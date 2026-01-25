@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+title: "Quantum Encoding Atlas"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - family-names: "Mishra"
+    given-names: "Ashutosh"
+    email: "ashutoshm1771@gmail.com"
+repository-code: "https://github.com/ashutoshm1771/quantum-encoding-atlas"
+url: "https://q-encoding-atlas.web.app/documentation"
+license: MIT
+version: "0.1.0"
+date-released: "2026-01-24"
+keywords:
+  - quantum computing
+  - quantum machine learning
+  - data encoding
+  - feature maps
+  - pennylane
+  - qiskit
+  - cirq
+abstract: >-
+  A comprehensive Python library for quantum data encodings
+  in machine learning, featuring 15+ encoding methods,
+  multi-framework support (PennyLane, Qiskit, Cirq),
+  analysis tools, and practical guidance for encoding selection.
