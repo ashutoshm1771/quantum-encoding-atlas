@@ -1,0 +1,33 @@
+# Include essential files
+include LICENSE
+include README.md
+include CHANGELOG.md
+include CONTRIBUTING.md
+include CITATION.cff
+include pyproject.toml
+
+# Include source code
+recursive-include src *.py
+recursive-include src *.pyi
+include src/encoding_atlas/py.typed
+
+# Include tests
+recursive-include tests *.py
+
+# Include documentation source
+recursive-include docs *.md
+recursive-include docs *.yml
+recursive-include docs *.yaml
+
+# Include examples
+recursive-include examples *.py
+recursive-include notebooks *.ipynb
+
+# Exclude unnecessary files
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude __pycache__
+global-exclude *.so
+global-exclude .DS_Store
+global-exclude .git*
+global-exclude *.egg-info
