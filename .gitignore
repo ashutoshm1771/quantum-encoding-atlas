@@ -1,6 +1,19 @@
 # External drivers folder - not tracked by git
 external_drivers/
 driver_files/
+demonstration/
+
+# Claude Code local settings
+.claude/
+
+# Type checking cache
+.mypy_cache/
+
+# Linter cache
+.ruff_cache/
+
+# Windows artifacts
+nul
 
 # Python
 __pycache__/
