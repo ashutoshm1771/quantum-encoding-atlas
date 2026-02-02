@@ -124,6 +124,43 @@ class TestCrossBackendStatevectorConsistency:
             f"This may indicate an entangling gate convention mismatch."
         )
 
+    def test_amplitude_encoding_statevector_consistency(self):
+        """Test AmplitudeEncoding produces consistent statevectors across backends.
+
+        AmplitudeEncoding directly sets amplitudes rather than applying
+        individual gates, so it specifically tests that the MSB/LSB qubit
+        ordering conversion in _to_qiskit() is correct.  Without the
+        conversion, amplitude indices would be scrambled by the
+        simulation utility's _reverse_qubit_order() call.
+        """
+        from encoding_atlas import AmplitudeEncoding
+        from encoding_atlas.analysis._utils import simulate_encoding_statevector
+
+        enc = AmplitudeEncoding(n_features=4, normalize=True)
+        x = np.array([0.5, 0.3, 0.7, 0.1])
+
+        sv_pennylane = simulate_encoding_statevector(enc, x, backend="pennylane")
+        sv_qiskit = simulate_encoding_statevector(enc, x, backend="qiskit")
+
+        # Verify element-wise match (not just sorted probabilities)
+        fidelity = np.abs(np.vdot(sv_pennylane, sv_qiskit)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"AmplitudeEncoding statevector fidelity between PennyLane and "
+            f"Qiskit is {fidelity:.6f}, expected > 0.9999. "
+            f"This may indicate that _to_qiskit() is not correctly "
+            f"converting amplitude indices from MSB to LSB ordering."
+        )
+
+        # Additionally verify that the probability distributions match
+        # at each index (unsorted), not just as a set
+        probs_pl = np.abs(sv_pennylane) ** 2
+        probs_qk = np.abs(sv_qiskit) ** 2
+        np.testing.assert_allclose(
+            probs_pl, probs_qk, atol=1e-6,
+            err_msg="Per-index probability mismatch between PennyLane and Qiskit",
+        )
+
     def test_zz_feature_map_statevector_consistency(self, sample_input_2q):
         """Test ZZFeatureMap produces consistent statevectors across backends.
 
@@ -144,6 +181,66 @@ class TestCrossBackendStatevectorConsistency:
         assert fidelity > 0.9999, (
             f"ZZFeatureMap statevector fidelity is {fidelity:.6f}. "
             f"CNOT gate conventions may differ between backends."
+        )
+
+    def test_cyclic_equivariant_statevector_consistency(self, sample_input_4q):
+        """Test CyclicEquivariantFeatureMap produces consistent statevectors.
+
+        This encoding uses RZZ entangling gates whose parameter convention
+        differs between PennyLane (IsingZZ), Qiskit (RZZ), and Cirq
+        (ZZPowGate).  A previous bug applied a spurious 2x factor in the
+        Qiskit and Cirq backends; this test guards against regressions.
+        """
+        from encoding_atlas.encodings.equivariant_feature_map import (
+            CyclicEquivariantFeatureMap,
+        )
+        from encoding_atlas.analysis._utils import simulate_encoding_statevector
+
+        enc = CyclicEquivariantFeatureMap(n_features=4, reps=1)
+        x = sample_input_4q
+
+        sv_pennylane = simulate_encoding_statevector(enc, x, backend="pennylane")
+        sv_qiskit = simulate_encoding_statevector(enc, x, backend="qiskit")
+
+        fidelity = np.abs(np.vdot(sv_pennylane, sv_qiskit)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"CyclicEquivariantFeatureMap statevector fidelity between "
+            f"PennyLane and Qiskit is {fidelity:.6f}, expected > 0.9999. "
+            f"This may indicate an RZZ parameter convention mismatch."
+        )
+
+    @pytest.mark.parametrize(
+        "coupling_strength",
+        [np.pi / 8, np.pi / 4, np.pi / 2, np.pi],
+        ids=["pi/8", "pi/4", "pi/2", "pi"],
+    )
+    def test_cyclic_equivariant_consistency_varying_coupling(
+        self, sample_input_4q, coupling_strength
+    ):
+        """Test cross-backend consistency across a range of coupling strengths.
+
+        Verifies that the RZZ convention fix holds for all coupling strengths,
+        not just the default value.
+        """
+        from encoding_atlas.encodings.equivariant_feature_map import (
+            CyclicEquivariantFeatureMap,
+        )
+        from encoding_atlas.analysis._utils import simulate_encoding_statevector
+
+        enc = CyclicEquivariantFeatureMap(
+            n_features=4, reps=1, coupling_strength=coupling_strength
+        )
+        x = sample_input_4q
+
+        sv_pennylane = simulate_encoding_statevector(enc, x, backend="pennylane")
+        sv_qiskit = simulate_encoding_statevector(enc, x, backend="qiskit")
+
+        fidelity = np.abs(np.vdot(sv_pennylane, sv_qiskit)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"Fidelity {fidelity:.6f} at coupling_strength={coupling_strength:.4f}. "
+            f"RZZ parameter conversion may be incorrect."
         )
 
 
@@ -276,6 +373,106 @@ class TestCrossBackendObservableConsistency:
 
         assert np.isclose(zz_pl, zz_qk, atol=0.001), (
             f"⟨Z⊗Z⟩ mismatch: PennyLane={zz_pl}, Qiskit={zz_qk}"
+        )
+
+
+@requires_both_backends
+class TestCrossBackendDataReuploadingConsistency:
+    """Test DataReuploading produces consistent results across backends.
+
+    DataReuploading applies repeated layers of RY data-encoding rotations
+    interleaved with CNOT entangling ladders.  This tests that the layered
+    structure and cyclic feature mapping are handled identically by both
+    PennyLane and Qiskit.
+    """
+
+    def test_data_reuploading_statevector_consistency(self, sample_input_4q):
+        """Test basic statevector fidelity between PennyLane and Qiskit."""
+        from encoding_atlas import DataReuploading
+        from encoding_atlas.analysis._utils import simulate_encoding_statevector
+
+        enc = DataReuploading(n_features=4, n_layers=3)
+        x = sample_input_4q
+
+        sv_pennylane = simulate_encoding_statevector(enc, x, backend="pennylane")
+        sv_qiskit = simulate_encoding_statevector(enc, x, backend="qiskit")
+
+        fidelity = np.abs(np.vdot(sv_pennylane, sv_qiskit)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"DataReuploading statevector fidelity between PennyLane and "
+            f"Qiskit is {fidelity:.6f}, expected > 0.9999."
+        )
+
+        probs_pl = np.abs(sv_pennylane) ** 2
+        probs_qk = np.abs(sv_qiskit) ** 2
+        np.testing.assert_allclose(
+            probs_pl, probs_qk, atol=1e-6,
+            err_msg="Per-index probability mismatch between PennyLane and Qiskit",
+        )
+
+    def test_data_reuploading_single_layer_consistency(self, sample_input_2q):
+        """Test single-layer DataReuploading consistency across backends."""
+        from encoding_atlas import DataReuploading
+        from encoding_atlas.analysis._utils import simulate_encoding_statevector
+
+        enc = DataReuploading(n_features=2, n_layers=1)
+        x = sample_input_2q
+
+        sv_pennylane = simulate_encoding_statevector(enc, x, backend="pennylane")
+        sv_qiskit = simulate_encoding_statevector(enc, x, backend="qiskit")
+
+        fidelity = np.abs(np.vdot(sv_pennylane, sv_qiskit)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"Single-layer DataReuploading fidelity is {fidelity:.6f}."
+        )
+
+    def test_data_reuploading_cyclic_mapping_consistency(self):
+        """Test cyclic feature mapping (n_features > n_qubits) consistency.
+
+        When more features than qubits are used, features are mapped
+        cyclically to qubits (feature i -> qubit i % n_qubits).  This
+        must be handled identically across backends.
+        """
+        from encoding_atlas import DataReuploading
+        from encoding_atlas.analysis._utils import simulate_encoding_statevector
+
+        enc = DataReuploading(n_features=6, n_qubits=3, n_layers=2)
+        x = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.1])
+
+        sv_pennylane = simulate_encoding_statevector(enc, x, backend="pennylane")
+        sv_qiskit = simulate_encoding_statevector(enc, x, backend="qiskit")
+
+        fidelity = np.abs(np.vdot(sv_pennylane, sv_qiskit)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"Cyclic DataReuploading (6 features, 3 qubits) fidelity "
+            f"is {fidelity:.6f}, expected > 0.9999."
+        )
+
+    @pytest.mark.parametrize("n_layers", [1, 2, 5], ids=["L=1", "L=2", "L=5"])
+    def test_data_reuploading_consistency_varying_layers(
+        self, sample_input_4q, n_layers
+    ):
+        """Test cross-backend consistency across different layer counts.
+
+        More layers mean more repeated encoding + entangling blocks, which
+        amplifies any convention mismatch between backends.
+        """
+        from encoding_atlas import DataReuploading
+        from encoding_atlas.analysis._utils import simulate_encoding_statevector
+
+        enc = DataReuploading(n_features=4, n_layers=n_layers)
+        x = sample_input_4q
+
+        sv_pennylane = simulate_encoding_statevector(enc, x, backend="pennylane")
+        sv_qiskit = simulate_encoding_statevector(enc, x, backend="qiskit")
+
+        fidelity = np.abs(np.vdot(sv_pennylane, sv_qiskit)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"DataReuploading (L={n_layers}) fidelity is {fidelity:.6f}."
         )
 
 

@@ -54,6 +54,10 @@ env/
 .coverage
 htmlcov/
 .hypothesis/
+*.tmp.*
+
+# Verification folder (temporary)
+verification/
 
 # OS
 .DS_Store

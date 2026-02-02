@@ -242,10 +242,15 @@ class TestScottMeasure:
         scott_k1 = compute_scott_measure(bell_state, n_qubits=2, k=1)
         assert_allclose(scott_k1, 1.0, atol=1e-10)
 
-    def test_invalid_k_raises(self, ghz_state_3q):
-        """Test that k > n_qubits//2 raises error."""
-        with pytest.raises(ValueError, match="exceeds maximum"):
-            compute_scott_measure(ghz_state_3q, n_qubits=3, k=2)  # max is 1
+    def test_invalid_k_equals_n_raises(self, ghz_state_3q):
+        """Test that k = n_qubits raises ValueError (full system, not a proper subsystem)."""
+        with pytest.raises(ValueError, match="must be strictly less than"):
+            compute_scott_measure(ghz_state_3q, n_qubits=3, k=3)
+
+    def test_invalid_k_exceeds_n_raises(self, ghz_state_3q):
+        """Test that k > n_qubits raises ValueError."""
+        with pytest.raises(ValueError, match="must be strictly less than"):
+            compute_scott_measure(ghz_state_3q, n_qubits=3, k=4)
 
     def test_k_zero_raises(self, bell_state):
         """Test that k=0 raises error."""
@@ -258,12 +263,14 @@ class TestScottMeasure:
             compute_scott_measure(bell_state, n_qubits=2, k=-1)
 
     def test_bounded_zero_one(self, random_statevector_generator):
-        """Test that Scott measure is always in [0, 1]."""
-        for n_qubits in [2, 4, 6]:  # Even qubits for k=n/2 tests
+        """Test that Scott measure is always in [0, 1] for all valid k."""
+        for n_qubits in [2, 3, 4, 5]:
             state = random_statevector_generator(n_qubits)
-            for k in range(1, n_qubits // 2 + 1):
+            for k in range(1, n_qubits):  # 1 <= k <= n_qubits - 1
                 scott = compute_scott_measure(state, n_qubits, k=k)
-                assert 0.0 <= scott <= 1.0, f"Scott(k={k}) = {scott} outside [0, 1]"
+                assert 0.0 <= scott <= 1.0, (
+                    f"Scott(n={n_qubits}, k={k}) = {scott} outside [0, 1]"
+                )
 
 
 # =============================================================================
@@ -543,10 +550,14 @@ class TestNumericalStability:
             assert_allclose(mw, 1.0, atol=1e-10)
 
     def test_unnormalized_state(self, unnormalized_state):
-        """Test that unnormalized state is handled correctly."""
-        # Should be renormalized automatically
-        mw = compute_meyer_wallach(unnormalized_state, n_qubits=2)
-        assert 0.0 <= mw <= 1.0
+        """Test that grossly unnormalized state is rejected.
+
+        States whose norm deviates from 1.0 by more than the
+        auto-renormalization tolerance are considered non-physical
+        and rejected by ``validate_statevector``.
+        """
+        with pytest.raises(ValidationError, match="not normalized"):
+            compute_meyer_wallach(unnormalized_state, n_qubits=2)
 
     def test_many_qubits_stability(self):
         """Test numerical stability for larger qubit systems."""
@@ -620,22 +631,24 @@ class TestStatisticalProperties:
 class TestScottMeasureErrors:
     """Tests for error handling in Scott measure."""
 
-    def test_k_exceeds_half_n_raises(self):
-        """Test that k > n_qubits // 2 raises error."""
+    def test_k_equals_n_qubits_raises(self):
+        """Test that k = n_qubits raises ValueError.
+
+        The full system is not a proper subsystem, so k = n is invalid.
+        """
         state = np.zeros(8, dtype=complex)
         state[0] = 1.0  # |000>
 
-        # For 3 qubits, max k is 1
-        with pytest.raises(ValueError, match="exceeds maximum"):
-            compute_scott_measure(state, n_qubits=3, k=2)
-
-    def test_k_equals_n_qubits_raises(self, bell_state):
-        """Test that k = n_qubits raises error (for n > 2)."""
-        state = np.zeros(8, dtype=complex)
-        state[0] = 1.0
-
-        with pytest.raises(ValueError, match="exceeds maximum"):
+        with pytest.raises(ValueError, match="must be strictly less than"):
             compute_scott_measure(state, n_qubits=3, k=3)
+
+    def test_k_exceeds_n_qubits_raises(self):
+        """Test that k > n_qubits raises ValueError."""
+        state = np.zeros(8, dtype=complex)
+        state[0] = 1.0  # |000>
+
+        with pytest.raises(ValueError, match="must be strictly less than"):
+            compute_scott_measure(state, n_qubits=3, k=5)
 
     def test_wrong_statevector_dimension(self, bell_state):
         """Test that wrong n_qubits for statevector raises error."""
@@ -816,7 +829,10 @@ class TestScottMeasureIntegration:
         assert 0.0 <= result["entanglement_capability"] <= 1.0
 
     def test_scott_measure_auto_k_selection_3_qubits(self):
-        """Test Scott measure auto-selects k=1 for 3-qubit system."""
+        """Test Scott measure auto-selects k=2 for 3-qubit system.
+
+        With n_qubits=3, max_k = n - 1 = 2, so auto-selected k = min(2, 2) = 2.
+        """
         from encoding_atlas import IQPEncoding
 
         enc = IQPEncoding(n_features=3, reps=2)
@@ -828,8 +844,8 @@ class TestScottMeasureIntegration:
             return_details=True,
         )
         assert result["measure"] == "scott"
-        # For 3 qubits, max_k = 3 // 2 = 1, so auto-selected k should be 1
-        assert result["scott_k"] == 1
+        # For 3 qubits, max_k = 3 - 1 = 2, so auto-selected k = min(2, 2) = 2
+        assert result["scott_k"] == 2
         assert 0.0 <= result["entanglement_capability"] <= 1.0
 
     def test_scott_measure_auto_k_selection_2_qubits(self, sample_encoding_2q):
@@ -842,7 +858,7 @@ class TestScottMeasureIntegration:
             return_details=True,
         )
         assert result["measure"] == "scott"
-        # For 2 qubits, max_k = 2 // 2 = 1, so auto-selected k should be 1
+        # For 2 qubits, max_k = 2 - 1 = 1, so auto-selected k = min(2, 1) = 1
         assert result["scott_k"] == 1
 
     def test_scott_k_explicit_valid(self, entangling_encoding_4q):
@@ -858,14 +874,14 @@ class TestScottMeasureIntegration:
         assert result["scott_k"] == 1
 
     def test_scott_k_explicit_invalid_raises(self, entangling_encoding_4q):
-        """Test that invalid explicit scott_k raises ValueError."""
+        """Test that scott_k = n_qubits raises ValueError (not a proper subsystem)."""
         with pytest.raises(ValueError, match="exceeds maximum valid value"):
             compute_entanglement_capability(
                 entangling_encoding_4q,
                 n_samples=10,
                 seed=42,
                 measure="scott",
-                scott_k=3,  # Invalid: 3 > 4 // 2 = 2
+                scott_k=4,  # Invalid: k=4 = n_qubits for 4-qubit encoding
             )
 
     def test_scott_k_zero_raises(self, entangling_encoding_4q):

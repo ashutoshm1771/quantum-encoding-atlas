@@ -330,7 +330,7 @@ _QUBIT_WARNING_THRESHOLD: int = 10
 def compute_expressibility(
     encoding: BaseEncoding,
     n_samples: int = ...,
-    n_bins: int = ...,
+    n_bins: int | None = ...,
     input_range: tuple[float, float] = ...,
     seed: int | None = ...,
     backend: Literal["pennylane", "qiskit", "cirq"] = ...,
@@ -343,7 +343,7 @@ def compute_expressibility(
 def compute_expressibility(
     encoding: BaseEncoding,
     n_samples: int = ...,
-    n_bins: int = ...,
+    n_bins: int | None = ...,
     input_range: tuple[float, float] = ...,
     seed: int | None = ...,
     backend: Literal["pennylane", "qiskit", "cirq"] = ...,
@@ -355,7 +355,7 @@ def compute_expressibility(
 def compute_expressibility(
     encoding: BaseEncoding,
     n_samples: int = _DEFAULT_N_SAMPLES,
-    n_bins: int = _DEFAULT_N_BINS,
+    n_bins: int | None = None,
     input_range: tuple[float, float] = _DEFAULT_INPUT_RANGE,
     seed: int | None = None,
     backend: Literal["pennylane", "qiskit", "cirq"] = "pennylane",
@@ -386,10 +386,12 @@ def compute_expressibility(
         Number of random input pairs to sample. Higher values give more
         accurate results but increase computation time. A minimum of 1000
         samples is recommended for reliable results.
-    n_bins : int, default=75
-        Number of bins for the fidelity histogram. Should be large enough
-        to capture distribution shape but small enough for sufficient
-        counts per bin. Rule of thumb: n_bins ≈ √n_samples.
+    n_bins : int or None, default=None
+        Number of bins for the fidelity histogram. If None (default),
+        automatically set to ``min(75, n_samples)`` so that small sample
+        counts don't require manually tuning the bin count. If provided
+        explicitly, must satisfy ``10 ≤ n_bins ≤ n_samples``.
+        Rule of thumb: n_bins ≈ √n_samples.
     input_range : tuple[float, float], default=(0, 2π)
         Range for sampling random input values. The default covers the
         full rotation range for typical quantum gates.
@@ -437,7 +439,7 @@ def compute_expressibility(
     AnalysisError
         If encoding is invalid or computation fails.
     ValueError
-        If ``n_bins < 10`` or ``n_bins > n_samples``, or if
+        If explicit ``n_bins < 10`` or ``n_bins > n_samples``, or if
         ``input_range[0] >= input_range[1]``.
 
     Warns
@@ -546,20 +548,26 @@ def compute_expressibility(
             stacklevel=2,
         )
 
-    # Validate n_bins
-    if not isinstance(n_bins, int) or n_bins < 1:
-        raise ValueError(f"n_bins must be a positive integer, got {n_bins}")
+    # Resolve n_bins: auto-select when not specified, validate when explicit
+    if n_bins is None:
+        # Auto-select: use the default, clamped to n_samples so that users
+        # who simply pass a small n_samples don't hit an unexpected error.
+        n_bins = min(_DEFAULT_N_BINS, n_samples)
+    else:
+        # User explicitly provided n_bins — validate strictly
+        if not isinstance(n_bins, int) or n_bins < 1:
+            raise ValueError(f"n_bins must be a positive integer, got {n_bins}")
 
-    if n_bins < 10:
-        raise ValueError(
-            f"n_bins must be at least 10 for meaningful histogram, got {n_bins}"
-        )
+        if n_bins < 10:
+            raise ValueError(
+                f"n_bins must be at least 10 for meaningful histogram, got {n_bins}"
+            )
 
-    if n_bins > n_samples:
-        raise ValueError(
-            f"n_bins ({n_bins}) cannot exceed n_samples ({n_samples}). "
-            f"Reduce n_bins or increase n_samples."
-        )
+        if n_bins > n_samples:
+            raise ValueError(
+                f"n_bins ({n_bins}) cannot exceed n_samples ({n_samples}). "
+                f"Reduce n_bins or increase n_samples."
+            )
 
     # Validate input_range
     if len(input_range) != 2:

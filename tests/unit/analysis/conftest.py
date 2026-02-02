@@ -324,7 +324,13 @@ def random_statevector_generator(seeded_rng: np.random.Generator):
 
 @pytest.fixture
 def unnormalized_state() -> NDArray[np.complexfloating]:
-    """Unnormalized statevector for testing normalization."""
+    """Grossly unnormalized statevector (norm=2.0) for testing rejection.
+
+    ``validate_statevector`` only auto-renormalizes tiny floating-point
+    drift (deviation ≤ ``max(tolerance * 1e4, 1e-6)``).  This state has
+    norm 2.0, so it should be *rejected* as non-physical rather than
+    silently renormalized.
+    """
     return np.array([2.0, 0.0, 0.0, 0.0], dtype=np.complex128)
 
 

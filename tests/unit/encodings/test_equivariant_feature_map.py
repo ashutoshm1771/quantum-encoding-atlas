@@ -404,7 +404,11 @@ class TestProperties:
     def test_swap_gate_count_breakdown(
         self, swap_encoding: SwapEquivariantFeatureMap
     ) -> None:
-        """Test gate count breakdown for swap encoding."""
+        """Test gate count breakdown for swap encoding.
+
+        The swap encoding uses CZ gates (not CNOT) for symmetric
+        pair entanglement that preserves equivariance.
+        """
         breakdown = swap_encoding.gate_count_breakdown()
         n = swap_encoding.n_features
         reps = swap_encoding.reps
@@ -412,7 +416,10 @@ class TestProperties:
 
         assert breakdown["ry"] == n * reps
         assert breakdown["hadamard"] == n * reps
-        assert breakdown["cnot"] == n_pairs * reps
+        assert breakdown["cz"] == n_pairs * reps
+        assert breakdown["total_single_qubit"] == breakdown["ry"] + breakdown["hadamard"]
+        assert breakdown["total_two_qubit"] == breakdown["cz"]
+        assert breakdown["total"] == breakdown["total_single_qubit"] + breakdown["total_two_qubit"]
 
     def test_properties_cached(self, so2_encoding: SO2EquivariantFeatureMap) -> None:
         """Test that properties are cached (same object returned)."""
@@ -925,6 +932,93 @@ class TestMathematicalCorrectness:
         """Test swap equivariance for identity (no swaps)."""
         swaps = [False, False]
         assert swap_encoding.verify_equivariance(sample_data_4d, swaps, atol=1e-6)
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_swap_equivariance_single_pair(
+        self,
+        swap_encoding: SwapEquivariantFeatureMap,
+        sample_data_4d: NDArray[np.floating],
+    ) -> None:
+        """Test swap equivariance for swapping a single pair."""
+        swaps = [True, False]
+        assert swap_encoding.verify_equivariance(sample_data_4d, swaps, atol=1e-6)
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_swap_equivariance_all_pairs(
+        self,
+        swap_encoding: SwapEquivariantFeatureMap,
+        sample_data_4d: NDArray[np.floating],
+    ) -> None:
+        """Test swap equivariance when all pairs are swapped."""
+        swaps = [True, True]
+        assert swap_encoding.verify_equivariance(sample_data_4d, swaps, atol=1e-6)
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_swap_equivariance_on_generators(
+        self,
+        swap_encoding: SwapEquivariantFeatureMap,
+        sample_data_4d: NDArray[np.floating],
+    ) -> None:
+        """Test swap equivariance on all group generators."""
+        assert swap_encoding.verify_equivariance_on_generators(
+            sample_data_4d, atol=1e-6
+        )
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_swap_equivariance_exhaustive_group_elements(
+        self,
+        swap_encoding: SwapEquivariantFeatureMap,
+    ) -> None:
+        """Test swap equivariance on all group elements for random inputs."""
+        from itertools import product as iter_product
+
+        rng = np.random.default_rng(42)
+        x = rng.uniform(-np.pi, np.pi, size=4)
+        n_pairs = swap_encoding.n_pairs
+
+        for swaps_tuple in iter_product([False, True], repeat=n_pairs):
+            swaps = list(swaps_tuple)
+            assert swap_encoding.verify_equivariance(
+                x, swaps, atol=1e-6
+            ), f"Equivariance failed for swaps={swaps}"
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_swap_equivariance_multiple_random_inputs(
+        self,
+        swap_encoding: SwapEquivariantFeatureMap,
+    ) -> None:
+        """Test swap equivariance on multiple random inputs."""
+        rng = np.random.default_rng(123)
+
+        for _ in range(10):
+            x = rng.uniform(-np.pi, np.pi, size=4)
+            for swaps in [[True, False], [False, True], [True, True]]:
+                assert swap_encoding.verify_equivariance(
+                    x, swaps, atol=1e-6
+                ), f"Equivariance failed for x={x}, swaps={swaps}"
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_swap_equivariance_various_reps(self) -> None:
+        """Test swap equivariance holds across different repetition counts."""
+        x = np.array([0.3, 0.7, 1.1, 0.5])
+        swaps = [True, True]
+
+        for reps in [1, 2, 3, 4]:
+            enc = SwapEquivariantFeatureMap(n_features=4, reps=reps)
+            assert enc.verify_equivariance(
+                x, swaps, atol=1e-6
+            ), f"Equivariance failed for reps={reps}"
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_swap_equivariance_six_features(self) -> None:
+        """Test swap equivariance with 6 features (3 pairs)."""
+        enc = SwapEquivariantFeatureMap(n_features=6, reps=2)
+        x = np.array([0.1, 0.9, 0.4, 0.6, 0.2, 0.8])
+
+        for g in enc.group_generators():
+            assert enc.verify_equivariance(
+                x, g, atol=1e-6
+            ), f"Equivariance failed for generator {g}"
 
     @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
     def test_equivariance_on_generators(
@@ -1532,3 +1626,214 @@ class TestSlowSimulation:
                 assert cyclic_encoding.verify_equivariance(
                     x, k, atol=1e-5
                 ), f"Failed for input {x} with shift {k}"
+
+    @pytest.mark.skipif(
+        not (HAS_PENNYLANE and HAS_QISKIT),
+        reason="PennyLane and Qiskit required",
+    )
+    @pytest.mark.cross_backend
+    def test_cyclic_pennylane_qiskit_fidelity(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test PennyLane-Qiskit statevector fidelity for cyclic encoding.
+
+        Both backends use RZZ-type entangling gates that must agree on the
+        parameter convention.  A previous bug applied a spurious 2x factor
+        in the Qiskit backend; this test guards against regressions.
+        """
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        # PennyLane statevector
+        pl_fn = cyclic_encoding.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=cyclic_encoding.n_qubits)
+
+        @qml.qnode(dev)
+        def pl_circuit():
+            pl_fn()
+            return qml.state()
+
+        sv_pl = pl_circuit()
+
+        # Qiskit statevector (reverse qubit order to match PennyLane MSB)
+        qk_circuit = cyclic_encoding.get_circuit(x, backend="qiskit")
+        sv_qk = np.array(Statevector(qk_circuit))
+
+        # Qiskit uses LSB ordering; reverse to match PennyLane MSB
+        n = cyclic_encoding.n_qubits
+        sv_qk_reordered = sv_qk.reshape([2] * n).transpose(
+            list(range(n))[::-1]
+        ).flatten()
+
+        fidelity = np.abs(np.vdot(sv_pl, sv_qk_reordered)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"PennyLane-Qiskit fidelity is {fidelity:.6f} for cyclic encoding. "
+            f"RZZ parameter convention may be inconsistent."
+        )
+
+    @pytest.mark.skipif(
+        not (HAS_PENNYLANE and HAS_CIRQ),
+        reason="PennyLane and Cirq required",
+    )
+    @pytest.mark.cross_backend
+    def test_cyclic_pennylane_cirq_fidelity(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test PennyLane-Cirq statevector fidelity for cyclic encoding.
+
+        Cirq's ZZPowGate uses a different parameter convention
+        (exponent-based) from PennyLane's IsingZZ.  This test verifies
+        the conversion is correct.
+        """
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        # PennyLane statevector
+        pl_fn = cyclic_encoding.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=cyclic_encoding.n_qubits)
+
+        @qml.qnode(dev)
+        def pl_circuit():
+            pl_fn()
+            return qml.state()
+
+        sv_pl = pl_circuit()
+
+        # Cirq statevector
+        cirq_circuit = cyclic_encoding.get_circuit(x, backend="cirq")
+        cirq_sim = cirq.Simulator()
+        cirq_result = cirq_sim.simulate(cirq_circuit)
+        sv_cirq = cirq_result.final_state_vector
+
+        fidelity = np.abs(np.vdot(sv_pl, sv_cirq)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"PennyLane-Cirq fidelity is {fidelity:.6f} for cyclic encoding. "
+            f"ZZPowGate exponent conversion may be inconsistent."
+        )
+
+    @pytest.mark.skipif(
+        not (HAS_PENNYLANE and HAS_QISKIT),
+        reason="PennyLane and Qiskit required",
+    )
+    @pytest.mark.cross_backend
+    @pytest.mark.parametrize(
+        "coupling_strength",
+        [np.pi / 8, np.pi / 4, np.pi / 2, np.pi],
+        ids=["pi/8", "pi/4", "pi/2", "pi"],
+    )
+    def test_cyclic_fidelity_varying_coupling(
+        self, coupling_strength: float
+    ) -> None:
+        """Test cross-backend fidelity across different coupling strengths.
+
+        Ensures the RZZ parameter fix is correct for all coupling values,
+        not just the default π/4.
+        """
+        enc = CyclicEquivariantFeatureMap(
+            n_features=4, reps=1, coupling_strength=coupling_strength
+        )
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        # PennyLane
+        pl_fn = enc.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=enc.n_qubits)
+
+        @qml.qnode(dev)
+        def pl_circuit():
+            pl_fn()
+            return qml.state()
+
+        sv_pl = pl_circuit()
+
+        # Qiskit (reorder to MSB)
+        qk_circuit = enc.get_circuit(x, backend="qiskit")
+        sv_qk = np.array(Statevector(qk_circuit))
+        n = enc.n_qubits
+        sv_qk_reordered = sv_qk.reshape([2] * n).transpose(
+            list(range(n))[::-1]
+        ).flatten()
+
+        fidelity = np.abs(np.vdot(sv_pl, sv_qk_reordered)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"Fidelity {fidelity:.6f} at coupling_strength={coupling_strength:.4f}"
+        )
+
+    @pytest.mark.skipif(
+        not (HAS_PENNYLANE and HAS_QISKIT),
+        reason="PennyLane and Qiskit required",
+    )
+    @pytest.mark.cross_backend
+    def test_swap_pennylane_qiskit_fidelity(
+        self, swap_encoding: SwapEquivariantFeatureMap
+    ) -> None:
+        """Test PennyLane-Qiskit statevector fidelity for swap encoding.
+
+        Verifies that both backends produce the same quantum state for the
+        swap equivariant circuit using direct RY encoding and CZ entanglement.
+        """
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        # PennyLane statevector
+        pl_fn = swap_encoding.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=swap_encoding.n_qubits)
+
+        @qml.qnode(dev)
+        def pl_circuit():
+            pl_fn()
+            return qml.state()
+
+        sv_pl = pl_circuit()
+
+        # Qiskit statevector (reverse qubit order to match PennyLane MSB)
+        qk_circuit = swap_encoding.get_circuit(x, backend="qiskit")
+        sv_qk = np.array(Statevector(qk_circuit))
+
+        n = swap_encoding.n_qubits
+        sv_qk_reordered = sv_qk.reshape([2] * n).transpose(
+            list(range(n))[::-1]
+        ).flatten()
+
+        fidelity = np.abs(np.vdot(sv_pl, sv_qk_reordered)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"PennyLane-Qiskit fidelity is {fidelity:.6f} for swap encoding."
+        )
+
+    @pytest.mark.skipif(
+        not (HAS_PENNYLANE and HAS_CIRQ),
+        reason="PennyLane and Cirq required",
+    )
+    @pytest.mark.cross_backend
+    def test_swap_pennylane_cirq_fidelity(
+        self, swap_encoding: SwapEquivariantFeatureMap
+    ) -> None:
+        """Test PennyLane-Cirq statevector fidelity for swap encoding.
+
+        Verifies that both backends produce the same quantum state for the
+        swap equivariant circuit using direct RY encoding and CZ entanglement.
+        """
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        # PennyLane statevector
+        pl_fn = swap_encoding.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=swap_encoding.n_qubits)
+
+        @qml.qnode(dev)
+        def pl_circuit():
+            pl_fn()
+            return qml.state()
+
+        sv_pl = pl_circuit()
+
+        # Cirq statevector
+        cirq_circuit = swap_encoding.get_circuit(x, backend="cirq")
+        cirq_sim = cirq.Simulator()
+        cirq_result = cirq_sim.simulate(cirq_circuit)
+        sv_cirq = cirq_result.final_state_vector
+
+        fidelity = np.abs(np.vdot(sv_pl, sv_cirq)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"PennyLane-Cirq fidelity is {fidelity:.6f} for swap encoding."
+        )

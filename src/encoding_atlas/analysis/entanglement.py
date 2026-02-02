@@ -269,7 +269,7 @@ def compute_entanglement_capability(
     n_samples: int = ...,
     input_range: tuple[float, float] = ...,
     seed: int | None = ...,
-    backend: Literal["pennylane", "qiskit"] = ...,
+    backend: Literal["pennylane", "qiskit", "cirq"] = ...,
     measure: Literal["meyer_wallach", "scott"] = ...,
     scott_k: int | None = ...,
     return_details: Literal[False] = ...,
@@ -283,7 +283,7 @@ def compute_entanglement_capability(
     n_samples: int = ...,
     input_range: tuple[float, float] = ...,
     seed: int | None = ...,
-    backend: Literal["pennylane", "qiskit"] = ...,
+    backend: Literal["pennylane", "qiskit", "cirq"] = ...,
     measure: Literal["meyer_wallach", "scott"] = ...,
     scott_k: int | None = ...,
     return_details: Literal[True] = ...,
@@ -296,7 +296,7 @@ def compute_entanglement_capability(
     n_samples: int = _DEFAULT_N_SAMPLES,
     input_range: tuple[float, float] = _DEFAULT_INPUT_RANGE,
     seed: int | None = None,
-    backend: Literal["pennylane", "qiskit"] = "pennylane",
+    backend: Literal["pennylane", "qiskit", "cirq"] = "pennylane",
     measure: Literal["meyer_wallach", "scott"] = "meyer_wallach",
     scott_k: int | None = None,
     return_details: bool = False,
@@ -321,7 +321,7 @@ def compute_entanglement_capability(
         uniformly from this range.
     seed : int, optional
         Random seed for reproducibility. If None, uses system entropy.
-    backend : {"pennylane", "qiskit"}, default="pennylane"
+    backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
         Backend for circuit simulation.
     measure : {"meyer_wallach", "scott"}, default="meyer_wallach"
         Entanglement measure to use:
@@ -333,11 +333,10 @@ def compute_entanglement_capability(
 
     scott_k : int, optional
         Subsystem size for Scott measure. Only used when ``measure="scott"``.
-        Must satisfy ``1 <= scott_k <= n_qubits // 2``.
+        Must satisfy ``1 <= scott_k <= n_qubits - 1``.
 
-        - If None (default): Automatically selects the maximum valid k,
-          i.e., ``min(2, n_qubits // 2)``. For 2-3 qubit systems, this
-          falls back to k=1 (equivalent to Meyer-Wallach).
+        - If None (default): Automatically selects ``min(2, n_qubits - 1)``.
+          For 2-qubit systems this falls back to k=1 (Meyer-Wallach).
         - If specified: Uses the given k value, raising an error if invalid.
 
         Ignored when ``measure="meyer_wallach"``.
@@ -474,17 +473,17 @@ def compute_entanglement_capability(
         )
 
     # Validate backend parameter
-    if backend not in ("pennylane", "qiskit"):
+    if backend not in ("pennylane", "qiskit", "cirq"):
         raise ValueError(
-            f"backend must be 'pennylane' or 'qiskit', got {backend!r}"
+            f"backend must be 'pennylane', 'qiskit', or 'cirq', got {backend!r}"
         )
 
     # Validate and resolve scott_k parameter
     effective_scott_k: int | None = None
     if measure == "scott":
-        max_k = max(1, n_qubits // 2)
+        max_k = n_qubits - 1  # proper subsystem: 1 <= k <= n-1
         if scott_k is None:
-            # Auto-select: prefer k=2 if valid, otherwise use max valid k
+            # Auto-select: prefer k=2 if valid, otherwise fall back to 1
             effective_scott_k = min(2, max_k)
             _logger.debug(
                 "Auto-selected scott_k=%d for %d qubits (max_k=%d)",
@@ -501,8 +500,8 @@ def compute_entanglement_capability(
             if scott_k > max_k:
                 raise ValueError(
                     f"scott_k={scott_k} exceeds maximum valid value of {max_k} "
-                    f"for {n_qubits} qubits. For meaningful entanglement measures, "
-                    f"scott_k must satisfy 1 <= scott_k <= n_qubits // 2."
+                    f"for {n_qubits} qubits. The Scott measure requires a proper "
+                    f"subsystem: 1 <= scott_k <= n_qubits - 1."
                 )
             effective_scott_k = int(scott_k)
     elif scott_k is not None:
@@ -838,11 +837,16 @@ def compute_scott_measure(
     n_qubits : int
         Number of qubits.
     k : int, default=2
-        Size of subsystems to consider. Must satisfy 1 <= k <= n_qubits // 2.
+        Size of subsystems to consider. Must satisfy
+        ``1 <= k <= n_qubits - 1``.
 
-        - k=1: Equivalent to Meyer-Wallach measure
-        - k=2: Pairwise entanglement (default)
-        - Higher k: More detailed entanglement structure
+        - k=1: Equivalent to Meyer-Wallach measure.
+        - k=2: Pairwise entanglement (default).
+        - Higher k: Captures higher-order entanglement structure.
+
+        The measure is well-defined for any proper subsystem size.
+        Note that ``Q_k`` and ``Q_{n-k}`` probe complementary subsystems
+        and therefore carry related (but not identical) information.
 
     Returns
     -------
@@ -852,26 +856,33 @@ def compute_scott_measure(
     Raises
     ------
     ValueError
-        If k is out of valid range or inputs are invalid.
+        If ``k < 1``, ``k >= n_qubits``, or other inputs are invalid.
     ValidationError
         If statevector is invalid.
 
     Examples
     --------
     >>> import numpy as np
-    >>> # GHZ state
+    >>> # GHZ state on 3 qubits
     >>> ghz = np.zeros(8, dtype=complex)
     >>> ghz[0] = ghz[7] = 1.0 / np.sqrt(2)
     >>> scott_1 = compute_scott_measure(ghz, n_qubits=3, k=1)
     >>> scott_2 = compute_scott_measure(ghz, n_qubits=3, k=2)
     >>> print(f"Scott k=1: {scott_1:.4f}")  # Same as Meyer-Wallach
+    Scott k=1: 1.0000
     >>> print(f"Scott k=2: {scott_2:.4f}")
+    Scott k=2: 0.6667
 
     Notes
     -----
-    The Scott measure with k > 1 is more computationally expensive than
-    Meyer-Wallach, as it requires computing reduced density matrices for
-    all C(n, k) subsystems.
+    The Scott measure averages the normalized linear entropy of all
+    :math:`\binom{n}{k}` reduced density matrices of size *k*.  The
+    mathematical definition is valid for any ``1 <= k <= n - 1``, where
+    *n* is the number of qubits [1]_.
+
+    Computational cost scales with :math:`\binom{n}{k}`, the number of
+    *k*-qubit subsystems.  For large *n*, choosing *k* close to 1 or
+    close to *n* - 1 is cheaper than choosing *k* near *n* / 2.
 
     References
     ----------
@@ -891,18 +902,14 @@ def compute_scott_measure(
     if k == 1:
         return compute_meyer_wallach(statevector, n_qubits)
 
-    # k cannot exceed n_qubits // 2 for meaningful measure
-    # (otherwise we're looking at most of the system)
-    max_k = max(1, n_qubits // 2)
-    if k > max_k:
+    # The Scott measure is defined for proper subsystem sizes: 1 <= k <= n-1.
+    # At k = n the reduced state is the full state (always pure, entropy = 0),
+    # which is trivial and mathematically degenerate, so we reject it.
+    if k >= n_qubits:
         raise ValueError(
-            f"k={k} exceeds maximum allowed value of {max_k} for {n_qubits} qubits. "
-            f"For meaningful entanglement measures, k should be at most n_qubits // 2."
-        )
-
-    if k > n_qubits:
-        raise ValueError(
-            f"k={k} cannot exceed n_qubits={n_qubits}"
+            f"k={k} must be strictly less than n_qubits={n_qubits}. "
+            f"The Scott measure requires a proper subsystem "
+            f"(1 <= k <= n_qubits - 1)."
         )
 
     # Validate statevector

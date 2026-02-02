@@ -2468,8 +2468,8 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
             # the logical CRZ gates here
             n_symmetry_pairs = self._symmetry_params["n_pairs"]
             crz_gates = self.reps * n_symmetry_pairs
-            # CRZ decomposition contributes to effective CNOT count
-            # counted as 2 per CRZ for hardware estimation
+            # CRZ decomposition: each CRZ yields 2 RZ single-qubit gates
+            rz_entanglement = self.reps * 2 * n_symmetry_pairs
         elif self.symmetry == "cyclic":
             # Cyclic: CNOT-RZ-CNOT structure per pair
             cnot_gates = self.reps * 2 * n_pairs

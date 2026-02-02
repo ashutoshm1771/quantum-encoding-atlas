@@ -1361,8 +1361,9 @@ class TestSlowSimulation:
     def test_cross_backend_probability_equivalence(self) -> None:
         """Test that all backends produce equivalent probability distributions.
 
-        Different backends may use different qubit orderings, so we compare
-        sorted probability distributions.
+        Compares sorted probability distributions as a basic sanity check.
+        See also ``test_cross_backend_statevector_index_consistency`` for
+        the stronger per-index comparison via the simulation utility.
         """
         enc = AmplitudeEncoding(n_features=4, normalize=True)
         x = np.array([0.5, 0.3, 0.7, 0.1])
@@ -1377,6 +1378,50 @@ class TestSlowSimulation:
 
         np.testing.assert_allclose(pl_probs, qk_probs, atol=1e-6)
         np.testing.assert_allclose(pl_probs, cirq_probs, atol=1e-6)
+
+    @pytest.mark.skipif(
+        not (HAS_PENNYLANE and HAS_QISKIT and HAS_CIRQ),
+        reason="All backends required",
+    )
+    @pytest.mark.cross_backend
+    def test_cross_backend_statevector_index_consistency(self) -> None:
+        """Test per-index statevector consistency through the simulation utility.
+
+        Unlike ``test_cross_backend_probability_equivalence`` (which sorts
+        probabilities), this test verifies that the simulation utility
+        returns statevectors with matching amplitude *positions* across
+        all backends.  This ensures that ``_to_qiskit()``'s MSB→LSB
+        index conversion is correct.
+        """
+        from encoding_atlas.analysis._utils import simulate_encoding_statevector
+
+        enc = AmplitudeEncoding(n_features=4, normalize=True)
+        x = np.array([0.5, 0.3, 0.7, 0.1])
+
+        sv_pl = simulate_encoding_statevector(enc, x, backend="pennylane")
+        sv_qk = simulate_encoding_statevector(enc, x, backend="qiskit")
+        sv_cirq = simulate_encoding_statevector(enc, x, backend="cirq")
+
+        # Fidelity should be ~1.0 (not just same probability set)
+        fidelity_qk = np.abs(np.vdot(sv_pl, sv_qk)) ** 2
+        fidelity_cirq = np.abs(np.vdot(sv_pl, sv_cirq)) ** 2
+
+        assert fidelity_qk > 0.9999, (
+            f"PennyLane–Qiskit fidelity {fidelity_qk:.6f}: "
+            f"amplitude index ordering may be mismatched"
+        )
+        assert fidelity_cirq > 0.9999, (
+            f"PennyLane–Cirq fidelity {fidelity_cirq:.6f}: "
+            f"amplitude index ordering may be mismatched"
+        )
+
+        # Per-index probability match
+        np.testing.assert_allclose(
+            np.abs(sv_pl) ** 2, np.abs(sv_qk) ** 2, atol=1e-6,
+        )
+        np.testing.assert_allclose(
+            np.abs(sv_pl) ** 2, np.abs(sv_cirq) ** 2, atol=1e-6,
+        )
 
     @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
     def test_different_inputs_produce_different_states(self) -> None:

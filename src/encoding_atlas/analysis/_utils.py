@@ -90,9 +90,10 @@ using this convention, regardless of which backend is used:
 
 **Native Backend Conventions:**
 
-- **PennyLane**: Uses MSB natively (qubit 0 = leftmost bit) - no conversion needed
-- **Qiskit**: Uses LSB natively (qubit 0 = rightmost bit) - converted to MSB
-- **Cirq**: Uses LSB natively - converted to MSB
+- **PennyLane**: Uses MSB natively (qubit 0 = leftmost bit) — no conversion needed.
+- **Qiskit**: Uses LSB natively (qubit 0 = rightmost bit) — converted to MSB via
+  ``_reverse_qubit_order()`` in ``_simulate_qiskit()``.
+- **Cirq**: Uses MSB natively (``LineQubit(0)`` = leftmost bit) — no conversion needed.
 
 The conversion is handled automatically by the simulation functions, so users
 always receive statevectors in the consistent MSB format.
@@ -828,11 +829,21 @@ def _simulate_cirq(
                 backend="cirq",
             )
 
-        # Create simulator and compute final state
-        simulator = cirq.Simulator()
+        # Create simulator and compute final state.
+        # Use complex128 to match the double-precision simulation used by
+        # PennyLane's default.qubit and Qiskit's Statevector.  Cirq's
+        # Simulator defaults to complex64 which silently truncates to
+        # single-precision, introducing ~1e-8 discrepancies that pollute
+        # downstream analysis (expressibility, entanglement, etc.).
+        simulator = cirq.Simulator(dtype=np.complex128)
 
-        # Get the result with the final state
-        result = simulator.simulate(circuit)
+        # Get the result with the final state.
+        # Specify qubit_order so that Cirq always returns a 2^n_qubits
+        # vector even when some qubits have no operations (e.g.
+        # BasisEncoding with sparse inputs).  Without this, Cirq only
+        # simulates the active qubits and returns a shorter vector.
+        all_qubits = cirq.LineQubit.range(encoding.n_qubits)
+        result = simulator.simulate(circuit, qubit_order=all_qubits)
 
         # Extract the statevector from the result
         # Cirq's final_state_vector is already a numpy array
@@ -1005,6 +1016,17 @@ def validate_statevector(
                 operation="validate_statevector",
             )
         if not np.isclose(norm, 1.0, atol=tolerance):
+            # If the norm deviates significantly from 1.0, the state is
+            # genuinely non-physical and should be rejected rather than
+            # silently renormalized.  Only tiny floating-point drift
+            # (within a generous tolerance) is corrected automatically.
+            _renorm_tolerance = max(tolerance * 1e4, 1e-6)
+            if abs(norm - 1.0) > _renorm_tolerance:
+                raise ValidationError(
+                    f"Statevector is not normalized: norm = {norm:.10f} "
+                    f"(deviation {abs(norm - 1.0):.2e} exceeds tolerance "
+                    f"{_renorm_tolerance:.2e})"
+                )
             _logger.debug("Renormalizing statevector: norm was %.10f", norm)
             state = state / norm
 
@@ -1973,7 +1995,7 @@ def create_rng(seed: int | None = None) -> np.random.Generator:
 
 
 def generate_random_parameters(
-    n_features: int,
+    encoding_or_n_features: BaseEncoding | int,
     n_samples: int = 1,
     param_min: float = _DEFAULT_PARAM_MIN,
     param_max: float = _DEFAULT_PARAM_MAX,
@@ -1983,8 +2005,10 @@ def generate_random_parameters(
 
     Parameters
     ----------
-    n_features : int
-        Number of features (parameters) per sample.
+    encoding_or_n_features : BaseEncoding or int
+        Either an encoding instance (``n_features`` is extracted
+        automatically) or an integer specifying the number of features
+        directly.
     n_samples : int, default=1
         Number of parameter vectors to generate.
     param_min : float, default=0.0
@@ -2002,24 +2026,36 @@ def generate_random_parameters(
 
     Examples
     --------
-    Generate a single parameter vector:
+    Generate parameters from an encoding:
 
-    >>> params = generate_random_parameters(n_features=4, seed=42)
+    >>> from encoding_atlas import AngleEncoding
+    >>> enc = AngleEncoding(n_features=4)
+    >>> params = generate_random_parameters(enc, n_samples=10, seed=42)
+    >>> print(params.shape)
+    (10, 4)
+
+    Generate parameters by specifying n_features directly:
+
+    >>> params = generate_random_parameters(4, seed=42)
     >>> print(params.shape)
     (4,)
-
-    Generate multiple parameter vectors:
-
-    >>> params = generate_random_parameters(n_features=4, n_samples=100, seed=42)
-    >>> print(params.shape)
-    (100, 4)
 
     With custom range:
 
     >>> params = generate_random_parameters(
-    ...     n_features=4, n_samples=10, param_min=-np.pi, param_max=np.pi
+    ...     4, n_samples=10, param_min=-np.pi, param_max=np.pi
     ... )
     """
+    # Accept either an encoding instance or an integer
+    if isinstance(encoding_or_n_features, BaseEncoding):
+        n_features = encoding_or_n_features.n_features
+    elif isinstance(encoding_or_n_features, (int, np.integer)):
+        n_features = int(encoding_or_n_features)
+    else:
+        raise TypeError(
+            f"Expected BaseEncoding or int, got {type(encoding_or_n_features).__name__}"
+        )
+
     if n_features < 1:
         raise ValueError(f"n_features must be at least 1, got {n_features}")
     if n_samples < 1:
