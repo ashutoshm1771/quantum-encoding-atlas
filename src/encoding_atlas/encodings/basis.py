@@ -125,7 +125,7 @@ from __future__ import annotations
 
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Literal, TypedDict
+from typing import Any, TypedDict
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -1471,8 +1471,8 @@ class BasisEncoding(BaseEncoding):
     def _to_pennylane(self, x: NDArray[np.integer[Any]]) -> Any:
         """Generate PennyLane circuit function.
 
-        Uses PennyLane's built-in BasisEmbedding for optimal performance
-        and compatibility with automatic differentiation pipelines.
+        Manually applies X gates to qubits corresponding to 1-valued
+        features, ensuring consistent qubit ordering with Qiskit and Cirq.
 
         Parameters
         ----------
@@ -1489,6 +1489,13 @@ class BasisEncoding(BaseEncoding):
         ------
         ImportError
             If PennyLane is not installed.
+
+        Notes
+        -----
+        This implementation uses manual X gate application instead of
+        PennyLane's built-in BasisEmbedding to ensure consistent qubit
+        ordering conventions across all backends (Qiskit, Cirq, PennyLane).
+        All backends follow the convention: feature x[i] controls qubit i.
         """
         try:
             import pennylane as qml
@@ -1505,7 +1512,13 @@ class BasisEncoding(BaseEncoding):
 
         def circuit() -> None:
             """Apply basis embedding gates."""
-            qml.BasisEmbedding(features, wires=range(n_qubits))
+            # Apply X gate to each qubit where the corresponding bit is 1.
+            # PennyLane uses big-endian (wire 0 = MSB), so feature[i] maps
+            # directly to wire i — no reversal needed.  The analysis module's
+            # _simulate_qiskit handles the Qiskit LSB→MSB conversion separately.
+            for i in range(n_qubits):
+                if features[i] == 1:
+                    qml.PauliX(wires=i)
 
         return circuit
 
@@ -1577,13 +1590,20 @@ class BasisEncoding(BaseEncoding):
             ) from e
 
         qubits = cirq.LineQubit.range(self.n_qubits)
-        circuit = cirq.Circuit()
 
-        # Collect all X gates into a single moment (parallel execution)
-        x_gates = [cirq.X(qubits[i]) for i, val in enumerate(x) if val == 1]
+        # Collect all X gates into a single moment (parallel execution).
+        # Cirq uses big-endian ordering (qubit 0 = MSB), same as PennyLane,
+        # so feature[i] maps directly to qubit[i] — no reversal needed.
+        x_gates = [
+            cirq.X(qubits[i])
+            for i, val in enumerate(x)
+            if val == 1
+        ]
 
         if x_gates:
-            circuit.append(cirq.Moment(x_gates))
+            circuit = cirq.Circuit(cirq.Moment(x_gates))
+        else:
+            circuit = cirq.Circuit()
 
         return circuit
 

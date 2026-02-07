@@ -1,0 +1,65 @@
+{
+  "stage": "entanglement",
+  "seed": 42,
+  "backend": "pennylane",
+  "encodings": [
+    {
+      "name": "iqp",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2, 3, 4] }
+    },
+    {
+      "name": "zz_feature_map",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2, 3] }
+    },
+    {
+      "name": "pauli_feature_map",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2] }
+    },
+    {
+      "name": "data_reuploading",
+      "params": { "n_features": [2, 4, 6, 8], "n_layers": [1, 2, 3] }
+    },
+    {
+      "name": "hardware_efficient",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2, 3] }
+    },
+    {
+      "name": "amplitude",
+      "params": { "n_features": [2, 4, 8] }
+    },
+    {
+      "name": "qaoa_encoding",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2, 3] }
+    },
+    {
+      "name": "hamiltonian_encoding",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2, 3] }
+    },
+    {
+      "name": "symmetry_inspired",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2] }
+    },
+    {
+      "name": "trainable_encoding",
+      "params": { "n_features": [2, 4, 6, 8], "n_layers": [1, 2, 3] }
+    },
+    {
+      "name": "so2_equivariant",
+      "params": { "n_features": 2, "max_angular_momentum": [1, 2, 3] }
+    },
+    {
+      "name": "cyclic_equivariant",
+      "params": { "n_features": [2, 4, 6], "reps": [1, 2] }
+    },
+    {
+      "name": "swap_equivariant",
+      "params": { "n_features": [2, 4, 6], "reps": [1, 2] }
+    }
+  ],
+  "analysis_params": {
+    "n_samples": 1000,
+    "input_range": [0.0, 6.283185307179586],
+    "measure": "meyer_wallach"
+  },
+  "output_dir": "experiments/results/raw/stage4_entanglement"
+}

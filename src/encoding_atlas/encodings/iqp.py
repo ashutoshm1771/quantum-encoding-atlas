@@ -503,11 +503,15 @@ class IQPEncoding(BaseEncoding):
             circuit complexity may exceed practical NISQ device limits.
         """
         # Validate repetitions
-        if isinstance(reps, bool) or not isinstance(reps, int) or reps < 1:
+        # Accept both Python int and numpy integer types, but reject bool
+        # (bool is a subclass of int in Python, so check it first)
+        if isinstance(reps, bool) or not isinstance(reps, (int, np.integer)) or reps < 1:
             raise ValueError(
                 f"reps must be at least 1 (got {reps!r}). "
                 "Each repetition adds one layer of H, RZ, and ZZ gates."
             )
+        # Convert numpy integer to Python int for consistency
+        reps = int(reps)
 
         # Validate entanglement topology
         if entanglement not in self._VALID_ENTANGLEMENTS:

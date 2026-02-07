@@ -97,7 +97,12 @@ from encoding_atlas.analysis.entanglement import (
 )
 
 # Main analysis functions
-from encoding_atlas.analysis.expressibility import compute_expressibility
+from encoding_atlas.analysis.expressibility import (
+    ExpressibilityResult,
+    compute_expressibility,
+    compute_fidelity_distribution,
+    compute_haar_distribution,
+)
 from encoding_atlas.analysis.resources import (
     compare_resources,
     count_resources,
@@ -123,6 +128,9 @@ from encoding_atlas.analysis.trainability import (
 __all__ = [
     # Main analysis functions
     "compute_expressibility",
+    "compute_fidelity_distribution",
+    "compute_haar_distribution",
+    "ExpressibilityResult",
     "compute_entanglement_capability",
     "compute_meyer_wallach",
     "compute_meyer_wallach_with_breakdown",

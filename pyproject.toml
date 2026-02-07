@@ -7,7 +7,8 @@ name = "encoding-atlas"
 dynamic = ["version"]
 description = "A comprehensive library for quantum data encodings in machine learning"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.9"
 authors = [
     {name = "Ashutosh Mishra", email = "ashutoshm1771@gmail.com"},
@@ -29,7 +30,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
@@ -56,8 +56,11 @@ qiskit = [
 cirq = [
     "cirq-core>=1.0.0",
 ]
+visualization = [
+    "matplotlib>=3.5.0",
+]
 all = [
-    "encoding-atlas[qiskit,cirq]",
+    "encoding-atlas[qiskit,cirq,visualization]",
 ]
 dev = [
     "pytest>=7.0.0",
@@ -86,7 +89,7 @@ Homepage = "https://github.com/ashutoshm1771/quantum-encoding-atlas"
 Documentation = "https://q-encoding-atlas.web.app/documentation"
 Repository = "https://github.com/ashutoshm1771/quantum-encoding-atlas.git"
 Issues = "https://github.com/ashutoshm1771/quantum-encoding-atlas/issues"
-Changelog = "https://github.com/ashutoshm1771/quantum-encoding-atlas/blob/main/CHANGELOG.md"
+Changelog = "https://github.com/ashutoshm1771/quantum-encoding-atlas/blob/master/CHANGELOG.md"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

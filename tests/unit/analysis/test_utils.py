@@ -81,10 +81,27 @@ class TestValidateStatevector:
         result = validate_statevector(bell_state, expected_qubits=2)
         assert len(result) == 4
 
-    def test_auto_renormalization(self, unnormalized_state):
-        """Test that unnormalized states are renormalized."""
-        result = validate_statevector(unnormalized_state, check_normalization=True)
+    def test_auto_renormalization_small_drift(self):
+        """Test that states with tiny norm drift are auto-renormalized.
+
+        The implementation only auto-renormalizes when the norm deviation
+        is within ``max(tolerance * 1e4, 1e-6)``.  Larger deviations are
+        rejected as non-physical (see ``validate_statevector`` source).
+        """
+        # Norm ≈ 1 + 1e-8, well within auto-renormalization tolerance
+        slightly_off = np.array([1.0 + 1e-8, 0.0, 0.0, 0.0], dtype=np.complex128)
+        result = validate_statevector(slightly_off, check_normalization=True)
         assert_allclose(np.linalg.norm(result), 1.0, atol=1e-10)
+
+    def test_grossly_unnormalized_raises(self, unnormalized_state):
+        """Test that grossly unnormalized states raise ValidationError.
+
+        States whose norm deviates from 1.0 by more than
+        ``max(tolerance * 1e4, 1e-6)`` are considered non-physical
+        and are rejected rather than silently renormalized.
+        """
+        with pytest.raises(ValidationError, match="not normalized"):
+            validate_statevector(unnormalized_state, check_normalization=True)
 
     def test_wrong_qubit_count_raises(self, bell_state):
         """Test that wrong expected_qubits raises error."""
@@ -455,55 +472,59 @@ class TestGenerateRandomParameters:
     """Tests for generate_random_parameters function."""
 
     def test_single_sample_shape(self):
-        """Test shape when generating single sample."""
-        params = generate_random_parameters(n_features=4, n_samples=1, seed=42)
+        """Test shape when generating single sample.
+
+        Note: The first positional parameter is ``encoding_or_n_features``
+        (accepts a BaseEncoding instance or an int).
+        """
+        params = generate_random_parameters(4, n_samples=1, seed=42)
         assert params.shape == (4,)
 
     def test_multiple_samples_shape(self):
         """Test shape when generating multiple samples."""
-        params = generate_random_parameters(n_features=4, n_samples=10, seed=42)
+        params = generate_random_parameters(4, n_samples=10, seed=42)
         assert params.shape == (10, 4)
 
     def test_default_range(self):
         """Test parameters are in default range [0, 2π]."""
-        params = generate_random_parameters(n_features=100, n_samples=100, seed=42)
+        params = generate_random_parameters(100, n_samples=100, seed=42)
         assert np.all(params >= 0)
         assert np.all(params <= 2 * np.pi)
 
     def test_custom_range(self):
         """Test parameters respect custom range."""
         params = generate_random_parameters(
-            n_features=100, n_samples=100, param_min=-1, param_max=1, seed=42
+            100, n_samples=100, param_min=-1, param_max=1, seed=42
         )
         assert np.all(params >= -1)
         assert np.all(params <= 1)
 
     def test_reproducibility(self):
         """Test that same seed gives same results."""
-        params1 = generate_random_parameters(n_features=4, n_samples=5, seed=42)
-        params2 = generate_random_parameters(n_features=4, n_samples=5, seed=42)
+        params1 = generate_random_parameters(4, n_samples=5, seed=42)
+        params2 = generate_random_parameters(4, n_samples=5, seed=42)
         assert_array_almost_equal(params1, params2)
 
     def test_different_seeds_different_results(self):
         """Test that different seeds give different results."""
-        params1 = generate_random_parameters(n_features=4, n_samples=5, seed=42)
-        params2 = generate_random_parameters(n_features=4, n_samples=5, seed=123)
+        params1 = generate_random_parameters(4, n_samples=5, seed=42)
+        params2 = generate_random_parameters(4, n_samples=5, seed=123)
         assert not np.allclose(params1, params2)
 
     def test_invalid_n_features_raises(self):
         """Test that n_features < 1 raises error."""
         with pytest.raises(ValueError, match="n_features"):
-            generate_random_parameters(n_features=0)
+            generate_random_parameters(0)
 
     def test_invalid_n_samples_raises(self):
         """Test that n_samples < 1 raises error."""
         with pytest.raises(ValueError, match="n_samples"):
-            generate_random_parameters(n_features=4, n_samples=0)
+            generate_random_parameters(4, n_samples=0)
 
     def test_invalid_range_raises(self):
         """Test that param_min >= param_max raises error."""
         with pytest.raises(ValueError, match="param_min"):
-            generate_random_parameters(n_features=4, param_min=1, param_max=0)
+            generate_random_parameters(4, param_min=1, param_max=0)
 
 
 # =============================================================================

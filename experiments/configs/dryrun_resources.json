@@ -1,0 +1,17 @@
+{
+  "stage": "resources",
+  "seed": 42,
+  "backend": "pennylane",
+  "encodings": [
+    {
+      "name": "angle",
+      "params": { "n_features": 4, "reps": 1 }
+    },
+    {
+      "name": "iqp",
+      "params": { "n_features": 4, "reps": 2 }
+    }
+  ],
+  "analysis_params": {},
+  "output_dir": "experiments/results/raw/dryrun"
+}

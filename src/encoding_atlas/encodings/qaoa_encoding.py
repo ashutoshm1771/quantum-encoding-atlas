@@ -1501,8 +1501,8 @@ class QAOAEncoding(BaseEncoding):
         base_trainability = 0.85
 
         # Depth penalty: logarithmic scaling to avoid overly harsh penalties
-        # Shallow circuits (depth < 10) have minimal penalty
-        depth_penalty = 0.02 * max(0, np.log1p(self.depth - 5))
+        # Shallow circuits (depth <= 5) have zero penalty
+        depth_penalty = 0.02 * np.log1p(max(0, self.depth - 5))
 
         # Entanglement penalty: full > circular > linear > none
         entanglement_penalties = {

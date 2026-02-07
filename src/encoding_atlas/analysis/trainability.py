@@ -578,6 +578,19 @@ def estimate_trainability(
             n_features,
         )
 
+    # Non-parameterized encodings (parameter_count=0) have no trainable
+    # parameters — all rotation angles are derived from input data.  Use
+    # n_features as the effective parameter count so that gradient analysis
+    # and barren-plateau detection remain meaningful (the gradients are
+    # w.r.t. the input features that drive the circuit).
+    if n_params == 0:
+        n_params = n_features
+        _logger.debug(
+            "parameter_count is 0 (non-trainable encoding); "
+            "using n_features=%d as effective n_params",
+            n_features,
+        )
+
     if verbose:
         _logger.info(
             "Estimating trainability for %s (n_qubits=%d, n_params=%d, "

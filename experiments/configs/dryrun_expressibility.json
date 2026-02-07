@@ -1,0 +1,17 @@
+{
+  "stage": "expressibility",
+  "seed": 42,
+  "backend": "pennylane",
+  "encodings": [
+    {
+      "name": "iqp",
+      "params": { "n_features": 2, "reps": 1 }
+    }
+  ],
+  "analysis_params": {
+    "n_samples": 100,
+    "n_bins": 15,
+    "input_range": [0.0, 6.283185307179586]
+  },
+  "output_dir": "experiments/results/raw/dryrun_expr"
+}

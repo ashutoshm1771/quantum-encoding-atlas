@@ -1,0 +1,81 @@
+{
+  "stage": "resources",
+  "seed": 42,
+  "backend": "pennylane",
+  "encodings": [
+    {
+      "name": "angle",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2, 3] }
+    },
+    {
+      "name": "amplitude",
+      "params": { "n_features": [2, 4, 8, 16] }
+    },
+    {
+      "name": "basis",
+      "params": { "n_features": [2, 4, 6, 8] }
+    },
+    {
+      "name": "iqp",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2, 3], "entanglement": ["full", "linear"] }
+    },
+    {
+      "name": "zz_feature_map",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2, 3], "entanglement": ["full", "linear"] }
+    },
+    {
+      "name": "pauli_feature_map",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2] }
+    },
+    {
+      "name": "data_reuploading",
+      "params": { "n_features": [2, 4, 6, 8], "n_layers": [1, 2, 3] }
+    },
+    {
+      "name": "hardware_efficient",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2, 3] }
+    },
+    {
+      "name": "higher_order_angle",
+      "comment": "order must be <= n_features; order 3 split to exclude n_features=2",
+      "params": { "n_features": [2, 4, 6, 8], "order": [1, 2] }
+    },
+    {
+      "name": "higher_order_angle",
+      "params": { "n_features": [4, 6, 8], "order": 3 }
+    },
+    {
+      "name": "qaoa_encoding",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2, 3] }
+    },
+    {
+      "name": "hamiltonian_encoding",
+      "comment": "Uses 'reps' not 'steps'",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2, 3] }
+    },
+    {
+      "name": "symmetry_inspired",
+      "params": { "n_features": [2, 4, 6, 8], "reps": [1, 2] }
+    },
+    {
+      "name": "trainable_encoding",
+      "params": { "n_features": [2, 4, 6, 8], "n_layers": [1, 2, 3] }
+    },
+    {
+      "name": "so2_equivariant",
+      "comment": "SO2 only supports n_features=2, uses max_angular_momentum not reps",
+      "params": { "n_features": 2, "max_angular_momentum": [1, 2, 3] }
+    },
+    {
+      "name": "cyclic_equivariant",
+      "params": { "n_features": [2, 4, 6], "reps": [1, 2] }
+    },
+    {
+      "name": "swap_equivariant",
+      "comment": "swap_equivariant requires even n_features",
+      "params": { "n_features": [2, 4, 6], "reps": [1, 2] }
+    }
+  ],
+  "analysis_params": {},
+  "output_dir": "experiments/results/raw/stage1_resources"
+}

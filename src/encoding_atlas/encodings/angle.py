@@ -348,10 +348,19 @@ class AngleEncoding(BaseEncoding):
     +-------------------+----------+--------+------------+---------------+
     """
 
+    # ==========================================================================
+    # Class Constants
+    # ==========================================================================
+
     # Valid rotation axes
     _VALID_ROTATIONS: frozenset[str] = frozenset({"X", "Y", "Z"})
 
+    # Memory-efficient slot-based attribute storage
     __slots__ = ('rotation', 'reps')
+
+    # ==========================================================================
+    # Initialization
+    # ==========================================================================
 
     def __init__(
         self,
@@ -403,6 +412,10 @@ class AngleEncoding(BaseEncoding):
             n_features, rotation, reps
         )
 
+    # ==========================================================================
+    # Properties
+    # ==========================================================================
+
     @property
     def n_qubits(self) -> int:
         """Number of qubits required for this encoding.
@@ -430,6 +443,10 @@ class AngleEncoding(BaseEncoding):
             Circuit depth, equal to reps.
         """
         return self.reps
+
+    # ==========================================================================
+    # Circuit Generation
+    # ==========================================================================
 
     def get_circuit(
         self,
@@ -721,6 +738,10 @@ class AngleEncoding(BaseEncoding):
                 f"Supported backends: 'pennylane', 'qiskit', 'cirq'"
             )
 
+    # ==========================================================================
+    # Backend-Specific Implementations
+    # ==========================================================================
+
     def _to_pennylane(self, x: NDArray[np.floating[Any]]) -> Any:
         """Generate PennyLane circuit function.
 
@@ -842,6 +863,10 @@ class AngleEncoding(BaseEncoding):
 
         return cirq.Circuit(moments)
 
+    # ==========================================================================
+    # Properties Computation
+    # ==========================================================================
+
     def _compute_properties(self) -> EncodingProperties:
         """Compute theoretical properties of this encoding.
 
@@ -877,6 +902,10 @@ class AngleEncoding(BaseEncoding):
                 f"Classically simulable with O(n) complexity."
             ),
         )
+
+    # ==========================================================================
+    # Resource Analysis
+    # ==========================================================================
 
     def gate_count_breakdown(self) -> GateCountBreakdown:
         """Get a detailed breakdown of gate counts by type.
@@ -1014,6 +1043,10 @@ class AngleEncoding(BaseEncoding):
                 "native_gates": [f"R{self.rotation}"],
             },
         }
+
+    # ==========================================================================
+    # String Representation
+    # ==========================================================================
 
     def __repr__(self) -> str:
         """Return detailed string representation.

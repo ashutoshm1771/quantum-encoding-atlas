@@ -162,11 +162,11 @@ _logger = logging.getLogger(__name__)
 __all__ = [
     # Main class
     "SymmetryInspiredFeatureMap",
-    # Backwards compatibility alias
+    # Deprecated alias (will be removed in v1.0.0)
     "CovariantFeatureMap",
     # Type definitions
     "SymmetryInspiredGateBreakdown",
-    # Backwards compatibility alias
+    # Deprecated alias (will be removed in v1.0.0)
     "CovariantGateBreakdown",
     # Utility functions
     "get_supported_symmetries",
@@ -275,7 +275,11 @@ class SymmetryInspiredGateBreakdown(TypedDict):
     """Total gate count."""
 
 
-# Backwards compatibility alias
+# Backwards compatibility alias (deprecated).
+# Use SymmetryInspiredGateBreakdown instead. This alias will be removed in
+# v1.0.0. TypedDict aliases cannot emit runtime warnings since they are not
+# instantiated directly, so the deprecation is documented here and in the
+# module __all__.
 CovariantGateBreakdown = SymmetryInspiredGateBreakdown
 
 
@@ -338,7 +342,9 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
 
         - 'rotation': SO(2)-inspired (treats feature pairs as 2D points,
           uses radius-based invariant angles)
-        - 'cyclic': Z_n-inspired (circular structure, symmetric products)
+        - 'cyclic': Z_n-inspired (circular entanglement topology with
+          symmetric interaction terms; does NOT compute cyclic-invariant
+          angles — see Notes)
         - 'reflection': Z_2-inspired (mirror-symmetric gate placement)
         - 'full': S_2-inspired (permutation-symmetric on pairs)
 
@@ -444,8 +450,16 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
       The encoding is invariant to rotations in this 2D space. The circuit
       uses controlled rotations that preserve this symmetry.
 
-    - **Cyclic (Z_n)**: Invariant to cyclic permutations of features.
-      Feature i becomes feature (i+1) mod n. Uses circular connectivity.
+    - **Cyclic (Z_n)**: Uses circular entanglement topology and symmetric
+      interaction terms ``(π - x_i)(π - x_j)`` inspired by cyclic structure.
+      The entanglement pattern connects qubit i to qubit (i+1) mod n,
+      mirroring Z_n connectivity. However, the single-qubit equivariant
+      angles are the raw feature values (not cyclic-invariant functions),
+      so this mode does **not** produce states invariant to cyclic
+      permutations of the input. The symmetry bias comes from the
+      circuit topology and symmetric interaction terms, not from
+      invariant angle computations. For rigorous cyclic equivariance,
+      use :class:`~encoding_atlas.encodings.equivariant_feature_map.CyclicEquivariantFeatureMap`.
 
     - **Reflection (Z_2)**: Invariant to reflection/parity transformation.
       Features [x₀, x₁, ..., x_{n-1}] map to [x_{n-1}, ..., x₁, x₀].
@@ -648,7 +662,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         feature_map: Literal["angle", "fourier", "polynomial"] = "angle",
         include_barriers: bool = True,
     ) -> None:
-        """Initialize the Covariant Feature Map encoding.
+        """Initialize the Symmetry-Inspired Feature Map encoding.
 
         Parameters
         ----------
@@ -684,7 +698,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         n_features = int(n_features)
         if n_features < 2:
             raise ValueError(
-                f"n_features must be at least 2 for covariant encoding, "
+                f"n_features must be at least 2 for symmetry-inspired encoding, "
                 f"got {n_features}"
             )
 
@@ -1022,8 +1036,13 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
             params["pair_indices"] = [(2 * i, 2 * i + 1) for i in range(n // 2)]
 
         elif self.symmetry == "cyclic":
-            # For cyclic symmetry, we use circular structure
-            params["generator_shift"] = 1  # Z_n generator
+            # Cyclic mode uses circular entanglement topology (qubit i
+            # connects to qubit (i+1) mod n) and symmetric interaction
+            # terms.  The single-qubit equivariant layer uses raw feature
+            # values — it does NOT compute cyclic-invariant functions.
+            # The symmetry bias is structural (topology + interaction
+            # terms), not algebraic.
+            params["generator_shift"] = 1  # Z_n generator for topology
 
         elif self.symmetry == "reflection":
             # For reflection symmetry, we pair qubits symmetrically
@@ -1239,7 +1258,14 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
             return radius
 
         elif self.symmetry == "cyclic":
-            # For cyclic symmetry, use feature value directly
+            # Cyclic mode: the equivariant angle is the raw feature value.
+            # Unlike rotation symmetry (which uses a group-invariant function
+            # like the radius), this does NOT produce an angle invariant to
+            # cyclic permutations of the input vector.  The cyclic inductive
+            # bias is instead provided by:
+            #   1. Circular entanglement topology (qubit i ↔ qubit (i+1) mod n)
+            #   2. Symmetric interaction terms: (π - x_i)(π - x_j)
+            # For rigorous Z_n equivariance, use CyclicEquivariantFeatureMap.
             value = float(x[idx])
             if not np.isfinite(value):
                 raise ValueError(
@@ -1323,7 +1349,12 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
             # Use hypot for numerical stability (avoids overflow)
             result = float(np.hypot(val_i, val_j))
         elif self.symmetry == "cyclic":
-            # For cyclic symmetry, use symmetric product
+            # Symmetric interaction term: (π - x_i)(π - x_j).
+            # This is symmetric under exchange of i,j (commutative) and
+            # provides shift-aware coupling, but is NOT invariant to
+            # cyclic permutation of the full feature vector.  The cyclic
+            # inductive bias comes from this symmetric coupling combined
+            # with the circular entanglement topology.
             result = (np.pi - val_i) * (np.pi - val_j)
         elif self.symmetry in ("reflection", "full"):
             # For reflection/full symmetry, use symmetric product
@@ -1737,7 +1768,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         )
 
         def circuit() -> None:
-            """Apply the covariant feature map encoding.
+            """Apply the symmetry-inspired feature map encoding.
 
             Note: All captured data (encoding_angles, equivariant_angles,
             interaction_angles, pairs, symmetry_params) are immutable to
@@ -1766,7 +1797,8 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
                         qml.CRZ(angle, wires=[i, j])
 
                 elif symmetry == "cyclic":
-                    # For cyclic symmetry, use circular CNOT structure
+                    # Cyclic: circular CNOT-RZ-CNOT structure.
+                    # Topology mirrors Z_n connectivity (i ↔ (i+1) mod n).
                     for i, j in pairs:
                         angle = interaction_angles[frozenset((i, j))]
                         qml.CNOT(wires=[i, j])
@@ -2374,11 +2406,11 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
                 "structure": "CNOT-RZ-CNOT per pair",
             }
         elif self.symmetry == "reflection":
-            # Reflection: CZ + RZ
+            # Reflection: CZ + 2 RZ (one RZ on each qubit of the pair)
             return {
                 "gate_types": ["CZ", "RZ"],
-                "n_gates": n_pairs + n_pairs,  # 1 CZ + 1 RZ per pair
-                "structure": "CZ followed by RZ per mirror pair",
+                "n_gates": n_pairs + 2 * n_pairs,  # 1 CZ + 2 RZ per pair
+                "structure": "CZ followed by RZ on both qubits per mirror pair",
             }
         elif self.symmetry == "full":
             # Full: CNOT-RY-CNOT-RY-CNOT
@@ -2396,7 +2428,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
     def gate_count_breakdown(self) -> CovariantGateBreakdown:
         """Get a detailed breakdown of gate counts by type.
 
-        Computes the exact number of each gate type in the covariant feature
+        Computes the exact number of each gate type in the symmetry-inspired feature
         map circuit. This is useful for:
 
         - Resource estimation before circuit execution
@@ -2430,7 +2462,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         >>> breakdown['crz']
         2
         >>> breakdown['total']
-        14
+        20
 
         Compare symmetry types:
 
@@ -2468,8 +2500,8 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
             # the logical CRZ gates here
             n_symmetry_pairs = self._symmetry_params["n_pairs"]
             crz_gates = self.reps * n_symmetry_pairs
-            # CRZ decomposition contributes to effective CNOT count
-            # counted as 2 per CRZ for hardware estimation
+            # CRZ decomposition: each CRZ yields 2 RZ single-qubit gates
+            rz_entanglement = self.reps * 2 * n_symmetry_pairs
         elif self.symmetry == "cyclic":
             # Cyclic: CNOT-RZ-CNOT structure per pair
             cnot_gates = self.reps * 2 * n_pairs
@@ -2555,7 +2587,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         >>> summary['n_qubits']
         4
         >>> summary['gate_counts']['total']
-        28
+        40
         >>> summary['symmetry']
         'rotation'
 
@@ -3113,7 +3145,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         # Ensure _properties is None (will be recomputed on first access)
         self._properties = None
 
-    def __reduce__(self) -> tuple[type, tuple[int], dict[str, Any]]:
+    def __reduce__(self) -> tuple[Any, tuple[Any, ...], dict[str, Any]]:
         """Support pickle with constructor arguments.
 
         This method provides a more robust pickling mechanism that
@@ -3185,13 +3217,22 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         """
         import warnings
 
-        # Suppress the rotation symmetry warning during reconstruction
-        # since it would have been shown during original construction
+        # Suppress warnings during reconstruction that were already shown
+        # during original construction:
+        # - Rotation symmetry overriding entanglement pattern (UserWarning)
+        # - CovariantFeatureMap deprecation (DeprecationWarning), because
+        #   CovariantFeatureMap inherits _reconstruct and cls(...) would
+        #   re-trigger __init__ in the subclass
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 "ignore",
                 message=".*rotation.*entanglement.*overridden.*",
                 category=UserWarning,
+            )
+            warnings.filterwarnings(
+                "ignore",
+                message=".*CovariantFeatureMap is deprecated.*",
+                category=DeprecationWarning,
             )
             return cls(
                 n_features=n_features,
@@ -3204,14 +3245,32 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
 
 
 # =============================================================================
-# BACKWARDS COMPATIBILITY ALIAS
+# BACKWARDS COMPATIBILITY ALIAS (Deprecated)
 # =============================================================================
 
-# CovariantFeatureMap is the original name for this encoding class.
-# SymmetryInspiredFeatureMap is the new, more accurate name that reflects
-# the heuristic (non-rigorous) nature of the symmetry implementation.
-# Both names are fully supported and equivalent.
-CovariantFeatureMap = SymmetryInspiredFeatureMap
+
+class CovariantFeatureMap(SymmetryInspiredFeatureMap):
+    """Deprecated alias for :class:`SymmetryInspiredFeatureMap`.
+
+    .. deprecated:: 0.2.0
+        ``CovariantFeatureMap`` has been renamed to
+        :class:`SymmetryInspiredFeatureMap` to more accurately reflect the
+        heuristic (non-rigorous) nature of the symmetry implementation.
+        The name "covariant" incorrectly implies mathematically rigorous
+        equivariance guarantees. Use ``SymmetryInspiredFeatureMap`` instead.
+        This alias will be removed in version 1.0.0.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        warnings.warn(
+            "CovariantFeatureMap is deprecated and will be removed in v1.0.0. "
+            "Use SymmetryInspiredFeatureMap instead, which is functionally "
+            "identical. The name was changed because 'covariant' incorrectly "
+            "implies rigorous equivariance guarantees.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
 
 
 # =============================================================================

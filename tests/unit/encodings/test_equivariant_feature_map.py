@@ -270,6 +270,63 @@ class TestValidation:
         with pytest.raises(ValueError, match="radial_sigma must be positive"):
             SO2EquivariantFeatureMap(radial_sigma=-1.0)
 
+    def test_so2_invalid_radial_sigma_inf(self) -> None:
+        """Test that infinite radial_sigma raises ValueError."""
+        with pytest.raises(ValueError, match="radial_sigma must be finite"):
+            SO2EquivariantFeatureMap(radial_sigma=np.inf)
+
+    def test_so2_invalid_radial_sigma_nan(self) -> None:
+        """Test that NaN radial_sigma raises ValueError."""
+        with pytest.raises(ValueError, match="radial_sigma must be finite"):
+            SO2EquivariantFeatureMap(radial_sigma=np.nan)
+
+    def test_so2_invalid_radial_sigma_type(self) -> None:
+        """Test that non-numeric radial_sigma raises TypeError."""
+        with pytest.raises(TypeError, match="radial_sigma must be"):
+            SO2EquivariantFeatureMap(radial_sigma="1.0")  # type: ignore[arg-type]
+
+    def test_so2_invalid_n_features_not_2(self) -> None:
+        """Test that n_features != 2 raises ValueError for SO(2) encoding.
+
+        SO(2) rotation equivariance is only defined for 2D Cartesian coordinates,
+        so n_features must be exactly 2.
+        """
+        with pytest.raises(ValueError, match="requires n_features=2"):
+            SO2EquivariantFeatureMap(n_features=3)
+
+    def test_so2_invalid_n_features_1(self) -> None:
+        """Test that n_features=1 raises ValueError for SO(2) encoding."""
+        with pytest.raises(ValueError, match="requires n_features=2"):
+            SO2EquivariantFeatureMap(n_features=1)
+
+    def test_so2_invalid_n_features_4(self) -> None:
+        """Test that n_features=4 raises ValueError for SO(2) encoding."""
+        with pytest.raises(ValueError, match="requires n_features=2"):
+            SO2EquivariantFeatureMap(n_features=4)
+
+    def test_so2_invalid_n_features_type_float(self) -> None:
+        """Test that float n_features raises TypeError for SO(2) encoding."""
+        with pytest.raises(TypeError, match="n_features must be an integer"):
+            SO2EquivariantFeatureMap(n_features=2.0)  # type: ignore[arg-type]
+
+    def test_so2_invalid_n_features_type_bool(self) -> None:
+        """Test that bool n_features raises TypeError for SO(2) encoding.
+
+        Python's bool is a subclass of int, but should be rejected for clarity.
+        """
+        with pytest.raises(TypeError, match="n_features must be an integer"):
+            SO2EquivariantFeatureMap(n_features=True)  # type: ignore[arg-type]
+
+    def test_so2_invalid_max_angular_momentum_type_float(self) -> None:
+        """Test that float max_angular_momentum raises TypeError."""
+        with pytest.raises(TypeError, match="max_angular_momentum must be an integer"):
+            SO2EquivariantFeatureMap(max_angular_momentum=1.5)  # type: ignore[arg-type]
+
+    def test_so2_invalid_max_angular_momentum_type_bool(self) -> None:
+        """Test that bool max_angular_momentum raises TypeError."""
+        with pytest.raises(TypeError, match="max_angular_momentum must be an integer"):
+            SO2EquivariantFeatureMap(max_angular_momentum=True)  # type: ignore[arg-type]
+
     # --- CyclicEquivariantFeatureMap ---
 
     def test_cyclic_invalid_reps_zero(self) -> None:
@@ -404,7 +461,11 @@ class TestProperties:
     def test_swap_gate_count_breakdown(
         self, swap_encoding: SwapEquivariantFeatureMap
     ) -> None:
-        """Test gate count breakdown for swap encoding."""
+        """Test gate count breakdown for swap encoding.
+
+        The swap encoding uses CZ gates (not CNOT) for symmetric
+        pair entanglement that preserves equivariance.
+        """
         breakdown = swap_encoding.gate_count_breakdown()
         n = swap_encoding.n_features
         reps = swap_encoding.reps
@@ -412,7 +473,10 @@ class TestProperties:
 
         assert breakdown["ry"] == n * reps
         assert breakdown["hadamard"] == n * reps
-        assert breakdown["cnot"] == n_pairs * reps
+        assert breakdown["cz"] == n_pairs * reps
+        assert breakdown["total_single_qubit"] == breakdown["ry"] + breakdown["hadamard"]
+        assert breakdown["total_two_qubit"] == breakdown["cz"]
+        assert breakdown["total"] == breakdown["total_single_qubit"] + breakdown["total_two_qubit"]
 
     def test_properties_cached(self, so2_encoding: SO2EquivariantFeatureMap) -> None:
         """Test that properties are cached (same object returned)."""
@@ -925,6 +989,93 @@ class TestMathematicalCorrectness:
         """Test swap equivariance for identity (no swaps)."""
         swaps = [False, False]
         assert swap_encoding.verify_equivariance(sample_data_4d, swaps, atol=1e-6)
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_swap_equivariance_single_pair(
+        self,
+        swap_encoding: SwapEquivariantFeatureMap,
+        sample_data_4d: NDArray[np.floating],
+    ) -> None:
+        """Test swap equivariance for swapping a single pair."""
+        swaps = [True, False]
+        assert swap_encoding.verify_equivariance(sample_data_4d, swaps, atol=1e-6)
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_swap_equivariance_all_pairs(
+        self,
+        swap_encoding: SwapEquivariantFeatureMap,
+        sample_data_4d: NDArray[np.floating],
+    ) -> None:
+        """Test swap equivariance when all pairs are swapped."""
+        swaps = [True, True]
+        assert swap_encoding.verify_equivariance(sample_data_4d, swaps, atol=1e-6)
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_swap_equivariance_on_generators(
+        self,
+        swap_encoding: SwapEquivariantFeatureMap,
+        sample_data_4d: NDArray[np.floating],
+    ) -> None:
+        """Test swap equivariance on all group generators."""
+        assert swap_encoding.verify_equivariance_on_generators(
+            sample_data_4d, atol=1e-6
+        )
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_swap_equivariance_exhaustive_group_elements(
+        self,
+        swap_encoding: SwapEquivariantFeatureMap,
+    ) -> None:
+        """Test swap equivariance on all group elements for random inputs."""
+        from itertools import product as iter_product
+
+        rng = np.random.default_rng(42)
+        x = rng.uniform(-np.pi, np.pi, size=4)
+        n_pairs = swap_encoding.n_pairs
+
+        for swaps_tuple in iter_product([False, True], repeat=n_pairs):
+            swaps = list(swaps_tuple)
+            assert swap_encoding.verify_equivariance(
+                x, swaps, atol=1e-6
+            ), f"Equivariance failed for swaps={swaps}"
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_swap_equivariance_multiple_random_inputs(
+        self,
+        swap_encoding: SwapEquivariantFeatureMap,
+    ) -> None:
+        """Test swap equivariance on multiple random inputs."""
+        rng = np.random.default_rng(123)
+
+        for _ in range(10):
+            x = rng.uniform(-np.pi, np.pi, size=4)
+            for swaps in [[True, False], [False, True], [True, True]]:
+                assert swap_encoding.verify_equivariance(
+                    x, swaps, atol=1e-6
+                ), f"Equivariance failed for x={x}, swaps={swaps}"
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_swap_equivariance_various_reps(self) -> None:
+        """Test swap equivariance holds across different repetition counts."""
+        x = np.array([0.3, 0.7, 1.1, 0.5])
+        swaps = [True, True]
+
+        for reps in [1, 2, 3, 4]:
+            enc = SwapEquivariantFeatureMap(n_features=4, reps=reps)
+            assert enc.verify_equivariance(
+                x, swaps, atol=1e-6
+            ), f"Equivariance failed for reps={reps}"
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_swap_equivariance_six_features(self) -> None:
+        """Test swap equivariance with 6 features (3 pairs)."""
+        enc = SwapEquivariantFeatureMap(n_features=6, reps=2)
+        x = np.array([0.1, 0.9, 0.4, 0.6, 0.2, 0.8])
+
+        for g in enc.group_generators():
+            assert enc.verify_equivariance(
+                x, g, atol=1e-6
+            ), f"Equivariance failed for generator {g}"
 
     @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
     def test_equivariance_on_generators(
@@ -1532,3 +1683,845 @@ class TestSlowSimulation:
                 assert cyclic_encoding.verify_equivariance(
                     x, k, atol=1e-5
                 ), f"Failed for input {x} with shift {k}"
+
+    @pytest.mark.skipif(
+        not (HAS_PENNYLANE and HAS_QISKIT),
+        reason="PennyLane and Qiskit required",
+    )
+    @pytest.mark.cross_backend
+    def test_cyclic_pennylane_qiskit_fidelity(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test PennyLane-Qiskit statevector fidelity for cyclic encoding.
+
+        Both backends use RZZ-type entangling gates that must agree on the
+        parameter convention.  A previous bug applied a spurious 2x factor
+        in the Qiskit backend; this test guards against regressions.
+        """
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        # PennyLane statevector
+        pl_fn = cyclic_encoding.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=cyclic_encoding.n_qubits)
+
+        @qml.qnode(dev)
+        def pl_circuit():
+            pl_fn()
+            return qml.state()
+
+        sv_pl = pl_circuit()
+
+        # Qiskit statevector (reverse qubit order to match PennyLane MSB)
+        qk_circuit = cyclic_encoding.get_circuit(x, backend="qiskit")
+        sv_qk = np.array(Statevector(qk_circuit))
+
+        # Qiskit uses LSB ordering; reverse to match PennyLane MSB
+        n = cyclic_encoding.n_qubits
+        sv_qk_reordered = sv_qk.reshape([2] * n).transpose(
+            list(range(n))[::-1]
+        ).flatten()
+
+        fidelity = np.abs(np.vdot(sv_pl, sv_qk_reordered)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"PennyLane-Qiskit fidelity is {fidelity:.6f} for cyclic encoding. "
+            f"RZZ parameter convention may be inconsistent."
+        )
+
+    @pytest.mark.skipif(
+        not (HAS_PENNYLANE and HAS_CIRQ),
+        reason="PennyLane and Cirq required",
+    )
+    @pytest.mark.cross_backend
+    def test_cyclic_pennylane_cirq_fidelity(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test PennyLane-Cirq statevector fidelity for cyclic encoding.
+
+        Cirq's ZZPowGate uses a different parameter convention
+        (exponent-based) from PennyLane's IsingZZ.  This test verifies
+        the conversion is correct.
+        """
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        # PennyLane statevector
+        pl_fn = cyclic_encoding.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=cyclic_encoding.n_qubits)
+
+        @qml.qnode(dev)
+        def pl_circuit():
+            pl_fn()
+            return qml.state()
+
+        sv_pl = pl_circuit()
+
+        # Cirq statevector
+        cirq_circuit = cyclic_encoding.get_circuit(x, backend="cirq")
+        cirq_sim = cirq.Simulator()
+        cirq_result = cirq_sim.simulate(cirq_circuit)
+        sv_cirq = cirq_result.final_state_vector
+
+        fidelity = np.abs(np.vdot(sv_pl, sv_cirq)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"PennyLane-Cirq fidelity is {fidelity:.6f} for cyclic encoding. "
+            f"ZZPowGate exponent conversion may be inconsistent."
+        )
+
+    @pytest.mark.skipif(
+        not (HAS_PENNYLANE and HAS_QISKIT),
+        reason="PennyLane and Qiskit required",
+    )
+    @pytest.mark.cross_backend
+    @pytest.mark.parametrize(
+        "coupling_strength",
+        [np.pi / 8, np.pi / 4, np.pi / 2, np.pi],
+        ids=["pi/8", "pi/4", "pi/2", "pi"],
+    )
+    def test_cyclic_fidelity_varying_coupling(
+        self, coupling_strength: float
+    ) -> None:
+        """Test cross-backend fidelity across different coupling strengths.
+
+        Ensures the RZZ parameter fix is correct for all coupling values,
+        not just the default π/4.
+        """
+        enc = CyclicEquivariantFeatureMap(
+            n_features=4, reps=1, coupling_strength=coupling_strength
+        )
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        # PennyLane
+        pl_fn = enc.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=enc.n_qubits)
+
+        @qml.qnode(dev)
+        def pl_circuit():
+            pl_fn()
+            return qml.state()
+
+        sv_pl = pl_circuit()
+
+        # Qiskit (reorder to MSB)
+        qk_circuit = enc.get_circuit(x, backend="qiskit")
+        sv_qk = np.array(Statevector(qk_circuit))
+        n = enc.n_qubits
+        sv_qk_reordered = sv_qk.reshape([2] * n).transpose(
+            list(range(n))[::-1]
+        ).flatten()
+
+        fidelity = np.abs(np.vdot(sv_pl, sv_qk_reordered)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"Fidelity {fidelity:.6f} at coupling_strength={coupling_strength:.4f}"
+        )
+
+    @pytest.mark.skipif(
+        not (HAS_PENNYLANE and HAS_QISKIT),
+        reason="PennyLane and Qiskit required",
+    )
+    @pytest.mark.cross_backend
+    def test_swap_pennylane_qiskit_fidelity(
+        self, swap_encoding: SwapEquivariantFeatureMap
+    ) -> None:
+        """Test PennyLane-Qiskit statevector fidelity for swap encoding.
+
+        Verifies that both backends produce the same quantum state for the
+        swap equivariant circuit using direct RY encoding and CZ entanglement.
+        """
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        # PennyLane statevector
+        pl_fn = swap_encoding.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=swap_encoding.n_qubits)
+
+        @qml.qnode(dev)
+        def pl_circuit():
+            pl_fn()
+            return qml.state()
+
+        sv_pl = pl_circuit()
+
+        # Qiskit statevector (reverse qubit order to match PennyLane MSB)
+        qk_circuit = swap_encoding.get_circuit(x, backend="qiskit")
+        sv_qk = np.array(Statevector(qk_circuit))
+
+        n = swap_encoding.n_qubits
+        sv_qk_reordered = sv_qk.reshape([2] * n).transpose(
+            list(range(n))[::-1]
+        ).flatten()
+
+        fidelity = np.abs(np.vdot(sv_pl, sv_qk_reordered)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"PennyLane-Qiskit fidelity is {fidelity:.6f} for swap encoding."
+        )
+
+    @pytest.mark.skipif(
+        not (HAS_PENNYLANE and HAS_CIRQ),
+        reason="PennyLane and Cirq required",
+    )
+    @pytest.mark.cross_backend
+    def test_swap_pennylane_cirq_fidelity(
+        self, swap_encoding: SwapEquivariantFeatureMap
+    ) -> None:
+        """Test PennyLane-Cirq statevector fidelity for swap encoding.
+
+        Verifies that both backends produce the same quantum state for the
+        swap equivariant circuit using direct RY encoding and CZ entanglement.
+        """
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        # PennyLane statevector
+        pl_fn = swap_encoding.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=swap_encoding.n_qubits)
+
+        @qml.qnode(dev)
+        def pl_circuit():
+            pl_fn()
+            return qml.state()
+
+        sv_pl = pl_circuit()
+
+        # Cirq statevector
+        cirq_circuit = swap_encoding.get_circuit(x, backend="cirq")
+        cirq_sim = cirq.Simulator()
+        cirq_result = cirq_sim.simulate(cirq_circuit)
+        sv_cirq = cirq_result.final_state_vector
+
+        fidelity = np.abs(np.vdot(sv_pl, sv_cirq)) ** 2
+
+        assert fidelity > 0.9999, (
+            f"PennyLane-Cirq fidelity is {fidelity:.6f} for swap encoding."
+        )
+
+
+# =============================================================================
+# Test Class: Statistical Verification
+# =============================================================================
+
+
+@pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+@pytest.mark.statistical_verification
+class TestStatisticalVerification:
+    """Tests for statistical equivariance verification.
+
+    Statistical verification uses measurement sampling to compare probability
+    distributions, making it scalable to larger systems where exact state
+    vector verification would require exponential memory.
+    """
+
+    def test_so2_statistical_verification_basic(
+        self, so2_encoding: SO2EquivariantFeatureMap
+    ) -> None:
+        """Test SO2 statistical verification with basic input."""
+        x = np.array([0.5, 0.3])
+        phi = np.pi / 4
+
+        result = so2_encoding.verify_equivariance_statistical(
+            x, phi, n_shots=5000, significance=0.05
+        )
+
+        assert "equivariant" in result
+        assert "p_value" in result
+        assert "test_statistic" in result
+        assert "significance" in result
+        assert "n_shots" in result
+        assert "group_element" in result
+        assert "method" in result
+        assert "confidence_level" in result
+
+        # For a correct equivariant encoding, should pass the test
+        assert result["equivariant"] is True
+        assert result["confidence_level"] == 0.95
+
+    def test_cyclic_statistical_verification(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test cyclic statistical verification."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        result = cyclic_encoding.verify_equivariance_statistical(
+            x, 1, n_shots=10000, significance=0.01
+        )
+
+        assert result["equivariant"] is True
+        assert result["n_shots"] == 10000
+        assert result["group_element"] == 1
+
+    def test_swap_statistical_verification(
+        self, swap_encoding: SwapEquivariantFeatureMap
+    ) -> None:
+        """Test swap statistical verification."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        swaps = [True, False]
+
+        result = swap_encoding.verify_equivariance_statistical(
+            x, swaps, n_shots=10000, significance=0.01
+        )
+
+        assert result["equivariant"] is True
+        assert result["group_element"] == swaps
+
+    def test_statistical_verification_higher_confidence(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test statistical verification with higher confidence (more shots)."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        result = cyclic_encoding.verify_equivariance_statistical(
+            x, 1, n_shots=10000, significance=0.01
+        )
+
+        assert result["equivariant"] is True
+        assert result["confidence_level"] == 0.99
+
+    def test_statistical_verification_invalid_n_shots_too_low(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test that n_shots < 100 raises ValueError."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        with pytest.raises(ValueError, match="n_shots must be at least 100"):
+            cyclic_encoding.verify_equivariance_statistical(x, 1, n_shots=50)
+
+    def test_statistical_verification_invalid_significance_zero(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test that significance=0 raises ValueError."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        with pytest.raises(ValueError, match="significance must be in"):
+            cyclic_encoding.verify_equivariance_statistical(
+                x, 1, n_shots=1000, significance=0.0
+            )
+
+    def test_statistical_verification_invalid_significance_one(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test that significance=1 raises ValueError."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        with pytest.raises(ValueError, match="significance must be in"):
+            cyclic_encoding.verify_equivariance_statistical(
+                x, 1, n_shots=1000, significance=1.0
+            )
+
+    def test_statistical_verification_invalid_significance_negative(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test that negative significance raises ValueError."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        with pytest.raises(ValueError, match="significance must be in"):
+            cyclic_encoding.verify_equivariance_statistical(
+                x, 1, n_shots=1000, significance=-0.1
+            )
+
+    def test_statistical_verification_result_types(
+        self, so2_encoding: SO2EquivariantFeatureMap
+    ) -> None:
+        """Test that statistical verification returns correct types."""
+        x = np.array([0.5, 0.3])
+
+        result = so2_encoding.verify_equivariance_statistical(
+            x, np.pi / 4, n_shots=1000
+        )
+
+        assert isinstance(result["equivariant"], bool)
+        assert isinstance(result["p_value"], float)
+        assert isinstance(result["test_statistic"], float)
+        assert isinstance(result["significance"], float)
+        assert isinstance(result["n_shots"], int)
+        assert isinstance(result["method"], str)
+        assert isinstance(result["confidence_level"], float)
+
+    def test_statistical_verification_multiple_angles(
+        self, so2_encoding: SO2EquivariantFeatureMap
+    ) -> None:
+        """Test SO2 statistical verification across multiple rotation angles.
+
+        Note: Statistical tests are inherently probabilistic. We use high shot
+        counts and low significance levels to minimize false negatives while
+        still testing the statistical verification infrastructure.
+        """
+        x = np.array([0.5, 0.3])
+        angles = [np.pi / 6, np.pi / 4, np.pi / 2]
+
+        # Track successes - allow one failure due to statistical variation
+        successes = 0
+        for phi in angles:
+            result = so2_encoding.verify_equivariance_statistical(
+                x, phi, n_shots=8000, significance=0.01
+            )
+            if result["equivariant"]:
+                successes += 1
+
+        # At least 2 of 3 should pass (allows for statistical variation)
+        assert successes >= 2, f"Only {successes}/3 angles passed statistical test"
+
+    def test_statistical_verification_all_cyclic_shifts(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test cyclic statistical verification for all shift values.
+
+        Note: Statistical tests are inherently probabilistic. We use high shot
+        counts and track success rates rather than requiring all tests to pass.
+        """
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        n = cyclic_encoding.n_features
+
+        # Track successes - allow one failure due to statistical variation
+        successes = 0
+        for k in range(n):
+            result = cyclic_encoding.verify_equivariance_statistical(
+                x, k, n_shots=8000, significance=0.01
+            )
+            if result["equivariant"]:
+                successes += 1
+
+        # At least n-1 should pass (allows for one statistical variation)
+        assert successes >= n - 1, f"Only {successes}/{n} shifts passed statistical test"
+
+
+# =============================================================================
+# Test Class: Auto Verification Method Selection
+# =============================================================================
+
+
+@pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+class TestAutoVerification:
+    """Tests for automatic verification method selection.
+
+    The verify_equivariance_auto method automatically chooses between exact
+    and statistical verification based on the number of qubits.
+    """
+
+    def test_so2_auto_verification(
+        self,
+        so2_encoding: SO2EquivariantFeatureMap,
+        sample_data_2d: NDArray[np.floating],
+    ) -> None:
+        """Test SO2 auto verification selects correct method."""
+        # SO2 with max_m=1 has 2 qubits, should use exact verification
+        result = so2_encoding.verify_equivariance_auto(sample_data_2d, np.pi / 4)
+        assert result is True
+
+    def test_cyclic_auto_verification(
+        self,
+        cyclic_encoding: CyclicEquivariantFeatureMap,
+        sample_data_4d: NDArray[np.floating],
+    ) -> None:
+        """Test cyclic auto verification selects correct method."""
+        # 4 qubits should use exact verification
+        result = cyclic_encoding.verify_equivariance_auto(sample_data_4d, 1)
+        assert result is True
+
+    def test_swap_auto_verification(
+        self,
+        swap_encoding: SwapEquivariantFeatureMap,
+        sample_data_4d: NDArray[np.floating],
+    ) -> None:
+        """Test swap auto verification selects correct method."""
+        result = swap_encoding.verify_equivariance_auto(
+            sample_data_4d, [True, False]
+        )
+        assert result is True
+
+    def test_auto_verification_identity_element(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test auto verification with identity element (shift by 0)."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = cyclic_encoding.verify_equivariance_auto(x, 0)
+        assert result is True
+
+    def test_auto_verification_multiple_shifts(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test auto verification with multiple cyclic shifts."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        for k in range(cyclic_encoding.n_features):
+            result = cyclic_encoding.verify_equivariance_auto(x, k)
+            assert result is True, f"Auto verification failed for shift k={k}"
+
+    def test_auto_verification_with_custom_tolerance(
+        self, so2_encoding: SO2EquivariantFeatureMap
+    ) -> None:
+        """Test auto verification with custom tolerance."""
+        x = np.array([0.5, 0.3])
+        result = so2_encoding.verify_equivariance_auto(x, np.pi / 4, atol=1e-8)
+        assert result is True
+
+
+# =============================================================================
+# Test Class: Resource Summary
+# =============================================================================
+
+
+class TestResourceSummary:
+    """Tests for resource_summary() method across all equivariant encodings."""
+
+    # --- SO2 Resource Summary ---
+
+    def test_so2_resource_summary_structure(
+        self, so2_encoding: SO2EquivariantFeatureMap
+    ) -> None:
+        """Test SO2 resource summary contains all expected keys."""
+        summary = so2_encoding.resource_summary()
+
+        # Circuit structure
+        assert "n_qubits" in summary
+        assert "n_features" in summary
+        assert "depth" in summary
+        assert "max_angular_momentum" in summary
+        assert "radial_function" in summary
+        assert "radial_sigma" in summary
+
+        # Gate counts
+        assert "gate_counts" in summary
+        assert isinstance(summary["gate_counts"], dict)
+
+        # Encoding characteristics
+        assert "is_entangling" in summary
+        assert "simulability" in summary
+        assert "trainability_estimate" in summary
+
+        # Symmetry information
+        assert "symmetry_group" in summary
+        assert "angular_momenta" in summary
+        assert "n_angular_states" in summary
+
+        # Verification cost
+        assert "verification_cost" in summary
+        assert "exact" in summary["verification_cost"]
+        assert "statistical" in summary["verification_cost"]
+
+        # Hardware requirements
+        assert "hardware_requirements" in summary
+        assert "connectivity" in summary["hardware_requirements"]
+        assert "native_gates" in summary["hardware_requirements"]
+
+        # Entanglement details
+        assert "n_entanglement_pairs" in summary
+        assert "entanglement_pairs" in summary
+
+        # Verification methods
+        assert "verification_methods" in summary
+
+    def test_so2_resource_summary_values(
+        self, so2_encoding: SO2EquivariantFeatureMap
+    ) -> None:
+        """Test SO2 resource summary returns correct values."""
+        summary = so2_encoding.resource_summary()
+
+        assert summary["n_qubits"] == 2
+        assert summary["n_features"] == 2
+        assert summary["max_angular_momentum"] == 1
+        assert summary["symmetry_group"] == "SO(2)"
+        assert summary["angular_momenta"] == [-1, 0, 1]
+        assert summary["n_angular_states"] == 3
+        assert summary["is_entangling"] is True
+        assert summary["radial_function"] == "gaussian"
+        assert summary["radial_sigma"] == 1.0
+
+    def test_so2_resource_summary_gate_counts(
+        self, so2_encoding: SO2EquivariantFeatureMap
+    ) -> None:
+        """Test SO2 resource summary gate count breakdown."""
+        summary = so2_encoding.resource_summary()
+        gate_counts = summary["gate_counts"]
+
+        assert "state_preparation" in gate_counts
+        assert "phase_gates" in gate_counts
+        assert "total_single_qubit" in gate_counts
+        assert "total_two_qubit" in gate_counts
+        assert "total" in gate_counts
+
+        # Gate counts should be non-negative integers
+        assert gate_counts["total"] >= 0
+        assert gate_counts["total_single_qubit"] >= 0
+        assert gate_counts["total_two_qubit"] >= 0
+
+    def test_so2_resource_summary_custom_parameters(self) -> None:
+        """Test SO2 resource summary with custom parameters."""
+        enc = SO2EquivariantFeatureMap(
+            max_angular_momentum=2,
+            radial_function="uniform",
+            radial_sigma=0.5,
+        )
+        summary = enc.resource_summary()
+
+        assert summary["max_angular_momentum"] == 2
+        assert summary["radial_function"] == "uniform"
+        assert summary["radial_sigma"] == 0.5
+        assert summary["angular_momenta"] == [-2, -1, 0, 1, 2]
+        assert summary["n_angular_states"] == 5
+
+    # --- Cyclic Resource Summary ---
+
+    def test_cyclic_resource_summary_structure(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test cyclic resource summary contains all expected keys."""
+        summary = cyclic_encoding.resource_summary()
+
+        # Circuit structure
+        assert "n_qubits" in summary
+        assert "n_features" in summary
+        assert "depth" in summary
+        assert "reps" in summary
+        assert "coupling_strength" in summary
+
+        # Gate counts
+        assert "gate_counts" in summary
+        gate_counts = summary["gate_counts"]
+        assert "ry" in gate_counts
+        assert "rzz" in gate_counts
+        assert "rx" in gate_counts
+        assert "total_single_qubit" in gate_counts
+        assert "total_two_qubit" in gate_counts
+        assert "total" in gate_counts
+
+        # Symmetry information
+        assert "symmetry_group" in summary
+        assert "cyclic_order" in summary
+
+        # Hardware requirements
+        assert "hardware_requirements" in summary
+        assert summary["hardware_requirements"]["connectivity"] == "ring"
+
+        # Entanglement details
+        assert "n_entanglement_pairs" in summary
+        assert "entanglement_pairs" in summary
+
+    def test_cyclic_resource_summary_values(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test cyclic resource summary returns correct values."""
+        summary = cyclic_encoding.resource_summary()
+
+        assert summary["n_qubits"] == 4
+        assert summary["n_features"] == 4
+        assert summary["reps"] == 2
+        assert summary["symmetry_group"] == "Z_4"
+        assert summary["cyclic_order"] == 4
+        assert summary["n_entanglement_pairs"] == 4  # Ring of 4 qubits
+        assert len(summary["entanglement_pairs"]) == 4
+
+    def test_cyclic_resource_summary_entanglement_pairs(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test cyclic entanglement pairs form a ring topology."""
+        summary = cyclic_encoding.resource_summary()
+        pairs = summary["entanglement_pairs"]
+
+        # Should include (0,1), (1,2), (2,3), (3,0) for ring of 4
+        expected_pairs = [(0, 1), (1, 2), (2, 3), (3, 0)]
+        assert pairs == expected_pairs
+
+    def test_cyclic_resource_summary_gate_counts(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test cyclic gate count breakdown is correct."""
+        summary = cyclic_encoding.resource_summary()
+        gate_counts = summary["gate_counts"]
+        n = cyclic_encoding.n_features
+        reps = cyclic_encoding.reps
+
+        # Per rep: n RY gates, n RZZ gates, n RX gates
+        assert gate_counts["ry"] == n * reps
+        assert gate_counts["rzz"] == n * reps
+        assert gate_counts["rx"] == n * reps
+        assert gate_counts["total_single_qubit"] == gate_counts["ry"] + gate_counts["rx"]
+        assert gate_counts["total_two_qubit"] == gate_counts["rzz"]
+
+    # --- Swap Resource Summary ---
+
+    def test_swap_resource_summary_structure(
+        self, swap_encoding: SwapEquivariantFeatureMap
+    ) -> None:
+        """Test swap resource summary contains all expected keys."""
+        summary = swap_encoding.resource_summary()
+
+        # Circuit structure
+        assert "n_qubits" in summary
+        assert "n_features" in summary
+        assert "depth" in summary
+        assert "reps" in summary
+        assert "n_pairs" in summary
+
+        # Gate counts
+        assert "gate_counts" in summary
+        gate_counts = summary["gate_counts"]
+        assert "ry" in gate_counts
+        assert "hadamard" in gate_counts
+        assert "cz" in gate_counts
+        assert "total_single_qubit" in gate_counts
+        assert "total_two_qubit" in gate_counts
+        assert "total" in gate_counts
+
+        # Symmetry information
+        assert "symmetry_group" in summary
+        assert "n_pair_swaps" in summary
+
+        # Hardware requirements
+        assert "hardware_requirements" in summary
+        assert summary["hardware_requirements"]["connectivity"] == "pairs"
+
+    def test_swap_resource_summary_values(
+        self, swap_encoding: SwapEquivariantFeatureMap
+    ) -> None:
+        """Test swap resource summary returns correct values."""
+        summary = swap_encoding.resource_summary()
+
+        assert summary["n_qubits"] == 4
+        assert summary["n_features"] == 4
+        assert summary["n_pairs"] == 2
+        assert summary["reps"] == 2
+        assert summary["symmetry_group"] == "S_2^2"
+        assert summary["n_pair_swaps"] == 2
+        assert summary["n_entanglement_pairs"] == 2  # 2 pairs
+
+    def test_swap_resource_summary_entanglement_pairs(
+        self, swap_encoding: SwapEquivariantFeatureMap
+    ) -> None:
+        """Test swap entanglement pairs are within feature pairs."""
+        summary = swap_encoding.resource_summary()
+        pairs = summary["entanglement_pairs"]
+
+        # Should be [(0,1), (2,3)] for 4 features with 2 pairs
+        expected_pairs = [(0, 1), (2, 3)]
+        assert pairs == expected_pairs
+
+    def test_swap_resource_summary_gate_counts(
+        self, swap_encoding: SwapEquivariantFeatureMap
+    ) -> None:
+        """Test swap gate count breakdown is correct."""
+        summary = swap_encoding.resource_summary()
+        gate_counts = summary["gate_counts"]
+        n = swap_encoding.n_features
+        reps = swap_encoding.reps
+        n_pairs = swap_encoding.n_pairs
+
+        # Per rep: n RY gates, n H gates, n_pairs CZ gates
+        assert gate_counts["ry"] == n * reps
+        assert gate_counts["hadamard"] == n * reps
+        assert gate_counts["cz"] == n_pairs * reps
+        assert gate_counts["total_single_qubit"] == gate_counts["ry"] + gate_counts["hadamard"]
+        assert gate_counts["total_two_qubit"] == gate_counts["cz"]
+
+    def test_swap_resource_summary_six_features(self) -> None:
+        """Test swap resource summary with 6 features (3 pairs)."""
+        enc = SwapEquivariantFeatureMap(n_features=6, reps=3)
+        summary = enc.resource_summary()
+
+        assert summary["n_qubits"] == 6
+        assert summary["n_features"] == 6
+        assert summary["n_pairs"] == 3
+        assert summary["symmetry_group"] == "S_2^3"
+        assert summary["n_entanglement_pairs"] == 3
+        assert summary["entanglement_pairs"] == [(0, 1), (2, 3), (4, 5)]
+
+    # --- Verification Cost Information ---
+
+    def test_verification_cost_structure(
+        self, so2_encoding: SO2EquivariantFeatureMap
+    ) -> None:
+        """Test verification cost information is complete."""
+        summary = so2_encoding.resource_summary()
+        cost = summary["verification_cost"]
+
+        # Exact verification cost
+        assert "memory" in cost["exact"]
+        assert "time" in cost["exact"]
+        assert "recommended_max_qubits" in cost["exact"]
+
+        # Statistical verification cost
+        assert "memory" in cost["statistical"]
+        assert "time" in cost["statistical"]
+        assert "default_shots" in cost["statistical"]
+        assert "scalable" in cost["statistical"]
+
+        # Statistical should be scalable
+        assert cost["statistical"]["scalable"] is True
+
+    def test_verification_methods_listed(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test that verification methods are properly listed."""
+        summary = cyclic_encoding.resource_summary()
+
+        assert "verification_methods" in summary
+        methods = summary["verification_methods"]
+
+        assert any("exact" in m for m in methods)
+        assert any("statistical" in m for m in methods)
+        assert any("auto" in m for m in methods)
+
+
+# =============================================================================
+# Test Class: Get Entanglement Pairs
+# =============================================================================
+
+
+class TestGetEntanglementPairs:
+    """Tests for get_entanglement_pairs() method."""
+
+    def test_so2_entanglement_pairs_empty(
+        self, so2_encoding: SO2EquivariantFeatureMap
+    ) -> None:
+        """Test SO2 entanglement pairs are empty (uses state preparation)."""
+        pairs = so2_encoding.get_entanglement_pairs()
+        assert pairs == []
+
+    def test_cyclic_entanglement_pairs_ring(
+        self, cyclic_encoding: CyclicEquivariantFeatureMap
+    ) -> None:
+        """Test cyclic entanglement pairs form a ring."""
+        pairs = cyclic_encoding.get_entanglement_pairs()
+
+        # 4 qubits should have 4 pairs in ring: (0,1), (1,2), (2,3), (3,0)
+        assert len(pairs) == 4
+        assert (0, 1) in pairs
+        assert (1, 2) in pairs
+        assert (2, 3) in pairs
+        assert (3, 0) in pairs
+
+    def test_swap_entanglement_pairs_within_pairs(
+        self, swap_encoding: SwapEquivariantFeatureMap
+    ) -> None:
+        """Test swap entanglement pairs are within feature pairs."""
+        pairs = swap_encoding.get_entanglement_pairs()
+
+        # 4 qubits = 2 pairs: (0,1), (2,3)
+        assert len(pairs) == 2
+        assert (0, 1) in pairs
+        assert (2, 3) in pairs
+
+    def test_cyclic_entanglement_pairs_various_sizes(self) -> None:
+        """Test cyclic entanglement pairs for various sizes."""
+        for n in [2, 3, 5, 8]:
+            enc = CyclicEquivariantFeatureMap(n_features=n)
+            pairs = enc.get_entanglement_pairs()
+
+            # Ring has n pairs
+            assert len(pairs) == n
+
+            # Each pair should be (i, (i+1) % n)
+            for i in range(n):
+                assert (i, (i + 1) % n) in pairs
+
+    def test_swap_entanglement_pairs_various_sizes(self) -> None:
+        """Test swap entanglement pairs for various sizes."""
+        for n in [2, 4, 6, 8]:
+            enc = SwapEquivariantFeatureMap(n_features=n)
+            pairs = enc.get_entanglement_pairs()
+
+            # n_pairs = n // 2
+            assert len(pairs) == n // 2
+
+            # Each pair should be (2i, 2i+1)
+            for i in range(n // 2):
+                assert (2 * i, 2 * i + 1) in pairs

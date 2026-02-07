@@ -1129,12 +1129,16 @@ class HigherOrderAngleEncoding(BaseEncoding):
             rotation_gate = qml.RZ
 
         def circuit() -> None:
-            """Apply the higher-order angle encoding gates."""
+            """Apply the higher-order angle encoding gates.
+
+            All rotation gates are applied unconditionally, including zero-angle
+            rotations. This ensures consistent circuit structure across all backends
+            and maintains compatibility with frameworks like Cirq that require
+            explicit gate operations for qubit registration.
+            """
             for _ in range(self.reps):
                 for qubit_idx in range(self.n_qubits):
-                    angle = angles[qubit_idx]
-                    if angle != 0.0:  # Skip zero-angle rotations for efficiency
-                        rotation_gate(angle, wires=qubit_idx)
+                    rotation_gate(angles[qubit_idx], wires=qubit_idx)
 
         return circuit
 
@@ -1170,12 +1174,12 @@ class HigherOrderAngleEncoding(BaseEncoding):
         else:  # Z
             apply_rotation = qc.rz
 
-        # Apply encoding
+        # Apply encoding gates unconditionally for all qubits.
+        # Zero-angle rotations are included to maintain consistent circuit
+        # structure across backends and ensure predictable gate counts.
         for rep in range(self.reps):
             for qubit_idx in range(self.n_qubits):
-                angle = self._compute_qubit_angle(x, qubit_idx)
-                if angle != 0.0:  # Skip zero-angle rotations
-                    apply_rotation(angle, qubit_idx)
+                apply_rotation(self._compute_qubit_angle(x, qubit_idx), qubit_idx)
 
             # Add barrier between repetitions for clarity
             if rep < self.reps - 1:
@@ -1247,8 +1251,8 @@ class HigherOrderAngleEncoding(BaseEncoding):
         n = self.n_qubits
         n_terms = self.n_terms
 
-        # Gate count: one rotation per qubit per rep (worst case)
-        # In practice, some may be skipped if angle is zero
+        # Gate count: one rotation per qubit per rep (deterministic).
+        # All rotations are applied unconditionally for cross-backend consistency.
         single_qubit_gates = n * self.reps
 
         # Depth: all rotations are parallel, so depth = reps

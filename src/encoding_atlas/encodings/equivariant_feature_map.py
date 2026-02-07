@@ -118,12 +118,12 @@ Input is a vector with an even number of features, organized into pairs
 (x₀, x₁), (x₂, x₃), ... where swapping within pairs is a symmetry:
 
 - **Pair structure**: Ensure features are organized so that indices (2i, 2i+1)
-  form meaningful pairs. The encoding uses symmetric (xᵢ + xⱼ)/2 and
-  antisymmetric (xᵢ - xⱼ)/2 combinations.
+  form meaningful pairs. Each feature x[i] is directly encoded on qubit i via
+  RY(x[i]), ensuring that swapping data within a pair is exactly equivalent
+  to applying a SWAP gate on the corresponding qubits.
 
-- **Scaling**: Scale features to similar ranges before encoding. Large
-  magnitude differences between pair members affect the symmetric/antisymmetric
-  balance::
+- **Scaling to rotation range**: Features are encoded via RY(xᵢ) rotations.
+  For full expressivity, scale features to span [0, 2π] or [-π, π]::
 
       # Standardize features
       x_scaled = (x - x.mean()) / x.std()
@@ -199,7 +199,7 @@ Resource Analysis
 All equivariant encoding classes provide methods to analyze circuit resources
 and plan hardware execution:
 
-- ``gate_count_breakdown()``: Get detailed gate counts by type (RY, RZZ, CNOT,
+- ``gate_count_breakdown()``: Get detailed gate counts by type (RY, RZZ, CZ,
   state preparation gates, etc.). Returns a TypedDict with breakdown.
 
 - ``resource_summary()``: Comprehensive breakdown including qubit count, depth,
@@ -409,22 +409,28 @@ class CyclicGateCountBreakdown(TypedDict):
 
 
 class SwapGateCountBreakdown(TypedDict):
-    """Gate count breakdown for swap equivariant encoding."""
+    """Gate count breakdown for swap equivariant encoding.
+
+    The swap equivariant circuit uses CZ (Controlled-Z) gates for entanglement
+    rather than CNOT gates. CZ is symmetric under qubit exchange, which is
+    essential for maintaining swap equivariance:
+    ``SWAP · CZ(q0, q1) · SWAP = CZ(q1, q0) = CZ(q0, q1)``.
+    """
 
     ry: int
-    """Number of RY gates for feature encoding."""
+    """Number of RY gates for direct feature encoding (one per qubit per layer)."""
 
     hadamard: int
-    """Number of Hadamard gates for pair symmetrization."""
+    """Number of Hadamard gates for basis mixing."""
 
-    cnot: int
-    """Number of CNOT gates for pair entanglement."""
+    cz: int
+    """Number of CZ (Controlled-Z) gates for symmetric pair entanglement."""
 
     total_single_qubit: int
-    """Total number of single-qubit gates."""
+    """Total number of single-qubit gates (RY + Hadamard)."""
 
     total_two_qubit: int
-    """Total number of two-qubit gates."""
+    """Total number of two-qubit gates (CZ)."""
 
     total: int
     """Total gate count."""
@@ -2002,7 +2008,13 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
         self,
         x: NDArray[np.floating[Any]],
     ) -> CircuitType:
-        """Generate Cirq circuit using state preparation.
+        """Generate Cirq circuit using unitary state preparation.
+
+        Constructs a unitary matrix U such that U|0...0⟩ = |ψ(x)⟩ and
+        applies it via ``cirq.MatrixGate``. The unitary is built by placing
+        the target state as the first column of a matrix and completing it
+        to an orthonormal basis via QR decomposition (Householder
+        reflections).
 
         Parameters
         ----------
@@ -2011,144 +2023,47 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
 
         Returns
         -------
-        Circuit
-            Cirq quantum circuit.
+        cirq.Circuit
+            Cirq quantum circuit that prepares the encoded state.
 
         Notes
         -----
-        Cirq does not have a built-in state preparation gate like PennyLane
-        or Qiskit. This implementation uses cirq_google's StatePreparationChannel
-        or a manual decomposition approach via amplitude encoding.
+        Cirq does not provide a built-in state preparation primitive
+        comparable to PennyLane's ``StatePrep`` or Qiskit's
+        ``QuantumCircuit.initialize``.  Instead we construct the full
+        2^n × 2^n unitary explicitly.  For the qubit counts used by
+        SO(2) equivariant encoding (typically 1--4 qubits for
+        ``max_angular_momentum`` up to ~7), the matrix is small and the
+        construction is negligible in cost.
 
-        For general arbitrary state preparation, we use the Gray code
-        decomposition which requires O(2^n) gates.
+        The QR-based orthonormal completion is the same numerically
+        stable algorithm used by the amplitude encoding Cirq backend
+        (see ``amplitude.py``).
         """
         import cirq
 
-        # Precompute target state
         target_state = self._encode_state(x)
+        dim = len(target_state)
 
-        # Create qubits
+        # Build unitary U with U[:, 0] = target_state via QR decomposition.
+        # Place target_state as the first column, remaining columns are
+        # standard basis vectors to guarantee full rank.
+        A = np.eye(dim, dtype=np.complex128)
+        A[:, 0] = target_state
+
+        Q, R = np.linalg.qr(A)
+
+        # Phase correction: QR gives Q[:, 0] = target_state * e^{-iθ}
+        # where R[0, 0] = e^{iθ}.  Multiply column 0 by conj(alpha) to
+        # recover the exact target state as the first column.
+        alpha = np.vdot(target_state, Q[:, 0])
+        Q[:, 0] *= np.conj(alpha)
+
         qubits = cirq.LineQubit.range(self._n_qubits)
         circuit = cirq.Circuit()
-
-        # For Cirq, we need to decompose state preparation into gates.
-        # We use a custom implementation based on amplitude encoding decomposition.
-        # The approach uses controlled rotations to prepare arbitrary states.
-
-        # If all amplitudes are zero except one, we can use X gates
-        # Otherwise, we need a more complex decomposition
-
-        # Find non-zero amplitudes
-        amplitudes = target_state
-        n_amplitudes = len(amplitudes)
-
-        # Normalize the state (should already be normalized, but ensure)
-        norm = np.linalg.norm(amplitudes)
-        if norm > 0:
-            amplitudes = amplitudes / norm
-
-        # Use recursive decomposition for state preparation
-        # This is based on the Shende-Bullock-Markov algorithm
-        self._cirq_state_prep_recursive(circuit, qubits, amplitudes, 0)
+        circuit.append(cirq.MatrixGate(Q).on(*qubits))
 
         return circuit
-
-    def _cirq_state_prep_recursive(
-        self,
-        circuit: Any,
-        qubits: list[Any],
-        amplitudes: NDArray[np.complexfloating[Any, Any]],
-        qubit_idx: int,
-    ) -> None:
-        """Recursively prepare state using controlled rotations.
-
-        This implements a simplified version of the Shende-Bullock-Markov
-        decomposition for arbitrary state preparation.
-
-        Parameters
-        ----------
-        circuit : cirq.Circuit
-            Circuit to add gates to.
-        qubits : list
-            List of qubits.
-        amplitudes : ndarray
-            Target amplitudes for the state.
-        qubit_idx : int
-            Current qubit index being processed.
-        """
-        import cirq
-
-        n_qubits = len(qubits)
-        n_amplitudes = len(amplitudes)
-
-        if n_amplitudes == 1:
-            # Base case: single amplitude, apply global phase if needed
-            if np.abs(amplitudes[0]) > 1e-10:
-                phase = np.angle(amplitudes[0])
-                if np.abs(phase) > 1e-10:
-                    # Global phase doesn't affect measurements, skip
-                    pass
-            return
-
-        if n_amplitudes == 2:
-            # Two amplitudes: single qubit rotation
-            a0, a1 = amplitudes[0], amplitudes[1]
-            norm = np.sqrt(np.abs(a0)**2 + np.abs(a1)**2)
-
-            if norm < 1e-10:
-                return
-
-            # Compute rotation angle
-            theta = 2 * np.arccos(np.clip(np.abs(a0) / norm, -1, 1))
-
-            # Apply RY rotation
-            if np.abs(theta) > 1e-10:
-                circuit.append(cirq.ry(theta)(qubits[qubit_idx]))
-
-            # Handle relative phase between a0 and a1
-            if np.abs(a0) > 1e-10 and np.abs(a1) > 1e-10:
-                rel_phase = np.angle(a1) - np.angle(a0)
-                if np.abs(rel_phase) > 1e-10:
-                    # Apply controlled phase using RZ
-                    circuit.append(cirq.rz(rel_phase)(qubits[qubit_idx]))
-
-            return
-
-        # Recursive case: split amplitudes and process
-        half = n_amplitudes // 2
-        amp_upper = amplitudes[:half]
-        amp_lower = amplitudes[half:]
-
-        # Compute norms for upper and lower halves
-        norm_upper = np.linalg.norm(amp_upper)
-        norm_lower = np.linalg.norm(amp_lower)
-        total_norm = np.sqrt(norm_upper**2 + norm_lower**2)
-
-        if total_norm < 1e-10:
-            return
-
-        # Rotation angle for this qubit
-        theta = 2 * np.arccos(np.clip(norm_upper / total_norm, -1, 1))
-
-        if np.abs(theta) > 1e-10:
-            circuit.append(cirq.ry(theta)(qubits[qubit_idx]))
-
-        # Recursively prepare the conditional states
-        if norm_upper > 1e-10:
-            amp_upper_normalized = amp_upper / norm_upper
-            self._cirq_state_prep_recursive(
-                circuit, qubits, amp_upper_normalized, qubit_idx + 1
-            )
-
-        if norm_lower > 1e-10:
-            amp_lower_normalized = amp_lower / norm_lower
-            # Apply X to flip qubit, then prepare, then flip back
-            circuit.append(cirq.X(qubits[qubit_idx]))
-            self._cirq_state_prep_recursive(
-                circuit, qubits, amp_lower_normalized, qubit_idx + 1
-            )
-            circuit.append(cirq.X(qubits[qubit_idx]))
 
     def gate_count_breakdown(self) -> SO2GateCountBreakdown:
         """Get breakdown of gate counts by type.
@@ -2776,10 +2691,11 @@ class CyclicEquivariantFeatureMap(EquivariantFeatureMap[int]):
                 circuit.ry(x[i], i)
 
             # Layer 2: RZZ ring entanglement
+            # RZZ(θ) implements exp(-i θ/2 Z⊗Z), same convention as
+            # PennyLane's IsingZZ(θ) — no conversion factor needed.
             for i in range(n):
                 j = (i + 1) % n
-                # RZZ gate in Qiskit
-                circuit.rzz(2 * self.coupling_strength, i, j)
+                circuit.rzz(self.coupling_strength, i, j)
 
             # Layer 3: RX rotation
             for i in range(n):
@@ -2814,9 +2730,17 @@ class CyclicEquivariantFeatureMap(EquivariantFeatureMap[int]):
             circuit.append([cirq.ry(x[i])(qubits[i]) for i in range(n)])
 
             # Layer 2: RZZ ring entanglement
+            # IsingZZ(φ) = exp(-i φ/2 Z⊗Z)
+            # Cirq's ZZPowGate(exponent=t) = exp(i π t Z⊗Z) up to global phase,
+            # with relative phase e^(iπt) on the -1 eigenspace.
+            # Matching: t = φ / π  (see also qaoa_encoding.py).
             for i in range(n):
                 j = (i + 1) % n
-                circuit.append(cirq.ZZPowGate(exponent=2 * self.coupling_strength / np.pi)(qubits[i], qubits[j]))
+                circuit.append(
+                    cirq.ZZPowGate(exponent=self.coupling_strength / np.pi)(
+                        qubits[i], qubits[j]
+                    )
+                )
 
             # Layer 3: RX rotation
             circuit.append([cirq.rx(np.pi / 6)(qubits[i]) for i in range(n)])
@@ -2991,16 +2915,22 @@ class CyclicEquivariantFeatureMap(EquivariantFeatureMap[int]):
 
 
 class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
-    """S_2 swap-equivariant quantum feature map for paired features.
+    r"""S_2 swap-equivariant quantum feature map for paired features.
 
     This encoding is equivariant to swapping pairs of features, satisfying:
 
-        (SWAP₀₁ ⊗ SWAP₂₃ ⊗ ...)|ψ(x)⟩ = |ψ(swap·x)⟩
+    .. math::
 
-    where swap exchanges (x₀, x₁) → (x₁, x₀), (x₂, x₃) → (x₃, x₂), etc.
+        (\mathrm{SWAP}_{01} \otimes \mathrm{SWAP}_{23} \otimes \ldots)
+        |\psi(x)\rangle = |\psi(\mathrm{swap} \cdot x)\rangle
 
-    The encoding encodes features in symmetric pairs, ensuring that
-    swapping features corresponds to swapping qubits.
+    where swap exchanges ``(x₀, x₁) → (x₁, x₀)``,
+    ``(x₂, x₃) → (x₃, x₂)``, etc.
+
+    The encoding uses **direct feature encoding** (``RY(x[i])`` on qubit *i*)
+    combined with **symmetric entanglement** (CZ gates), ensuring that
+    swapping features within a pair is exactly equivalent to applying a
+    SWAP gate on the corresponding qubits.
 
     Parameters
     ----------
@@ -3044,14 +2974,39 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
     Notes
     -----
     **Pair Structure**: Features are organized into pairs:
-    (x₀, x₁), (x₂, x₃), (x₄, x₅), ...
+    ``(x₀, x₁), (x₂, x₃), (x₄, x₅), ...``
 
     Each pair is encoded on two qubits with symmetric structure.
 
     **Circuit Structure**: Each layer consists of:
-    1. RY gates for feature encoding
-    2. Hadamard gates for symmetrization
-    3. CNOT gates for pair entanglement
+
+    1. **RY gates** for direct feature encoding: ``RY(x[i])`` on qubit *i*.
+       Swapping data ``(x[i] ↔ x[j])`` is equivalent to swapping the RY
+       angles between qubits, which is exactly what the SWAP gate does.
+    2. **Hadamard gates** for basis mixing. Since ``H ⊗ H`` commutes with
+       SWAP (tensor product of identical operators), this layer preserves
+       equivariance.
+    3. **CZ gates** for symmetric pair entanglement. CZ is used instead of
+       CNOT because CZ is symmetric under qubit exchange:
+       ``SWAP · CZ(q0, q1) · SWAP = CZ(q1, q0) = CZ(q0, q1)``.
+       This symmetry is essential for equivariance; CNOT would break it
+       because ``CNOT(q0, q1) ≠ CNOT(q1, q0)``.
+
+    **Equivariance Proof Sketch** (for one pair on qubits 0, 1):
+
+    The circuit per layer is ``CZ · (H ⊗ H) · (RY(x₀) ⊗ RY(x₁))``.
+    Applying SWAP to the state:
+
+    .. math::
+
+        \mathrm{SWAP} \cdot \mathrm{CZ} \cdot (H \otimes H)
+        \cdot (R_Y(x_0) \otimes R_Y(x_1)) |00\rangle
+
+    Since CZ commutes with SWAP, push SWAP through CZ. Since
+    ``H ⊗ H`` commutes with SWAP, push through again. SWAP exchanges
+    the single-qubit gates: ``RY(x₀) ⊗ RY(x₁) → RY(x₁) ⊗ RY(x₀)``.
+    Since ``SWAP|00⟩ = |00⟩``, the result is ``|ψ(x₁, x₀)⟩``,
+    which is exactly ``|ψ(swap · x)⟩``.
 
     References
     ----------
@@ -3103,7 +3058,7 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
         self.reps = reps
 
         # Cache entanglement pairs for performance
-        # CNOT gates are applied within each feature pair
+        # CZ gates are applied within each feature pair
         self._entanglement_pairs: list[tuple[int, int]] = [
             (2 * i, 2 * i + 1) for i in range(self.n_pairs)
         ]
@@ -3121,7 +3076,7 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
     @property
     def depth(self) -> int:
         """Circuit depth."""
-        # Each rep: RY layer + H layer + CNOT layer
+        # Each rep: RY layer + H layer + CZ layer
         return 3 * self.reps
 
     def group_action(
@@ -3226,14 +3181,15 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
                 qml.SWAP(wires=[qubit_a, qubit_b])
 
     def get_entanglement_pairs(self) -> list[tuple[int, int]]:
-        """Get CNOT pairs within each feature pair.
+        """Get CZ gate qubit pairs within each feature pair.
 
         Returns
         -------
         list[tuple[int, int]]
-            List of (control, target) pairs for CNOT gates.
-            Each pair (2i, 2i+1) represents entanglement within
-            feature pair i.
+            List of qubit pairs for CZ gates.
+            Each pair ``(2i, 2i+1)`` represents symmetric entanglement
+            within feature pair *i*. CZ is symmetric, so the order
+            within each tuple does not affect the gate operation.
 
         Examples
         --------
@@ -3352,32 +3308,30 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
         def circuit() -> None:
             """Swap-equivariant encoding circuit.
 
-            For each pair (x_i, x_{i+1}), encode:
-            - Symmetric combination: (x_i + x_{i+1})/2
-            - Antisymmetric combination: (x_i - x_{i+1})/2
+            Each feature x[i] is directly encoded on qubit i via RY(x[i]).
+            Hadamard gates provide basis mixing, and CZ gates provide
+            symmetric entanglement within pairs.
 
-            This ensures swapping the pair corresponds to a known transformation.
+            Equivariance holds because:
+            - Direct encoding: swapping data ↔ swapping qubits
+            - H ⊗ H commutes with SWAP (identical single-qubit gates)
+            - CZ commutes with SWAP (symmetric two-qubit gate)
+            - SWAP|00⟩ = |00⟩ (initial state is invariant)
             """
             for rep in range(self.reps):
-                # Layer 1: Symmetric encoding within pairs
-                for pair_idx in range(self.n_pairs):
-                    i = 2 * pair_idx
-                    j = 2 * pair_idx + 1
-                    # Encode sum and difference
-                    sum_val = (x[i] + x[j]) / 2
-                    diff_val = (x[i] - x[j]) / 2
-                    qml.RY(sum_val, wires=i)
-                    qml.RY(diff_val, wires=j)
+                # Layer 1: Direct feature encoding (RY(x[i]) on qubit i)
+                for i in range(n):
+                    qml.RY(x[i], wires=i)
 
                 # Layer 2: Hadamard for basis mixing
                 for i in range(n):
                     qml.Hadamard(wires=i)
 
-                # Layer 3: Pair entanglement (CNOT within each pair)
+                # Layer 3: Symmetric pair entanglement (CZ within each pair)
                 for pair_idx in range(self.n_pairs):
                     i = 2 * pair_idx
                     j = 2 * pair_idx + 1
-                    qml.CNOT(wires=[i, j])
+                    qml.CZ(wires=[i, j])
 
         return circuit
 
@@ -3403,24 +3357,19 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
         circuit = QuantumCircuit(n)
 
         for rep in range(self.reps):
-            # Layer 1: Symmetric encoding within pairs
-            for pair_idx in range(self.n_pairs):
-                i = 2 * pair_idx
-                j = 2 * pair_idx + 1
-                sum_val = (x[i] + x[j]) / 2
-                diff_val = (x[i] - x[j]) / 2
-                circuit.ry(sum_val, i)
-                circuit.ry(diff_val, j)
+            # Layer 1: Direct feature encoding (RY(x[i]) on qubit i)
+            for i in range(n):
+                circuit.ry(float(x[i]), i)
 
             # Layer 2: Hadamard gates
             for i in range(n):
                 circuit.h(i)
 
-            # Layer 3: CNOT within pairs
+            # Layer 3: Symmetric pair entanglement (CZ within each pair)
             for pair_idx in range(self.n_pairs):
                 i = 2 * pair_idx
                 j = 2 * pair_idx + 1
-                circuit.cx(i, j)
+                circuit.cz(i, j)
 
         return circuit
 
@@ -3447,23 +3396,18 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
         circuit = cirq.Circuit()
 
         for rep in range(self.reps):
-            # Layer 1: Symmetric encoding within pairs
-            for pair_idx in range(self.n_pairs):
-                i = 2 * pair_idx
-                j = 2 * pair_idx + 1
-                sum_val = (x[i] + x[j]) / 2
-                diff_val = (x[i] - x[j]) / 2
-                circuit.append(cirq.ry(sum_val)(qubits[i]))
-                circuit.append(cirq.ry(diff_val)(qubits[j]))
+            # Layer 1: Direct feature encoding (RY(x[i]) on qubit i)
+            for i in range(n):
+                circuit.append(cirq.ry(float(x[i]))(qubits[i]))
 
             # Layer 2: Hadamard gates
             circuit.append([cirq.H(qubits[i]) for i in range(n)])
 
-            # Layer 3: CNOT within pairs
+            # Layer 3: Symmetric pair entanglement (CZ within each pair)
             for pair_idx in range(self.n_pairs):
                 i = 2 * pair_idx
                 j = 2 * pair_idx + 1
-                circuit.append(cirq.CNOT(qubits[i], qubits[j]))
+                circuit.append(cirq.CZ(qubits[i], qubits[j]))
 
         return circuit
 
@@ -3473,21 +3417,31 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
         Returns
         -------
         SwapGateCountBreakdown
-            Dictionary with detailed gate counts.
+            Dictionary with detailed gate counts including RY, Hadamard,
+            and CZ gates per layer and in total.
+
+        Examples
+        --------
+        >>> enc = SwapEquivariantFeatureMap(n_features=4, reps=2)
+        >>> breakdown = enc.gate_count_breakdown()
+        >>> breakdown['ry']
+        8
+        >>> breakdown['cz']
+        4
         """
         n = self.n_qubits
 
         ry_count = n * self.reps
         hadamard_count = n * self.reps
-        cnot_count = self.n_pairs * self.reps
+        cz_count = self.n_pairs * self.reps
 
         return {
             'ry': ry_count,
             'hadamard': hadamard_count,
-            'cnot': cnot_count,
+            'cz': cz_count,
             'total_single_qubit': ry_count + hadamard_count,
-            'total_two_qubit': cnot_count,
-            'total': ry_count + hadamard_count + cnot_count,
+            'total_two_qubit': cz_count,
+            'total': ry_count + hadamard_count + cz_count,
         }
 
     def _compute_properties(self) -> EncodingProperties:
@@ -3544,8 +3498,8 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
                 - ``native_gates``: List of required gate types
 
             **Entanglement Details**:
-                - ``n_entanglement_pairs``: Number of CNOT pairs per layer
-                - ``entanglement_pairs``: List of (control, target) qubit pairs
+                - ``n_entanglement_pairs``: Number of CZ pairs per layer
+                - ``entanglement_pairs``: List of qubit pairs for CZ gates
 
         Examples
         --------
@@ -3601,7 +3555,7 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
             # Hardware requirements
             "hardware_requirements": {
                 "connectivity": "pairs",
-                "native_gates": ["RY", "H", "CNOT"],
+                "native_gates": ["RY", "H", "CZ"],
             },
             # Entanglement details
             "n_entanglement_pairs": len(pairs),

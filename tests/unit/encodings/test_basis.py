@@ -15,6 +15,8 @@ which maps binary/discrete data to computational basis states. It includes:
 - Backend error handling
 - Serialization (pickle roundtrip)
 - Concurrent access / thread safety
+- Gate count breakdown and resource analysis
+- Protocol conformance (DataTransformable, DataDependentResourceAnalyzable)
 - Slow simulation tests (cross-backend state fidelity)
 
 Run with: pytest tests/unit/encodings/test_basis.py -v
@@ -40,6 +42,12 @@ from numpy.typing import NDArray
 
 from encoding_atlas import BasisEncoding
 from encoding_atlas.core.properties import EncodingProperties
+from encoding_atlas.core.protocols import (
+    DataDependentResourceAnalyzable,
+    DataTransformable,
+    EntanglementQueryable,
+    ResourceAnalyzable,
+)
 
 if TYPE_CHECKING:
     from typing import Any
@@ -2048,3 +2056,275 @@ class TestSlowSimulation:
 
             assert np.max(pl_probs) > 0.99, f"PL batch {i} not pure basis state"
             assert np.max(qk_probs) > 0.99, f"QK batch {i} not pure basis state"
+
+
+# =============================================================================
+# Test Class: Gate Count Breakdown
+# =============================================================================
+
+
+class TestGateCountBreakdown:
+    """Tests for the gate_count_breakdown() method.
+
+    gate_count_breakdown() returns worst-case gate counts as a TypedDict
+    with fields: x_gates, total_single_qubit, total_two_qubit, total,
+    is_worst_case.
+    """
+
+    def test_breakdown_returns_dict(self) -> None:
+        """Test that gate_count_breakdown() returns a dict."""
+        enc = BasisEncoding(n_features=4)
+        breakdown = enc.gate_count_breakdown()
+        assert isinstance(breakdown, dict)
+
+    def test_breakdown_x_gates_equals_n_features(self) -> None:
+        """Test that x_gates equals n_features (worst case: all 1s)."""
+        for n in [1, 4, 8, 16]:
+            enc = BasisEncoding(n_features=n)
+            breakdown = enc.gate_count_breakdown()
+            assert breakdown["x_gates"] == n
+
+    def test_breakdown_total_single_qubit(self) -> None:
+        """Test that total_single_qubit equals x_gates."""
+        enc = BasisEncoding(n_features=8)
+        breakdown = enc.gate_count_breakdown()
+        assert breakdown["total_single_qubit"] == breakdown["x_gates"]
+        assert breakdown["total_single_qubit"] == 8
+
+    def test_breakdown_no_two_qubit_gates(self) -> None:
+        """Test that there are never two-qubit gates in basis encoding."""
+        for n in [1, 4, 8, 32]:
+            enc = BasisEncoding(n_features=n)
+            breakdown = enc.gate_count_breakdown()
+            assert breakdown["total_two_qubit"] == 0
+
+    def test_breakdown_total_equals_single_qubit(self) -> None:
+        """Test that total equals total_single_qubit (no two-qubit gates)."""
+        enc = BasisEncoding(n_features=4)
+        breakdown = enc.gate_count_breakdown()
+        assert breakdown["total"] == breakdown["total_single_qubit"]
+
+    def test_breakdown_total_consistency(self) -> None:
+        """Test that total = total_single_qubit + total_two_qubit."""
+        enc = BasisEncoding(n_features=8)
+        breakdown = enc.gate_count_breakdown()
+        assert breakdown["total"] == (
+            breakdown["total_single_qubit"] + breakdown["total_two_qubit"]
+        )
+
+    def test_breakdown_is_worst_case_flag(self) -> None:
+        """Test that is_worst_case is always True."""
+        enc = BasisEncoding(n_features=4)
+        breakdown = enc.gate_count_breakdown()
+        assert breakdown["is_worst_case"] is True
+
+    def test_breakdown_matches_properties(self) -> None:
+        """Test that breakdown total matches properties.gate_count."""
+        enc = BasisEncoding(n_features=8)
+        breakdown = enc.gate_count_breakdown()
+        assert breakdown["total"] == enc.properties.gate_count
+        assert breakdown["total_single_qubit"] == enc.properties.single_qubit_gates
+        assert breakdown["total_two_qubit"] == enc.properties.two_qubit_gates
+
+    def test_breakdown_custom_threshold_unchanged(self) -> None:
+        """Test that breakdown is the same regardless of threshold.
+
+        Threshold affects actual gate counts, not worst-case bounds.
+        """
+        enc_default = BasisEncoding(n_features=4)
+        enc_custom = BasisEncoding(n_features=4, threshold=0.0)
+        assert enc_default.gate_count_breakdown() == enc_custom.gate_count_breakdown()
+
+    def test_breakdown_has_all_expected_keys(self) -> None:
+        """Test that breakdown contains all documented keys."""
+        enc = BasisEncoding(n_features=4)
+        breakdown = enc.gate_count_breakdown()
+        expected_keys = {
+            "x_gates",
+            "total_single_qubit",
+            "total_two_qubit",
+            "total",
+            "is_worst_case",
+        }
+        assert set(breakdown.keys()) == expected_keys
+
+
+# =============================================================================
+# Test Class: transform_input (DataTransformable Protocol)
+# =============================================================================
+
+
+class TestTransformInput:
+    """Tests for the transform_input() method.
+
+    transform_input() is an alias for binarize() that implements the
+    DataTransformable protocol for standardized cross-encoding usage.
+    """
+
+    def test_transform_basic(self) -> None:
+        """Test basic transform_input with continuous data."""
+        enc = BasisEncoding(n_features=4)
+        x = np.array([0.8, 0.2, 0.6, 0.4])
+        result = enc.transform_input(x)
+        expected = np.array([1, 0, 1, 0])
+        np.testing.assert_array_equal(result, expected)
+
+    def test_transform_matches_binarize(self) -> None:
+        """Test that transform_input returns identical output to binarize."""
+        enc = BasisEncoding(n_features=4)
+        x = np.array([0.1, 0.9, 0.5, 0.51])
+        np.testing.assert_array_equal(
+            enc.transform_input(x), enc.binarize(x)
+        )
+
+    def test_transform_binary_data_idempotent(self) -> None:
+        """Test that transform_input is idempotent for binary data.
+
+        With default threshold 0.5, binary [0, 1] data is unchanged
+        because 1 > 0.5 -> 1 and 0 <= 0.5 -> 0.
+        """
+        enc = BasisEncoding(n_features=4)
+        x = np.array([1, 0, 1, 0])
+        result = enc.transform_input(x)
+        np.testing.assert_array_equal(result, x)
+
+    def test_transform_custom_threshold(self) -> None:
+        """Test transform_input respects custom threshold."""
+        enc = BasisEncoding(n_features=4, threshold=0.0)
+        x = np.array([-0.5, 0.0, 0.5, 1.0])
+        result = enc.transform_input(x)
+        expected = np.array([0, 0, 1, 1])
+        np.testing.assert_array_equal(result, expected)
+
+    def test_transform_all_zeros(self) -> None:
+        """Test transform_input with all-zero input."""
+        enc = BasisEncoding(n_features=4)
+        x = np.array([0.0, 0.0, 0.0, 0.0])
+        result = enc.transform_input(x)
+        expected = np.array([0, 0, 0, 0])
+        np.testing.assert_array_equal(result, expected)
+
+    def test_transform_all_ones(self) -> None:
+        """Test transform_input with all-one input."""
+        enc = BasisEncoding(n_features=4)
+        x = np.array([1.0, 1.0, 1.0, 1.0])
+        result = enc.transform_input(x)
+        expected = np.array([1, 1, 1, 1])
+        np.testing.assert_array_equal(result, expected)
+
+    def test_transform_returns_integer_dtype(self) -> None:
+        """Test that transform_input returns integer-typed array."""
+        enc = BasisEncoding(n_features=4)
+        x = np.array([0.8, 0.2, 0.6, 0.4])
+        result = enc.transform_input(x)
+        assert np.issubdtype(result.dtype, np.integer)
+
+    def test_transform_preserves_shape_1d(self) -> None:
+        """Test that 1D input produces 1D output."""
+        enc = BasisEncoding(n_features=4)
+        x = np.array([0.1, 0.9, 0.3, 0.8])
+        result = enc.transform_input(x)
+        assert result.ndim == 1
+        assert result.shape == (4,)
+
+    def test_transform_preserves_shape_2d(self) -> None:
+        """Test that 2D batch input produces 2D output."""
+        enc = BasisEncoding(n_features=3)
+        X = np.array([[0.1, 0.9, 0.5], [0.6, 0.4, 0.7]])
+        result = enc.transform_input(X)
+        assert result.ndim == 2
+        assert result.shape == (2, 3)
+
+    def test_transform_wrong_shape_rejected(self) -> None:
+        """Test that wrong feature count raises ValueError."""
+        enc = BasisEncoding(n_features=4)
+        x = np.array([0.5, 0.5])
+        with pytest.raises(ValueError, match="Expected 4 features"):
+            enc.transform_input(x)
+
+    def test_transform_nan_rejected(self) -> None:
+        """Test that NaN values are rejected."""
+        enc = BasisEncoding(n_features=4)
+        x = np.array([0.5, np.nan, 0.5, 0.5])
+        with pytest.raises(ValueError, match="NaN"):
+            enc.transform_input(x)
+
+    def test_transform_list_input(self) -> None:
+        """Test that list input is accepted and converted."""
+        enc = BasisEncoding(n_features=4)
+        result = enc.transform_input([0.8, 0.2, 0.6, 0.4])
+        expected = np.array([1, 0, 1, 0])
+        np.testing.assert_array_equal(result, expected)
+
+
+# =============================================================================
+# Test Class: Protocol Conformance
+# =============================================================================
+
+
+class TestProtocolConformance:
+    """Tests for protocol conformance via isinstance checks.
+
+    BasisEncoding should implement:
+    - DataDependentResourceAnalyzable (resource_summary(x), actual_gate_count(x))
+    - DataTransformable (transform_input(x))
+
+    BasisEncoding should NOT implement:
+    - ResourceAnalyzable (data-independent resource_summary() — no parameter)
+    - EntanglementQueryable (no entanglement created)
+    """
+
+    def test_implements_data_dependent_resource_analyzable(self) -> None:
+        """Test that BasisEncoding satisfies DataDependentResourceAnalyzable."""
+        enc = BasisEncoding(n_features=4)
+        assert isinstance(enc, DataDependentResourceAnalyzable)
+
+    def test_implements_data_transformable(self) -> None:
+        """Test that BasisEncoding satisfies DataTransformable."""
+        enc = BasisEncoding(n_features=4)
+        assert isinstance(enc, DataTransformable)
+
+    def test_does_not_implement_entanglement_queryable(self) -> None:
+        """Test that BasisEncoding does NOT satisfy EntanglementQueryable.
+
+        BasisEncoding creates product states with no entanglement.
+        """
+        enc = BasisEncoding(n_features=4)
+        assert not isinstance(enc, EntanglementQueryable)
+
+    def test_data_dependent_protocol_methods_work(self) -> None:
+        """Test that protocol methods produce correct results when called
+        through the protocol interface."""
+        enc = BasisEncoding(n_features=4)
+
+        # Use the protocol's actual_gate_count method
+        assert isinstance(enc, DataDependentResourceAnalyzable)
+        x = np.array([1, 0, 1, 0])
+        assert enc.actual_gate_count(x) == 2
+
+        # Use the protocol's resource_summary method
+        summary = enc.resource_summary(x)
+        assert summary["actual_gate_count"] == 2
+
+    def test_data_transformable_protocol_method_works(self) -> None:
+        """Test that transform_input produces correct results when called
+        through the DataTransformable protocol interface."""
+        enc = BasisEncoding(n_features=4)
+        assert isinstance(enc, DataTransformable)
+
+        x = np.array([0.8, 0.2, 0.6, 0.4])
+        result = enc.transform_input(x)
+        expected = np.array([1, 0, 1, 0])
+        np.testing.assert_array_equal(result, expected)
+
+    def test_protocol_check_with_custom_threshold(self) -> None:
+        """Test that protocol conformance holds with custom threshold."""
+        enc = BasisEncoding(n_features=4, threshold=0.0)
+        assert isinstance(enc, DataDependentResourceAnalyzable)
+        assert isinstance(enc, DataTransformable)
+
+        x = np.array([-0.5, 0.0, 0.5, 1.0])
+        assert enc.actual_gate_count(x) == 2
+        np.testing.assert_array_equal(
+            enc.transform_input(x), np.array([0, 0, 1, 1])
+        )

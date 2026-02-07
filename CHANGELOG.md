@@ -7,20 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-- **BREAKING**: Renamed `CovariantFeatureMap` to `SymmetryInspiredFeatureMap` to better
-  reflect its heuristic nature. The class provides symmetry-inspired inductive bias but
-  does NOT guarantee mathematical equivariance (U(g)|ψ(x)⟩ = |ψ(g·x)⟩).
-  - `CovariantFeatureMap` remains available as a backwards-compatible alias
-  - Registry keys `covariant` and `covariant_feature_map` still work
-  - New recommended keys: `symmetry_inspired` and `symmetry_inspired_feature_map`
-  - File renamed from `covariant_feature_map.py` to `symmetry_inspired_feature_map.py`
-
-### Added
-- Added detailed implementation guide for true `EquivariantFeatureMap` in
-  `external_drivers/EQUIVARIANT_FEATURE_MAP_IMPLEMENTATION_GUIDE.md`
-
-## [0.1.0] - 2026-01-24
+## [0.1.0] - 2026-02-07
 
 ### Added
 
@@ -30,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Encoding registry system with `register_encoding`, `get_encoding`, `list_encodings`
 - Type definitions and protocols for static type checking (`py.typed` marker)
 
-#### Encoding Implementations
+#### Encoding Implementations (16 encodings)
 - **AngleEncoding**: Single-qubit rotations (RX, RY, RZ) with configurable repetitions
 - **AmplitudeEncoding**: Logarithmic qubit encoding via state amplitudes
 - **BasisEncoding**: Binary encoding into computational basis states
@@ -39,10 +26,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **PauliFeatureMap**: Configurable Pauli rotation feature maps
 - **HardwareEfficientEncoding**: NISQ-friendly ansatz with hardware-native gates
 - **DataReuploading**: Multi-layer data re-uploading with trainable parameters
-- **SymmetryInspiredFeatureMap**: Symmetry-inspired quantum feature maps (formerly CovariantFeatureMap)
+- **SymmetryInspiredFeatureMap**: Symmetry-inspired quantum feature maps
 - **HamiltonianEncoding**: Time-evolution based encoding
 - **HigherOrderAngleEncoding**: Higher-order polynomial angle encoding
 - **QAOAEncoding**: QAOA-inspired encoding structure
+- **TrainableEncoding**: Parameterized encoding with learnable gate parameters
+- **SO2EquivariantFeatureMap**: SO(2) rotation-equivariant quantum feature map
+- **CyclicEquivariantFeatureMap**: Cyclic group equivariant quantum feature map
+- **SwapEquivariantFeatureMap**: Permutation-equivariant quantum feature map
 
 #### Multi-Backend Support
 - PennyLane backend (primary)
@@ -53,12 +44,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Analysis Tools
 - Expressibility calculation
 - Entanglement capability metrics
-- Resource estimation (qubits, depth, gate counts)
+- Trainability estimation via variance of parameter-shift gradients
+- Classical simulability analysis (Clifford detection, matchgate detection, entanglement-based)
+- Resource counting and estimation (gate counts, depth, qubit requirements)
+
+#### Experiment Framework
+- Experiment runner with checkpointing support
+- VQC (Variational Quantum Classifier) experiment pipeline
+- Kernel-based classification experiment pipeline
+- Noise model support for realistic hardware simulation
 
 #### Utilities
 - Benchmarking framework for encoding comparison
 - Decision guide system for encoding selection
-- Visualization tools
+- Visualization tools (`pip install encoding-atlas[visualization]` for matplotlib support)
 
 #### Quality & Infrastructure
 - Comprehensive test suite with 80%+ coverage requirement
@@ -77,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Core**: NumPy ≥1.21, SciPy ≥1.7, PennyLane ≥0.33, scikit-learn ≥1.0
 - **Optional**: Qiskit ≥1.0 (`pip install encoding-atlas[qiskit]`)
 - **Optional**: Cirq ≥1.0 (`pip install encoding-atlas[cirq]`)
+- **Optional**: matplotlib ≥3.5 (`pip install encoding-atlas[visualization]`)
 - **All backends**: `pip install encoding-atlas[all]`
 
 ### Python Support

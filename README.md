@@ -8,7 +8,7 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/encoding-atlas.svg)](https://pypi.org/project/encoding-atlas/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/ashutoshm1771/quantum-encoding-atlas/actions/workflows/ci.yml/badge.svg)](https://github.com/ashutoshm1771/quantum-encoding-atlas/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/ashutoshm1771/quantum-encoding-atlas/branch/main/graph/badge.svg)](https://codecov.io/gh/ashutoshm1771/quantum-encoding-atlas)
+[![codecov](https://codecov.io/gh/ashutoshm1771/quantum-encoding-atlas/branch/master/graph/badge.svg)](https://codecov.io/gh/ashutoshm1771/quantum-encoding-atlas)
 [![Documentation](https://img.shields.io/badge/docs-online-blue.svg)](https://q-encoding-atlas.web.app/documentation)
 
 [Documentation](https://q-encoding-atlas.web.app/documentation) |
@@ -25,7 +25,7 @@ The **Quantum Encoding Atlas** is the definitive open-source resource for unders
 
 ## Features
 
-- 📊 **15+ Encoding Methods** — Comprehensive implementations of all major quantum data encodings
+- 📊 **16 Encoding Methods** — Comprehensive implementations of all major quantum data encodings
 - 🔀 **Multi-Framework Support** — Works seamlessly with PennyLane, Qiskit, and Cirq
 - 📈 **Analysis Tools** — Compute expressibility, entanglement capability, and trainability
 - 🧪 **Benchmarking Framework** — Systematic comparison infrastructure
@@ -91,11 +91,13 @@ print(f"Reason: {rec.explanation}")
 
 | Category | Encodings |
 |----------|-----------|
-| **Amplitude-based** | Amplitude, Approximate Amplitude |
-| **Angle-based** | RX, RY, RZ, Multi-axis, Higher-order |
-| **Basis** | Binary, One-hot |
-| **Entangling** | IQP, ZZ Feature Map, Pauli Feature Map |
-| **Advanced** | Data Re-uploading, Hardware-efficient |
+| **Amplitude-based** | AmplitudeEncoding |
+| **Angle-based** | AngleEncoding (RX/RY/RZ), HigherOrderAngleEncoding |
+| **Basis** | BasisEncoding |
+| **Entangling** | IQPEncoding, ZZFeatureMap, PauliFeatureMap |
+| **Advanced** | DataReuploading, HardwareEfficientEncoding, QAOAEncoding, HamiltonianEncoding |
+| **Symmetry & Equivariant** | SymmetryInspiredFeatureMap, SO2EquivariantFeatureMap, CyclicEquivariantFeatureMap, SwapEquivariantFeatureMap |
+| **Trainable** | TrainableEncoding |
 
 See the [full encoding list](https://q-encoding-atlas.web.app/documentation) for details.
 

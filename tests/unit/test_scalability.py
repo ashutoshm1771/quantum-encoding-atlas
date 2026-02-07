@@ -431,12 +431,12 @@ class TestResourceLimits:
         for n in sizes:
             enc = AngleEncoding(n_features=n)
 
-            start = time.time()
+            start = time.perf_counter()
             for _ in range(1000):
                 _ = enc.n_qubits
                 _ = enc.depth
                 _ = enc.properties
-            times[n] = time.time() - start
+            times[n] = time.perf_counter() - start
 
         # Time should not grow significantly with size
         # (properties should be cached)

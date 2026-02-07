@@ -39,8 +39,9 @@ The analysis returns one of three classifications:
 
 - ``conditionally_simulable``: Circuit may be simulable depending on
   input data, circuit parameters, or specific structure.
-  Examples: Circuits with bounded entanglement, small circuits (< 20 qubits),
-  circuits with special symmetry structure.
+  Examples: Circuits with linear/circular entanglement topology where
+  tensor network (MPS) simulation may be efficient if entanglement
+  entropy is bounded.
 
 - ``not_simulable``: Circuit is believed to be hard to simulate classically.
   Examples: IQP circuits, random circuits with high entanglement,
@@ -302,18 +303,6 @@ _MEMORY_WARNING_QUBITS: int = 25
 # Numerical constants for entropy calculations
 _ENTROPY_EPSILON: float = 1e-15
 
-# Valid simulability class values (for type safety and validation)
-# These are the only valid values for the SimulabilityResult.simulability_class field.
-# Any encoding property that returns a different value will be normalized to "not_simulable"
-# as a conservative fallback.
-_VALID_SIMULABILITY_CLASSES: frozenset[str] = frozenset(
-    {
-        "simulable",
-        "conditionally_simulable",
-        "not_simulable",
-    }
-)
-
 
 # =============================================================================
 # Main Public Functions
@@ -404,7 +393,7 @@ def check_simulability(
 
     - ``conditionally_simulable``: Circuit may be simulable depending on
       input data, circuit parameters, or specific structure.
-      Examples: Circuits with bounded entanglement, small circuits.
+      Examples: Circuits with linear/circular entanglement topology.
 
     - ``not_simulable``: Circuit is believed to be hard to simulate
       classically. Examples: IQP circuits, random circuits with high
@@ -518,13 +507,6 @@ def check_simulability(
             f"Statevector simulation feasible ({n_qubits} qubits, ~{memory_str} memory)"
         )
 
-        # Add warning for memory-intensive simulations
-        if n_qubits > _MEMORY_WARNING_QUBITS:
-            recommendations.append(
-                f"Note: {n_qubits} qubits requires ~{memory_str} memory; "
-                f"ensure sufficient RAM is available"
-            )
-
     # Case 3: Check if Clifford-only (Gottesman-Knill theorem applies)
     if is_clifford:
         _logger.debug(
@@ -618,7 +600,7 @@ def check_simulability(
                 recommendations=recommendations,
             )
 
-        # Full/all-to-all entanglement - likely hard to simulate
+        # Full/all-to-all entanglement - log for debugging
         if entanglement_pattern == "full":
             _logger.debug(
                 "Encoding %s has full entanglement pattern",
@@ -626,64 +608,44 @@ def check_simulability(
             )
 
         # =====================================================================
-        # Small Circuit Override: Circuits with ≤ _SMALL_CIRCUIT_QUBITS qubits
-        # can always be simulated via brute-force statevector methods, even if
-        # the circuit structure would otherwise be hard to simulate efficiently.
-        # Per documentation, small circuits are "conditionally_simulable".
+        # Theoretical Complexity Classification
+        #
+        # For circuits with full, partial, or unknown entanglement topology
+        # and non-Clifford gates, no known efficient classical simulation
+        # algorithm exists.  The classification is based on the circuit
+        # *family's* asymptotic complexity, not a specific instance size.
+        #
+        # - IQP circuits have provable hardness under polynomial hierarchy
+        #   assumptions [Bremner, Montanaro & Shepherd, PRL 117(8), 2016].
+        # - General entangling circuits with parameterized rotations are
+        #   believed to be hard based on the absence of known efficient
+        #   algorithms and connections to #P-hard problems.
+        #
+        # Small instances (≤ _SMALL_CIRCUIT_QUBITS qubits) can always be
+        # brute-force simulated via statevector methods.  This practical
+        # feasibility is noted in *recommendations* but does not change the
+        # theoretical classification, because simulability is a property of
+        # the circuit family, not a single instance.
         # =====================================================================
+
+        # Practical feasibility note for small circuits (recommendation only)
         if n_qubits <= _SMALL_CIRCUIT_QUBITS:
-            _logger.debug(
-                "Encoding %s has %d qubits (≤ %d), classifying as "
-                "conditionally_simulable despite entanglement structure",
-                encoding.__class__.__name__,
-                n_qubits,
-                _SMALL_CIRCUIT_QUBITS,
+            memory_bytes = 2**n_qubits * 16
+            memory_str = _format_memory_size(memory_bytes)
+            recommendations.append(
+                f"Brute-force statevector simulation is feasible at this "
+                f"circuit size ({n_qubits} qubits, ~{memory_str} memory)"
             )
 
-            # Build reason based on circuit characteristics
-            encoding_name_lower = encoding.__class__.__name__.lower()
-            if "iqp" in encoding_name_lower:
-                hardness_note = (
-                    "IQP circuits have provable hardness for large instances, but "
-                )
-            else:
-                hardness_note = ""
-
-            reason = (
-                f"{hardness_note}Circuit with {n_qubits} qubits can be simulated "
-                f"via brute-force statevector methods (2^{n_qubits} = "
-                f"{2**n_qubits:,} amplitudes)"
-            )
-
-            recommendations.extend(
-                [
-                    "Brute-force statevector simulation is tractable for this circuit size",
-                    "Consider using PennyLane's default.qubit or Qiskit's Statevector",
-                    "For larger instances, quantum hardware may be required",
-                ]
-            )
-
-            return SimulabilityResult(
-                is_simulable=False,  # Not *efficiently* simulable, but tractable
-                simulability_class="conditionally_simulable",
-                reason=reason,
-                details=details,
-                recommendations=recommendations,
-            )
-
-        # =====================================================================
-        # Large Circuit Classification: For circuits exceeding the small circuit
-        # threshold, classify based on structure and known hardness results.
-        # =====================================================================
         recommendations.extend(
             [
-                f"Use statevector simulation for small instances (< {_SMALL_CIRCUIT_QUBITS} qubits)",
+                f"Use statevector simulation for instances with < {_SMALL_CIRCUIT_QUBITS} qubits",
                 "Consider tensor network methods for structured entanglement",
                 "May require quantum hardware for large instances",
             ]
         )
 
-        # Check if it's a known hard class (e.g., IQP)
+        # Determine reason based on circuit characteristics
         encoding_name = encoding.__class__.__name__.lower()
         if "iqp" in encoding_name:
             reason = (
@@ -990,7 +952,7 @@ def estimate_entanglement_bound(
     Warnings
     --------
     UserWarning
-        If the encoding has more than 15 qubits, a warning is issued
+        If the encoding has more than 25 qubits, a warning is issued
         about memory usage for simulation.
 
     Notes
@@ -1427,11 +1389,14 @@ def _check_matchgate_property(encoding: BaseEncoding) -> bool:
     """
     encoding_name = encoding.__class__.__name__.lower()
 
+    # Compute entanglement pattern once (used by all checks below)
+    entanglement_pattern = _get_entanglement_pattern(encoding)
+    _has_linear_topology = entanglement_pattern in ("linear", "none")
+
     # Check for known matchgate-based encoding types
     if encoding_name in _MATCHGATE_ENCODING_NAMES:
         # Verify linear topology for simulability
-        entanglement_pattern = _get_entanglement_pattern(encoding)
-        if entanglement_pattern in ("linear", "nearest_neighbor", "none"):
+        if _has_linear_topology:
             _logger.debug(
                 "Encoding %s identified as matchgate circuit with %s topology",
                 encoding.__class__.__name__,
@@ -1453,19 +1418,12 @@ def _check_matchgate_property(encoding: BaseEncoding) -> bool:
             encoding, "gate_set", getattr(encoding, "gates", None)
         )
         if gate_set_attr is not None:
-            # Convert to set of lowercase strings for comparison
-            if isinstance(gate_set_attr, (list, tuple, set, frozenset)):
-                gates = {str(g).lower() for g in gate_set_attr}
-            elif isinstance(gate_set_attr, str):
-                gates = {gate_set_attr.lower()}
-            else:
-                gates = set()
+            gates = _normalize_gate_set(gate_set_attr)
 
             # Check if all gates are matchgates
             if gates and gates.issubset(_MATCHGATE_GATES):
                 # Also verify topology
-                entanglement_pattern = _get_entanglement_pattern(encoding)
-                if entanglement_pattern in ("linear", "nearest_neighbor", "none"):
+                if _has_linear_topology:
                     _logger.debug(
                         "Encoding %s uses matchgate set with linear topology",
                         encoding.__class__.__name__,
@@ -1475,8 +1433,7 @@ def _check_matchgate_property(encoding: BaseEncoding) -> bool:
     # Check for fermionic/particle-preserving keywords in encoding name
     fermionic_keywords = {"fermionic", "fermion", "givens", "particle", "matchgate"}
     if any(keyword in encoding_name for keyword in fermionic_keywords):
-        entanglement_pattern = _get_entanglement_pattern(encoding)
-        if entanglement_pattern in ("linear", "nearest_neighbor", "none"):
+        if _has_linear_topology:
             _logger.debug(
                 "Encoding %s appears to be fermionic/matchgate-based",
                 encoding.__class__.__name__,
@@ -1502,8 +1459,8 @@ def _get_entanglement_pattern(encoding: BaseEncoding) -> str:
     Returns
     -------
     str
-        One of: "none", "linear", "nearest_neighbor", "circular", "full",
-        "partial", "unknown"
+        One of: "none", "linear", "circular", "full", "partial", "unknown".
+        Note that "nearest_neighbor" inputs are normalized to "linear".
 
     Notes
     -----
@@ -1541,9 +1498,8 @@ def _get_entanglement_pattern(encoding: BaseEncoding) -> str:
                 return "full"
             elif pattern in ("none", "empty"):
                 return "none"
-            # Return the pattern directly if it's a recognized value
-            if pattern in ("linear", "circular", "full", "partial", "none"):
-                return pattern
+            elif pattern == "partial":
+                return "partial"
 
     # =========================================================================
     # Strategy 2: Analyze get_entanglement_pairs() if implemented
