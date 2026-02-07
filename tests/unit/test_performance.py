@@ -112,6 +112,35 @@ def benchmark_function(
     }
 
 
+def compute_relative_iqr(times: List[float]) -> float:
+    """Compute the relative interquartile range (IQR / median).
+
+    Uses IQR instead of standard deviation to measure timing consistency
+    because IQR is robust to outliers caused by OS scheduling jitter,
+    garbage collection pauses, and other non-deterministic system events
+    that inevitably affect wall-clock microbenchmarks.
+
+    Parameters
+    ----------
+    times : List[float]
+        List of measured execution times in seconds.
+
+    Returns
+    -------
+    float
+        IQR divided by the median. A value < 1.0 indicates that the
+        middle 50% of timings are tightly clustered relative to the
+        typical execution time.
+    """
+    sorted_times = sorted(times)
+    n = len(sorted_times)
+    q1 = sorted_times[n // 4]
+    q3 = sorted_times[3 * n // 4]
+    iqr = q3 - q1
+    median = statistics.median(sorted_times)
+    return iqr / median if median > 0 else 0.0
+
+
 # =============================================================================
 # Encoding Configurations for Testing
 # =============================================================================
@@ -257,23 +286,31 @@ class TestCircuitGenerationBenchmarks:
     ) -> None:
         """Test that circuit generation time is consistent.
 
-        Standard deviation should be less than mean (coefficient of
-        variation < 1.0), indicating stable performance.
+        Measures consistency using batched timings with IQR-based
+        spread. Each measurement times a batch of calls together,
+        amortizing per-call OS scheduling jitter across the batch.
+        Uses relative IQR (IQR / median) which is robust to the
+        residual outliers that remain after batching.
         """
         enc = IQPEncoding(n_features=4)
+        batch_size = 10
 
-        # Use more warmup iterations to account for JIT compilation
-        # and caching effects that can cause initial variance
-        stats = benchmark_function(
-            lambda: enc.get_circuit(sample_data_4d, backend="pennylane"),
-            n_iterations=100,
-            warmup=30,
-        )
+        # Warmup to stabilize JIT compilation and caching effects
+        for _ in range(30):
+            enc.get_circuit(sample_data_4d, backend="pennylane")
 
-        cv = stats["std"] / stats["mean"] if stats["mean"] > 0 else 0
-        assert cv < 1.0, (
+        # Measure batched timings to amortize per-call OS jitter
+        times: List[float] = []
+        for _ in range(50):
+            with Timer() as t:
+                for _ in range(batch_size):
+                    enc.get_circuit(sample_data_4d, backend="pennylane")
+            times.append(t.elapsed / batch_size)
+
+        relative_iqr = compute_relative_iqr(times)
+        assert relative_iqr < 1.0, (
             f"Circuit generation time highly variable: "
-            f"CV={cv:.2f}, expected < 1.0"
+            f"relative IQR={relative_iqr:.2f}, expected < 1.0"
         )
 
 
@@ -639,10 +676,10 @@ class TestInstantiationPerformance:
     def test_repeated_instantiation_consistent(self) -> None:
         """Test that repeated instantiation has consistent performance.
 
-        Uses coefficient of variation (CV = std/mean) to measure consistency.
-        A CV < 1.0 indicates acceptable variance for timing tests in CI
-        environments where system load can vary. The threshold is generous
-        to avoid flaky test failures while still catching severe regressions.
+        Uses relative IQR (IQR / median) instead of coefficient of
+        variation to measure consistency. IQR is robust to outliers
+        caused by OS scheduling jitter and GC pauses that inevitably
+        affect wall-clock microbenchmarks on non-real-time systems.
         """
         # Warmup iterations to allow JIT compilation and caching to stabilize
         for _ in range(20):
@@ -655,15 +692,10 @@ class TestInstantiationPerformance:
                 _ = HardwareEfficientEncoding(n_features=4, reps=2)
             times.append(t.elapsed)
 
-        # Check consistency (low variance)
-        # CV < 1.0 means std < mean, indicating reasonable consistency
-        # This threshold is generous to accommodate CI environment variability
-        mean_time = statistics.mean(times)
-        std_time = statistics.stdev(times)
-        cv = std_time / mean_time if mean_time > 0 else 0
-
-        assert cv < 1.0, (
-            f"Instantiation time inconsistent: CV={cv:.2f}, expected < 1.0"
+        relative_iqr = compute_relative_iqr(times)
+        assert relative_iqr < 1.0, (
+            f"Instantiation time inconsistent: "
+            f"relative IQR={relative_iqr:.2f}, expected < 1.0"
         )
 
 

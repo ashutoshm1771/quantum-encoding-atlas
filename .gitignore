@@ -61,6 +61,9 @@ htmlcov/
 .hypothesis/
 *.tmp.*
 
+# Test notebooks (not for distribution)
+notebooks/test_encoding_atlas.ipynb
+
 # Experiment results (reproducible outputs)
 experiments/results/
 
