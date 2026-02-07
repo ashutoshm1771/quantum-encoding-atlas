@@ -1,0 +1,35 @@
+{
+  "stage": "tradeoff",
+  "seed": 42,
+  "backend": "pennylane",
+  "encodings": [
+    {
+      "name": "__tradeoff__",
+      "params": {}
+    }
+  ],
+  "analysis_params": {
+    "stage_dirs": {
+      "resources": "experiments/results/raw/stage1_resources",
+      "simulability": "experiments/results/raw/stage2_simulability",
+      "expressibility": "experiments/results/raw/stage3_expressibility",
+      "entanglement": "experiments/results/raw/stage4_entanglement",
+      "trainability": "experiments/results/raw/stage5_trainability",
+      "noise": "experiments/results/raw/stage5b_noise",
+      "vqc": "experiments/results/raw/stage6a_vqc",
+      "kernel": "experiments/results/raw/stage6b_kernel"
+    },
+    "figure_dir": "experiments/results/figures",
+    "sensitivity_n_samples": 1000,
+    "generate_plots": true,
+    "default_weights": {
+      "accuracy": 0.30,
+      "expressibility": 0.15,
+      "trainability": 0.20,
+      "inv_depth": 0.15,
+      "entanglement": 0.05,
+      "noise_resilience": 0.15
+    }
+  },
+  "output_dir": "experiments/results/raw/stage7_tradeoff"
+}

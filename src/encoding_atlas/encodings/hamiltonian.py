@@ -65,16 +65,16 @@ This formula has a critical point at x = π where interactions vanish.
 Supported Hamiltonian Types
 ---------------------------
 - **'iqp'**: Diagonal Hamiltonians with ZZ interactions (IQP-style)
-  H(x) = Σᵢ xᵢZᵢ + Σᵢⱼ xᵢxⱼZᵢZⱼ
+  H(x) = Σᵢ xᵢZᵢ + Σᵢⱼ (π - xᵢ)(π - xⱼ)ZᵢZⱼ
 
 - **'xy'**: XY model with data-dependent couplings
-  H(x) = Σᵢⱼ xᵢⱼ(XᵢXⱼ + YᵢYⱼ)
+  H(x) = Σᵢⱼ (π - xᵢ)(π - xⱼ)(XᵢXⱼ + YᵢYⱼ)
 
 - **'heisenberg'**: Heisenberg model with all Pauli interactions
-  H(x) = Σᵢⱼ xᵢⱼ(XᵢXⱼ + YᵢYⱼ + ZᵢZⱼ)
+  H(x) = Σᵢⱼ (π - xᵢ)(π - xⱼ)(XᵢXⱼ + YᵢYⱼ + ZᵢZⱼ)
 
 - **'pauli_z'**: Single-qubit Z rotations with pairwise ZZ interactions
-  H(x) = Σᵢ xᵢZᵢ + Σᵢⱼ xᵢxⱼZᵢZⱼ
+  H(x) = Σᵢ xᵢZᵢ + Σᵢⱼ (π - xᵢ)(π - xⱼ)ZᵢZⱼ
 
 Note on Data Preprocessing
 --------------------------
@@ -248,6 +248,12 @@ if TYPE_CHECKING:
 # By default, no handlers are attached, so no output is produced unless the
 # application configures logging.
 _logger = logging.getLogger(__name__)
+
+# =============================================================================
+# Public API
+# =============================================================================
+
+__all__ = ['HamiltonianEncoding', 'GateCountBreakdown']
 
 # =============================================================================
 # Module-level constants for numerical precision
@@ -548,6 +554,8 @@ class HamiltonianEncoding(BaseEncoding):
     insert_barriers : bool, default=True
         Whether to insert barriers between Trotter steps in circuits.
         Useful for visualization and preventing gate optimizations.
+        Only effective for the Qiskit backend. PennyLane does not support
+        barriers, and the Cirq backend does not currently insert them.
 
     Attributes
     ----------
@@ -763,6 +771,7 @@ class HamiltonianEncoding(BaseEncoding):
             Entanglement pattern for two-qubit terms.
         insert_barriers : bool, default=True
             Whether to insert barriers between Trotter steps.
+            Only effective for the Qiskit backend.
         max_pairs : int or None, default=None
             Maximum number of qubit pairs for two-qubit interactions.
             If None, all pairs from the entanglement pattern are used.
@@ -2103,7 +2112,8 @@ class HamiltonianEncoding(BaseEncoding):
             two_qubit_gates_per_rep = 2 * n_pairs
 
         # Total counts
-        single_qubit_gates = self.reps * single_qubit_gates_per_rep
+        # Include initial Hadamard layer (H^⊗n) for |+⟩^⊗n state preparation
+        single_qubit_gates = n + self.reps * single_qubit_gates_per_rep
         two_qubit_gates = self.reps * two_qubit_gates_per_rep
         total_gates = single_qubit_gates + two_qubit_gates
 

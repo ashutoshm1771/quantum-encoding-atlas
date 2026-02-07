@@ -1298,23 +1298,21 @@ class TestZZFeatureMapEntanglementPairs:
 
 
 class TestZZFeatureMapEntanglementPairsCaching:
-    """Tests for entanglement pairs caching mechanism."""
+    """Tests for entanglement pairs computed at initialization."""
 
-    def test_pairs_cached_after_first_call(self) -> None:
-        """Test that entanglement pairs are cached after first computation."""
+    def test_pairs_computed_at_init(self) -> None:
+        """Test that entanglement pairs are computed at initialization."""
         enc = ZZFeatureMap(n_features=4, entanglement="full")
 
-        # Initially, cache should be None
-        assert enc._entanglement_pairs is None
-
-        # First call computes and caches
-        pairs1 = enc._get_entanglement_pairs()
+        # Pairs should be computed immediately at init, not lazily
         assert enc._entanglement_pairs is not None
-        assert enc._entanglement_pairs is pairs1
+        assert len(enc._entanglement_pairs) == 6  # 4*3/2 = 6 pairs
 
-        # Second call returns cached result
+        # Accessor returns the same cached list
+        pairs1 = enc._get_entanglement_pairs()
         pairs2 = enc._get_entanglement_pairs()
-        assert pairs2 is pairs1  # Same object, not just equal
+        assert pairs1 is pairs2  # Same object, not just equal
+        assert pairs1 is enc._entanglement_pairs
 
     def test_cache_content_correct(self) -> None:
         """Test that cached pairs have correct content."""
@@ -1771,91 +1769,148 @@ class TestZZFeatureMapInternalOptimizations:
 
 
 # =============================================================================
-# Test Class: ZZFeatureMap Specific - Full Entanglement Info Logging
+# Test Class: ZZFeatureMap Specific - Full Entanglement Warning
 # =============================================================================
 
 
-class TestZZFeatureMapFullEntanglementInfoLogging:
-    """Tests for the INFO logging with large n_features and full entanglement."""
+class TestZZFeatureMapFullEntanglementWarning:
+    """Tests for the UserWarning with large n_features and full entanglement.
+
+    ZZFeatureMap emits a UserWarning when full entanglement is used with
+    n_features > 10 to alert users about O(n²) gate scaling. This matches
+    the pattern used by IQPEncoding and other encodings.
+    """
 
     def test_threshold_constant_exists(self) -> None:
         """Test that the threshold constant exists."""
-        from encoding_atlas.encodings.zz_feature_map import _FULL_ENTANGLEMENT_INFO_THRESHOLD
+        from encoding_atlas.encodings.zz_feature_map import _FULL_ENTANGLEMENT_WARNING_THRESHOLD
 
-        assert isinstance(_FULL_ENTANGLEMENT_INFO_THRESHOLD, int)
-        assert _FULL_ENTANGLEMENT_INFO_THRESHOLD == 10
+        assert isinstance(_FULL_ENTANGLEMENT_WARNING_THRESHOLD, int)
+        assert _FULL_ENTANGLEMENT_WARNING_THRESHOLD == 10
 
-    def test_no_log_below_threshold(self, caplog: pytest.LogCaptureFixture) -> None:
-        """Test that no INFO log is emitted below threshold."""
-        import logging
+    def test_no_warning_at_threshold(self) -> None:
+        """Test that no warning is emitted at threshold (n=10)."""
+        import warnings
 
-        with caplog.at_level(logging.INFO, logger="encoding_atlas.encodings.zz_feature_map"):
-            # n_features <= 10 should not trigger the log
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             _ = ZZFeatureMap(n_features=10, entanglement="full")
 
-        # Check that no INFO message about ZZ pairs was logged
-        info_messages = [r for r in caplog.records if r.levelno == logging.INFO]
-        zz_pair_messages = [m for m in info_messages if "ZZ pairs" in m.message]
-        assert len(zz_pair_messages) == 0
+        # Filter for UserWarnings about full entanglement
+        entanglement_warnings = [
+            x for x in w
+            if issubclass(x.category, UserWarning)
+            and "Full entanglement" in str(x.message)
+        ]
+        assert len(entanglement_warnings) == 0
 
-    def test_log_above_threshold(self, caplog: pytest.LogCaptureFixture) -> None:
-        """Test that INFO log is emitted above threshold."""
-        import logging
+    def test_warning_above_threshold(self) -> None:
+        """Test that UserWarning is emitted above threshold."""
+        import warnings
 
-        with caplog.at_level(logging.INFO, logger="encoding_atlas.encodings.zz_feature_map"):
-            # n_features > 10 should trigger the log
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             _ = ZZFeatureMap(n_features=12, entanglement="full")
 
-        # Check that INFO message about ZZ pairs was logged
-        info_messages = [r for r in caplog.records if r.levelno == logging.INFO]
-        zz_pair_messages = [m for m in info_messages if "ZZ pairs" in m.message]
-        assert len(zz_pair_messages) == 1
+        # Filter for UserWarnings about full entanglement
+        entanglement_warnings = [
+            x for x in w
+            if issubclass(x.category, UserWarning)
+            and "Full entanglement" in str(x.message)
+        ]
+        assert len(entanglement_warnings) == 1
 
         # Verify message content
-        msg = zz_pair_messages[0].message
+        msg = str(entanglement_warnings[0].message)
         assert "12" in msg  # n_features
         assert "66" in msg  # n_pairs = 12*11/2 = 66
         assert "linear" in msg.lower()  # Suggestion for linear
 
-    def test_no_log_for_linear_entanglement(self, caplog: pytest.LogCaptureFixture) -> None:
-        """Test that no INFO log is emitted for linear entanglement regardless of n."""
-        import logging
+    def test_no_warning_for_linear_entanglement(self) -> None:
+        """Test that no warning is emitted for linear entanglement regardless of n."""
+        import warnings
 
-        with caplog.at_level(logging.INFO, logger="encoding_atlas.encodings.zz_feature_map"):
-            # Linear entanglement should not trigger the log
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             _ = ZZFeatureMap(n_features=20, entanglement="linear")
 
-        info_messages = [r for r in caplog.records if r.levelno == logging.INFO]
-        zz_pair_messages = [m for m in info_messages if "ZZ pairs" in m.message]
-        assert len(zz_pair_messages) == 0
+        entanglement_warnings = [
+            x for x in w
+            if issubclass(x.category, UserWarning)
+            and "Full entanglement" in str(x.message)
+        ]
+        assert len(entanglement_warnings) == 0
 
-    def test_no_log_for_circular_entanglement(self, caplog: pytest.LogCaptureFixture) -> None:
-        """Test that no INFO log is emitted for circular entanglement regardless of n."""
-        import logging
+    def test_no_warning_for_circular_entanglement(self) -> None:
+        """Test that no warning is emitted for circular entanglement regardless of n."""
+        import warnings
 
-        with caplog.at_level(logging.INFO, logger="encoding_atlas.encodings.zz_feature_map"):
-            # Circular entanglement should not trigger the log
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             _ = ZZFeatureMap(n_features=20, entanglement="circular")
 
-        info_messages = [r for r in caplog.records if r.levelno == logging.INFO]
-        zz_pair_messages = [m for m in info_messages if "ZZ pairs" in m.message]
-        assert len(zz_pair_messages) == 0
+        entanglement_warnings = [
+            x for x in w
+            if issubclass(x.category, UserWarning)
+            and "Full entanglement" in str(x.message)
+        ]
+        assert len(entanglement_warnings) == 0
 
-    def test_log_contains_cnot_count(self, caplog: pytest.LogCaptureFixture) -> None:
-        """Test that the log message contains CNOT count."""
-        import logging
+    def test_warning_contains_cnot_count(self) -> None:
+        """Test that the warning message contains CNOT count."""
+        import warnings
 
-        with caplog.at_level(logging.INFO, logger="encoding_atlas.encodings.zz_feature_map"):
-            enc = ZZFeatureMap(n_features=15, reps=2, entanglement="full")
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            _ = ZZFeatureMap(n_features=15, reps=2, entanglement="full")
 
-        info_messages = [r for r in caplog.records if r.levelno == logging.INFO]
-        zz_pair_messages = [m for m in info_messages if "ZZ pairs" in m.message]
-        assert len(zz_pair_messages) == 1
+        entanglement_warnings = [
+            x for x in w
+            if issubclass(x.category, UserWarning)
+            and "Full entanglement" in str(x.message)
+        ]
+        assert len(entanglement_warnings) == 1
 
-        msg = zz_pair_messages[0].message
+        msg = str(entanglement_warnings[0].message)
         # n_pairs = 15*14/2 = 105
         # CNOTs = 2 * 105 * 2 = 420
-        assert "420" in msg or "CNOT" in msg
+        assert "420" in msg
+        assert "CNOT" in msg
+
+    def test_warning_stacklevel_points_to_caller(self) -> None:
+        """Test that warning stacklevel points to the caller's code, not __init__."""
+        import warnings
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            _ = ZZFeatureMap(n_features=15, entanglement="full")
+
+        entanglement_warnings = [
+            x for x in w
+            if issubclass(x.category, UserWarning)
+            and "Full entanglement" in str(x.message)
+        ]
+        assert len(entanglement_warnings) == 1
+
+        # The warning should point to this test file, not zz_feature_map.py
+        warning_filename = entanglement_warnings[0].filename
+        assert "test_zz_feature_map" in warning_filename
+
+    def test_logger_warning_also_emitted(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Test that _logger.warning is also called alongside warnings.warn."""
+        import logging
+        import warnings
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("always")
+            with caplog.at_level(logging.WARNING, logger="encoding_atlas.encodings.zz_feature_map"):
+                _ = ZZFeatureMap(n_features=12, entanglement="full")
+
+        # Check that WARNING was logged (in addition to UserWarning)
+        warning_records = [r for r in caplog.records if r.levelno == logging.WARNING]
+        assert len(warning_records) == 1
+        assert "Large feature count" in warning_records[0].message
+        assert "12" in warning_records[0].message
 
 
 # =============================================================================

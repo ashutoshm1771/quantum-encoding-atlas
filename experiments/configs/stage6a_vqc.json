@@ -1,0 +1,83 @@
+{
+  "stage": "vqc",
+  "seed": 42,
+  "backend": "pennylane",
+  "encodings": [
+    {
+      "name": "angle",
+      "params": { "n_features": [2, 4], "rotation": ["Y"] }
+    },
+    {
+      "name": "amplitude",
+      "params": { "n_features": [2, 4] }
+    },
+    {
+      "name": "basis",
+      "params": { "n_features": [2, 4] }
+    },
+    {
+      "name": "iqp",
+      "params": { "n_features": [2, 4], "reps": [2] }
+    },
+    {
+      "name": "zz_feature_map",
+      "params": { "n_features": [2, 4], "reps": [2] }
+    },
+    {
+      "name": "pauli_feature_map",
+      "params": { "n_features": [2, 4], "reps": [2] }
+    },
+    {
+      "name": "data_reuploading",
+      "params": { "n_features": [2, 4], "n_layers": [2] }
+    },
+    {
+      "name": "hardware_efficient",
+      "params": { "n_features": [2, 4], "reps": [2] }
+    },
+    {
+      "name": "higher_order_angle",
+      "params": { "n_features": [2, 4], "order": [2] }
+    },
+    {
+      "name": "qaoa_encoding",
+      "params": { "n_features": [2, 4], "reps": [2] }
+    },
+    {
+      "name": "hamiltonian_encoding",
+      "params": { "n_features": [2, 4], "reps": [2] }
+    },
+    {
+      "name": "symmetry_inspired",
+      "params": { "n_features": [2, 4], "reps": [2] }
+    },
+    {
+      "name": "trainable_encoding",
+      "params": { "n_features": [2, 4], "n_layers": [2] }
+    },
+    {
+      "name": "so2_equivariant",
+      "params": { "n_features": [2], "max_angular_momentum": [2] }
+    },
+    {
+      "name": "cyclic_equivariant",
+      "params": { "n_features": [2, 4], "reps": [2] }
+    },
+    {
+      "name": "swap_equivariant",
+      "params": { "n_features": [2, 4], "reps": [2] }
+    }
+  ],
+  "analysis_params": {
+    "datasets": ["moons", "circles", "linear", "xor", "iris", "wine", "breast_cancer", "digits_01"],
+    "n_runs": 10,
+    "n_folds": 5,
+    "vqc_params": {
+      "n_var_layers": 2,
+      "lr": 0.01,
+      "epochs": 100
+    },
+    "classical_baselines": ["svm_rbf", "random_forest", "mlp_2layer"]
+  },
+  "output_dir": "experiments/results/raw/stage6a_vqc"
+}

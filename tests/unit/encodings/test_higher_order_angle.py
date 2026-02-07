@@ -2260,3 +2260,388 @@ class TestSlowSimulation:
 
         np.testing.assert_allclose(pl_probs, qk_probs, atol=1e-6)
         np.testing.assert_allclose(pl_probs, cirq_probs, atol=1e-6)
+
+    @pytest.mark.skipif(
+        not (HAS_PENNYLANE and HAS_QISKIT and HAS_CIRQ),
+        reason="All backends required",
+    )
+    @pytest.mark.cross_backend
+    def test_cross_backend_zero_input_state_equivalence(self) -> None:
+        """Test that all backends produce equivalent states for zero input.
+
+        When all input features are zero, all rotation angles are zero, resulting
+        in identity operations. All backends should produce the |0...0⟩ state
+        with equivalent state vectors and consistent qubit dimensions.
+
+        This test verifies that removing the zero-angle skip optimization
+        maintains correct cross-backend consistency.
+        """
+        enc = HigherOrderAngleEncoding(n_features=4, order=2)
+        x = np.zeros(4)
+
+        # Get PennyLane state
+        pl_circuit = enc.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=enc.n_qubits)
+
+        @qml.qnode(dev)
+        def pl_full():
+            pl_circuit()
+            return qml.state()
+
+        pl_state = np.array(pl_full())
+
+        # Get Qiskit state
+        qk_circuit = enc.get_circuit(x, backend="qiskit")
+        qk_sv = Statevector(qk_circuit)
+        qk_state = np.array(qk_sv.data)
+
+        # Get Cirq state
+        cirq_circuit = enc.get_circuit(x, backend="cirq")
+        cirq_sim = cirq.Simulator(dtype=np.complex128)
+        cirq_result = cirq_sim.simulate(cirq_circuit)
+        cirq_state = np.array(cirq_result.final_state_vector)
+
+        # All states should have same dimension (2^n_qubits = 16)
+        expected_dim = 2 ** enc.n_qubits
+        assert len(pl_state) == expected_dim, f"PennyLane: {len(pl_state)} != {expected_dim}"
+        assert len(qk_state) == expected_dim, f"Qiskit: {len(qk_state)} != {expected_dim}"
+        assert len(cirq_state) == expected_dim, f"Cirq: {len(cirq_state)} != {expected_dim}"
+
+        # All states should be |0...0⟩ (first element is 1, rest are 0)
+        expected_state = np.zeros(expected_dim, dtype=np.complex128)
+        expected_state[0] = 1.0
+
+        np.testing.assert_allclose(pl_state, expected_state, atol=1e-10)
+        np.testing.assert_allclose(qk_state, expected_state, atol=1e-10)
+        np.testing.assert_allclose(cirq_state, expected_state, atol=1e-10)
+
+    @pytest.mark.skipif(
+        not (HAS_PENNYLANE and HAS_QISKIT and HAS_CIRQ),
+        reason="All backends required",
+    )
+    @pytest.mark.cross_backend
+    def test_cross_backend_zero_input_qubit_registration(self) -> None:
+        """Test that all backends register correct number of qubits for zero input.
+
+        This specifically tests Cirq's qubit registration behavior. When all
+        rotation angles are zero, Cirq must still register all qubits to maintain
+        consistent state vector dimensions across backends.
+        """
+        enc = HigherOrderAngleEncoding(n_features=4, order=2)
+        x = np.zeros(4)
+
+        # PennyLane: Device defines qubit count
+        pl_circuit = enc.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=enc.n_qubits)
+
+        @qml.qnode(dev)
+        def pl_full():
+            pl_circuit()
+            return qml.state()
+
+        pl_state = pl_full()
+        pl_dim = len(pl_state)
+
+        # Qiskit: Circuit pre-allocates qubits
+        qk_circuit = enc.get_circuit(x, backend="qiskit")
+        qk_qubits = qk_circuit.num_qubits
+
+        # Cirq: Qubits registered via operations
+        cirq_circuit = enc.get_circuit(x, backend="cirq")
+        cirq_qubits = len(cirq_circuit.all_qubits())
+
+        # All should have n_features qubits
+        assert qk_qubits == enc.n_features, f"Qiskit qubits: {qk_qubits}"
+        assert cirq_qubits == enc.n_features, f"Cirq qubits: {cirq_qubits}"
+        assert pl_dim == 2 ** enc.n_features, f"PennyLane state dim: {pl_dim}"
+
+    @pytest.mark.skipif(
+        not (HAS_PENNYLANE and HAS_QISKIT and HAS_CIRQ),
+        reason="All backends required",
+    )
+    @pytest.mark.cross_backend
+    def test_cross_backend_partial_zero_input(self) -> None:
+        """Test cross-backend equivalence when some (but not all) inputs are zero.
+
+        This tests the edge case where some rotation angles are zero while
+        others are non-zero, ensuring consistent behavior.
+        """
+        enc = HigherOrderAngleEncoding(n_features=4, order=2)
+        # Only first two features are non-zero
+        x = np.array([0.5, 0.3, 0.0, 0.0])
+
+        # Get PennyLane state
+        pl_circuit = enc.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=enc.n_qubits)
+
+        @qml.qnode(dev)
+        def pl_full():
+            pl_circuit()
+            return qml.state()
+
+        pl_state = np.array(pl_full())
+
+        # Get Qiskit state
+        qk_circuit = enc.get_circuit(x, backend="qiskit")
+        qk_sv = Statevector(qk_circuit)
+        qk_state = np.array(qk_sv.data)
+
+        # Get Cirq state
+        cirq_circuit = enc.get_circuit(x, backend="cirq")
+        cirq_sim = cirq.Simulator(dtype=np.complex128)
+        cirq_result = cirq_sim.simulate(cirq_circuit)
+        cirq_state = np.array(cirq_result.final_state_vector)
+
+        # All states should have same dimension
+        expected_dim = 2 ** enc.n_qubits
+        assert len(pl_state) == expected_dim
+        assert len(qk_state) == expected_dim
+        assert len(cirq_state) == expected_dim
+
+        # States should be equivalent (compare probability distributions)
+        pl_probs = sorted(np.abs(pl_state) ** 2)
+        qk_probs = sorted(np.abs(qk_state) ** 2)
+        cirq_probs = sorted(np.abs(cirq_state) ** 2)
+
+        np.testing.assert_allclose(pl_probs, qk_probs, atol=1e-6)
+        np.testing.assert_allclose(pl_probs, cirq_probs, atol=1e-6)
+
+
+# =============================================================================
+# Test Class: Deterministic Gate Counts
+# =============================================================================
+
+
+class TestDeterministicGateCounts:
+    """Tests verifying deterministic gate counts regardless of input values.
+
+    After removing the zero-angle skip optimization, gate counts should be
+    deterministic and independent of input values. This ensures predictable
+    circuit structure for hardware resource planning.
+    """
+
+    @pytest.mark.skipif(not HAS_QISKIT, reason="Qiskit not installed")
+    def test_qiskit_gate_count_with_zero_input(self) -> None:
+        """Test that Qiskit circuit has deterministic gate count for zero input."""
+        enc = HigherOrderAngleEncoding(n_features=4, order=2)
+        x_zero = np.zeros(4)
+        x_nonzero = np.array([0.1, 0.2, 0.3, 0.4])
+
+        circuit_zero = enc.get_circuit(x_zero, backend="qiskit")
+        circuit_nonzero = enc.get_circuit(x_nonzero, backend="qiskit")
+
+        # Count rotation gates (excluding barriers)
+        def count_rotations(circuit: "QuantumCircuit") -> int:
+            return sum(
+                1 for inst in circuit.data
+                if inst.operation.name in ("rx", "ry", "rz")
+            )
+
+        gates_zero = count_rotations(circuit_zero)
+        gates_nonzero = count_rotations(circuit_nonzero)
+
+        # Both should have the same number of gates
+        assert gates_zero == gates_nonzero
+        # Should equal n_qubits * reps
+        assert gates_zero == enc.n_qubits * enc.reps
+
+    @pytest.mark.skipif(not HAS_QISKIT, reason="Qiskit not installed")
+    def test_qiskit_gate_count_matches_properties(self) -> None:
+        """Test that actual Qiskit gate count matches reported properties."""
+        for n_features in [2, 4, 6]:
+            for reps in [1, 2, 3]:
+                enc = HigherOrderAngleEncoding(n_features=n_features, reps=reps)
+                x = np.random.randn(n_features)
+
+                circuit = enc.get_circuit(x, backend="qiskit")
+                actual_gates = sum(
+                    1 for inst in circuit.data
+                    if inst.operation.name in ("rx", "ry", "rz")
+                )
+
+                expected_gates = enc.properties.single_qubit_gates
+                assert actual_gates == expected_gates, (
+                    f"n_features={n_features}, reps={reps}: "
+                    f"actual={actual_gates}, expected={expected_gates}"
+                )
+
+    @pytest.mark.skipif(not HAS_CIRQ, reason="Cirq not installed")
+    def test_cirq_gate_count_with_zero_input(self) -> None:
+        """Test that Cirq circuit has deterministic gate count for zero input."""
+        enc = HigherOrderAngleEncoding(n_features=4, order=2)
+        x_zero = np.zeros(4)
+        x_nonzero = np.array([0.1, 0.2, 0.3, 0.4])
+
+        circuit_zero = enc.get_circuit(x_zero, backend="cirq")
+        circuit_nonzero = enc.get_circuit(x_nonzero, backend="cirq")
+
+        gates_zero = len(list(circuit_zero.all_operations()))
+        gates_nonzero = len(list(circuit_nonzero.all_operations()))
+
+        # Both should have the same number of gates
+        assert gates_zero == gates_nonzero
+        # Should equal n_qubits * reps
+        assert gates_zero == enc.n_qubits * enc.reps
+
+    @pytest.mark.skipif(not HAS_CIRQ, reason="Cirq not installed")
+    def test_cirq_qubit_count_with_zero_input(self) -> None:
+        """Test that Cirq circuit registers all qubits even with zero input.
+
+        This is critical for Cirq's behavior: qubits are only registered when
+        operations are applied to them. With the zero-angle skip removed,
+        all qubits should always be registered.
+        """
+        enc = HigherOrderAngleEncoding(n_features=4, order=2)
+        x = np.zeros(4)
+
+        circuit = enc.get_circuit(x, backend="cirq")
+        registered_qubits = len(circuit.all_qubits())
+
+        assert registered_qubits == enc.n_features, (
+            f"Expected {enc.n_features} qubits, got {registered_qubits}. "
+            "This may indicate zero-angle rotations are being skipped."
+        )
+
+    @pytest.mark.skipif(not HAS_QISKIT, reason="Qiskit not installed")
+    @pytest.mark.parametrize("rotation", ["X", "Y", "Z"])
+    def test_gate_count_all_rotations(self, rotation: str) -> None:
+        """Test deterministic gate counts for all rotation axes."""
+        enc = HigherOrderAngleEncoding(n_features=4, order=2, rotation=rotation)
+        x_zero = np.zeros(4)
+
+        circuit = enc.get_circuit(x_zero, backend="qiskit")
+
+        gate_name = f"r{rotation.lower()}"
+        gate_count = sum(
+            1 for inst in circuit.data
+            if inst.operation.name == gate_name
+        )
+
+        assert gate_count == enc.n_qubits * enc.reps
+
+    @pytest.mark.skipif(not HAS_QISKIT, reason="Qiskit not installed")
+    def test_gate_count_multiple_reps(self) -> None:
+        """Test that gate count scales correctly with reps."""
+        for reps in [1, 2, 3, 5]:
+            enc = HigherOrderAngleEncoding(n_features=4, order=2, reps=reps)
+            x = np.zeros(4)
+
+            circuit = enc.get_circuit(x, backend="qiskit")
+            gate_count = sum(
+                1 for inst in circuit.data
+                if inst.operation.name == "ry"
+            )
+
+            expected = enc.n_qubits * reps
+            assert gate_count == expected, f"reps={reps}: {gate_count} != {expected}"
+
+
+# =============================================================================
+# Test Class: Zero-Angle Edge Cases
+# =============================================================================
+
+
+class TestZeroAngleEdgeCases:
+    """Tests for edge cases involving zero angles.
+
+    These tests verify correct behavior when rotation angles are exactly zero
+    or very close to zero due to input values or floating-point arithmetic.
+    """
+
+    def test_zero_angles_computed_correctly(self) -> None:
+        """Test that zero input produces exactly zero angles."""
+        enc = HigherOrderAngleEncoding(n_features=4, order=2, combination="product")
+        x = np.zeros(4)
+
+        angles = enc.compute_angles(x)
+
+        # All angles should be exactly zero
+        assert np.all(angles == 0.0), f"Expected all zeros, got {angles}"
+
+    def test_near_zero_angles_not_exactly_zero(self) -> None:
+        """Test that very small (but non-zero) inputs produce non-zero angles."""
+        enc = HigherOrderAngleEncoding(n_features=4, order=2, combination="product")
+        eps = np.finfo(float).eps
+        x = np.array([eps, eps, eps, eps])
+
+        angles = enc.compute_angles(x)
+
+        # Angles should be non-zero (though very small)
+        assert np.all(angles != 0.0), "Expected non-zero angles for non-zero input"
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_zero_input_produces_ground_state(self) -> None:
+        """Test that zero input produces the ground state |0...0⟩."""
+        enc = HigherOrderAngleEncoding(n_features=4, order=2)
+        x = np.zeros(4)
+
+        circuit_fn = enc.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=enc.n_qubits)
+
+        @qml.qnode(dev)
+        def full_circuit():
+            circuit_fn()
+            return qml.state()
+
+        state = full_circuit()
+
+        # Ground state: |0000⟩ = [1, 0, 0, ..., 0]
+        expected = np.zeros(2 ** enc.n_qubits, dtype=np.complex128)
+        expected[0] = 1.0
+
+        np.testing.assert_allclose(state, expected, atol=1e-10)
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_single_nonzero_feature(self) -> None:
+        """Test encoding when only one feature is non-zero."""
+        enc = HigherOrderAngleEncoding(n_features=4, order=2)
+        x = np.array([0.5, 0.0, 0.0, 0.0])
+
+        # Should not raise
+        circuit_fn = enc.get_circuit(x, backend="pennylane")
+        dev = qml.device("default.qubit", wires=enc.n_qubits)
+
+        @qml.qnode(dev)
+        def full_circuit():
+            circuit_fn()
+            return qml.state()
+
+        state = full_circuit()
+
+        # State should be valid (normalized)
+        norm = np.sum(np.abs(state) ** 2)
+        assert np.isclose(norm, 1.0, atol=1e-10)
+
+        # State should NOT be ground state (since x[0] != 0)
+        ground_state = np.zeros(2 ** enc.n_qubits, dtype=np.complex128)
+        ground_state[0] = 1.0
+        assert not np.allclose(state, ground_state, atol=1e-6)
+
+    def test_sum_combination_zero_input(self) -> None:
+        """Test sum combination with zero input."""
+        enc = HigherOrderAngleEncoding(n_features=4, order=2, combination="sum")
+        x = np.zeros(4)
+
+        angles = enc.compute_angles(x)
+
+        # All angles should be exactly zero for sum combination too
+        assert np.all(angles == 0.0)
+
+    def test_mixed_positive_negative_cancellation(self) -> None:
+        """Test that positive and negative values can cancel to zero.
+
+        For product combination, x * (-x) produces negative values, not zero.
+        This test verifies correct handling of such cases.
+        """
+        enc = HigherOrderAngleEncoding(n_features=2, order=2, combination="product")
+        x = np.array([1.0, -1.0])
+
+        # Terms: (0,) -> 1.0, (1,) -> -1.0, (0,1) -> -1.0
+        # Qubit 0 (idx 0, 2): (0,), (0,1) -> 1.0 + (-1.0) = 0.0
+        # Qubit 1 (idx 1): (1,) -> -1.0
+
+        angles = enc.compute_angles(x)
+
+        # Verify angle computation is correct
+        assert np.isclose(angles[0], 0.0), f"Expected 0.0, got {angles[0]}"
+        assert np.isclose(angles[1], -1.0), f"Expected -1.0, got {angles[1]}"

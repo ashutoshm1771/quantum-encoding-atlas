@@ -1544,3 +1544,529 @@ class TestSlowSimulation:
                 and "Cirq backend memory warning" in str(w.message)
             ]
             assert len(memory_warnings) == 0
+
+
+# =============================================================================
+# Test Class: transform_input (DataTransformable Protocol)
+# =============================================================================
+
+
+class TestTransformInput:
+    """Tests for the transform_input() method (DataTransformable protocol).
+
+    This method exposes the encoding's internal preprocessing:
+    validation, power-of-2 padding, and optional L2 normalization.
+    """
+
+    def test_normalizes_to_unit_norm(self) -> None:
+        """Test that transform_input produces a unit-norm vector."""
+        enc = AmplitudeEncoding(n_features=4, normalize=True)
+        x = np.array([3.0, 4.0, 0.0, 0.0])  # norm = 5
+
+        result = enc.transform_input(x)
+
+        assert np.isclose(np.linalg.norm(result), 1.0, atol=1e-15)
+
+    def test_normalized_values_are_correct(self) -> None:
+        """Test that normalized amplitudes match manual computation."""
+        enc = AmplitudeEncoding(n_features=4, normalize=True)
+        x = np.array([3.0, 4.0, 0.0, 0.0])
+        expected = x / np.linalg.norm(x)  # [0.6, 0.8, 0.0, 0.0]
+
+        result = enc.transform_input(x)
+
+        np.testing.assert_allclose(result, expected, atol=1e-15)
+
+    def test_pads_non_power_of_two_features(self) -> None:
+        """Test that non-power-of-2 features are zero-padded."""
+        enc = AmplitudeEncoding(n_features=3)  # n_qubits=2, state_dim=4
+        x = np.array([1.0, 0.0, 0.0])
+
+        result = enc.transform_input(x)
+
+        assert len(result) == 4  # padded to 2^2
+        # [1, 0, 0] normalized -> [1, 0, 0], padded -> [1, 0, 0, 0]
+        np.testing.assert_allclose(result, [1.0, 0.0, 0.0, 0.0], atol=1e-15)
+
+    def test_no_padding_for_power_of_two(self) -> None:
+        """Test that power-of-2 features are not padded."""
+        enc = AmplitudeEncoding(n_features=4)
+        x = np.array([0.5, 0.5, 0.5, 0.5])
+
+        result = enc.transform_input(x)
+
+        assert len(result) == 4
+
+    def test_normalize_false_skips_normalization(self) -> None:
+        """Test that normalize=False returns padded but unnormalized data."""
+        enc = AmplitudeEncoding(n_features=3, normalize=False)
+        # Pre-normalize a 3-feature vector; padding won't change its norm
+        x_raw = np.array([1.0, 2.0, 2.0])
+        x_pre = x_raw / np.linalg.norm(x_raw)
+
+        result = enc.transform_input(x_pre)
+
+        assert len(result) == 4  # padded to 2^2
+        # First 3 elements unchanged, 4th is zero
+        np.testing.assert_allclose(result[:3], x_pre, atol=1e-15)
+        assert result[3] == 0.0
+
+    def test_zero_vector_raises_error(self) -> None:
+        """Test that a zero vector raises ValueError."""
+        enc = AmplitudeEncoding(n_features=4, normalize=True)
+        x = np.zeros(4)
+
+        with pytest.raises(ValueError, match="zero.*norm"):
+            enc.transform_input(x)
+
+    def test_wrong_shape_raises_error(self) -> None:
+        """Test that wrong feature count raises ValueError."""
+        enc = AmplitudeEncoding(n_features=4)
+        x = np.array([1.0, 2.0])  # only 2 features
+
+        with pytest.raises(ValueError, match="Expected 4 features"):
+            enc.transform_input(x)
+
+    def test_batch_input_raises_error(self) -> None:
+        """Test that multi-sample 2D input raises ValueError."""
+        enc = AmplitudeEncoding(n_features=4)
+        X = np.array([[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0]])
+
+        with pytest.raises(ValueError, match="single sample"):
+            enc.transform_input(X)
+
+    def test_2d_single_sample_accepted(self) -> None:
+        """Test that (1, n_features) shaped input is accepted."""
+        enc = AmplitudeEncoding(n_features=4)
+        x = np.array([[3.0, 4.0, 0.0, 0.0]])
+
+        result = enc.transform_input(x)
+
+        assert result.ndim == 1
+        assert np.isclose(np.linalg.norm(result), 1.0, atol=1e-15)
+
+    def test_list_input_accepted(self) -> None:
+        """Test that plain list input is accepted and processed."""
+        enc = AmplitudeEncoding(n_features=4)
+        result = enc.transform_input([3.0, 4.0, 0.0, 0.0])
+
+        assert isinstance(result, np.ndarray)
+        assert np.isclose(np.linalg.norm(result), 1.0, atol=1e-15)
+
+    def test_idempotency_on_normalized_data(self) -> None:
+        """Test approximate idempotency for already-normalized data."""
+        enc = AmplitudeEncoding(n_features=4, normalize=True)
+        x = np.array([0.5, 0.5, 0.5, 0.5])
+
+        first = enc.transform_input(x)
+        # Make writeable copy for second call (transform_input returns immutable)
+        second = enc.transform_input(first.copy())
+
+        np.testing.assert_allclose(first, second, atol=1e-14)
+
+    def test_satisfies_data_transformable_protocol(self) -> None:
+        """Test that AmplitudeEncoding satisfies the DataTransformable protocol."""
+        from encoding_atlas.core.protocols import DataTransformable
+
+        enc = AmplitudeEncoding(n_features=4)
+
+        assert isinstance(enc, DataTransformable)
+
+
+# =============================================================================
+# Test Class: gate_count_breakdown (ResourceAnalyzable Protocol)
+# =============================================================================
+
+
+class TestGateCountBreakdown:
+    """Tests for the gate_count_breakdown() method.
+
+    Gate counts are theoretical estimates based on the Möttönen et al.
+    decomposition: ~2^n rotations and ~2^n - 2 CNOTs for n qubits.
+    """
+
+    def test_return_type_is_dict(self) -> None:
+        """Test that gate_count_breakdown returns a dict."""
+        enc = AmplitudeEncoding(n_features=4)
+        breakdown = enc.gate_count_breakdown()
+
+        assert isinstance(breakdown, dict)
+
+    def test_required_keys_present(self) -> None:
+        """Test that all documented keys are present."""
+        enc = AmplitudeEncoding(n_features=8)
+        breakdown = enc.gate_count_breakdown()
+
+        expected_keys = {
+            "rotation_gates", "cnot",
+            "total_single_qubit", "total_two_qubit", "total",
+            "state_dimension", "is_estimate",
+        }
+        assert expected_keys == set(breakdown.keys())
+
+    def test_is_estimate_always_true(self) -> None:
+        """Test that is_estimate is always True for amplitude encoding."""
+        for n in [2, 4, 8, 16]:
+            enc = AmplitudeEncoding(n_features=n)
+            assert enc.gate_count_breakdown()["is_estimate"] is True
+
+    def test_4_features_gate_counts(self) -> None:
+        """Test gate counts for 4 features (2 qubits, state_dim=4).
+
+        rotation_gates = 4, cnot = 4-2 = 2, total = 6.
+        """
+        enc = AmplitudeEncoding(n_features=4)
+        breakdown = enc.gate_count_breakdown()
+
+        assert breakdown["rotation_gates"] == 4
+        assert breakdown["cnot"] == 2
+        assert breakdown["total_single_qubit"] == 4
+        assert breakdown["total_two_qubit"] == 2
+        assert breakdown["total"] == 6
+        assert breakdown["state_dimension"] == 4
+
+    def test_8_features_gate_counts(self) -> None:
+        """Test gate counts for 8 features (3 qubits, state_dim=8).
+
+        rotation_gates = 8, cnot = 8-2 = 6, total = 14.
+        """
+        enc = AmplitudeEncoding(n_features=8)
+        breakdown = enc.gate_count_breakdown()
+
+        assert breakdown["rotation_gates"] == 8
+        assert breakdown["cnot"] == 6
+        assert breakdown["total"] == 14
+        assert breakdown["state_dimension"] == 8
+
+    def test_16_features_gate_counts(self) -> None:
+        """Test gate counts for 16 features (4 qubits, state_dim=16).
+
+        rotation_gates = 16, cnot = 16-2 = 14, total = 30.
+        """
+        enc = AmplitudeEncoding(n_features=16)
+        breakdown = enc.gate_count_breakdown()
+
+        assert breakdown["rotation_gates"] == 16
+        assert breakdown["cnot"] == 14
+        assert breakdown["total"] == 30
+
+    def test_single_feature_gate_counts(self) -> None:
+        """Test gate counts for 1 feature (1 qubit, state_dim=2).
+
+        rotation_gates = 2, cnot = max(0, 2-2) = 0, total = 2.
+        Single-qubit state prep requires no entanglement.
+        """
+        enc = AmplitudeEncoding(n_features=1)
+        breakdown = enc.gate_count_breakdown()
+
+        assert breakdown["rotation_gates"] == 2
+        assert breakdown["cnot"] == 0
+        assert breakdown["total_two_qubit"] == 0
+        assert breakdown["total"] == 2
+
+    def test_total_equals_single_plus_two_qubit(self) -> None:
+        """Test that total = total_single_qubit + total_two_qubit."""
+        for n in [1, 2, 3, 4, 5, 8, 16, 32]:
+            enc = AmplitudeEncoding(n_features=n)
+            bd = enc.gate_count_breakdown()
+            assert bd["total"] == bd["total_single_qubit"] + bd["total_two_qubit"], (
+                f"n_features={n}: {bd['total']} != "
+                f"{bd['total_single_qubit']} + {bd['total_two_qubit']}"
+            )
+
+    def test_non_power_of_two_uses_padded_state_dim(self) -> None:
+        """Test that non-power-of-2 features use the padded state dimension.
+
+        5 features → 3 qubits → state_dim=8, same counts as 8 features.
+        """
+        enc_5 = AmplitudeEncoding(n_features=5)
+        enc_8 = AmplitudeEncoding(n_features=8)
+
+        assert enc_5.gate_count_breakdown() == enc_8.gate_count_breakdown()
+
+    def test_exponential_scaling(self) -> None:
+        """Test that gate counts scale exponentially with qubits."""
+        counts = []
+        for n_qubits in range(1, 6):
+            enc = AmplitudeEncoding(n_features=2**n_qubits)
+            counts.append(enc.gate_count_breakdown()["total"])
+
+        # Each doubling of state dim should roughly double the gate count
+        for i in range(1, len(counts)):
+            # total = 2 * state_dim - 2, so ratio is ~2 for large state_dim
+            ratio = counts[i] / counts[i - 1]
+            assert ratio > 1.5, (
+                f"Gate count did not scale: {counts[i-1]} -> {counts[i]}"
+            )
+
+
+# =============================================================================
+# Test Class: resource_summary (ResourceAnalyzable Protocol)
+# =============================================================================
+
+
+class TestResourceSummary:
+    """Tests for the resource_summary() method.
+
+    Provides a comprehensive breakdown of circuit resources including
+    qubit requirements, compression ratio, memory estimates, etc.
+    """
+
+    def test_return_type_is_dict(self) -> None:
+        """Test that resource_summary returns a dict."""
+        enc = AmplitudeEncoding(n_features=4)
+        summary = enc.resource_summary()
+
+        assert isinstance(summary, dict)
+
+    def test_required_keys_present(self) -> None:
+        """Test that all documented keys are present."""
+        enc = AmplitudeEncoding(n_features=8)
+        summary = enc.resource_summary()
+
+        expected_keys = {
+            "n_features", "n_qubits", "state_dimension",
+            "compression_ratio", "padding_zeros",
+            "depth", "normalize",
+            "theoretical_gate_count",
+            "theoretical_single_qubit_gates",
+            "theoretical_two_qubit_gates",
+            "is_entangling", "simulability",
+            "cirq_unitary_memory_bytes", "cirq_unitary_memory_human",
+            "backend_notes",
+        }
+        assert expected_keys == set(summary.keys())
+
+    def test_basic_structure_4_features(self) -> None:
+        """Test basic structure values for 4 features (2 qubits)."""
+        enc = AmplitudeEncoding(n_features=4)
+        summary = enc.resource_summary()
+
+        assert summary["n_features"] == 4
+        assert summary["n_qubits"] == 2
+        assert summary["state_dimension"] == 4
+        assert summary["padding_zeros"] == 0
+        assert summary["depth"] == 4  # 2^2
+
+    def test_compression_ratio(self) -> None:
+        """Test compression ratio calculation (n_features / n_qubits)."""
+        enc = AmplitudeEncoding(n_features=16)
+        summary = enc.resource_summary()
+
+        # 16 features / 4 qubits = 4.0
+        assert summary["compression_ratio"] == 4.0
+
+    def test_compression_ratio_non_power_of_two(self) -> None:
+        """Test compression ratio for non-power-of-2 features."""
+        enc = AmplitudeEncoding(n_features=8)
+        summary = enc.resource_summary()
+
+        # 8 features / 3 qubits ≈ 2.667
+        expected = 8.0 / 3.0
+        assert np.isclose(summary["compression_ratio"], expected)
+
+    def test_padding_zeros_power_of_two(self) -> None:
+        """Test that power-of-2 features have zero padding."""
+        enc = AmplitudeEncoding(n_features=8)
+        summary = enc.resource_summary()
+
+        assert summary["padding_zeros"] == 0
+
+    def test_padding_zeros_non_power_of_two(self) -> None:
+        """Test padding count for non-power-of-2 features."""
+        enc = AmplitudeEncoding(n_features=5)
+        summary = enc.resource_summary()
+
+        # 5 features → 3 qubits → state_dim=8, padding=3
+        assert summary["padding_zeros"] == 3
+
+    def test_theoretical_gate_counts(self) -> None:
+        """Test theoretical gate count formulas (2n-2 total)."""
+        enc = AmplitudeEncoding(n_features=8)
+        summary = enc.resource_summary()
+
+        state_dim = 8
+        assert summary["theoretical_gate_count"] == 2 * state_dim - 2  # 14
+        assert summary["theoretical_single_qubit_gates"] == state_dim  # 8
+        assert summary["theoretical_two_qubit_gates"] == state_dim - 2  # 6
+
+    def test_encoding_characteristics(self) -> None:
+        """Test fixed encoding characteristics."""
+        enc = AmplitudeEncoding(n_features=4)
+        summary = enc.resource_summary()
+
+        assert summary["is_entangling"] is True
+        assert summary["simulability"] == "not_simulable"
+
+    def test_normalize_flag_reflected(self) -> None:
+        """Test that the normalize setting is reflected in summary."""
+        enc_true = AmplitudeEncoding(n_features=4, normalize=True)
+        enc_false = AmplitudeEncoding(n_features=4, normalize=False)
+
+        assert enc_true.resource_summary()["normalize"] is True
+        assert enc_false.resource_summary()["normalize"] is False
+
+    def test_cirq_memory_calculation(self) -> None:
+        """Test Cirq unitary memory estimation (2^n × 2^n × 16 bytes)."""
+        enc = AmplitudeEncoding(n_features=4)
+        summary = enc.resource_summary()
+
+        # state_dim=4, memory = 4*4*16 = 256 bytes
+        assert summary["cirq_unitary_memory_bytes"] == 256
+
+    def test_cirq_memory_human_readable(self) -> None:
+        """Test human-readable memory string for larger encodings."""
+        enc = AmplitudeEncoding(n_features=1024)
+        summary = enc.resource_summary()
+
+        # 10 qubits, state_dim=1024, memory = 1024^2 * 16 = 16 MB
+        assert summary["cirq_unitary_memory_human"] == "16.0 MB"
+
+    def test_backend_notes_has_all_backends(self) -> None:
+        """Test that backend_notes includes all three backends."""
+        enc = AmplitudeEncoding(n_features=4)
+        notes = enc.resource_summary()["backend_notes"]
+
+        assert "pennylane" in notes
+        assert "qiskit" in notes
+        assert "cirq" in notes
+
+    def test_depth_matches_property(self) -> None:
+        """Test that depth in summary matches the depth property."""
+        enc = AmplitudeEncoding(n_features=16)
+        summary = enc.resource_summary()
+
+        assert summary["depth"] == enc.depth
+
+    def test_single_feature_summary(self) -> None:
+        """Test resource summary for the edge case of 1 feature."""
+        enc = AmplitudeEncoding(n_features=1)
+        summary = enc.resource_summary()
+
+        assert summary["n_features"] == 1
+        assert summary["n_qubits"] == 1
+        assert summary["state_dimension"] == 2
+        assert summary["padding_zeros"] == 1  # 1 feature padded to 2
+        assert summary["compression_ratio"] == 1.0
+
+
+# =============================================================================
+# Test Class: normalize=False Rejection (Non-Unit Norm)
+# =============================================================================
+
+
+class TestNormalizeFalseRejection:
+    """Tests for the normalize=False norm validation in get_circuit().
+
+    When normalize=False, the encoding validates that the input vector
+    has L2 norm close to 1.0 (within 1% relative tolerance). This
+    catches the common mistake of forgetting to pre-normalize data.
+    """
+
+    def test_unnormalized_data_rejected(self) -> None:
+        """Test that raw unnormalized data raises ValueError."""
+        enc = AmplitudeEncoding(n_features=4, normalize=False)
+        x = np.array([1.0, 2.0, 3.0, 4.0])  # norm ≈ 5.48
+
+        with pytest.raises(ValueError, match="normalize=False"):
+            enc.get_circuit(x, backend="pennylane")
+
+    def test_error_message_includes_actual_norm(self) -> None:
+        """Test that the error message reports the actual norm value."""
+        enc = AmplitudeEncoding(n_features=4, normalize=False)
+        x = np.array([1.0, 2.0, 3.0, 4.0])
+
+        with pytest.raises(ValueError) as excinfo:
+            enc.get_circuit(x, backend="pennylane")
+
+        error_msg = str(excinfo.value)
+        # Should contain the norm value (5.477...)
+        assert "5.4" in error_msg
+        # Should suggest remediation options
+        assert "normalize=True" in error_msg
+        assert "np.linalg.norm" in error_msg
+
+    def test_exactly_unit_norm_accepted(self) -> None:
+        """Test that a vector with exact unit norm is accepted."""
+        enc = AmplitudeEncoding(n_features=4, normalize=False)
+        x = np.array([0.5, 0.5, 0.5, 0.5])  # norm = 1.0
+
+        # Should not raise
+        if HAS_PENNYLANE:
+            circuit = enc.get_circuit(x, backend="pennylane")
+            assert callable(circuit)
+
+    def test_slightly_off_unit_norm_accepted(self) -> None:
+        """Test that small numerical deviations from unit norm pass.
+
+        The tolerance is 1% relative, so norm=1.005 should be accepted.
+        """
+        enc = AmplitudeEncoding(n_features=4, normalize=False)
+        x = np.array([0.5, 0.5, 0.5, 0.5])
+        # Introduce tiny deviation (within 1% rtol)
+        x_slightly_off = x * 1.003  # norm ≈ 1.003
+
+        if HAS_PENNYLANE:
+            circuit = enc.get_circuit(x_slightly_off, backend="pennylane")
+            assert callable(circuit)
+
+    def test_beyond_tolerance_rejected(self) -> None:
+        """Test that norm deviations beyond 1% are rejected."""
+        enc = AmplitudeEncoding(n_features=4, normalize=False)
+        x = np.array([0.5, 0.5, 0.5, 0.5])
+        x_too_far = x * 1.02  # norm ≈ 1.02, >1% off
+
+        with pytest.raises(ValueError, match="normalize=False"):
+            enc.get_circuit(x_too_far, backend="pennylane")
+
+    def test_subnormalized_data_rejected(self) -> None:
+        """Test that vectors with norm significantly below 1 are rejected."""
+        enc = AmplitudeEncoding(n_features=4, normalize=False)
+        x = np.array([0.1, 0.1, 0.1, 0.1])  # norm = 0.2
+
+        with pytest.raises(ValueError, match="normalize=False"):
+            enc.get_circuit(x, backend="pennylane")
+
+    @pytest.mark.skipif(not HAS_QISKIT, reason="Qiskit not installed")
+    def test_rejection_works_for_qiskit_backend(self) -> None:
+        """Test that norm rejection also triggers for Qiskit backend."""
+        enc = AmplitudeEncoding(n_features=4, normalize=False)
+        x = np.array([1.0, 2.0, 3.0, 4.0])
+
+        with pytest.raises(ValueError, match="normalize=False"):
+            enc.get_circuit(x, backend="qiskit")
+
+    @pytest.mark.skipif(not HAS_CIRQ, reason="Cirq not installed")
+    def test_rejection_works_for_cirq_backend(self) -> None:
+        """Test that norm rejection also triggers for Cirq backend."""
+        enc = AmplitudeEncoding(n_features=4, normalize=False)
+        x = np.array([1.0, 2.0, 3.0, 4.0])
+
+        with pytest.raises(ValueError, match="normalize=False"):
+            enc.get_circuit(x, backend="cirq")
+
+    def test_rejection_in_get_circuit_from_validated(self) -> None:
+        """Test that _get_circuit_from_validated also enforces norm check.
+
+        This internal method is used by get_circuits() for batch processing.
+        """
+        enc = AmplitudeEncoding(n_features=4, normalize=False)
+        x_unnorm = np.array([1.0, 2.0, 3.0, 4.0])
+
+        with pytest.raises(ValueError, match="normalize=False"):
+            enc._get_circuit_from_validated(x_unnorm, "pennylane")
+
+    def test_prenormalized_data_accepted_all_backends(self) -> None:
+        """Test that properly pre-normalized data works across all backends."""
+        enc = AmplitudeEncoding(n_features=4, normalize=False)
+        x = np.array([1.0, 2.0, 3.0, 4.0])
+        x_norm = x / np.linalg.norm(x)
+
+        if HAS_PENNYLANE:
+            assert callable(enc.get_circuit(x_norm, backend="pennylane"))
+        if HAS_QISKIT:
+            circuit = enc.get_circuit(x_norm, backend="qiskit")
+            assert circuit.num_qubits == 2
+        if HAS_CIRQ:
+            circuit = enc.get_circuit(x_norm, backend="cirq")
+            assert len(circuit.all_qubits()) == 2

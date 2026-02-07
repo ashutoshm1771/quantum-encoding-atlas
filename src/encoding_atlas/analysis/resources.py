@@ -624,8 +624,12 @@ def get_gate_breakdown(
     get_resource_summary : Quick summary from cached properties.
     """
     result = count_resources(encoding, x=x, detailed=True)
-    # Type assertion for type checker
-    assert "rx" in result, "Expected DetailedGateBreakdown"
+    # Runtime type narrowing (cannot use assert — stripped by python -O)
+    if "rx" not in result:  # pragma: no cover
+        raise AnalysisError(
+            "count_resources(detailed=True) did not return a "
+            "DetailedGateBreakdown. This is an internal error.",
+        )
     return result
 
 
@@ -714,6 +718,24 @@ def compare_resources(
     if not encodings:
         raise ValueError("encodings list cannot be empty")
 
+    _VALID_METRICS = {
+        "n_qubits",
+        "depth",
+        "gate_count",
+        "single_qubit_gates",
+        "two_qubit_gates",
+        "parameter_count",
+        "cnot_count",
+        "cz_count",
+        "t_gate_count",
+        "hadamard_count",
+        "rotation_gates",
+        "two_qubit_ratio",
+        "gates_per_qubit",
+        "encoding_name",
+        "is_data_dependent",
+    }
+
     if metrics is None:
         metrics = [
             "n_qubits",
@@ -725,6 +747,13 @@ def compare_resources(
             "two_qubit_ratio",
             "gates_per_qubit",
         ]
+    else:
+        unknown = set(metrics) - _VALID_METRICS
+        if unknown:
+            raise ValueError(
+                f"Unknown metric(s): {sorted(unknown)}. "
+                f"Valid metrics: {sorted(_VALID_METRICS)}"
+            )
 
     results: dict[str, list[Any]] = {m: [] for m in metrics}
 
@@ -739,6 +768,10 @@ def compare_resources(
             results["encoding_name"].append(enc.__class__.__name__)
 
         for metric in metrics:
+            # Skip encoding_name if already populated by include_names
+            # to avoid duplicating entries in the same list.
+            if metric == "encoding_name" and include_names:
+                continue
             value = summary.get(metric)
             if value is None:
                 _logger.warning(
@@ -840,6 +873,28 @@ def estimate_execution_time(
     """
     _validate_encoding(encoding)
 
+    # Validate timing parameters
+    if not 0.0 <= parallelization_factor <= 1.0:
+        raise ValidationError(
+            f"parallelization_factor must be between 0.0 and 1.0, "
+            f"got {parallelization_factor}"
+        )
+    if single_qubit_gate_time_us < 0:
+        raise ValidationError(
+            f"single_qubit_gate_time_us must be non-negative, "
+            f"got {single_qubit_gate_time_us}"
+        )
+    if two_qubit_gate_time_us < 0:
+        raise ValidationError(
+            f"two_qubit_gate_time_us must be non-negative, "
+            f"got {two_qubit_gate_time_us}"
+        )
+    if measurement_time_us < 0:
+        raise ValidationError(
+            f"measurement_time_us must be non-negative, "
+            f"got {measurement_time_us}"
+        )
+
     summary = get_resource_summary(encoding)
 
     single_qubit_gates = summary["single_qubit_gates"]
@@ -859,9 +914,15 @@ def estimate_execution_time(
     estimated_time = gate_time * (1.0 - parallelization_factor) + meas_time
 
     # But estimated time shouldn't be less than the critical path
-    # (depth * slowest gate time)
+    # (depth * slowest gate time per layer).
+    # Use the appropriate per-layer gate time: if the circuit has two-qubit
+    # gates, assume layers may contain them; otherwise use single-qubit time.
     depth = summary["depth"]
-    critical_path_time = depth * two_qubit_gate_time_us + meas_time
+    if two_qubit_gates > 0:
+        per_layer_time = max(single_qubit_gate_time_us, two_qubit_gate_time_us)
+    else:
+        per_layer_time = single_qubit_gate_time_us
+    critical_path_time = depth * per_layer_time + meas_time
     estimated_time = max(estimated_time, critical_path_time)
 
     _logger.debug(
@@ -1330,7 +1391,12 @@ def _count_data_dependent_resources(
             # Fallback if method doesn't accept x
             try:
                 resource_dict = encoding.resource_summary()  # type: ignore[call-arg]
-            except Exception:
+            except Exception as e:
+                _logger.warning(
+                    "Failed to get resource_summary for %s: %s",
+                    encoding.__class__.__name__,
+                    e,
+                )
                 resource_dict = {}
 
     # Get actual gate count for specific input

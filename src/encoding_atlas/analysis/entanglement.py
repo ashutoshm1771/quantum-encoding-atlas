@@ -117,16 +117,14 @@ from __future__ import annotations
 import logging
 import warnings
 from itertools import combinations
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, Union, overload
+from typing import Any, Literal, TypedDict, Union, overload
 
 import numpy as np
 from numpy.typing import NDArray
 
 from encoding_atlas.core.base import BaseEncoding
 from encoding_atlas.core.exceptions import (
-    AnalysisError,
     InsufficientSamplesError,
-    NumericalInstabilityError,
     SimulationError,
     ValidationError,
 )
@@ -144,9 +142,6 @@ from encoding_atlas.analysis._utils import (
 # =============================================================================
 # Type Checking Imports and Type Definitions
 # =============================================================================
-
-if TYPE_CHECKING:
-    pass
 
 # Type aliases for clarity
 StatevectorType = NDArray[np.complexfloating[Any, Any]]
@@ -263,7 +258,7 @@ _MAX_VERBOSE_QUBITS: int = 10
 # =============================================================================
 
 
-@overload
+@overload  # pragma: no cover
 def compute_entanglement_capability(
     encoding: BaseEncoding,
     n_samples: int = ...,
@@ -277,7 +272,7 @@ def compute_entanglement_capability(
 ) -> float: ...
 
 
-@overload
+@overload  # pragma: no cover
 def compute_entanglement_capability(
     encoding: BaseEncoding,
     n_samples: int = ...,
@@ -781,14 +776,7 @@ def compute_meyer_wallach_with_breakdown(
     if not isinstance(n_qubits, (int, np.integer)) or n_qubits < 1:
         raise ValueError(f"n_qubits must be a positive integer, got {n_qubits}")
 
-    expected_dim = 2**n_qubits
     state = validate_statevector(statevector, expected_qubits=n_qubits)
-
-    if len(state) != expected_dim:
-        raise ValueError(
-            f"Statevector length {len(state)} doesn't match "
-            f"2^{n_qubits} = {expected_dim}"
-        )
 
     # Handle single-qubit case (no entanglement possible)
     if n_qubits == 1:
@@ -915,10 +903,6 @@ def compute_scott_measure(
     # Validate statevector
     state = validate_statevector(statevector, expected_qubits=n_qubits)
 
-    # Special case: single qubit cannot have entanglement
-    if n_qubits == 1:
-        return 0.0
-
     # Compute average linear entropy over all k-qubit subsystems
     total_linear_entropy = 0.0
     n_subsystems = 0
@@ -934,90 +918,13 @@ def compute_scott_measure(
         total_linear_entropy += linear_entropy
         n_subsystems += 1
 
-    # Average and normalize
-    if n_subsystems == 0:
-        return 0.0
-
     # Normalization factor to bring to [0, 1] range
     # Maximum linear entropy for k qubits is 1 - 1/2^k
     max_linear_entropy = 1.0 - 1.0 / (2**k)
     avg_linear_entropy = total_linear_entropy / n_subsystems
-
-    if max_linear_entropy > _EPSILON:
-        normalized_measure = avg_linear_entropy / max_linear_entropy
-    else:
-        normalized_measure = 0.0
+    normalized_measure = avg_linear_entropy / max_linear_entropy
 
     # Clamp to [0, 1]
     return float(np.clip(normalized_measure, 0.0, 1.0))
 
 
-# =============================================================================
-# Private Helper Functions
-# =============================================================================
-
-
-def _validate_entanglement_inputs(
-    n_samples: int,
-    input_range: tuple[float, float] | list[float],
-    measure: str,
-    backend: str,
-) -> None:
-    """Validate common input parameters for entanglement functions.
-
-    This is a helper function that consolidates input validation logic.
-
-    Parameters
-    ----------
-    n_samples : int
-        Number of samples to validate.
-    input_range : tuple[float, float] or list[float]
-        Input range to validate.
-    measure : str
-        Measure name to validate.
-    backend : str
-        Backend name to validate.
-
-    Raises
-    ------
-    InsufficientSamplesError
-        If n_samples is too low.
-    ValidationError
-        If any parameter is invalid.
-    """
-    if n_samples < _MIN_SAMPLES_ERROR:
-        raise InsufficientSamplesError(
-            f"n_samples must be at least {_MIN_SAMPLES_ERROR}, got {n_samples}",
-            requested_samples=n_samples,
-            minimum_samples=_MIN_SAMPLES_ERROR,
-            metric="entanglement_capability",
-        )
-
-    # Validate input_range - check type before length
-    if not isinstance(input_range, (tuple, list)):
-        raise ValidationError(
-            f"input_range must be a tuple or list of (min, max), "
-            f"got {type(input_range).__name__}: {input_range!r}"
-        )
-
-    if len(input_range) != 2:
-        raise ValidationError(
-            f"input_range must be a tuple of (min, max) with exactly 2 elements, "
-            f"got {len(input_range)} elements: {input_range}"
-        )
-
-    if input_range[0] >= input_range[1]:
-        raise ValidationError(
-            f"input_range[0] must be less than input_range[1]: "
-            f"{input_range[0]} >= {input_range[1]}"
-        )
-
-    if measure not in ("meyer_wallach", "scott"):
-        raise ValueError(
-            f"measure must be 'meyer_wallach' or 'scott', got {measure!r}"
-        )
-
-    if backend not in ("pennylane", "qiskit"):
-        raise ValueError(
-            f"backend must be 'pennylane' or 'qiskit', got {backend!r}"
-        )

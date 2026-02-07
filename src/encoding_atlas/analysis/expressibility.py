@@ -966,6 +966,10 @@ def compute_haar_distribution(
     # Convert to numpy array and ensure float type
     F = np.asarray(fidelity_values, dtype=np.float64)
 
+    # Handle empty input gracefully (regardless of code path)
+    if F.size == 0:
+        return np.array([], dtype=np.float64)
+
     # Hilbert space dimension
     d = 2**n_qubits
 
@@ -1069,6 +1073,10 @@ def _sample_fidelities(
     SimulationError
         If circuit simulation fails.
     """
+    # TODO: Vectorize this loop — batch rng.uniform calls and simulation
+    # calls to reduce per-sample overhead. This is the main performance
+    # bottleneck for large n_samples. See simulate_encoding_statevectors_batch
+    # in _utils.py for a possible starting point.
     fidelities = np.zeros(n_samples, dtype=np.float64)
 
     # Logging interval (log every 10% of progress)

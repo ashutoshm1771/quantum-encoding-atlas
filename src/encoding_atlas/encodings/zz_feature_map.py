@@ -78,6 +78,7 @@ References
 from __future__ import annotations
 
 import logging
+import warnings
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Literal, TypedDict
 
@@ -137,10 +138,25 @@ _DEFAULT_ENTANGLEMENT: Literal["full", "linear", "circular"] = "full"
 # - "circular": Nearest-neighbor with periodic boundary, n ZZ pairs (for n>2)
 _VALID_ENTANGLEMENTS: frozenset[str] = frozenset({"full", "linear", "circular"})
 
-# Threshold for logging an informational message about O(n²) scaling.
-# When n_features exceeds this value with full entanglement, a log message
-# is emitted to help users understand the resource implications.
-_FULL_ENTANGLEMENT_INFO_THRESHOLD: int = 10
+# Threshold for warning about full entanglement with many features.
+#
+# Full entanglement creates n(n-1)/2 ZZ interaction pairs, each requiring
+# 2 CNOT gates. The gate count scales quadratically:
+#
+#   Two-qubit gates per layer = n(n-1)
+#
+# Examples (per layer, reps=2):
+#   - 4 features:  12 CNOTs (manageable)
+#   - 8 features:  56 CNOTs (moderate)
+#   - 10 features: 90 CNOTs (threshold - warning issued)
+#   - 12 features: 132 CNOTs (may exceed NISQ capabilities)
+#   - 16 features: 240 CNOTs (likely impractical on current hardware)
+#
+# At 10 features, the circuit complexity becomes significant enough to warrant
+# a warning. Users should consider 'linear' or 'circular' entanglement for
+# larger feature counts, or ensure their target hardware supports the required
+# gate count and connectivity.
+_FULL_ENTANGLEMENT_WARNING_THRESHOLD: int = 10
 
 # Threshold for DEBUG logging about input values outside optimal range.
 # The (π - x) phase convention works best with inputs in [0, 2π].
@@ -512,31 +528,45 @@ class ZZFeatureMap(BaseEncoding):
         self.reps: int = reps
         self.entanglement: Literal["full", "linear", "circular"] = entanglement
 
-        # Cache entanglement pairs for performance (computed once, used many times)
-        # This avoids recomputing O(n²) pairs on every circuit generation.
-        self._entanglement_pairs: list[tuple[int, int]] | None = None
+        # Pre-compute and cache entanglement pairs at initialization.
+        # This is computed once and reused for all circuit generation calls,
+        # avoiding redundant O(n²) computation for full entanglement.
+        self._entanglement_pairs: list[tuple[int, int]] = (
+            self._compute_entanglement_pairs(n_features, entanglement)
+        )
+
+        _logger.debug(
+            "Entanglement pairs computed: topology=%r, n_qubits=%d, n_pairs=%d",
+            entanglement,
+            n_features,
+            len(self._entanglement_pairs),
+        )
 
         # =====================================================================
-        # RESOURCE SCALING INFO
+        # RESOURCE SCALING WARNING
         # =====================================================================
-        # Log informational message for large feature counts with full entanglement
-        # to help users understand the O(n²) scaling implications.
+        # Warn about potentially excessive gate count with full entanglement.
+        # This matches the pattern used by IQPEncoding and other encodings.
         if (
             entanglement == "full"
-            and n_features > _FULL_ENTANGLEMENT_INFO_THRESHOLD
+            and n_features > _FULL_ENTANGLEMENT_WARNING_THRESHOLD
         ):
-            n_pairs = n_features * (n_features - 1) // 2
-            n_cnots = 2 * n_pairs * reps
-            _logger.info(
-                "ZZFeatureMap with full entanglement and n_features=%d creates "
-                "%d ZZ pairs per layer (%d total CNOT gates for %d reps). "
-                "For hardware-friendly circuits, consider entanglement='linear' "
-                "which creates only %d pairs.",
+            n_pairs = len(self._entanglement_pairs)
+            cnot_count = 2 * n_pairs * reps
+            warnings.warn(
+                f"Full entanglement with {n_features} features creates "
+                f"{n_pairs} ZZ interaction pairs per layer ({cnot_count} total "
+                f"CNOT gates for {reps} reps). This may exceed practical limits "
+                f"for NISQ devices. Consider using entanglement='linear' or "
+                f"'circular' for better hardware compatibility.",
+                UserWarning,
+                stacklevel=2,
+            )
+            _logger.warning(
+                "Large feature count with full entanglement: %d features, "
+                "%d CNOT gates total",
                 n_features,
-                n_pairs,
-                n_cnots,
-                reps,
-                n_features - 1,
+                cnot_count,
             )
 
         # Log initialization for debugging
@@ -697,49 +727,73 @@ class ZZFeatureMap(BaseEncoding):
         """
         return self._get_entanglement_pairs()
 
-    def _get_entanglement_pairs(self) -> list[tuple[int, int]]:
-        """Get qubit pairs for ZZ entanglement (internal, cached).
+    @staticmethod
+    def _compute_entanglement_pairs(
+        n_features: int,
+        entanglement: Literal["full", "linear", "circular"],
+    ) -> list[tuple[int, int]]:
+        """Compute qubit pairs for ZZ entanglement based on topology.
 
-        This method uses caching to avoid recomputing the pairs on every
-        circuit generation call. The pairs are computed once and stored.
+        This is a static method used during initialization to compute the
+        entanglement pairs once. The result is cached as an instance attribute.
+
+        Parameters
+        ----------
+        n_features : int
+            Number of features (qubits).
+        entanglement : {"full", "linear", "circular"}
+            Entanglement topology.
 
         Returns
         -------
         list[tuple[int, int]]
             List of (control, target) qubit pairs for ZZ interactions.
+
+        Notes
+        -----
+        Pair counts by topology:
+
+        - Full: n(n-1)/2 pairs (all combinations where i < j)
+        - Linear: n-1 pairs (nearest neighbors only)
+        - Circular: n-1 pairs for n<=2, n pairs for n>2 (adds wrap-around)
         """
-        # Return cached pairs if available
-        if self._entanglement_pairs is not None:
-            return self._entanglement_pairs
-
-        n = self.n_features
-
-        if self.entanglement == "full":
+        if entanglement == "full":
             # All-to-all connectivity: every pair (i, j) with i < j
-            pairs = [(i, j) for i in range(n) for j in range(i + 1, n)]
-        elif self.entanglement == "linear":
+            pairs = [(i, j) for i in range(n_features) for j in range(i + 1, n_features)]
+        elif entanglement == "linear":
             # Nearest-neighbor connectivity: only (i, i+1) pairs
-            pairs = [(i, i + 1) for i in range(n - 1)]
+            pairs = [(i, i + 1) for i in range(n_features - 1)]
         else:  # circular
             # Nearest-neighbor with periodic boundary
-            pairs = [(i, i + 1) for i in range(n - 1)]
+            pairs = [(i, i + 1) for i in range(n_features - 1)]
             # Add wrap-around only for n > 2 to avoid duplicate pair
             # For n=2, linear already has (0, 1), circular would add (1, 0)
             # which is redundant (same qubits, different order doesn't matter for ZZ)
-            if n > 2:
-                pairs.append((n - 1, 0))
-
-        # Cache the computed pairs
-        self._entanglement_pairs = pairs
-
-        _logger.debug(
-            "Entanglement pairs computed: topology=%r, n_qubits=%d, n_pairs=%d",
-            self.entanglement,
-            n,
-            len(pairs),
-        )
+            if n_features > 2:
+                pairs.append((n_features - 1, 0))
 
         return pairs
+
+    def _get_entanglement_pairs(self) -> list[tuple[int, int]]:
+        """Get qubit pairs for ZZ entanglement (internal accessor).
+
+        Returns the cached entanglement pairs computed at initialization.
+        This method provides a consistent internal interface for accessing
+        the pairs throughout the class.
+
+        Returns
+        -------
+        list[tuple[int, int]]
+            List of (control, target) qubit pairs for ZZ interactions.
+            This returns the cached list directly (not a copy) for
+            performance. Callers should not modify the returned list.
+
+        See Also
+        --------
+        get_entanglement_pairs : Public API that returns the same data.
+        _compute_entanglement_pairs : Static method that computes pairs.
+        """
+        return self._entanglement_pairs
 
     # =========================================================================
     # Resource Analysis

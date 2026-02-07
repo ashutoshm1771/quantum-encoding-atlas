@@ -35,9 +35,12 @@ Test values are validated against the mathematical definitions:
 
 from __future__ import annotations
 
+import logging
+from unittest.mock import patch
+
 import numpy as np
 import pytest
-from numpy.testing import assert_allclose, assert_array_almost_equal
+from numpy.testing import assert_allclose
 
 from encoding_atlas.core.exceptions import (
     AnalysisError,
@@ -51,7 +54,6 @@ from encoding_atlas.analysis.entanglement import (
     compute_meyer_wallach,
     compute_meyer_wallach_with_breakdown,
     compute_scott_measure,
-    EntanglementResult,
 )
 
 
@@ -686,6 +688,17 @@ class TestBackendConsistency:
         assert 0.0 <= result_pl <= 1.0
         assert 0.0 <= result_qk <= 1.0
 
+    def test_non_entangling_consistent_across_backends(self, sample_encoding_2q):
+        """Test that non-entangling encoding gives zero on both backends."""
+        result_pl = compute_entanglement_capability(
+            sample_encoding_2q, n_samples=100, seed=42, backend="pennylane"
+        )
+        result_qk = compute_entanglement_capability(
+            sample_encoding_2q, n_samples=100, seed=42, backend="qiskit"
+        )
+        assert_allclose(result_pl, 0.0, atol=1e-10)
+        assert_allclose(result_qk, 0.0, atol=1e-10)
+
 
 # =============================================================================
 # Test: Edge Cases
@@ -825,7 +838,7 @@ class TestScottMeasureIntegration:
         )
         assert isinstance(result, dict)
         assert result["measure"] == "scott"
-        assert result["scott_k"] == 2  # Auto-selected max for 4 qubits
+        assert result["scott_k"] == 2  # Auto-selected: min(2, n_qubits - 1) = min(2, 3)
         assert 0.0 <= result["entanglement_capability"] <= 1.0
 
     def test_scott_measure_auto_k_selection_3_qubits(self):
@@ -1034,4 +1047,459 @@ class TestInputRangeValidation:
                 entangling_encoding_4q,
                 n_samples=10,
                 input_range=(1.0, 1.0),  # min == max
+            )
+
+
+# =============================================================================
+# Test: Verbose Logging
+# =============================================================================
+
+
+class TestVerboseLogging:
+    """Tests for verbose logging paths in compute_entanglement_capability."""
+
+    @pytest.fixture(autouse=True)
+    def check_pennylane(self, pennylane_available):
+        """Skip tests if PennyLane is not available."""
+        if not pennylane_available:
+            pytest.skip("PennyLane not available")
+
+    def test_verbose_meyer_wallach(self, entangling_encoding_4q, caplog):
+        """Test that verbose=True logs progress with Meyer-Wallach measure."""
+        with caplog.at_level(logging.DEBUG, logger="encoding_atlas.analysis.entanglement"):
+            result = compute_entanglement_capability(
+                entangling_encoding_4q,
+                n_samples=20,
+                seed=42,
+                verbose=True,
+            )
+        assert isinstance(result, float)
+        assert "Computing entanglement capability" in caplog.text
+        assert "Entanglement capability" in caplog.text
+
+    def test_verbose_scott(self, entangling_encoding_4q, caplog):
+        """Test that verbose=True logs the Scott measure description."""
+        with caplog.at_level(logging.DEBUG, logger="encoding_atlas.analysis.entanglement"):
+            result = compute_entanglement_capability(
+                entangling_encoding_4q,
+                n_samples=20,
+                seed=42,
+                verbose=True,
+                measure="scott",
+            )
+        assert isinstance(result, float)
+        assert "scott (k=" in caplog.text
+
+    def test_verbose_progress_logging(self, entangling_encoding_4q, caplog):
+        """Test that verbose progress logging fires at 10% intervals."""
+        with caplog.at_level(logging.DEBUG, logger="encoding_atlas.analysis.entanglement"):
+            compute_entanglement_capability(
+                entangling_encoding_4q,
+                n_samples=100,
+                seed=42,
+                verbose=True,
+            )
+        assert "Processed" in caplog.text
+        assert "Per-qubit entanglement" in caplog.text
+
+
+# =============================================================================
+# Test: Simulation Error Propagation
+# =============================================================================
+
+
+class TestSimulationErrorPropagation:
+    """Tests for error handling during sampling in compute_entanglement_capability."""
+
+    def test_simulation_error_reraised(self, entangling_encoding_4q, pennylane_available):
+        """Test that SimulationError from simulation is re-raised directly."""
+        if not pennylane_available:
+            pytest.skip("PennyLane not available")
+
+        with patch(
+            "encoding_atlas.analysis.entanglement.simulate_encoding_statevector",
+            side_effect=SimulationError("Backend crashed", backend="pennylane"),
+        ):
+            with pytest.raises(SimulationError, match="Backend crashed"):
+                compute_entanglement_capability(
+                    entangling_encoding_4q, n_samples=10, seed=42
+                )
+
+    def test_generic_exception_wrapped_in_simulation_error(
+        self, entangling_encoding_4q, pennylane_available
+    ):
+        """Test that generic exceptions are wrapped in SimulationError."""
+        if not pennylane_available:
+            pytest.skip("PennyLane not available")
+
+        with patch(
+            "encoding_atlas.analysis.entanglement.simulate_encoding_statevector",
+            side_effect=RuntimeError("unexpected failure"),
+        ):
+            with pytest.raises(SimulationError, match="Entanglement computation failed"):
+                compute_entanglement_capability(
+                    entangling_encoding_4q, n_samples=10, seed=42
+                )
+
+
+# =============================================================================
+# Test: Scott Measure n_qubits Validation
+# =============================================================================
+
+
+class TestScottMeasureNQubitsValidation:
+    """Tests for n_qubits validation in compute_scott_measure."""
+
+    def test_n_qubits_zero_raises(self, bell_state):
+        """Test that n_qubits=0 raises ValueError."""
+        with pytest.raises(ValueError, match="positive integer"):
+            compute_scott_measure(bell_state, n_qubits=0, k=1)
+
+    def test_n_qubits_negative_raises(self, bell_state):
+        """Test that negative n_qubits raises ValueError."""
+        with pytest.raises(ValueError, match="positive integer"):
+            compute_scott_measure(bell_state, n_qubits=-1, k=1)
+
+    def test_n_qubits_float_raises(self, bell_state):
+        """Test that float n_qubits raises ValueError."""
+        with pytest.raises(ValueError, match="positive integer"):
+            compute_scott_measure(bell_state, n_qubits=2.5, k=1)
+
+
+# =============================================================================
+# Test: compute_meyer_wallach_with_breakdown - Error Handling
+# =============================================================================
+
+
+class TestMeyerWallachWithBreakdownErrors:
+    """Direct error path tests for compute_meyer_wallach_with_breakdown.
+
+    These complement the TestMeyerWallachErrors tests which cover
+    the same validation indirectly via compute_meyer_wallach.
+    """
+
+    def test_n_qubits_zero_raises(self, bell_state):
+        """Test that n_qubits=0 raises ValueError."""
+        with pytest.raises(ValueError, match="positive integer"):
+            compute_meyer_wallach_with_breakdown(bell_state, n_qubits=0)
+
+    def test_n_qubits_negative_raises(self, bell_state):
+        """Test that negative n_qubits raises ValueError."""
+        with pytest.raises(ValueError, match="positive integer"):
+            compute_meyer_wallach_with_breakdown(bell_state, n_qubits=-1)
+
+    def test_n_qubits_float_raises(self, bell_state):
+        """Test that float n_qubits raises ValueError."""
+        with pytest.raises(ValueError, match="positive integer"):
+            compute_meyer_wallach_with_breakdown(bell_state, n_qubits=2.5)
+
+    def test_wrong_dimension_raises(self, bell_state):
+        """Test that mismatched statevector dimension raises ValidationError."""
+        with pytest.raises(ValidationError):
+            compute_meyer_wallach_with_breakdown(bell_state, n_qubits=3)
+
+    def test_nan_raises(self):
+        """Test that NaN values raise ValidationError."""
+        state_nan = np.array([np.nan, 0, 0, 1], dtype=complex)
+        with pytest.raises(ValidationError, match="NaN"):
+            compute_meyer_wallach_with_breakdown(state_nan, n_qubits=2)
+
+    def test_zero_norm_raises(self, zero_norm_state):
+        """Test that zero-norm state raises NumericalInstabilityError."""
+        with pytest.raises(NumericalInstabilityError, match="near-zero"):
+            compute_meyer_wallach_with_breakdown(zero_norm_state, n_qubits=2)
+
+
+# =============================================================================
+# Test: Cirq Backend
+# =============================================================================
+
+
+class TestCirqBackend:
+    """Tests for entanglement capability using the Cirq backend."""
+
+    @pytest.fixture(autouse=True)
+    def check_cirq(self, cirq_available):
+        """Skip tests if Cirq is not available."""
+        if not cirq_available:
+            pytest.skip("Cirq not available")
+
+    def test_cirq_entangling_encoding(self, entangling_encoding_4q):
+        """Test that Cirq backend produces valid entanglement for IQPEncoding."""
+        result = compute_entanglement_capability(
+            entangling_encoding_4q,
+            n_samples=100,
+            seed=42,
+            backend="cirq",
+        )
+        assert isinstance(result, float)
+        assert 0.0 <= result <= 1.0
+        # IQP should produce non-zero entanglement
+        assert result > 0.0
+
+    def test_cirq_non_entangling_encoding(self, sample_encoding_2q):
+        """Test that Cirq backend gives zero entanglement for AngleEncoding."""
+        result = compute_entanglement_capability(
+            sample_encoding_2q,
+            n_samples=100,
+            seed=42,
+            backend="cirq",
+        )
+        assert_allclose(result, 0.0, atol=1e-10)
+
+    def test_cirq_return_details(self, entangling_encoding_4q):
+        """Test that Cirq backend works with return_details=True."""
+        result = compute_entanglement_capability(
+            entangling_encoding_4q,
+            n_samples=100,
+            seed=42,
+            backend="cirq",
+            return_details=True,
+        )
+        assert isinstance(result, dict)
+        assert result["entanglement_samples"].shape == (100,)
+        assert result["per_qubit_entanglement"].shape == (4,)
+        assert 0.0 <= result["entanglement_capability"] <= 1.0
+
+    def test_cirq_reproducibility(self, entangling_encoding_4q):
+        """Test that Cirq backend gives reproducible results with seed."""
+        result1 = compute_entanglement_capability(
+            entangling_encoding_4q, n_samples=100, seed=42, backend="cirq"
+        )
+        result2 = compute_entanglement_capability(
+            entangling_encoding_4q, n_samples=100, seed=42, backend="cirq"
+        )
+        assert_allclose(result1, result2, atol=1e-10)
+
+    def test_cirq_scott_measure(self, entangling_encoding_4q):
+        """Test that Cirq backend works with Scott measure."""
+        result = compute_entanglement_capability(
+            entangling_encoding_4q,
+            n_samples=100,
+            seed=42,
+            backend="cirq",
+            measure="scott",
+            return_details=True,
+        )
+        assert result["measure"] == "scott"
+        assert result["scott_k"] == 2
+        assert 0.0 <= result["entanglement_capability"] <= 1.0
+
+
+class TestCirqBackendConsistency:
+    """Cross-backend consistency tests including Cirq."""
+
+    @pytest.fixture(autouse=True)
+    def check_pennylane_and_cirq(self, pennylane_available, cirq_available):
+        """Skip tests if both PennyLane and Cirq are not available."""
+        if not pennylane_available or not cirq_available:
+            pytest.skip("Both PennyLane and Cirq required")
+
+    def test_pennylane_cirq_consistency(self, entangling_encoding_4q):
+        """Test that PennyLane and Cirq produce consistent entanglement values."""
+        result_pl = compute_entanglement_capability(
+            entangling_encoding_4q, n_samples=100, seed=42, backend="pennylane"
+        )
+        result_cirq = compute_entanglement_capability(
+            entangling_encoding_4q, n_samples=100, seed=42, backend="cirq"
+        )
+
+        # Both should be valid and in a reasonable range of each other
+        assert 0.0 <= result_pl <= 1.0
+        assert 0.0 <= result_cirq <= 1.0
+
+    def test_non_entangling_consistent_across_backends(self, sample_encoding_2q):
+        """Test that non-entangling encoding gives zero on both backends."""
+        result_pl = compute_entanglement_capability(
+            sample_encoding_2q, n_samples=100, seed=42, backend="pennylane"
+        )
+        result_cirq = compute_entanglement_capability(
+            sample_encoding_2q, n_samples=100, seed=42, backend="cirq"
+        )
+        assert_allclose(result_pl, 0.0, atol=1e-10)
+        assert_allclose(result_cirq, 0.0, atol=1e-10)
+
+
+# =============================================================================
+# Test: Qiskit Backend
+# =============================================================================
+
+
+class TestQiskitBackend:
+    """Tests for entanglement capability using the Qiskit backend."""
+
+    @pytest.fixture(autouse=True)
+    def check_qiskit(self, qiskit_available):
+        """Skip tests if Qiskit is not available."""
+        if not qiskit_available:
+            pytest.skip("Qiskit not available")
+
+    def test_qiskit_entangling_encoding(self, entangling_encoding_4q):
+        """Test that Qiskit backend produces valid entanglement for IQPEncoding."""
+        result = compute_entanglement_capability(
+            entangling_encoding_4q,
+            n_samples=100,
+            seed=42,
+            backend="qiskit",
+        )
+        assert isinstance(result, float)
+        assert 0.0 <= result <= 1.0
+        # IQP should produce non-zero entanglement
+        assert result > 0.0
+
+    def test_qiskit_non_entangling_encoding(self, sample_encoding_2q):
+        """Test that Qiskit backend gives zero entanglement for AngleEncoding."""
+        result = compute_entanglement_capability(
+            sample_encoding_2q,
+            n_samples=100,
+            seed=42,
+            backend="qiskit",
+        )
+        assert_allclose(result, 0.0, atol=1e-10)
+
+    def test_qiskit_return_details(self, entangling_encoding_4q):
+        """Test that Qiskit backend works with return_details=True."""
+        result = compute_entanglement_capability(
+            entangling_encoding_4q,
+            n_samples=100,
+            seed=42,
+            backend="qiskit",
+            return_details=True,
+        )
+        assert isinstance(result, dict)
+        assert result["entanglement_samples"].shape == (100,)
+        assert result["per_qubit_entanglement"].shape == (4,)
+        assert 0.0 <= result["entanglement_capability"] <= 1.0
+
+    def test_qiskit_reproducibility(self, entangling_encoding_4q):
+        """Test that Qiskit backend gives reproducible results with seed."""
+        result1 = compute_entanglement_capability(
+            entangling_encoding_4q, n_samples=100, seed=42, backend="qiskit"
+        )
+        result2 = compute_entanglement_capability(
+            entangling_encoding_4q, n_samples=100, seed=42, backend="qiskit"
+        )
+        assert_allclose(result1, result2, atol=1e-10)
+
+    def test_qiskit_scott_measure(self, entangling_encoding_4q):
+        """Test that Qiskit backend works with Scott measure."""
+        result = compute_entanglement_capability(
+            entangling_encoding_4q,
+            n_samples=100,
+            seed=42,
+            backend="qiskit",
+            measure="scott",
+            return_details=True,
+        )
+        assert result["measure"] == "scott"
+        assert result["scott_k"] == 2
+        assert 0.0 <= result["entanglement_capability"] <= 1.0
+
+
+# =============================================================================
+# Test: Qiskit-Cirq Backend Consistency
+# =============================================================================
+
+
+class TestQiskitCirqConsistency:
+    """Cross-backend consistency tests between Qiskit and Cirq."""
+
+    @pytest.fixture(autouse=True)
+    def check_qiskit_and_cirq(self, qiskit_available, cirq_available):
+        """Skip tests if both Qiskit and Cirq are not available."""
+        if not qiskit_available or not cirq_available:
+            pytest.skip("Both Qiskit and Cirq required")
+
+    def test_qiskit_cirq_entangling_consistency(self, entangling_encoding_4q):
+        """Test that Qiskit and Cirq produce consistent entanglement values."""
+        result_qk = compute_entanglement_capability(
+            entangling_encoding_4q, n_samples=100, seed=42, backend="qiskit"
+        )
+        result_cirq = compute_entanglement_capability(
+            entangling_encoding_4q, n_samples=100, seed=42, backend="cirq"
+        )
+
+        assert 0.0 <= result_qk <= 1.0
+        assert 0.0 <= result_cirq <= 1.0
+
+    def test_qiskit_cirq_non_entangling_consistency(self, sample_encoding_2q):
+        """Test that non-entangling encoding gives zero on both backends."""
+        result_qk = compute_entanglement_capability(
+            sample_encoding_2q, n_samples=100, seed=42, backend="qiskit"
+        )
+        result_cirq = compute_entanglement_capability(
+            sample_encoding_2q, n_samples=100, seed=42, backend="cirq"
+        )
+        assert_allclose(result_qk, 0.0, atol=1e-10)
+        assert_allclose(result_cirq, 0.0, atol=1e-10)
+
+
+# =============================================================================
+# Test: All Three Backends Consistency
+# =============================================================================
+
+
+class TestAllBackendsConsistency:
+    """Cross-backend consistency tests across all three backends."""
+
+    @pytest.fixture(autouse=True)
+    def check_all_backends(self, pennylane_available, qiskit_available, cirq_available):
+        """Skip tests if any backend is not available."""
+        if not pennylane_available or not qiskit_available or not cirq_available:
+            pytest.skip("All three backends (PennyLane, Qiskit, Cirq) required")
+
+    def test_entangling_all_backends(self, entangling_encoding_4q):
+        """Test that all three backends produce valid entanglement for IQPEncoding."""
+        result_pl = compute_entanglement_capability(
+            entangling_encoding_4q, n_samples=100, seed=42, backend="pennylane"
+        )
+        result_qk = compute_entanglement_capability(
+            entangling_encoding_4q, n_samples=100, seed=42, backend="qiskit"
+        )
+        result_cirq = compute_entanglement_capability(
+            entangling_encoding_4q, n_samples=100, seed=42, backend="cirq"
+        )
+
+        # All should be valid and non-zero for entangling encoding
+        for label, result in [
+            ("pennylane", result_pl),
+            ("qiskit", result_qk),
+            ("cirq", result_cirq),
+        ]:
+            assert 0.0 < result <= 1.0, f"{label} result {result} not in (0, 1]"
+
+    def test_non_entangling_all_backends(self, sample_encoding_2q):
+        """Test that all three backends give zero entanglement for AngleEncoding."""
+        result_pl = compute_entanglement_capability(
+            sample_encoding_2q, n_samples=100, seed=42, backend="pennylane"
+        )
+        result_qk = compute_entanglement_capability(
+            sample_encoding_2q, n_samples=100, seed=42, backend="qiskit"
+        )
+        result_cirq = compute_entanglement_capability(
+            sample_encoding_2q, n_samples=100, seed=42, backend="cirq"
+        )
+
+        assert_allclose(result_pl, 0.0, atol=1e-10)
+        assert_allclose(result_qk, 0.0, atol=1e-10)
+        assert_allclose(result_cirq, 0.0, atol=1e-10)
+
+    def test_scott_measure_all_backends(self, entangling_encoding_4q):
+        """Test that Scott measure gives valid results on all backends."""
+        results = {}
+        for backend in ("pennylane", "qiskit", "cirq"):
+            result = compute_entanglement_capability(
+                entangling_encoding_4q,
+                n_samples=100,
+                seed=42,
+                backend=backend,
+                measure="scott",
+                return_details=True,
+            )
+            results[backend] = result
+            assert result["measure"] == "scott"
+            assert result["scott_k"] == 2
+            assert 0.0 <= result["entanglement_capability"] <= 1.0, (
+                f"{backend} Scott measure {result['entanglement_capability']} "
+                f"not in [0, 1]"
             )

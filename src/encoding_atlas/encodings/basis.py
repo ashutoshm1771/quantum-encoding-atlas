@@ -125,7 +125,7 @@ from __future__ import annotations
 
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Literal, TypedDict
+from typing import Any, TypedDict
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray

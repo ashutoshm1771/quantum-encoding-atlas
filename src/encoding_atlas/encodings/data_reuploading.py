@@ -1,45 +1,69 @@
 """Data re-uploading encoding module.
 
-This module implements DataReuploading, a quantum data encoding technique that
-achieves universal function approximation by repeatedly encoding classical data
-throughout the circuit, interleaved with entangling layers. This approach
-enables quantum circuits to learn arbitrarily complex functions of the input.
+This module implements DataReuploading, a quantum feature map that repeatedly
+encodes classical data throughout the circuit, interleaved with entangling
+layers. This multi-layer encoding strategy creates quantum states with rich
+Fourier spectra, enabling high expressivity in quantum machine learning models.
 
-Data re-uploading is a powerful technique in quantum machine learning, offering:
+Data re-uploading is a foundational technique in quantum machine learning,
+offering several key advantages:
 
-1. **Universal Approximation**: Can approximate any continuous function with
-   sufficient layers, analogous to deep neural networks
+1. **High Expressivity**: Multiple encoding layers increase the accessible
+   Fourier frequencies, enabling complex decision boundaries
 2. **Efficient Depth-Width Trade-off**: Uses fewer qubits than angle encoding
    while maintaining expressivity through depth
-3. **Single-Qubit Universality**: Can approximate any function using a single
-   qubit with sufficient re-uploading layers
-4. **Trainability**: Interleaved structure helps mitigate barren plateaus
+3. **Rich Feature Space**: Creates quantum kernels with higher-order feature
+   interactions through repeated encoding and entanglement
+4. **Gradient-Friendly Structure**: Interleaved data-entanglement pattern
+   provides better gradient flow than purely random circuits
 
 The encoding creates quantum states by repeatedly uploading data:
 
     |ψ(x)⟩ = [U_ent · U_data(x)]^L |0⟩^⊗n
 
-where U_data(x) encodes the classical features and U_ent provides entanglement
-between qubits. The key insight is that re-encoding data at multiple points
-in the circuit effectively increases the expressivity of the encoding.
+where U_data(x) encodes the classical features via RY rotations and U_ent
+provides entanglement via a CNOT ladder. The key insight is that re-encoding
+data at multiple circuit depths increases the Fourier frequency content of
+the resulting quantum state.
+
+Relationship to Universal Approximation
+---------------------------------------
+This module implements the **encoding component** of the data re-uploading
+architecture. The full universal approximation capability described in
+Pérez-Salinas et al. [1]_ requires **trainable parameters** interleaved
+with data uploads:
+
+    |ψ(θ, x)⟩ = U(θₗ) · U_data(x) · U(θₗ₋₁) · U_data(x) · ... · U(θ₁) |0⟩
+
+This module provides U_data(x) repeated L times with fixed entanglement.
+To achieve universal approximation, users should:
+
+1. Use this encoding as the feature map in a variational circuit
+2. Add trainable rotation layers (e.g., via PennyLane's StronglyEntanglingLayers)
+3. Optimize the trainable parameters for their specific task
+
+The encoding alone creates a fixed (but expressive) quantum kernel suitable
+for kernel methods, classification, and as input to variational algorithms.
 
 Mathematical Background
 -----------------------
-The universal approximation property arises from the Fourier decomposition
-of quantum circuits. A single-qubit rotation R(θ) creates outputs of the form:
+The expressivity of data re-uploading arises from Fourier analysis of
+parameterized quantum circuits [2]_. For a single data feature x encoded
+L times through rotation gates, the expectation value of any observable
+can be written as a Fourier series:
 
-    f(θ) = a₀ + a₁cos(θ) + b₁sin(θ)
+    f(x) = Σₖ cₖ exp(ikx)  for k ∈ {-L, ..., L}
 
-By composing L rotations with data re-uploading:
+The number of accessible Fourier frequencies grows linearly with L (the
+number of encoding layers). For multi-qubit circuits with entanglement,
+the frequency spectrum becomes richer due to:
 
-    f(θ) = Σₖ [aₖcos(kθ) + bₖsin(kθ)]  for k = 0, 1, ..., L
+- Product terms from multi-qubit observables
+- Interference between qubits via entanglement
 
-This creates a Fourier series with L+1 terms, enabling approximation of
-increasingly complex functions as L increases.
-
-For multi-qubit circuits with entanglement, the expressivity grows
-exponentially, allowing representation of functions with up to 2^n
-Fourier frequencies where n is the number of qubits.
+The Fourier coefficients cₖ are determined by the fixed circuit structure.
+To control these coefficients (and thus approximate arbitrary functions),
+trainable parameters must be added between data uploads.
 
 Note on Data Preprocessing
 --------------------------
@@ -56,16 +80,17 @@ Use Cases
 ---------
 Data re-uploading encoding is particularly suited for:
 
-- **Quantum classifiers**: Binary and multi-class classification tasks where
-  universal approximation capability is beneficial
-- **Function fitting**: Approximating complex continuous functions using
-  quantum circuits as function approximators
-- **Variational quantum algorithms**: As the encoding layer in VQE, QAOA,
-  or custom variational circuits
+- **Quantum kernel methods**: As a high-expressivity feature map for
+  quantum kernel estimation and quantum support vector machines
+- **Variational quantum classifiers**: As the data encoding layer in
+  hybrid quantum-classical classifiers (add trainable layers for full
+  universal approximation capability)
 - **Quantum neural networks**: Input encoding for QNN architectures where
   expressivity is more important than circuit width
-- **Single-qubit experiments**: Demonstrating quantum machine learning
-  concepts with minimal hardware requirements
+- **Function approximation**: When combined with trainable parameters,
+  enables approximation of complex continuous functions
+- **Single-qubit demonstrations**: Proof-of-concept experiments showing
+  how re-uploading increases expressivity with minimal qubits
 
 Limitations
 -----------
@@ -75,8 +100,10 @@ Limitations
   plateaus despite the interleaved structure
 - **Feature capacity**: When n_features > n_qubits with cyclic mapping,
   different features encoded on the same qubit may interfere
-- **Gate count scaling**: Total gates scale as O(n_layers × n_qubits),
+- **Gate count scaling**: Total gates scale as O(n_layers × n_features),
   which can be significant for deep circuits
+- **Fixed coefficients**: Without trainable parameters, the Fourier
+  coefficients are fixed by the circuit structure
 
 Debugging
 ---------
@@ -116,7 +143,7 @@ References
 ----------
 .. [1] Pérez-Salinas, A., et al. (2020). "Data re-uploading for a universal
        quantum classifier." Quantum, 4, 226.
-.. [2] Schuld, M., Sweke, R., & Meyer, J. K. (2021). "Effect of data encoding
+.. [2] Schuld, M., Sweke, R., & Meyer, J. J. (2021). "Effect of data encoding
        on the expressive power of variational quantum machine learning models."
        Physical Review A, 103(3), 032430.
 .. [3] Goto, T., et al. (2021). "Universal approximation property of quantum
@@ -247,17 +274,17 @@ class GateCountBreakdown(TypedDict):
 
 
 class DataReuploading(BaseEncoding):
-    """Data re-uploading encoding for universal function approximation.
+    """Data re-uploading quantum feature map with high expressivity.
 
     DataReuploading implements a quantum encoding strategy where classical
     data is encoded multiple times throughout the circuit, interleaved with
-    entangling layers. This approach achieves universal approximation
-    capability, meaning it can approximate any continuous function of the
-    input features with sufficient circuit depth.
+    entangling layers. This multi-layer approach creates quantum states with
+    rich Fourier spectra, enabling expressive quantum kernels and serving as
+    a foundation for variational quantum classifiers.
 
-    The key insight is that re-uploading data at multiple points effectively
-    increases the expressive power of the quantum model, similar to how depth
-    increases expressivity in classical neural networks.
+    The key insight is that re-uploading data at multiple circuit depths
+    increases the number of accessible Fourier frequencies, similar to how
+    depth increases expressivity in classical neural networks.
 
     The circuit structure repeats L times:
 
@@ -275,9 +302,9 @@ class DataReuploading(BaseEncoding):
         Number of classical features to encode. Must be a positive integer.
         If n_features > n_qubits, features are cyclically mapped to qubits.
     n_layers : int, default=3
-        Number of re-uploading layers. Higher values increase expressivity
-        but also circuit depth. Must be at least 1. The universal
-        approximation property requires sufficient layers.
+        Number of re-uploading layers. Higher values increase the number of
+        accessible Fourier frequencies but also circuit depth. Must be at
+        least 1. More layers provide richer feature representations.
     n_qubits : int, optional
         Number of qubits in the circuit. If not specified, defaults to
         n_features. Can be set lower than n_features to use fewer qubits
@@ -351,13 +378,17 @@ class DataReuploading(BaseEncoding):
 
     Notes
     -----
-    **Universal Approximation**: With sufficient layers, data re-uploading
-    can approximate any continuous function. The required number of layers
-    depends on the target function's complexity (Fourier frequency content).
+    **Feature Map vs. Universal Approximation**: This class implements a
+    *fixed feature map* that provides high expressivity through repeated
+    data encoding. For full universal function approximation as described
+    in [1]_, trainable parameters must be added between data uploads. Use
+    this encoding as the feature map layer in a variational circuit, then
+    add trainable rotations to achieve universal approximation capability.
 
-    **Single-Qubit Universality**: Even with a single qubit (n_qubits=1),
-    data re-uploading achieves universal approximation for functions of one
-    variable. This is a remarkable property not shared by single-layer encodings.
+    **Fourier Expressivity**: With L encoding layers, the quantum state
+    can represent functions with Fourier frequencies up to ±L. More layers
+    enable the representation of higher-frequency components. The specific
+    Fourier coefficients are determined by the fixed circuit structure.
 
     **Trainability Considerations**: While data re-uploading helps with
     expressivity, very deep circuits may still face trainability challenges.
@@ -368,12 +399,22 @@ class DataReuploading(BaseEncoding):
     on qubit (i mod n_qubits). This allows compact representations but may
     create interference between features mapped to the same qubit.
 
+    **Gate Set Choice**: This implementation uses RY rotations for data
+    encoding and a CNOT ladder for entanglement. The original single-qubit
+    formulation in [1]_ uses general SU(2) (U3) rotations with three
+    parameters per gate, and the multi-qubit extension uses CZ gates with
+    varying entanglement topologies. The RY + CNOT variant used here is a
+    common simplification adopted by many QML frameworks; it is less
+    expressive per gate but sufficient for most feature map applications.
+    The Fourier frequency analysis from [2]_ applies regardless of the
+    specific rotation axis.
+
     **Comparison with Classical Deep Learning**: Data re-uploading is
     analogous to residual connections in deep neural networks, where
     information about the input is preserved and refined through layers.
     """
 
-    __slots__ = ('n_layers', '_n_qubits')
+    __slots__ = ('n_layers', '_n_qubits', '_entanglement_pairs')
 
     def __init__(
         self,
@@ -443,12 +484,29 @@ class DataReuploading(BaseEncoding):
         self.n_layers: int = n_layers
         self._n_qubits: int = n_qubits if n_qubits is not None else n_features
 
+        # Pre-compute and cache entanglement pairs as an immutable tuple.
+        # This eliminates redundant computation during circuit generation:
+        # - Each get_circuit() call would otherwise recompute pairs
+        # - Batch processing of N samples would compute pairs N times
+        # - With caching, pairs are computed once at initialization
+        #
+        # DataReuploading uses a CNOT ladder topology (linear entanglement).
+        # For n qubits, we have n-1 pairs: (0,1), (1,2), ..., (n-2, n-1)
+        if self._n_qubits <= 1:
+            self._entanglement_pairs: tuple[tuple[int, int], ...] = ()
+        else:
+            self._entanglement_pairs = tuple(
+                (i, i + 1) for i in range(self._n_qubits - 1)
+            )
+
         # Log initialization for debugging
         _logger.debug(
-            "DataReuploading initialized: n_features=%d, n_layers=%d, n_qubits=%d",
+            "DataReuploading initialized: n_features=%d, n_layers=%d, n_qubits=%d, "
+            "n_entanglement_pairs=%d",
             self.n_features,
             self.n_layers,
             self._n_qubits,
+            len(self._entanglement_pairs),
         )
 
         # =====================================================================
@@ -614,8 +672,8 @@ class DataReuploading(BaseEncoding):
         **Single-Qubit Case (n_qubits=1):**
 
         When n_qubits=1, there are no CNOT gates (no entanglement possible).
-        The circuit consists only of repeated RY rotations, which still
-        provides universal approximation for single-variable functions.
+        The circuit consists only of repeated RY rotations, creating a
+        feature map with L Fourier frequencies for L layers.
 
         See Also
         --------
@@ -778,8 +836,8 @@ class DataReuploading(BaseEncoding):
 
         if self._n_qubits == 1:
             recommendations.append(
-                "Single-qubit mode: No entanglement, but universal approximation "
-                "for single-variable functions is still achievable."
+                "Single-qubit mode: No entanglement, but repeated encoding still "
+                "increases Fourier frequency content for expressive feature maps."
             )
 
         if self.n_features > self._n_qubits:
@@ -856,6 +914,8 @@ class DataReuploading(BaseEncoding):
             List of (control, target) qubit pairs for CNOT gates.
             Each tuple (i, i+1) indicates a CNOT from qubit i to qubit i+1.
             Returns an empty list for single-qubit configurations.
+            This is a new list created from the cached tuple, so callers
+            can safely modify it without affecting the encoding.
 
         Notes
         -----
@@ -873,8 +933,14 @@ class DataReuploading(BaseEncoding):
         **Single-Qubit Case:**
 
         When n_qubits=1, no entanglement is possible, so an empty list
-        is returned. Single-qubit data re-uploading still achieves
-        universal approximation for single-variable functions.
+        is returned. Single-qubit data re-uploading still creates an
+        expressive feature map with L Fourier frequencies for L layers.
+
+        **Caching:**
+
+        Entanglement pairs are computed once at initialization and cached
+        as an immutable tuple. This method returns a new list copy for
+        API compatibility, ensuring callers cannot modify the internal state.
 
         Examples
         --------
@@ -907,11 +973,9 @@ class DataReuploading(BaseEncoding):
         gate_count_breakdown : Get detailed gate counts including CNOT count.
         resource_summary : Comprehensive resource analysis.
         """
-        # Linear/ladder entanglement: each qubit connects to the next
-        # For n qubits, we have n-1 CNOT pairs: (0,1), (1,2), ..., (n-2, n-1)
-        if self._n_qubits <= 1:
-            return []
-        return [(i, i + 1) for i in range(self._n_qubits - 1)]
+        # Return a new list from the cached tuple for API compatibility
+        # Callers can safely modify the returned list
+        return list(self._entanglement_pairs)
 
     # =========================================================================
     # Circuit Generation
@@ -1335,8 +1399,9 @@ class DataReuploading(BaseEncoding):
             simulability="not_simulable" if n > 1 else "simulable",
             trainability_estimate=max(0.4, 0.9 - 0.05 * self.n_layers),
             notes=(
-                f"Data re-uploading with {self.n_layers} layers. "
-                f"Universal approximation capability via repeated encoding."
+                f"Data re-uploading feature map with {self.n_layers} layers. "
+                f"High expressivity via repeated encoding; add trainable "
+                f"parameters for universal approximation."
             ),
         )
 
