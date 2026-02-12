@@ -1,7 +1,7 @@
 """Base encoding class and protocols."""
 
-from abc import ABC, abstractmethod
 import threading
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -43,10 +43,10 @@ class BaseEncoding(ABC):
     """
 
     __slots__ = (
-        '_n_features',
-        '_config',
-        '_properties',
-        '_properties_lock',
+        "_n_features",
+        "_config",
+        "_properties",
+        "_properties_lock",
     )
 
     def __init__(self, n_features: int, **kwargs: Any) -> None:
@@ -261,12 +261,15 @@ class BaseEncoding(ABC):
                     f"Input contains string values. Expected numeric data, got {type(x[0]).__name__}. "
                     "Convert strings to floats before encoding."
                 )
-        elif isinstance(x, np.ndarray):
-            if x.dtype.kind in ('U', 'S', 'O'):  # Unicode, byte string, or object dtype
-                raise TypeError(
-                    f"Input array has non-numeric dtype '{x.dtype}'. "
-                    "Expected numeric data (float or int)."
-                )
+        elif isinstance(x, np.ndarray) and x.dtype.kind in (
+            "U",
+            "S",
+            "O",
+        ):  # Unicode, byte string, or object dtype
+            raise TypeError(
+                f"Input array has non-numeric dtype '{x.dtype}'. "
+                "Expected numeric data (float or int)."
+            )
 
         # =======================================================================
         # COMPLEX NUMBER VALIDATION
@@ -335,7 +338,9 @@ class BaseEncoding(ABC):
     def __repr__(self) -> str:
         config_str = ", ".join(f"{k}={v!r}" for k, v in self._config.items())
         if config_str:
-            return f"{self.__class__.__name__}(n_features={self.n_features}, {config_str})"
+            return (
+                f"{self.__class__.__name__}(n_features={self.n_features}, {config_str})"
+            )
         return f"{self.__class__.__name__}(n_features={self.n_features})"
 
     def __eq__(self, other: object) -> bool:
@@ -353,14 +358,18 @@ class BaseEncoding(ABC):
             if isinstance(obj, list):
                 return tuple(_make_hashable(item) for item in obj)
             elif isinstance(obj, dict):
-                return tuple(sorted((_make_hashable(k), _make_hashable(v)) for k, v in obj.items()))
+                return tuple(
+                    sorted(
+                        (_make_hashable(k), _make_hashable(v)) for k, v in obj.items()
+                    )
+                )
             elif isinstance(obj, set):
                 return frozenset(_make_hashable(item) for item in obj)
             return obj
 
-        hashable_config = tuple(sorted(
-            (k, _make_hashable(v)) for k, v in self._config.items()
-        ))
+        hashable_config = tuple(
+            sorted((k, _make_hashable(v)) for k, v in self._config.items())
+        )
         return hash((self.__class__.__name__, self.n_features, hashable_config))
 
     def __getstate__(self) -> dict[str, Any]:
@@ -385,23 +394,23 @@ class BaseEncoding(ABC):
         The cached `_properties` value is preserved if it was computed,
         avoiding recomputation after unpickling.
         """
-        state: dict[str, Any] = {'slots': {}, 'dict': None}
+        state: dict[str, Any] = {"slots": {}, "dict": None}
 
         # Collect slot attributes from the entire class hierarchy
         for cls in type(self).__mro__:
-            if hasattr(cls, '__slots__'):
+            if hasattr(cls, "__slots__"):
                 for slot in cls.__slots__:
                     # Skip the lock - it cannot be pickled
-                    if slot == '_properties_lock':
+                    if slot == "_properties_lock":
                         continue
                     # Only include slots that have been set
                     if hasattr(self, slot):
-                        state['slots'][slot] = getattr(self, slot)
+                        state["slots"][slot] = getattr(self, slot)
 
         # Handle __dict__ for subclasses that don't define __slots__
         # (they inherit slots from BaseEncoding but store their own attrs in __dict__)
-        if hasattr(self, '__dict__') and self.__dict__:
-            state['dict'] = self.__dict__.copy()
+        if hasattr(self, "__dict__") and self.__dict__:
+            state["dict"] = self.__dict__.copy()
 
         return state
 
@@ -422,15 +431,15 @@ class BaseEncoding(ABC):
         is fully functional for concurrent access.
         """
         # Restore slot values
-        for slot, value in state.get('slots', {}).items():
+        for slot, value in state.get("slots", {}).items():
             setattr(self, slot, value)
 
         # Restore __dict__ attributes if present
-        if state.get('dict'):
-            if not hasattr(self, '__dict__'):
+        if state.get("dict"):
+            if not hasattr(self, "__dict__"):
                 # This shouldn't happen, but handle gracefully
-                object.__setattr__(self, '__dict__', {})
-            self.__dict__.update(state['dict'])
+                object.__setattr__(self, "__dict__", {})
+            self.__dict__.update(state["dict"])
 
         # Recreate the thread lock
         self._properties_lock = threading.Lock()

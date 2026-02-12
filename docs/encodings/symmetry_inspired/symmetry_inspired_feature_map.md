@@ -1,7 +1,5 @@
 # Symmetry-Inspired Feature Map
 
-**Author:** Ashutosh Mishra
-
 A **heuristic** quantum data encoding that incorporates symmetry-aware gate
 structures inspired by geometric quantum machine learning — providing
 **inductive bias** for problems with underlying symmetries without the
@@ -86,8 +84,10 @@ gate angles differently to respect a specific symmetry structure.
   │  rotation    │  SO(2)     │  Pairs (xi, xi+1) treated as 2D coords  │
   │              │            │  Angle: radius = sqrt(xi^2 + xi+1^2)    │
   ├──────────────┼────────────┼───────────────────────────────────────────┤
-  │  cyclic      │  Z_n       │  Circular permutation of features       │
-  │              │            │  Angle: feature value directly           │
+  │  cyclic      │  Z_n       │  Cyclic inductive bias via topology     │
+  │              │            │  and (π-x) interaction terms             │
+  │              │            │  Angle: feature value directly (NOT      │
+  │              │            │  invariant to cyclic permutations)       │
   ├──────────────┼────────────┼───────────────────────────────────────────┤
   │  reflection  │  Z_2       │  Mirror symmetry (reversal of features) │
   │              │            │  Angle: (xi + x_{n-1-i}) / 2            │
@@ -135,14 +135,17 @@ equivariant angle uses the **radius** — an SO(2)-invariant quantity.
 ### Cyclic Symmetry (Z_n-inspired)
 
 Designed for data with circular/periodic structure where feature i and
-feature (i+1) mod n should be treated similarly.
+feature (i+1) mod n should be treated similarly. The cyclic bias comes
+from the entanglement topology and (pi - x) interaction terms, **not**
+from cyclic-invariant angle computation. The entanglement topology is
+controlled by the `entanglement` parameter (not forced to circular).
 
 ```
   Features:    x = [x0, x1, x2, x3]
 
   Equivariant angle for qubit i:
 
-       phi_i = x_i                (direct feature value)
+       phi_i = x_i                (direct feature value — NOT cyclic-invariant)
 
   Interaction angle for pair (i, j):
 

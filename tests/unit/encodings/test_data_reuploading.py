@@ -107,11 +107,13 @@ def batch_data_4d() -> NDArray[np.floating]:
     - [0.5, 0.6, 0.7, 0.8] (mid-range values)
     - [0.9, 1.0, 1.1, 1.2] (near boundary values)
     """
-    return np.array([
-        [0.1, 0.2, 0.3, 0.4],
-        [0.5, 0.6, 0.7, 0.8],
-        [0.9, 1.0, 1.1, 1.2],
-    ])
+    return np.array(
+        [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.5, 0.6, 0.7, 0.8],
+            [0.9, 1.0, 1.1, 1.2],
+        ]
+    )
 
 
 @pytest.fixture
@@ -587,9 +589,9 @@ class TestMathematicalCorrectness:
         breakdown = enc.gate_count_breakdown()
 
         # RY gates: n_features * n_layers = 4 * 3 = 12
-        assert breakdown['ry_gates'] == 12
+        assert breakdown["ry_gates"] == 12
         # CNOT gates: (n_qubits - 1) * n_layers = 3 * 3 = 9
-        assert breakdown['cnot_gates'] == 9
+        assert breakdown["cnot_gates"] == 9
 
     @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
     def test_rotation_angle_applied(self) -> None:
@@ -764,12 +766,9 @@ class TestNumericalStability:
         """
         enc = DataReuploading(n_features=4, n_layers=2)
         # Values very close to π but not exactly π
-        x = np.array([
-            np.pi - 1e-14,
-            np.pi + 1e-14,
-            2 * np.pi - 1e-14,
-            np.pi / 2 + 1e-14
-        ])
+        x = np.array(
+            [np.pi - 1e-14, np.pi + 1e-14, 2 * np.pi - 1e-14, np.pi / 2 + 1e-14]
+        )
 
         if HAS_PENNYLANE:
             circuit_fn = enc.get_circuit(x, backend="pennylane")
@@ -1020,7 +1019,7 @@ class TestConcurrentAccess:
         def generate_circuits(thread_id: int) -> list[Any]:
             circuits = []
             try:
-                for i in range(num_circuits_per_thread):
+                for _i in range(num_circuits_per_thread):
                     x = np.random.randn(4)
                     if HAS_QISKIT:
                         circuit = enc.get_circuit(x, backend="qiskit")
@@ -1030,7 +1029,9 @@ class TestConcurrentAccess:
             return circuits
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [executor.submit(generate_circuits, i) for i in range(num_threads)]
+            futures = [
+                executor.submit(generate_circuits, i) for i in range(num_threads)
+            ]
             results = [f.result() for f in as_completed(futures)]
 
         # No errors should have occurred
@@ -1132,36 +1133,36 @@ class TestDataReuploadingSpecific:
         enc = DataReuploading(n_features=4, n_layers=3)
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['ry_gates'] == 12  # 4 * 3
-        assert breakdown['cnot_gates'] == 9  # 3 * 3
-        assert breakdown['total'] == 21  # 12 + 9
+        assert breakdown["ry_gates"] == 12  # 4 * 3
+        assert breakdown["cnot_gates"] == 9  # 3 * 3
+        assert breakdown["total"] == 21  # 12 + 9
 
     def test_gate_count_per_layer(self) -> None:
         """Test per-layer gate count computation."""
         enc = DataReuploading(n_features=8, n_layers=5)
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['ry_per_layer'] == 8
-        assert breakdown['cnot_per_layer'] == 7
-        assert breakdown['gates_per_layer'] == 15
+        assert breakdown["ry_per_layer"] == 8
+        assert breakdown["cnot_per_layer"] == 7
+        assert breakdown["gates_per_layer"] == 15
 
     def test_single_qubit_no_cnot(self) -> None:
         """Test that single-qubit encoding has no CNOT gates."""
         enc = DataReuploading(n_features=1, n_layers=5)
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['ry_gates'] == 5  # 1 * 5 layers
-        assert breakdown['cnot_gates'] == 0  # No entanglement possible
-        assert breakdown['total'] == 5
+        assert breakdown["ry_gates"] == 5  # 1 * 5 layers
+        assert breakdown["cnot_gates"] == 0  # No entanglement possible
+        assert breakdown["total"] == 5
 
     def test_single_layer_gate_count(self) -> None:
         """Test gate count with single layer."""
         enc = DataReuploading(n_features=4, n_layers=1)
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['ry_gates'] == 4
-        assert breakdown['cnot_gates'] == 3
-        assert breakdown['total'] == 7
+        assert breakdown["ry_gates"] == 4
+        assert breakdown["cnot_gates"] == 3
+        assert breakdown["total"] == 7
 
     def test_many_layers_gate_count(self) -> None:
         """Test gate count with many layers."""
@@ -1171,9 +1172,9 @@ class TestDataReuploadingSpecific:
 
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['ry_gates'] == 40  # 4 * 10
-        assert breakdown['cnot_gates'] == 30  # 3 * 10
-        assert breakdown['total'] == 70
+        assert breakdown["ry_gates"] == 40  # 4 * 10
+        assert breakdown["cnot_gates"] == 30  # 3 * 10
+        assert breakdown["total"] == 70
 
     def test_fewer_qubits_than_features_gate_count(self) -> None:
         """Test gate count when n_qubits < n_features (cyclic mapping)."""
@@ -1181,10 +1182,10 @@ class TestDataReuploadingSpecific:
         breakdown = enc.gate_count_breakdown()
 
         # With cyclic mapping: ALL features are encoded (one RY per feature)
-        assert breakdown['ry_per_layer'] == 8  # All 8 features
-        assert breakdown['cnot_per_layer'] == 3  # n_qubits - 1
-        assert breakdown['ry_gates'] == 16  # 8 * 2
-        assert breakdown['cnot_gates'] == 6  # 3 * 2
+        assert breakdown["ry_per_layer"] == 8  # All 8 features
+        assert breakdown["cnot_per_layer"] == 3  # n_qubits - 1
+        assert breakdown["ry_gates"] == 16  # 8 * 2
+        assert breakdown["cnot_gates"] == 6  # 3 * 2
 
     def test_more_qubits_than_features_gate_count(self) -> None:
         """Test gate count when n_qubits > n_features."""
@@ -1192,21 +1193,21 @@ class TestDataReuploadingSpecific:
         breakdown = enc.gate_count_breakdown()
 
         # RY per layer = n_features (all features encoded)
-        assert breakdown['ry_per_layer'] == 2
+        assert breakdown["ry_per_layer"] == 2
         # Entanglement uses all n_qubits
-        assert breakdown['cnot_per_layer'] == 5  # n_qubits - 1
-        assert breakdown['ry_gates'] == 6  # 2 * 3
-        assert breakdown['cnot_gates'] == 15  # 5 * 3
+        assert breakdown["cnot_per_layer"] == 5  # n_qubits - 1
+        assert breakdown["ry_gates"] == 6  # 2 * 3
+        assert breakdown["cnot_gates"] == 15  # 5 * 3
 
     def test_total_single_and_two_qubit(self) -> None:
         """Test that single/two qubit totals match gate counts."""
         enc = DataReuploading(n_features=4, n_layers=3)
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['total_single_qubit'] == breakdown['ry_gates']
-        assert breakdown['total_two_qubit'] == breakdown['cnot_gates']
-        assert breakdown['total'] == (
-            breakdown['total_single_qubit'] + breakdown['total_two_qubit']
+        assert breakdown["total_single_qubit"] == breakdown["ry_gates"]
+        assert breakdown["total_two_qubit"] == breakdown["cnot_gates"]
+        assert breakdown["total"] == (
+            breakdown["total_single_qubit"] + breakdown["total_two_qubit"]
         )
 
     def test_gate_count_return_type(self) -> None:
@@ -1215,9 +1216,14 @@ class TestDataReuploadingSpecific:
         breakdown = enc.gate_count_breakdown()
 
         expected_keys = {
-            'ry_gates', 'cnot_gates', 'total_single_qubit',
-            'total_two_qubit', 'total', 'ry_per_layer',
-            'cnot_per_layer', 'gates_per_layer'
+            "ry_gates",
+            "cnot_gates",
+            "total_single_qubit",
+            "total_two_qubit",
+            "total",
+            "ry_per_layer",
+            "cnot_per_layer",
+            "gates_per_layer",
         }
         assert set(breakdown.keys()) == expected_keys
         assert all(isinstance(v, int) for v in breakdown.values())
@@ -1231,35 +1237,35 @@ class TestDataReuploadingSpecific:
         enc = DataReuploading(n_features=4, n_layers=3)
         summary = enc.resource_summary()
 
-        assert summary['n_qubits'] == 4
-        assert summary['n_features'] == 4
-        assert summary['n_layers'] == 3
+        assert summary["n_qubits"] == 4
+        assert summary["n_features"] == 4
+        assert summary["n_layers"] == 3
         # depth = n_layers * (ceil(n_features/n_qubits) + (n_qubits-1)) = 3 * (1 + 3) = 12
-        assert summary['depth'] == 12
+        assert summary["depth"] == 12
 
     def test_gate_counts_included(self) -> None:
         """Test that gate counts are included in summary."""
         enc = DataReuploading(n_features=4, n_layers=3)
         summary = enc.resource_summary()
 
-        assert 'gate_counts' in summary
-        assert summary['gate_counts']['total'] == 21
+        assert "gate_counts" in summary
+        assert summary["gate_counts"]["total"] == 21
 
     def test_entangling_property_in_summary(self) -> None:
         """Test is_entangling reflects qubit count in summary."""
         enc_multi = DataReuploading(n_features=4)
         enc_single = DataReuploading(n_features=1)
 
-        assert enc_multi.resource_summary()['is_entangling'] is True
-        assert enc_single.resource_summary()['is_entangling'] is False
+        assert enc_multi.resource_summary()["is_entangling"] is True
+        assert enc_single.resource_summary()["is_entangling"] is False
 
     def test_simulability_property_in_summary(self) -> None:
         """Test simulability reflects qubit count in summary."""
         enc_multi = DataReuploading(n_features=4)
         enc_single = DataReuploading(n_features=1)
 
-        assert enc_multi.resource_summary()['simulability'] == 'not_simulable'
-        assert enc_single.resource_summary()['simulability'] == 'simulable'
+        assert enc_multi.resource_summary()["simulability"] == "not_simulable"
+        assert enc_single.resource_summary()["simulability"] == "simulable"
 
     def test_trainability_estimate(self) -> None:
         """Test trainability estimate computation."""
@@ -1272,28 +1278,31 @@ class TestDataReuploadingSpecific:
         summary_deep = enc_deep.resource_summary()
 
         # Shallow should have higher trainability
-        assert summary_shallow['trainability_estimate'] > summary_deep['trainability_estimate']
+        assert (
+            summary_shallow["trainability_estimate"]
+            > summary_deep["trainability_estimate"]
+        )
         # Trainability should be in valid range
-        assert 0.0 <= summary_shallow['trainability_estimate'] <= 1.0
-        assert 0.0 <= summary_deep['trainability_estimate'] <= 1.0
+        assert 0.0 <= summary_shallow["trainability_estimate"] <= 1.0
+        assert 0.0 <= summary_deep["trainability_estimate"] <= 1.0
 
     def test_fourier_frequencies(self) -> None:
         """Test Fourier frequencies equals n_layers."""
         enc = DataReuploading(n_features=4, n_layers=7)
         summary = enc.resource_summary()
 
-        assert summary['fourier_frequencies'] == 7
+        assert summary["fourier_frequencies"] == 7
 
     def test_hardware_requirements(self) -> None:
         """Test hardware requirements section."""
         enc = DataReuploading(n_features=4, n_layers=3)
         summary = enc.resource_summary()
 
-        hw_req = summary['hardware_requirements']
-        assert hw_req['connectivity'] == 'linear'
-        assert 'RY' in hw_req['native_gates']
-        assert 'CNOT' in hw_req['native_gates']
-        assert hw_req['min_qubit_count'] == 4
+        hw_req = summary["hardware_requirements"]
+        assert hw_req["connectivity"] == "linear"
+        assert "RY" in hw_req["native_gates"]
+        assert "CNOT" in hw_req["native_gates"]
+        assert hw_req["min_qubit_count"] == 4
 
     def test_summary_all_expected_keys(self) -> None:
         """Test that summary contains all expected keys."""
@@ -1301,10 +1310,17 @@ class TestDataReuploadingSpecific:
         summary = enc.resource_summary()
 
         expected_keys = {
-            'n_qubits', 'n_features', 'n_layers', 'depth',
-            'gate_counts', 'is_entangling', 'simulability',
-            'trainability_estimate', 'fourier_frequencies',
-            'hardware_requirements', 'recommendations'
+            "n_qubits",
+            "n_features",
+            "n_layers",
+            "depth",
+            "gate_counts",
+            "is_entangling",
+            "simulability",
+            "trainability_estimate",
+            "fourier_frequencies",
+            "hardware_requirements",
+            "recommendations",
         }
         assert set(summary.keys()) == expected_keys
 
@@ -1329,7 +1345,7 @@ class TestDataReuploadingSpecific:
 
         user_warnings = [x for x in w if issubclass(x.category, UserWarning)]
         assert len(user_warnings) == 1
-        assert 'deep circuit' in str(user_warnings[0].message).lower()
+        assert "deep circuit" in str(user_warnings[0].message).lower()
 
     def test_warning_at_threshold(self) -> None:
         """Test warning behavior at threshold boundary."""
@@ -1357,8 +1373,8 @@ class TestDataReuploadingSpecific:
         assert len(user_warnings) == 1
 
         msg = str(user_warnings[0].message).lower()
-        assert 'trainability' in msg
-        assert 'barren plateau' in msg
+        assert "trainability" in msg
+        assert "barren plateau" in msg
 
     def test_encoding_still_works_with_warning(self) -> None:
         """Test that encoding functions correctly despite warning."""
@@ -1384,11 +1400,11 @@ class TestDataReuploadingSpecific:
         breakdown = enc.gate_count_breakdown()
 
         # With cyclic mapping: ALL 8 features are encoded
-        assert breakdown['ry_per_layer'] == 8
-        assert breakdown['ry_gates'] == 16  # 8 * 2
+        assert breakdown["ry_per_layer"] == 8
+        assert breakdown["ry_gates"] == 16  # 8 * 2
         # CNOT uses n_qubits, so 3 per layer
-        assert breakdown['cnot_per_layer'] == 3
-        assert breakdown['cnot_gates'] == 6  # 3 * 2
+        assert breakdown["cnot_per_layer"] == 3
+        assert breakdown["cnot_gates"] == 6  # 3 * 2
 
     def test_cyclic_mapping_more_features_than_qubits(self) -> None:
         """Test encoding with more features than qubits."""
@@ -1401,7 +1417,7 @@ class TestDataReuploadingSpecific:
 
         # Gate counts should reflect all features
         breakdown = enc.gate_count_breakdown()
-        assert breakdown['ry_per_layer'] == 6  # All 6 features
+        assert breakdown["ry_per_layer"] == 6  # All 6 features
 
     @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
     def test_cyclic_mapping_produces_valid_state_pennylane(self) -> None:
@@ -1409,7 +1425,7 @@ class TestDataReuploadingSpecific:
         enc = DataReuploading(n_features=8, n_qubits=4, n_layers=2)
         x = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8])
 
-        circuit_fn = enc.get_circuit(x, backend='pennylane')
+        circuit_fn = enc.get_circuit(x, backend="pennylane")
         dev = qml.device("default.qubit", wires=4)
 
         @qml.qnode(dev)
@@ -1432,12 +1448,12 @@ class TestDataReuploadingSpecific:
         enc = DataReuploading(n_features=8, n_qubits=4, n_layers=2)
         x = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8])
 
-        circuit = enc.get_circuit(x, backend='qiskit')
+        circuit = enc.get_circuit(x, backend="qiskit")
 
         assert circuit.num_qubits == 4
 
         # Count RY gates in the circuit
-        ry_count = sum(1 for inst in circuit.data if inst.operation.name == 'ry')
+        ry_count = sum(1 for inst in circuit.data if inst.operation.name == "ry")
         # With cyclic mapping: 8 features * 2 layers = 16 RY gates
         assert ry_count == 16
 
@@ -1447,7 +1463,7 @@ class TestDataReuploadingSpecific:
         enc = DataReuploading(n_features=6, n_qubits=3, n_layers=2)
         x = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
 
-        circuit = enc.get_circuit(x, backend='cirq')
+        circuit = enc.get_circuit(x, backend="cirq")
 
         assert len(circuit.all_qubits()) == 3
 
@@ -1463,8 +1479,8 @@ class TestDataReuploadingSpecific:
         x1 = np.array([0.1, 0.2, 0.3, 0.4, 0.0, 0.0, 0.0, 0.0])
         x2 = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8])
 
-        circuit_fn1 = enc.get_circuit(x1, backend='pennylane')
-        circuit_fn2 = enc.get_circuit(x2, backend='pennylane')
+        circuit_fn1 = enc.get_circuit(x1, backend="pennylane")
+        circuit_fn2 = enc.get_circuit(x2, backend="pennylane")
 
         dev = qml.device("default.qubit", wires=4)
 
@@ -1484,9 +1500,9 @@ class TestDataReuploadingSpecific:
         # If truncation was used, states would be identical
         # With cyclic mapping, they should differ
         fidelity = np.abs(np.vdot(state1, state2)) ** 2
-        assert fidelity < 0.99, (
-            "States should differ when features beyond n_qubits are changed"
-        )
+        assert (
+            fidelity < 0.99
+        ), "States should differ when features beyond n_qubits are changed"
 
     # -------------------------------------------------------------------------
     # Entanglement Pairs Tests
@@ -1550,8 +1566,8 @@ class TestDataReuploadingSpecific:
         X = np.random.default_rng(42).random((20, 4))
 
         if HAS_PENNYLANE:
-            circuits_seq = enc.get_circuits(X, backend='pennylane', parallel=False)
-            circuits_par = enc.get_circuits(X, backend='pennylane', parallel=True)
+            circuits_seq = enc.get_circuits(X, backend="pennylane", parallel=False)
+            circuits_par = enc.get_circuits(X, backend="pennylane", parallel=True)
 
             assert len(circuits_seq) == len(circuits_par)
             assert all(callable(c) for c in circuits_seq)
@@ -1563,8 +1579,8 @@ class TestDataReuploadingSpecific:
         enc = DataReuploading(n_features=4, n_layers=2)
         X = np.random.default_rng(42).random((20, 4))
 
-        circuits_seq = enc.get_circuits(X, backend='qiskit', parallel=False)
-        circuits_par = enc.get_circuits(X, backend='qiskit', parallel=True)
+        circuits_seq = enc.get_circuits(X, backend="qiskit", parallel=False)
+        circuits_par = enc.get_circuits(X, backend="qiskit", parallel=True)
 
         assert len(circuits_seq) == len(circuits_par)
         assert all(isinstance(c, QuantumCircuit) for c in circuits_seq)
@@ -1577,7 +1593,7 @@ class TestDataReuploadingSpecific:
 
         if HAS_PENNYLANE:
             circuits = enc.get_circuits(
-                X, backend='pennylane', parallel=True, max_workers=2
+                X, backend="pennylane", parallel=True, max_workers=2
             )
             assert len(circuits) == 20
 
@@ -1588,7 +1604,7 @@ class TestDataReuploadingSpecific:
 
         if HAS_PENNYLANE:
             # Should work without issues (parallel=True but only 1 sample)
-            circuits = enc.get_circuits(X, backend='pennylane', parallel=True)
+            circuits = enc.get_circuits(X, backend="pennylane", parallel=True)
             assert len(circuits) == 1
 
     @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
@@ -1597,23 +1613,27 @@ class TestDataReuploadingSpecific:
         enc = DataReuploading(n_features=4, n_layers=2)
 
         # Create distinguishable inputs
-        X = np.array([
-            [0.0, 0.0, 0.0, 0.0],
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-        ])
+        X = np.array(
+            [
+                [0.0, 0.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ]
+        )
 
-        circuits = enc.get_circuits(X, backend='pennylane', parallel=True)
+        circuits = enc.get_circuits(X, backend="pennylane", parallel=True)
         dev = qml.device("default.qubit", wires=enc.n_qubits)
 
         states = []
         for circuit_fn in circuits:
+
             @qml.qnode(dev)
             def run_circuit():
                 circuit_fn()
                 return qml.state()
+
             states.append(np.array(run_circuit()))
 
         # Verify that states are in the expected order by checking
@@ -1632,8 +1652,8 @@ class TestDataReuploadingSpecific:
         x = np.array([0.1, 0.2, 0.3, 0.4])
 
         if HAS_PENNYLANE:
-            circuit1 = enc.get_circuit(x, backend='pennylane')
-            circuit2 = enc._get_circuit_from_validated(x, backend='pennylane')
+            circuit1 = enc.get_circuit(x, backend="pennylane")
+            circuit2 = enc._get_circuit_from_validated(x, backend="pennylane")
 
             assert callable(circuit1)
             assert callable(circuit2)
@@ -1644,7 +1664,7 @@ class TestDataReuploadingSpecific:
         enc = DataReuploading(n_features=4, n_layers=2)
         x = np.array([0.1, 0.2, 0.3, 0.4])
 
-        circuit = enc._get_circuit_from_validated(x, backend='qiskit')
+        circuit = enc._get_circuit_from_validated(x, backend="qiskit")
         assert isinstance(circuit, QuantumCircuit)
         assert circuit.num_qubits == 4
 
@@ -1654,7 +1674,7 @@ class TestDataReuploadingSpecific:
         enc = DataReuploading(n_features=4, n_layers=2)
         x = np.array([0.1, 0.2, 0.3, 0.4])
 
-        circuit = enc._get_circuit_from_validated(x, backend='cirq')
+        circuit = enc._get_circuit_from_validated(x, backend="cirq")
         assert isinstance(circuit, cirq.Circuit)
         assert len(circuit.all_qubits()) == 4
 
@@ -1664,7 +1684,7 @@ class TestDataReuploadingSpecific:
         x = np.array([0.1, 0.2, 0.3, 0.4])
 
         with pytest.raises(ValueError, match="Unknown backend"):
-            enc._get_circuit_from_validated(x, backend='invalid')  # type: ignore
+            enc._get_circuit_from_validated(x, backend="invalid")  # type: ignore
 
 
 # =============================================================================
@@ -1771,12 +1791,12 @@ class TestSlowSimulation:
         # Both states must be normalized
         norm1 = np.sum(np.abs(state1) ** 2)
         norm2 = np.sum(np.abs(state2) ** 2)
-        assert np.isclose(norm1, 1.0, atol=1e-10), (
-            f"{name1} is not normalized: |norm|² = {norm1}"
-        )
-        assert np.isclose(norm2, 1.0, atol=1e-10), (
-            f"{name2} is not normalized: |norm|² = {norm2}"
-        )
+        assert np.isclose(
+            norm1, 1.0, atol=1e-10
+        ), f"{name1} is not normalized: |norm|² = {norm1}"
+        assert np.isclose(
+            norm2, 1.0, atol=1e-10
+        ), f"{name2} is not normalized: |norm|² = {norm2}"
 
         # Compare sorted probability distributions
         probs1 = sorted(np.abs(state1) ** 2)
@@ -1863,7 +1883,7 @@ class TestSlowSimulation:
         cirq_state = self._get_cirq_state(enc, x)
 
         # All states should have correct dimension: 2^n_qubits = 16
-        expected_dim = 2 ** enc.n_qubits
+        expected_dim = 2**enc.n_qubits
         assert len(pl_state) == expected_dim
         assert len(qk_state) == expected_dim
         assert len(cirq_state) == expected_dim
@@ -1897,14 +1917,16 @@ class TestSlowSimulation:
             assert len(cirq_state) == 4
 
             self._assert_states_equivalent(
-                pl_state, qk_state,
+                pl_state,
+                qk_state,
                 f"PennyLane (layers={n_layers})",
-                f"Qiskit (layers={n_layers})"
+                f"Qiskit (layers={n_layers})",
             )
             self._assert_states_equivalent(
-                pl_state, cirq_state,
+                pl_state,
+                cirq_state,
                 f"PennyLane (layers={n_layers})",
-                f"Cirq (layers={n_layers})"
+                f"Cirq (layers={n_layers})",
             )
 
     @pytest.mark.skipif(
@@ -1926,7 +1948,7 @@ class TestSlowSimulation:
         cirq_state = self._get_cirq_state(enc, x)
 
         # Dimension: 2^4 = 16 (4 qubits explicitly set)
-        expected_dim = 2 ** 4
+        expected_dim = 2**4
         assert len(pl_state) == expected_dim
         assert len(qk_state) == expected_dim
         assert len(cirq_state) == expected_dim
@@ -1953,7 +1975,7 @@ class TestSlowSimulation:
         cirq_state = self._get_cirq_state(enc, x)
 
         # Dimension: 2^4 = 16 (4 qubits explicitly set)
-        expected_dim = 2 ** 4
+        expected_dim = 2**4
         assert len(pl_state) == expected_dim
         assert len(qk_state) == expected_dim
         assert len(cirq_state) == expected_dim
@@ -2031,21 +2053,27 @@ class TestSlowSimulation:
         pl_state1 = self._get_pennylane_state(enc, x)
         pl_state2 = self._get_pennylane_state(enc, x)
         np.testing.assert_allclose(
-            pl_state1, pl_state2, atol=1e-14,
+            pl_state1,
+            pl_state2,
+            atol=1e-14,
             err_msg="PennyLane states differ between runs",
         )
 
         qk_state1 = self._get_qiskit_state(enc, x)
         qk_state2 = self._get_qiskit_state(enc, x)
         np.testing.assert_allclose(
-            qk_state1, qk_state2, atol=1e-14,
+            qk_state1,
+            qk_state2,
+            atol=1e-14,
             err_msg="Qiskit states differ between runs",
         )
 
         cirq_state1 = self._get_cirq_state(enc, x)
         cirq_state2 = self._get_cirq_state(enc, x)
         np.testing.assert_allclose(
-            cirq_state1, cirq_state2, atol=1e-14,
+            cirq_state1,
+            cirq_state2,
+            atol=1e-14,
             err_msg="Cirq states differ between runs",
         )
 
@@ -2063,7 +2091,9 @@ class TestSlowSimulation:
         x1 = np.array([0.1, 0.2, 0.3, 0.4])
         x2 = np.array([0.9, 0.8, 0.7, 0.6])
 
-        def fidelity(s1: NDArray[np.complexfloating], s2: NDArray[np.complexfloating]) -> float:
+        def fidelity(
+            s1: NDArray[np.complexfloating], s2: NDArray[np.complexfloating]
+        ) -> float:
             return float(np.abs(np.vdot(s1, s2)) ** 2)
 
         # Get states for both inputs from each backend
@@ -2103,7 +2133,7 @@ class TestSlowSimulation:
         cirq_state = self._get_cirq_state(enc, x)
 
         # Verify dimensions
-        expected_dim = 2 ** enc.n_qubits
+        expected_dim = 2**enc.n_qubits
         assert len(pl_state) == expected_dim
         assert len(qk_state) == expected_dim
         assert len(cirq_state) == expected_dim
@@ -2253,6 +2283,8 @@ class TestSlowSimulation:
             return significant > 1
 
         # All backends should produce entangled states
-        assert is_entangled(pl_state, enc.n_qubits), "PennyLane state should be entangled"
+        assert is_entangled(
+            pl_state, enc.n_qubits
+        ), "PennyLane state should be entangled"
         assert is_entangled(qk_state, enc.n_qubits), "Qiskit state should be entangled"
         assert is_entangled(cirq_state, enc.n_qubits), "Cirq state should be entangled"

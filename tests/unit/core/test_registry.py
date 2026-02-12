@@ -13,13 +13,13 @@ Run with: pytest tests/unit/core/test_registry.py -v
 
 from __future__ import annotations
 
-import threading
 from concurrent.futures import ThreadPoolExecutor
-from typing import TYPE_CHECKING, Any, List, Type
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pytest
 
+from encoding_atlas.core.exceptions import RegistryError
 from encoding_atlas.core.registry import (
     _ENCODING_REGISTRY,
     _clear_registry,
@@ -27,10 +27,9 @@ from encoding_atlas.core.registry import (
     list_encodings,
     register_encoding,
 )
-from encoding_atlas.core.exceptions import RegistryError
 
 if TYPE_CHECKING:
-    from encoding_atlas.core.base import BaseEncoding
+    pass
 
 
 # =============================================================================
@@ -507,8 +506,8 @@ class TestRegistryThreadSafety:
 
     def test_concurrent_get_encoding(self) -> None:
         """Test concurrent access to get_encoding."""
-        results: List[Any] = []
-        errors: List[Exception] = []
+        results: list[Any] = []
+        errors: list[Exception] = []
 
         def get_angle_encoding():
             try:
@@ -528,8 +527,8 @@ class TestRegistryThreadSafety:
 
     def test_concurrent_list_encodings(self) -> None:
         """Test concurrent access to list_encodings."""
-        results: List[List[str]] = []
-        errors: List[Exception] = []
+        results: list[list[str]] = []
+        errors: list[Exception] = []
 
         def list_all():
             try:
@@ -553,7 +552,7 @@ class TestRegistryThreadSafety:
 
     def test_concurrent_mixed_operations(self) -> None:
         """Test concurrent mixed read operations."""
-        errors: List[Exception] = []
+        errors: list[Exception] = []
 
         def mixed_ops():
             try:

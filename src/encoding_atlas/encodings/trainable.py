@@ -145,7 +145,6 @@ References
 
 from __future__ import annotations
 
-import copy
 import logging
 import warnings
 from concurrent.futures import ThreadPoolExecutor
@@ -177,7 +176,7 @@ _logger = logging.getLogger(__name__)
 # Public API
 # =============================================================================
 
-__all__ = ['TrainableEncoding']
+__all__ = ["TrainableEncoding"]
 
 # =============================================================================
 # Module-Level Constants
@@ -229,6 +228,7 @@ _LARGE_PARAMETER_COUNT_WARNING_THRESHOLD: int = 100
 # =============================================================================
 # Type Definitions
 # =============================================================================
+
 
 class GateCountBreakdown(TypedDict):
     """Type definition for gate count breakdown dictionary.
@@ -434,23 +434,23 @@ class TrainableEncoding(BaseEncoding):
 
     # Valid options for rotation gates, entanglement, and initialization
     _VALID_ROTATIONS: frozenset[str] = frozenset({"X", "Y", "Z"})
-    _VALID_ENTANGLEMENTS: frozenset[str] = frozenset({
-        "linear", "circular", "full", "none"
-    })
-    _VALID_INITIALIZATIONS: frozenset[str] = frozenset({
-        "xavier", "he", "zeros", "random", "small_random"
-    })
+    _VALID_ENTANGLEMENTS: frozenset[str] = frozenset(
+        {"linear", "circular", "full", "none"}
+    )
+    _VALID_INITIALIZATIONS: frozenset[str] = frozenset(
+        {"xavier", "he", "zeros", "random", "small_random"}
+    )
 
     __slots__ = (
-        'n_layers',
-        'data_rotation',
-        'trainable_rotation',
-        'entanglement',
-        'initialization',
-        '_trainable_params',
-        '_entanglement_pairs',
-        '_seed',
-        '_rng',
+        "n_layers",
+        "data_rotation",
+        "trainable_rotation",
+        "entanglement",
+        "initialization",
+        "_trainable_params",
+        "_entanglement_pairs",
+        "_seed",
+        "_rng",
     )
 
     def __init__(
@@ -541,9 +541,8 @@ class TrainableEncoding(BaseEncoding):
             )
 
         # Validate seed if provided
-        if seed is not None:
-            if not isinstance(seed, int) or seed < 0:
-                raise ValueError(f"seed must be a non-negative integer, got {seed!r}")
+        if seed is not None and (not isinstance(seed, int) or seed < 0):
+            raise ValueError(f"seed must be a non-negative integer, got {seed!r}")
 
         # =====================================================================
         # INITIALIZATION
@@ -574,7 +573,9 @@ class TrainableEncoding(BaseEncoding):
         )
 
         # Initialize trainable parameters
-        self._trainable_params: NDArray[np.floating[Any]] = self._initialize_parameters()
+        self._trainable_params: NDArray[np.floating[Any]] = (
+            self._initialize_parameters()
+        )
 
         # Log initialization
         _logger.debug(
@@ -661,7 +662,9 @@ class TrainableEncoding(BaseEncoding):
         elif self.entanglement == "linear":
             entangling_depth = max(0, self.n_qubits - 1)
         elif self.entanglement == "circular":
-            entangling_depth = self.n_qubits if self.n_qubits > 2 else max(0, self.n_qubits - 1)
+            entangling_depth = (
+                self.n_qubits if self.n_qubits > 2 else max(0, self.n_qubits - 1)
+            )
         else:  # full
             # Full entanglement: all pairs, can be parallelized to some extent
             # Depth is approximately n_qubits - 1 for most efficient layout
@@ -972,7 +975,9 @@ class TrainableEncoding(BaseEncoding):
             total_single_qubit=total_single_qubit,
             total_two_qubit=cnot_gates,
             total=total,
-            gates_per_layer=data_gates_per_layer + trainable_gates_per_layer + cnot_per_layer,
+            gates_per_layer=data_gates_per_layer
+            + trainable_gates_per_layer
+            + cnot_per_layer,
         )
 
     def resource_summary(self) -> dict[str, Any]:
@@ -1024,9 +1029,7 @@ class TrainableEncoding(BaseEncoding):
             )
 
         if not recommendations:
-            recommendations.append(
-                "Configuration looks good for typical QML tasks."
-            )
+            recommendations.append("Configuration looks good for typical QML tasks.")
 
         return {
             # Circuit structure
@@ -1055,7 +1058,9 @@ class TrainableEncoding(BaseEncoding):
             "trainability_estimate": props.trainability_estimate,
             # Hardware requirements
             "hardware_requirements": {
-                "connectivity": self.entanglement if self.entanglement != "none" else "any",
+                "connectivity": (
+                    self.entanglement if self.entanglement != "none" else "any"
+                ),
                 "native_gates": [
                     f"R{self.data_rotation}",
                     f"R{self.trainable_rotation}",
@@ -1118,7 +1123,7 @@ class TrainableEncoding(BaseEncoding):
         _logger.debug(
             "Generating circuit: backend=%r, input_shape=%s",
             backend,
-            getattr(x, 'shape', f'len={len(x)}'),
+            getattr(x, "shape", f"len={len(x)}"),
         )
 
         x_validated = self._validate_input(x)
@@ -1204,14 +1209,14 @@ class TrainableEncoding(BaseEncoding):
 
         if parallel and n_samples > 1:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
+
                 def generate_single(x: NDArray[np.floating[Any]]) -> CircuitType:
                     return self._get_circuit_from_validated(x, backend)
 
                 circuits = list(executor.map(generate_single, X_validated))
         else:
             circuits = [
-                self._get_circuit_from_validated(x, backend)
-                for x in X_validated
+                self._get_circuit_from_validated(x, backend) for x in X_validated
             ]
 
         return circuits
@@ -1264,7 +1269,9 @@ class TrainableEncoding(BaseEncoding):
 
         # Select rotation gate factories
         data_rot_gate = {"X": qml.RX, "Y": qml.RY, "Z": qml.RZ}[self.data_rotation]
-        trainable_rot_gate = {"X": qml.RX, "Y": qml.RY, "Z": qml.RZ}[self.trainable_rotation]
+        trainable_rot_gate = {"X": qml.RX, "Y": qml.RY, "Z": qml.RZ}[
+            self.trainable_rotation
+        ]
 
         def circuit() -> None:
             """Apply the trainable encoding gates."""
@@ -1310,7 +1317,9 @@ class TrainableEncoding(BaseEncoding):
 
         # Map rotation types to Qiskit methods
         data_rot_method = {"X": "rx", "Y": "ry", "Z": "rz"}[self.data_rotation]
-        trainable_rot_method = {"X": "rx", "Y": "ry", "Z": "rz"}[self.trainable_rotation]
+        trainable_rot_method = {"X": "rx", "Y": "ry", "Z": "rz"}[
+            self.trainable_rotation
+        ]
 
         for layer in range(self.n_layers):
             # Data encoding sublayer
@@ -1360,23 +1369,21 @@ class TrainableEncoding(BaseEncoding):
 
         for layer in range(self.n_layers):
             # Data encoding sublayer
-            circuit.append([
-                data_rot(float(x[i]))(qubits[i])
-                for i in range(self.n_qubits)
-            ])
+            circuit.append(
+                [data_rot(float(x[i]))(qubits[i]) for i in range(self.n_qubits)]
+            )
 
             # Trainable sublayer
-            circuit.append([
-                trainable_rot(float(params[layer, i]))(qubits[i])
-                for i in range(self.n_qubits)
-            ])
+            circuit.append(
+                [
+                    trainable_rot(float(params[layer, i]))(qubits[i])
+                    for i in range(self.n_qubits)
+                ]
+            )
 
             # Entanglement sublayer
             if pairs:
-                circuit.append([
-                    cirq.CNOT(qubits[i], qubits[j])
-                    for i, j in pairs
-                ])
+                circuit.append([cirq.CNOT(qubits[i], qubits[j]) for i, j in pairs])
 
         return circuit
 
@@ -1442,9 +1449,9 @@ class TrainableEncoding(BaseEncoding):
         state = super().__getstate__()
 
         # Add trainable-specific state
-        state['slots']['_trainable_params'] = self._trainable_params.copy()
-        state['slots']['_entanglement_pairs'] = self._entanglement_pairs.copy()
-        state['slots']['_seed'] = self._seed
+        state["slots"]["_trainable_params"] = self._trainable_params.copy()
+        state["slots"]["_entanglement_pairs"] = self._entanglement_pairs.copy()
+        state["slots"]["_seed"] = self._seed
         # Note: _rng is not picklable, will be recreated
 
         return state
@@ -1503,17 +1510,19 @@ class TrainableEncoding(BaseEncoding):
 
         Note: Hash does not include trainable parameters as they can change.
         """
-        return hash((
-            self.__class__.__name__,
-            self.n_features,
-            self.n_layers,
-            self.data_rotation,
-            self.trainable_rotation,
-            self.entanglement,
-            self.initialization,
-        ))
+        return hash(
+            (
+                self.__class__.__name__,
+                self.n_features,
+                self.n_layers,
+                self.data_rotation,
+                self.trainable_rotation,
+                self.entanglement,
+                self.initialization,
+            )
+        )
 
-    def copy(self) -> 'TrainableEncoding':
+    def copy(self) -> TrainableEncoding:
         """Create a deep copy of this encoding.
 
         Returns

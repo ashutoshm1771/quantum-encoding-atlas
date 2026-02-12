@@ -169,7 +169,7 @@ _logger = logging.getLogger(__name__)
 # Public API
 # =============================================================================
 
-__all__ = ['IQPEncoding']
+__all__ = ["IQPEncoding"]
 
 # =============================================================================
 # Module-Level Constants
@@ -468,7 +468,7 @@ class IQPEncoding(BaseEncoding):
     # Valid entanglement topologies
     _VALID_ENTANGLEMENTS: frozenset[str] = frozenset({"full", "linear", "circular"})
 
-    __slots__ = ('reps', 'entanglement', '_entanglement_pairs')
+    __slots__ = ("reps", "entanglement", "_entanglement_pairs")
 
     def __init__(
         self,
@@ -505,7 +505,11 @@ class IQPEncoding(BaseEncoding):
         # Validate repetitions
         # Accept both Python int and numpy integer types, but reject bool
         # (bool is a subclass of int in Python, so check it first)
-        if isinstance(reps, bool) or not isinstance(reps, (int, np.integer)) or reps < 1:
+        if (
+            isinstance(reps, bool)
+            or not isinstance(reps, (int, np.integer))
+            or reps < 1
+        ):
             raise ValueError(
                 f"reps must be at least 1 (got {reps!r}). "
                 "Each repetition adds one layer of H, RZ, and ZZ gates."
@@ -541,14 +545,13 @@ class IQPEncoding(BaseEncoding):
         # Log initialization
         _logger.debug(
             "IQPEncoding initialized: n_features=%d, reps=%d, entanglement=%r",
-            n_features, reps, entanglement
+            n_features,
+            reps,
+            entanglement,
         )
 
         # Warn about potentially excessive gate count with full entanglement
-        if (
-            entanglement == "full"
-            and n_features > _FULL_ENTANGLEMENT_WARNING_THRESHOLD
-        ):
+        if entanglement == "full" and n_features > _FULL_ENTANGLEMENT_WARNING_THRESHOLD:
             n_pairs = n_features * (n_features - 1) // 2
             cnot_count = 2 * n_pairs * reps
             warnings.warn(
@@ -563,7 +566,8 @@ class IQPEncoding(BaseEncoding):
             _logger.warning(
                 "Large feature count with full entanglement: %d features, "
                 "%d CNOT gates total",
-                n_features, cnot_count
+                n_features,
+                cnot_count,
             )
 
     @property
@@ -746,7 +750,11 @@ class IQPEncoding(BaseEncoding):
 
         _logger.debug(
             "Gate breakdown: H=%d, RZ_single=%d, RZ_zz=%d, CNOT=%d, total=%d",
-            h_gates, rz_single, rz_zz, cnot_gates, total
+            h_gates,
+            rz_single,
+            rz_zz,
+            cnot_gates,
+            total,
         )
 
         return GateCountBreakdown(
@@ -874,7 +882,7 @@ class IQPEncoding(BaseEncoding):
             "entanglement=%s, pairs=%d",
             self.n_qubits,
             self.depth,
-            gate_counts['total'],
+            gate_counts["total"],
             self.entanglement,
             len(pairs),
         )
@@ -911,7 +919,9 @@ class IQPEncoding(BaseEncoding):
           or n-1 pairs for n≤2 (no wrap-around needed)
         """
         if entanglement == "full":
-            pairs = [(i, j) for i in range(n_features) for j in range(i + 1, n_features)]
+            pairs = [
+                (i, j) for i in range(n_features) for j in range(i + 1, n_features)
+            ]
         elif entanglement == "linear":
             pairs = [(i, i + 1) for i in range(n_features - 1)]
         else:  # circular
@@ -993,7 +1003,8 @@ class IQPEncoding(BaseEncoding):
         """
         _logger.debug(
             "Generating circuit: backend=%r, input_shape=%s",
-            backend, getattr(x, 'shape', f'len={len(x)}')
+            backend,
+            getattr(x, "shape", f"len={len(x)}"),
         )
 
         x_validated = self._validate_input(x)
@@ -1144,8 +1155,7 @@ class IQPEncoding(BaseEncoding):
             # The batch was already validated above, so we can safely skip
             # per-sample validation for better performance
             circuits = [
-                self._get_circuit_from_validated(x, backend)
-                for x in X_validated
+                self._get_circuit_from_validated(x, backend) for x in X_validated
             ]
 
             _logger.debug(
@@ -1205,7 +1215,8 @@ class IQPEncoding(BaseEncoding):
 
         _logger.debug(
             "Generating circuit from validated input: backend=%r, shape=%s",
-            backend, x.shape
+            backend,
+            x.shape,
         )
 
         # Dispatch to backend-specific implementation
@@ -1352,10 +1363,9 @@ class IQPEncoding(BaseEncoding):
             # Hadamard layer
             circuit.append([cirq.H(q) for q in qubits])
             # Single-qubit Z rotations
-            circuit.append([
-                cirq.rz(2 * float(x[i]))(qubits[i])
-                for i in range(self.n_qubits)
-            ])
+            circuit.append(
+                [cirq.rz(2 * float(x[i]))(qubits[i]) for i in range(self.n_qubits)]
+            )
             # ZZ interactions
             for i, j in pairs:
                 circuit.append(cirq.CNOT(qubits[i], qubits[j]))

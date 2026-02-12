@@ -15,16 +15,14 @@ Example
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
-
-    from encoding_atlas.core.base import BaseEncoding
-    from encoding_atlas.core.properties import EncodingProperties
 
 
 @dataclass
@@ -141,7 +139,9 @@ def _format_text_comparison(
     lines.append("┌" + "─" * (width - 2) + "┐")
     title = f"ENCODING COMPARISON (n_features={n_features})"
     padding = (width - 2 - len(title)) // 2
-    lines.append("│" + " " * padding + title + " " * (width - 2 - padding - len(title)) + "│")
+    lines.append(
+        "│" + " " * padding + title + " " * (width - 2 - padding - len(title)) + "│"
+    )
     lines.append("├" + "─" * (width - 2) + "┤")
 
     # Extract max values for scaling bars
@@ -167,12 +167,14 @@ def _format_text_comparison(
         # Combine left and right sections
         line = f"│  {name_padded} {qubits_bar:<15} {d.properties.n_qubits:<4}   {name_padded} {depth_bar:<15} {d.properties.depth:<4}"
         # Pad to width
-        line = line[:width - 1].ljust(width - 1) + "│"
+        line = line[: width - 1].ljust(width - 1) + "│"
         lines.append(line)
 
     # Gate count section
     lines.append("│" + " " * (width - 2) + "│")
-    lines.append("│  GATE COUNT" + " " * 24 + "TWO-QUBIT GATES" + " " * (width - 53) + "│")
+    lines.append(
+        "│  GATE COUNT" + " " * 24 + "TWO-QUBIT GATES" + " " * (width - 53) + "│"
+    )
     lines.append("│  " + "─" * 10 + " " * 25 + "─" * 15 + " " * (width - 54) + "│")
 
     for d in data:
@@ -180,7 +182,7 @@ def _format_text_comparison(
         two_q_bar = _create_bar(d.properties.two_qubit_gates, max_two_qubit, 15)
         name_padded = d.name.ljust(max_name_len)
         line = f"│  {name_padded} {gates_bar:<15} {d.properties.gate_count:<4}   {name_padded} {two_q_bar:<15} {d.properties.two_qubit_gates:<4}"
-        line = line[:width - 1].ljust(width - 1) + "│"
+        line = line[: width - 1].ljust(width - 1) + "│"
         lines.append(line)
 
     # Properties table
@@ -190,11 +192,11 @@ def _format_text_comparison(
 
     # Header row
     header = f"│  {'Encoding':<{max_name_len}}  {'Entangling':<12}  {'Simulability':<20}  {'Trainability':<15}"
-    header = header[:width - 1].ljust(width - 1) + "│"
+    header = header[: width - 1].ljust(width - 1) + "│"
     lines.append(header)
 
     sep = "│  " + "─" * (max_name_len + 2 + 12 + 2 + 20 + 2 + 15)
-    sep = sep[:width - 1].ljust(width - 1) + "│"
+    sep = sep[: width - 1].ljust(width - 1) + "│"
     lines.append(sep)
 
     for d in data:
@@ -207,7 +209,7 @@ def _format_text_comparison(
         train_str = f"{train_bar} {trainability:.1f}"
 
         row = f"│  {d.name:<{max_name_len}}  {entangling:<12}  {simulability:<20}  {train_str:<15}"
-        row = row[:width - 1].ljust(width - 1) + "│"
+        row = row[: width - 1].ljust(width - 1) + "│"
         lines.append(row)
 
     # Notes section (optional)
@@ -218,9 +220,13 @@ def _format_text_comparison(
 
         for d in data:
             if d.properties.notes:
-                note = d.properties.notes[:60] + "..." if len(d.properties.notes) > 60 else d.properties.notes
+                note = (
+                    d.properties.notes[:60] + "..."
+                    if len(d.properties.notes) > 60
+                    else d.properties.notes
+                )
                 row = f"│  {d.name}: {note}"
-                row = row[:width - 1].ljust(width - 1) + "│"
+                row = row[: width - 1].ljust(width - 1) + "│"
                 lines.append(row)
 
     lines.append("│" + " " * (width - 2) + "│")
@@ -296,7 +302,9 @@ def _create_matplotlib_comparison(
     # 3. Gate Count (stacked)
     ax = axes[0, 2]
     bars1 = ax.barh(names, single_qubit, label="Single-qubit", color=colors, alpha=0.7)
-    bars2 = ax.barh(names, two_qubit, left=single_qubit, label="Two-qubit", color=colors, alpha=0.4)
+    bars2 = ax.barh(
+        names, two_qubit, left=single_qubit, label="Two-qubit", color=colors, alpha=0.4
+    )
     ax.set_xlabel("Gate Count")
     ax.set_title("Gate Composition")
     ax.legend(loc="lower right", fontsize=8)
@@ -319,7 +327,7 @@ def _create_matplotlib_comparison(
     ax.set_title("Entanglement")
 
     # Add text labels
-    for i, (name, ent) in enumerate(zip(names, entangling)):
+    for i, (_name, ent) in enumerate(zip(names, entangling)):
         label = "Entangling" if ent else "Product States"
         ax.text(0.5, i, label, ha="center", va="center", fontsize=10, fontweight="bold")
 
@@ -335,7 +343,8 @@ def _create_matplotlib_comparison(
         summary_lines.append(f"  {icon} {d.name}: {sim}\n")
 
     ax.text(
-        0.1, 0.9,
+        0.1,
+        0.9,
         "".join(summary_lines),
         transform=ax.transAxes,
         fontsize=10,
@@ -453,4 +462,6 @@ def compare_encodings(
     elif output == "matplotlib":
         return _create_matplotlib_comparison(data, n_features, figsize)
     else:
-        raise ValueError(f"Unknown output format: {output!r}. Use 'text' or 'matplotlib'.")
+        raise ValueError(
+            f"Unknown output format: {output!r}. Use 'text' or 'matplotlib'."
+        )

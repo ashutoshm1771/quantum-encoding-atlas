@@ -394,36 +394,39 @@ def build_encoding_profiles(
                 profiles[reg]["noise_resilience"] = None
 
     # Stage 6a: VQC
+    # Merge dataset results from ALL n_features configs per encoding so that
+    # both 2-feature datasets (moons, circles, …) and 4-feature datasets
+    # (iris, wine, …) appear in the profile.
     if "vqc" in stage_dirs:
         results = load_stage_results(stage_dirs["vqc"])
         for reg in profiles:
-            default_result = _find_default_config_result(results, reg)
-            if not default_result:
-                continue
-            res = default_result.get("result", {})
-            datasets_data = res.get("datasets", {})
-            if not datasets_data:
-                continue
             vqc_acc: dict[str, float] = {}
             vqc_ci: dict[str, tuple[float, float]] = {}
             vqc_folds: dict[str, list[float]] = {}
             vqc_train: dict[str, float] = {}
-            for ds_name, ds_result in datasets_data.items():
-                if ds_result.get("status") != "success":
+            for r in results:
+                if canonicalize_encoding_name(r["encoding_name"]) != reg:
                     continue
-                mean_acc = ds_result.get("mean_test_accuracy")
-                if mean_acc is not None:
-                    vqc_acc[ds_name] = float(mean_acc)
-                ci_lo = ds_result.get("ci_95_lower")
-                ci_hi = ds_result.get("ci_95_upper")
-                if ci_lo is not None and ci_hi is not None:
-                    vqc_ci[ds_name] = (float(ci_lo), float(ci_hi))
-                folds = _extract_fold_accuracies(ds_result)
-                if folds:
-                    vqc_folds[ds_name] = folds
-                train_acc = ds_result.get("mean_train_accuracy")
-                if train_acc is not None:
-                    vqc_train[ds_name] = float(train_acc)
+                res = r.get("result", {})
+                datasets_data = res.get("datasets", {})
+                for ds_name, ds_result in datasets_data.items():
+                    if ds_result.get("status") != "success":
+                        continue
+                    if ds_name in vqc_acc:
+                        continue  # keep first successful config for this dataset
+                    mean_acc = ds_result.get("mean_test_accuracy")
+                    if mean_acc is not None:
+                        vqc_acc[ds_name] = float(mean_acc)
+                    ci_lo = ds_result.get("ci_95_lower")
+                    ci_hi = ds_result.get("ci_95_upper")
+                    if ci_lo is not None and ci_hi is not None:
+                        vqc_ci[ds_name] = (float(ci_lo), float(ci_hi))
+                    folds = _extract_fold_accuracies(ds_result)
+                    if folds:
+                        vqc_folds[ds_name] = folds
+                    train_acc = ds_result.get("mean_train_accuracy")
+                    if train_acc is not None:
+                        vqc_train[ds_name] = float(train_acc)
             if vqc_acc:
                 profiles[reg]["vqc_accuracy"] = vqc_acc
             if vqc_ci:
@@ -434,36 +437,37 @@ def build_encoding_profiles(
                 profiles[reg]["vqc_train_accuracy"] = vqc_train
 
     # Stage 6b: Kernel
+    # Merge dataset results from ALL n_features configs (same as VQC above).
     if "kernel" in stage_dirs:
         results = load_stage_results(stage_dirs["kernel"])
         for reg in profiles:
-            default_result = _find_default_config_result(results, reg)
-            if not default_result:
-                continue
-            res = default_result.get("result", {})
-            datasets_data = res.get("datasets", {})
-            if not datasets_data:
-                continue
             ker_acc: dict[str, float] = {}
             ker_ci: dict[str, tuple[float, float]] = {}
             ker_folds: dict[str, list[float]] = {}
             ker_kta: dict[str, float] = {}
-            for ds_name, ds_result in datasets_data.items():
-                if ds_result.get("status") != "success":
+            for r in results:
+                if canonicalize_encoding_name(r["encoding_name"]) != reg:
                     continue
-                mean_acc = ds_result.get("mean_test_accuracy")
-                if mean_acc is not None:
-                    ker_acc[ds_name] = float(mean_acc)
-                ci_lo = ds_result.get("ci_95_lower")
-                ci_hi = ds_result.get("ci_95_upper")
-                if ci_lo is not None and ci_hi is not None:
-                    ker_ci[ds_name] = (float(ci_lo), float(ci_hi))
-                folds = _extract_fold_accuracies(ds_result)
-                if folds:
-                    ker_folds[ds_name] = folds
-                ckta = ds_result.get("centered_kernel_target_alignment")
-                if ckta is not None:
-                    ker_kta[ds_name] = float(ckta)
+                res = r.get("result", {})
+                datasets_data = res.get("datasets", {})
+                for ds_name, ds_result in datasets_data.items():
+                    if ds_result.get("status") != "success":
+                        continue
+                    if ds_name in ker_acc:
+                        continue  # keep first successful config for this dataset
+                    mean_acc = ds_result.get("mean_test_accuracy")
+                    if mean_acc is not None:
+                        ker_acc[ds_name] = float(mean_acc)
+                    ci_lo = ds_result.get("ci_95_lower")
+                    ci_hi = ds_result.get("ci_95_upper")
+                    if ci_lo is not None and ci_hi is not None:
+                        ker_ci[ds_name] = (float(ci_lo), float(ci_hi))
+                    folds = _extract_fold_accuracies(ds_result)
+                    if folds:
+                        ker_folds[ds_name] = folds
+                    ckta = ds_result.get("centered_kernel_target_alignment")
+                    if ckta is not None:
+                        ker_kta[ds_name] = float(ckta)
             if ker_acc:
                 profiles[reg]["kernel_accuracy"] = ker_acc
             if ker_ci:
@@ -2508,6 +2512,14 @@ def run_tradeoff_analysis(
             logger.info("Generated %d figures in %s", len(generated), figure_dir)
         except Exception as e:
             logger.warning("Plot generation failed: %s", e)
+
+        # 10b. Generate journal-quality figures
+        try:
+            from experiments.plotting_journal import generate_journal_figures
+            journal_generated = generate_journal_figures(results, profiles, figure_dir)
+            logger.info("Generated %d journal figures in %s", len(journal_generated), figure_dir)
+        except Exception as e:
+            logger.warning("Journal figure generation failed: %s", e)
 
     # 11. Return complete result
     return {

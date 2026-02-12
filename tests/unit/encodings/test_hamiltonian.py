@@ -105,11 +105,13 @@ def batch_data_4d() -> NDArray[np.floating]:
     - [0.5, 0.6, 0.7, 0.8] (mid-range values)
     - [0.0, 0.0, 0.0, 0.0] (edge case: zeros)
     """
-    return np.array([
-        [0.1, 0.2, 0.3, 0.4],
-        [0.5, 0.6, 0.7, 0.8],
-        [0.0, 0.0, 0.0, 0.0],
-    ])
+    return np.array(
+        [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.5, 0.6, 0.7, 0.8],
+            [0.0, 0.0, 0.0, 0.0],
+        ]
+    )
 
 
 @pytest.fixture
@@ -390,7 +392,9 @@ class TestProperties:
         assert props.single_qubit_gates > 0
         assert props.two_qubit_gates > 0
 
-    def test_properties_parameter_count(self, default_encoding: HamiltonianEncoding) -> None:
+    def test_properties_parameter_count(
+        self, default_encoding: HamiltonianEncoding
+    ) -> None:
         """Test that parameter_count is 0 (data-driven, not trainable)."""
         props = default_encoding.properties
         assert props.parameter_count == 0
@@ -415,7 +419,9 @@ class TestProperties:
         enc_full = HamiltonianEncoding(n_features=8, entanglement="full")
         enc_linear = HamiltonianEncoding(n_features=8, entanglement="linear")
 
-        assert enc_linear.properties.two_qubit_gates < enc_full.properties.two_qubit_gates
+        assert (
+            enc_linear.properties.two_qubit_gates < enc_full.properties.two_qubit_gates
+        )
 
     def test_entanglement_pairs_full(self) -> None:
         """Test full entanglement pattern generates correct pairs.
@@ -629,7 +635,7 @@ class TestPennyLaneBackend:
 
         state = full_circuit()
         assert state is not None
-        assert len(state) == 2 ** default_encoding.n_qubits
+        assert len(state) == 2**default_encoding.n_qubits
 
     def test_state_normalized(
         self,
@@ -689,7 +695,9 @@ class TestPennyLaneBackend:
         sample_data_4d: NDArray[np.floating],
     ) -> None:
         """Test Heisenberg Hamiltonian circuit executes."""
-        circuit_fn = heisenberg_encoding.get_circuit(sample_data_4d, backend="pennylane")
+        circuit_fn = heisenberg_encoding.get_circuit(
+            sample_data_4d, backend="pennylane"
+        )
         dev = qml.device("default.qubit", wires=heisenberg_encoding.n_qubits)
 
         @qml.qnode(dev)
@@ -882,8 +890,8 @@ class TestMathematicalCorrectness:
         state = full_circuit()
 
         # All amplitudes should be equal: 1/sqrt(2^n) = 1/4
-        expected_amplitude = 1.0 / np.sqrt(2 ** 4)
-        expected = np.ones(2 ** 4) * expected_amplitude
+        expected_amplitude = 1.0 / np.sqrt(2**4)
+        expected = np.ones(2**4) * expected_amplitude
 
         np.testing.assert_allclose(np.abs(state), np.abs(expected), atol=1e-10)
 
@@ -914,7 +922,7 @@ class TestMathematicalCorrectness:
         assert np.isclose(np.sum(np.abs(state2) ** 2), 1.0, atol=1e-10)
 
         # States should differ from ground state
-        ground_state = np.zeros(2 ** 4)
+        ground_state = np.zeros(2**4)
         ground_state[0] = 1.0
         fidelity_ground1 = np.abs(np.vdot(state1, ground_state)) ** 2
         fidelity_ground2 = np.abs(np.vdot(state2, ground_state)) ** 2
@@ -1042,12 +1050,14 @@ class TestNumericalStability:
     def test_near_pi_multiples(self) -> None:
         """Test numerical stability near pi multiples."""
         enc = HamiltonianEncoding(n_features=4, hamiltonian_type="iqp", reps=2)
-        x = np.array([
-            np.pi - 1e-14,
-            np.pi + 1e-14,
-            2 * np.pi - 1e-14,
-            np.pi / 2 + 1e-14,
-        ])
+        x = np.array(
+            [
+                np.pi - 1e-14,
+                np.pi + 1e-14,
+                2 * np.pi - 1e-14,
+                np.pi / 2 + 1e-14,
+            ]
+        )
 
         circuit_fn = enc.get_circuit(x, backend="pennylane")
         dev = qml.device("default.qubit", wires=enc.n_qubits)
@@ -1297,21 +1307,27 @@ class TestBackendErrorHandling:
     """Tests for backend error handling."""
 
     def test_invalid_backend_name(
-        self, default_encoding: HamiltonianEncoding, sample_data_4d: NDArray[np.floating]
+        self,
+        default_encoding: HamiltonianEncoding,
+        sample_data_4d: NDArray[np.floating],
     ) -> None:
         """Test that invalid backend raises ValueError."""
         with pytest.raises(ValueError, match="Unknown backend"):
             default_encoding.get_circuit(sample_data_4d, backend="invalid")  # type: ignore
 
     def test_invalid_backend_type(
-        self, default_encoding: HamiltonianEncoding, sample_data_4d: NDArray[np.floating]
+        self,
+        default_encoding: HamiltonianEncoding,
+        sample_data_4d: NDArray[np.floating],
     ) -> None:
         """Test that non-string backend raises appropriate error."""
         with pytest.raises((TypeError, ValueError)):
             default_encoding.get_circuit(sample_data_4d, backend=123)  # type: ignore
 
     def test_none_backend_uses_default(
-        self, default_encoding: HamiltonianEncoding, sample_data_4d: NDArray[np.floating]
+        self,
+        default_encoding: HamiltonianEncoding,
+        sample_data_4d: NDArray[np.floating],
     ) -> None:
         """Test that None backend uses default (pennylane)."""
         circuit = default_encoding.get_circuit(sample_data_4d)
@@ -1406,7 +1422,7 @@ class TestConcurrentAccess:
         def generate_circuits(thread_id: int) -> list[Any]:
             circuits = []
             try:
-                for i in range(num_circuits_per_thread):
+                for _i in range(num_circuits_per_thread):
                     x = np.random.randn(4)
                     circuit = enc.get_circuit(x, backend="pennylane")
                     circuits.append(circuit)
@@ -1415,7 +1431,9 @@ class TestConcurrentAccess:
             return circuits
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [executor.submit(generate_circuits, i) for i in range(num_threads)]
+            futures = [
+                executor.submit(generate_circuits, i) for i in range(num_threads)
+            ]
             results = [f.result() for f in as_completed(futures)]
 
         # No errors should have occurred
@@ -1461,7 +1479,7 @@ class TestConcurrentAccess:
         def generate_circuits(thread_id: int) -> list[QuantumCircuit]:
             circuits = []
             try:
-                for i in range(num_circuits_per_thread):
+                for _i in range(num_circuits_per_thread):
                     x = np.random.randn(4)
                     circuit = enc.get_circuit(x, backend="qiskit")
                     circuits.append(circuit)
@@ -1470,7 +1488,9 @@ class TestConcurrentAccess:
             return circuits
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [executor.submit(generate_circuits, i) for i in range(num_threads)]
+            futures = [
+                executor.submit(generate_circuits, i) for i in range(num_threads)
+            ]
             results = [f.result() for f in as_completed(futures)]
 
         assert len(errors) == 0, f"Thread errors: {errors}"
@@ -1521,10 +1541,7 @@ class TestSlowSimulation:
 
         for ham_type in hamiltonian_types:
             enc = HamiltonianEncoding(
-                n_features=4,
-                hamiltonian_type=ham_type,
-                evolution_time=3.0,
-                reps=2
+                n_features=4, hamiltonian_type=ham_type, evolution_time=3.0, reps=2
             )
             circuit_fn = enc.get_circuit(x, backend="pennylane")
 
@@ -1543,7 +1560,9 @@ class TestSlowSimulation:
 
         # IQP and Pauli-Z should produce identical states
         fidelity_iqp_pauli_z = np.abs(np.vdot(states["iqp"], states["pauli_z"])) ** 2
-        assert fidelity_iqp_pauli_z > 0.99, "IQP and Pauli-Z should produce identical states"
+        assert (
+            fidelity_iqp_pauli_z > 0.99
+        ), "IQP and Pauli-Z should produce identical states"
 
     @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
     def test_different_inputs_produce_different_states(self) -> None:
@@ -1704,12 +1723,16 @@ class TestSlowSimulation:
         cirq_probs = sorted(np.abs(cirq_state) ** 2)
 
         np.testing.assert_allclose(
-            pl_probs, qk_probs, atol=1e-6,
-            err_msg=f"PennyLane vs Qiskit mismatch for {hamiltonian_type}"
+            pl_probs,
+            qk_probs,
+            atol=1e-6,
+            err_msg=f"PennyLane vs Qiskit mismatch for {hamiltonian_type}",
         )
         np.testing.assert_allclose(
-            pl_probs, cirq_probs, atol=1e-6,
-            err_msg=f"PennyLane vs Cirq mismatch for {hamiltonian_type}"
+            pl_probs,
+            cirq_probs,
+            atol=1e-6,
+            err_msg=f"PennyLane vs Cirq mismatch for {hamiltonian_type}",
         )
 
     @pytest.mark.skipif(
@@ -1718,9 +1741,7 @@ class TestSlowSimulation:
     )
     @pytest.mark.cross_backend
     @pytest.mark.parametrize("entanglement", ["full", "linear", "circular"])
-    def test_cross_backend_with_different_entanglement(
-        self, entanglement: str
-    ) -> None:
+    def test_cross_backend_with_different_entanglement(self, entanglement: str) -> None:
         """Test cross-backend equivalence with different entanglement patterns."""
         enc = HamiltonianEncoding(
             n_features=4,
@@ -1759,10 +1780,14 @@ class TestSlowSimulation:
         cirq_probs = sorted(np.abs(cirq_state) ** 2)
 
         np.testing.assert_allclose(
-            pl_probs, qk_probs, atol=1e-6,
-            err_msg=f"PennyLane vs Qiskit mismatch for {entanglement}"
+            pl_probs,
+            qk_probs,
+            atol=1e-6,
+            err_msg=f"PennyLane vs Qiskit mismatch for {entanglement}",
         )
         np.testing.assert_allclose(
-            pl_probs, cirq_probs, atol=1e-6,
-            err_msg=f"PennyLane vs Cirq mismatch for {entanglement}"
+            pl_probs,
+            cirq_probs,
+            atol=1e-6,
+            err_msg=f"PennyLane vs Cirq mismatch for {entanglement}",
         )

@@ -17,7 +17,7 @@ from __future__ import annotations
 import gc
 import sys
 import time
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
@@ -27,18 +27,14 @@ from encoding_atlas import (
     AngleEncoding,
     BasisEncoding,
     DataReuploading,
-    HamiltonianEncoding,
     HardwareEfficientEncoding,
-    HigherOrderAngleEncoding,
     IQPEncoding,
-    PauliFeatureMap,
     QAOAEncoding,
-    SymmetryInspiredFeatureMap,
     ZZFeatureMap,
 )
 
 if TYPE_CHECKING:
-    from encoding_atlas.core.base import BaseEncoding
+    pass
 
 
 # =============================================================================
@@ -157,9 +153,7 @@ class TestLargeQubitCounts:
 
     def test_hardware_efficient_50_qubits(self) -> None:
         """Test HardwareEfficientEncoding with 50 qubits."""
-        enc = HardwareEfficientEncoding(
-            n_features=50, reps=2, entanglement="linear"
-        )
+        enc = HardwareEfficientEncoding(n_features=50, reps=2, entanglement="linear")
         assert enc.n_qubits == 50
 
         x = np.random.randn(50)
@@ -228,9 +222,7 @@ class TestDeepCircuits:
         This is a stress test - should complete without memory error.
         """
         # Use simple encoding with linear entanglement for speed
-        enc = HardwareEfficientEncoding(
-            n_features=4, reps=100, entanglement="linear"
-        )
+        enc = HardwareEfficientEncoding(n_features=4, reps=100, entanglement="linear")
 
         x = np.array([0.1, 0.2, 0.3, 0.4])
 
@@ -285,9 +277,9 @@ class TestLargeBatchSizes:
 
         # Throughput should be > 50 circuits/second (conservative for varied hardware)
         throughput = 2000 / elapsed
-        assert throughput > 50, (
-            f"Low throughput for large batch: {throughput:.0f} circuits/s"
-        )
+        assert (
+            throughput > 50
+        ), f"Low throughput for large batch: {throughput:.0f} circuits/s"
 
     def test_batch_memory_doesnt_explode(self) -> None:
         """Test that batch processing doesn't cause memory explosion."""
@@ -303,9 +295,9 @@ class TestLargeBatchSizes:
         memory_used = get_memory_mb() - baseline
 
         # Should not use more than 1GB for 1000 circuits
-        assert memory_used < 1000, (
-            f"Excessive memory for 1000 circuits: {memory_used:.0f}MB"
-        )
+        assert (
+            memory_used < 1000
+        ), f"Excessive memory for 1000 circuits: {memory_used:.0f}MB"
 
         del circuits
         gc.collect()
@@ -369,9 +361,7 @@ class TestCombinedScaling:
 
     def test_moderate_qubits_moderate_reps(self) -> None:
         """Test 20 qubits with 20 repetitions (moderate both)."""
-        enc = HardwareEfficientEncoding(
-            n_features=20, reps=20, entanglement="linear"
-        )
+        enc = HardwareEfficientEncoding(n_features=20, reps=20, entanglement="linear")
 
         x = np.random.randn(20)
         circuit = enc.get_circuit(x, backend="pennylane")
@@ -426,7 +416,7 @@ class TestResourceLimits:
     def test_property_access_scales(self) -> None:
         """Test that property access scales well with encoding size."""
         sizes = [10, 50, 100]
-        times: Dict[int, float] = {}
+        times: dict[int, float] = {}
 
         for n in sizes:
             enc = AngleEncoding(n_features=n)
@@ -478,9 +468,7 @@ class TestScalabilityRegression:
 
     def test_baseline_50_qubits_linear(self) -> None:
         """Baseline: 50 qubits with linear entanglement should work."""
-        enc = HardwareEfficientEncoding(
-            n_features=50, reps=2, entanglement="linear"
-        )
+        enc = HardwareEfficientEncoding(n_features=50, reps=2, entanglement="linear")
         x = np.random.randn(50)
 
         start = time.time()
@@ -505,9 +493,9 @@ class TestScalabilityRegression:
         # Should achieve > 50 circuits/second (very conservative for CI/varied hardware)
         # This threshold accommodates slower machines and systems under load
         throughput = 1000 / elapsed
-        assert throughput > 50, (
-            f"Batch baseline regression: {throughput:.0f} circuits/s < 50"
-        )
+        assert (
+            throughput > 50
+        ), f"Batch baseline regression: {throughput:.0f} circuits/s < 50"
 
     def test_baseline_deep_circuit_50_reps(self) -> None:
         """Baseline: 50 repetitions should complete reasonably."""

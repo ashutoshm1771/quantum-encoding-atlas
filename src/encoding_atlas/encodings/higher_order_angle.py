@@ -84,9 +84,10 @@ from __future__ import annotations
 import logging
 import math
 import warnings
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from itertools import combinations
-from typing import Any, Iterator, Literal, Sequence, TypedDict
+from typing import Any, Literal, TypedDict
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -125,7 +126,7 @@ _logger = logging.getLogger(__name__)
 # Public API
 # =============================================================================
 
-__all__ = ['HigherOrderAngleEncoding', 'GateCountBreakdown', 'count_terms']
+__all__ = ["HigherOrderAngleEncoding", "GateCountBreakdown", "count_terms"]
 
 # =============================================================================
 # Module-Level Constants
@@ -172,9 +173,7 @@ def _normalize_backend(backend: BackendType | None) -> BackendType:
         return _DEFAULT_BACKEND
 
     if not isinstance(backend, str):
-        raise ValueError(
-            f"backend must be a string, got {type(backend).__name__}"
-        )
+        raise ValueError(f"backend must be a string, got {type(backend).__name__}")
 
     backend_lower = backend.lower()
     if backend_lower not in _SUPPORTED_BACKENDS:
@@ -440,14 +439,14 @@ class HigherOrderAngleEncoding(BaseEncoding):
     # This eliminates the per-instance __dict__ overhead and ensures
     # consistent attribute access patterns.
     __slots__ = (
-        'order',
-        'rotation',
-        'combination',
-        'include_first_order',
-        'scaling',
-        'reps',
-        '_terms',
-        '_qubit_terms',
+        "order",
+        "rotation",
+        "combination",
+        "include_first_order",
+        "scaling",
+        "reps",
+        "_terms",
+        "_qubit_terms",
     )
 
     # Valid combination methods
@@ -500,28 +499,20 @@ class HigherOrderAngleEncoding(BaseEncoding):
             )
         n_features = int(n_features)
         if n_features < 1:
-            raise ValueError(
-                f"n_features must be at least 1, got {n_features}"
-            )
+            raise ValueError(f"n_features must be at least 1, got {n_features}")
 
         # Validate order
         if not isinstance(order, (int, np.integer)):
-            raise TypeError(
-                f"order must be an integer, got {type(order).__name__}"
-            )
+            raise TypeError(f"order must be an integer, got {type(order).__name__}")
         order = int(order)
         if order < 1:
             raise ValueError(f"order must be at least 1, got {order}")
         if order > n_features:
-            raise ValueError(
-                f"order ({order}) cannot exceed n_features ({n_features})"
-            )
+            raise ValueError(f"order ({order}) cannot exceed n_features ({n_features})")
 
         # Validate rotation
         if not isinstance(rotation, str):
-            raise TypeError(
-                f"rotation must be a string, got {type(rotation).__name__}"
-            )
+            raise TypeError(f"rotation must be a string, got {type(rotation).__name__}")
         rotation_upper = rotation.upper()
         if rotation_upper not in self._VALID_ROTATIONS:
             raise ValueError(
@@ -550,18 +541,14 @@ class HigherOrderAngleEncoding(BaseEncoding):
 
         # Validate scaling
         if not isinstance(scaling, (int, float, np.integer, np.floating)):
-            raise TypeError(
-                f"scaling must be a number, got {type(scaling).__name__}"
-            )
+            raise TypeError(f"scaling must be a number, got {type(scaling).__name__}")
         scaling = float(scaling)
         if not np.isfinite(scaling):
             raise ValueError(f"scaling must be finite, got {scaling}")
 
         # Validate reps
         if not isinstance(reps, (int, np.integer)):
-            raise TypeError(
-                f"reps must be an integer, got {type(reps).__name__}"
-            )
+            raise TypeError(f"reps must be an integer, got {type(reps).__name__}")
         reps = int(reps)
         if reps < 1:
             raise ValueError(f"reps must be at least 1, got {reps}")
@@ -597,9 +584,7 @@ class HigherOrderAngleEncoding(BaseEncoding):
         self.reps: int = reps
 
         # Precompute terms for efficiency
-        self._terms: tuple[tuple[int, ...], ...] = tuple(
-            self._generate_terms()
-        )
+        self._terms: tuple[tuple[int, ...], ...] = tuple(self._generate_terms())
 
         # Precompute term assignments to qubits (round-robin)
         self._qubit_terms: tuple[tuple[tuple[int, ...], ...], ...] = (
@@ -856,7 +841,7 @@ class HigherOrderAngleEncoding(BaseEncoding):
         _logger.debug(
             "Generating circuit: backend=%r, input_shape=%s",
             backend,
-            getattr(x, 'shape', f'len={len(x)}'),
+            getattr(x, "shape", f"len={len(x)}"),
         )
 
         # Validate and convert input
@@ -1024,8 +1009,7 @@ class HigherOrderAngleEncoding(BaseEncoding):
             # The batch was already validated above, so we can safely skip
             # per-sample validation for better performance
             circuits = [
-                self._get_circuit_from_validated(x, backend)
-                for x in X_validated
+                self._get_circuit_from_validated(x, backend) for x in X_validated
             ]
 
             _logger.debug(
@@ -1213,12 +1197,17 @@ class HigherOrderAngleEncoding(BaseEncoding):
 
         # Select rotation gate constructor
         if self.rotation == "X":
+
             def rotation_gate(angle: float) -> cirq.Gate:
                 return cirq.rx(angle)
+
         elif self.rotation == "Y":
+
             def rotation_gate(angle: float) -> cirq.Gate:
                 return cirq.ry(angle)
+
         else:  # Z
+
             def rotation_gate(angle: float) -> cirq.Gate:
                 return cirq.rz(angle)
 
@@ -1345,7 +1334,10 @@ class HigherOrderAngleEncoding(BaseEncoding):
 
         _logger.debug(
             "Gate breakdown: rx=%d, ry=%d, rz=%d, total=%d",
-            rx, ry, rz, total,
+            rx,
+            ry,
+            rz,
+            total,
         )
 
         return GateCountBreakdown(
@@ -1459,12 +1451,11 @@ class HigherOrderAngleEncoding(BaseEncoding):
         }
 
         _logger.debug(
-            "Resource summary: n_qubits=%d, depth=%d, n_terms=%d, "
-            "total_gates=%d",
+            "Resource summary: n_qubits=%d, depth=%d, n_terms=%d, " "total_gates=%d",
             self.n_qubits,
             self.depth,
             self.n_terms,
-            gate_counts['total'],
+            gate_counts["total"],
         )
 
         return summary
@@ -1562,10 +1553,9 @@ class HigherOrderAngleEncoding(BaseEncoding):
         if x_validated.ndim == 2:
             x_validated = x_validated[0]
 
-        return np.array([
-            self._compute_qubit_angle(x_validated, q)
-            for q in range(self.n_qubits)
-        ])
+        return np.array(
+            [self._compute_qubit_angle(x_validated, q) for q in range(self.n_qubits)]
+        )
 
     def __repr__(self) -> str:
         """Return detailed string representation."""
@@ -1596,16 +1586,18 @@ class HigherOrderAngleEncoding(BaseEncoding):
 
     def __hash__(self) -> int:
         """Return hash of the encoding."""
-        return hash((
-            self.__class__.__name__,
-            self.n_features,
-            self.order,
-            self.rotation,
-            self.combination,
-            self.include_first_order,
-            self.scaling,
-            self.reps,
-        ))
+        return hash(
+            (
+                self.__class__.__name__,
+                self.n_features,
+                self.order,
+                self.rotation,
+                self.combination,
+                self.include_first_order,
+                self.scaling,
+                self.reps,
+            )
+        )
 
 
 # =============================================================================

@@ -71,6 +71,18 @@ EXPECTED_FIGURE_NAMES = [
     "convergence_analysis",
 ]
 
+EXPECTED_JOURNAL_FIGURE_NAMES = [
+    "accuracy_violins",
+    "critical_difference_vqc",
+    "critical_difference_kernel",
+    "metric_correlation_matrix",
+    "encoding_property_heatmap",
+    "forest_plot",
+    "hypothesis_scorecard",
+    "rank_stability_bump",
+    "performance_profile",
+]
+
 VALID_VERDICTS = {"supported", "refuted", "inconclusive"}
 
 HYPOTHESIS_IDS = ["H1", "H2", "H3", "H4", "H5", "H6", "H7"]
@@ -367,6 +379,36 @@ def validate_figures(figure_dir: Path, suite: ValidationSuite) -> None:
     )
 
 
+def validate_journal_figures(figure_dir: Path, suite: ValidationSuite) -> None:
+    """Check that journal-quality figure PNG files exist."""
+    if not figure_dir.is_dir():
+        suite.add(
+            "journal_figure_dir_exists",
+            False,
+            f"Figure directory MISSING: {figure_dir}",
+        )
+        return
+
+    found_count = 0
+    missing_names = []
+
+    for name in EXPECTED_JOURNAL_FIGURE_NAMES:
+        png_path = figure_dir / f"{name}.png"
+        exists = png_path.is_file()
+        if exists:
+            found_count += 1
+        else:
+            missing_names.append(name)
+
+    all_found = found_count == len(EXPECTED_JOURNAL_FIGURE_NAMES)
+    suite.add(
+        "journal_figures_png_complete",
+        all_found,
+        f"Journal PNG figures: {found_count}/{len(EXPECTED_JOURNAL_FIGURE_NAMES)} found"
+        + (f" — missing: {missing_names}" if missing_names else ""),
+    )
+
+
 def validate_summary_json(results_dir: Path, suite: ValidationSuite) -> None:
     """Check the main summary.json if it exists."""
     path = results_dir / "summary.json"
@@ -404,6 +446,7 @@ def run_validation(
     results_dir: str,
     figure_dir: str,
     check_figures: bool = True,
+    check_journal_figures: bool = False,
 ) -> ValidationSuite:
     """Run all Stage 7 validation checks.
 
@@ -415,6 +458,8 @@ def run_validation(
         Path to figures directory.
     check_figures : bool
         Whether to check for figure files (set False if --quick was used).
+    check_journal_figures : bool
+        Whether to also check for journal-quality figures.
 
     Returns
     -------
@@ -461,6 +506,10 @@ def run_validation(
     # 7. Figures exist
     if check_figures:
         validate_figures(figures_path, suite)
+
+    # 7b. Journal figures (opt-in)
+    if check_journal_figures:
+        validate_journal_figures(figures_path, suite)
 
     # 8. Summary JSON (optional)
     validate_summary_json(results_path, suite)
@@ -527,6 +576,11 @@ def main() -> int:
         help="Skip figure validation (e.g., if run with --quick)",
     )
     parser.add_argument(
+        "--check-journal-figures",
+        action="store_true",
+        help="Also validate journal-quality figures from plotting_journal.py",
+    )
+    parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
@@ -543,6 +597,7 @@ def main() -> int:
             results_dir=args.results_dir,
             figure_dir=args.figure_dir,
             check_figures=not args.no_figures,
+            check_journal_figures=args.check_journal_figures,
         )
 
         print_validation_summary(suite)

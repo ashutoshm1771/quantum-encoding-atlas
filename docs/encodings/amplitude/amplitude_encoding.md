@@ -1,7 +1,5 @@
 # Amplitude Encoding
 
-**Author:** Ashutosh Mishra
-
 A quantum data encoding that maps classical features directly to the
 **amplitudes** of a quantum state, achieving exponential compression.
 
@@ -104,8 +102,10 @@ Given a classical vector **x** = (x₀, x₁, ..., x_{n-1}):
 ### Qubit Count
 
 ```
-  n_qubits  =  ⌈ log₂(n_features) ⌉
+  n_qubits  =  max(1, ⌈ log₂(n_features) ⌉)
 
+  A minimum of 1 qubit is enforced (for n_features=1, log₂(1)=0 but
+  the encoding uses 1 qubit with the state padded to 2 amplitudes).
   If n_features is not a power of 2, zero-pad to the next power of 2:
 
   n_features │ n_qubits │ state_dim │ padding

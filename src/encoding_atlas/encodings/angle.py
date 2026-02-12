@@ -158,7 +158,7 @@ _logger = logging.getLogger(__name__)
 # Public API
 # =============================================================================
 
-__all__ = ['AngleEncoding']
+__all__ = ["AngleEncoding"]
 
 # =============================================================================
 # Module-Level Constants
@@ -356,7 +356,7 @@ class AngleEncoding(BaseEncoding):
     _VALID_ROTATIONS: frozenset[str] = frozenset({"X", "Y", "Z"})
 
     # Memory-efficient slot-based attribute storage
-    __slots__ = ('rotation', 'reps')
+    __slots__ = ("rotation", "reps")
 
     # ==========================================================================
     # Initialization
@@ -409,7 +409,9 @@ class AngleEncoding(BaseEncoding):
         # Log initialization
         _logger.debug(
             "AngleEncoding initialized: n_features=%d, rotation=%r, reps=%d",
-            n_features, rotation, reps
+            n_features,
+            rotation,
+            reps,
         )
 
     # ==========================================================================
@@ -498,7 +500,8 @@ class AngleEncoding(BaseEncoding):
         """
         _logger.debug(
             "Generating circuit: backend=%r, input_shape=%s",
-            backend, getattr(x, 'shape', f'len={len(x)}')
+            backend,
+            getattr(x, "shape", f"len={len(x)}"),
         )
 
         # Validate and preprocess input
@@ -510,8 +513,10 @@ class AngleEncoding(BaseEncoding):
         # This helps users identify when feature scaling may be needed
         if _logger.isEnabledFor(logging.DEBUG):
             x_min, x_max = float(x_validated.min()), float(x_validated.max())
-            if abs(x_min) > _INPUT_RANGE_DEBUG_THRESHOLD or \
-               abs(x_max) > _INPUT_RANGE_DEBUG_THRESHOLD:
+            if (
+                abs(x_min) > _INPUT_RANGE_DEBUG_THRESHOLD
+                or abs(x_max) > _INPUT_RANGE_DEBUG_THRESHOLD
+            ):
                 _logger.debug(
                     "Input values [%.3g, %.3g] are outside typical range "
                     "[-2π, 2π]. Rotation gates are periodic with period 2π "
@@ -666,8 +671,7 @@ class AngleEncoding(BaseEncoding):
             # The batch was already validated above, so we can safely skip
             # per-sample validation for better performance
             circuits = [
-                self._get_circuit_from_validated(x, backend)
-                for x in X_validated
+                self._get_circuit_from_validated(x, backend) for x in X_validated
             ]
 
             _logger.debug(
@@ -858,7 +862,9 @@ class AngleEncoding(BaseEncoding):
         moments = []
         for _ in range(self.reps):
             # Create a moment with all rotations in parallel
-            gates = [rotation_gate(float(x[i]))(qubits[i]) for i in range(self.n_qubits)]
+            gates = [
+                rotation_gate(float(x[i]))(qubits[i]) for i in range(self.n_qubits)
+            ]
             moments.append(cirq.Moment(gates))
 
         return cirq.Circuit(moments)

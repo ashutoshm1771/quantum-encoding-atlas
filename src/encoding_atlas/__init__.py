@@ -39,18 +39,19 @@ For more information, see the documentation at:
 https://q-encoding-atlas.web.app/documentation
 """
 
+from encoding_atlas import analysis, benchmark, guide, visualization
 from encoding_atlas._version import __version__
 from encoding_atlas.core.base import BaseEncoding
 from encoding_atlas.core.properties import EncodingProperties
-from encoding_atlas.core.registry import get_encoding, list_encodings, register_encoding
 
 # Capability protocols (Layer 2 of the Layered Contract Architecture)
 from encoding_atlas.core.protocols import (
-    ResourceAnalyzable,
     DataDependentResourceAnalyzable,
-    EntanglementQueryable,
     DataTransformable,
+    EntanglementQueryable,
+    ResourceAnalyzable,
 )
+from encoding_atlas.core.registry import get_encoding, list_encodings, register_encoding
 
 # Encodings
 from encoding_atlas.encodings import (
@@ -72,11 +73,6 @@ from encoding_atlas.encodings import (
     TrainableEncoding,
     ZZFeatureMap,
 )
-
-from encoding_atlas import analysis
-from encoding_atlas import benchmark
-from encoding_atlas import guide
-from encoding_atlas import visualization
 
 __all__ = [
     # Version

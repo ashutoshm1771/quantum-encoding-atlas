@@ -101,11 +101,13 @@ def batch_data_4d() -> NDArray[np.floating]:
     - [0.5, 0.6, 0.7, 0.8] (mid-range values)
     - [0.0, 0.0, 0.0, 0.0] (edge case: zeros)
     """
-    return np.array([
-        [0.1, 0.2, 0.3, 0.4],
-        [0.5, 0.6, 0.7, 0.8],
-        [0.0, 0.0, 0.0, 0.0],
-    ])
+    return np.array(
+        [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.5, 0.6, 0.7, 0.8],
+            [0.0, 0.0, 0.0, 0.0],
+        ]
+    )
 
 
 @pytest.fixture
@@ -493,9 +495,7 @@ class TestInputValidation:
         with pytest.raises(ValueError, match="infinite"):
             default_encoding.get_circuit(x, backend="qiskit")
 
-    def test_negative_inf_input_rejected(
-        self, default_encoding: AngleEncoding
-    ) -> None:
+    def test_negative_inf_input_rejected(self, default_encoding: AngleEncoding) -> None:
         """Test that negative infinite values are rejected."""
         x = np.array([0.1, -np.inf, 0.3, 0.4])
         with pytest.raises(ValueError, match="infinite"):
@@ -553,10 +553,12 @@ class TestInputValidation:
     def test_invalid_complex_batch(self) -> None:
         """Test that batch with complex values is rejected."""
         enc = AngleEncoding(n_features=4)
-        X = np.array([
-            [1 + 0j, 2 + 0j, 3 + 0j, 4 + 0j],
-            [5 + 0j, 6 + 0j, 7 + 0j, 8 + 0j],
-        ])
+        X = np.array(
+            [
+                [1 + 0j, 2 + 0j, 3 + 0j, 4 + 0j],
+                [5 + 0j, 6 + 0j, 7 + 0j, 8 + 0j],
+            ]
+        )
         with pytest.raises(TypeError, match="complex"):
             enc.get_circuits(X)
 
@@ -597,7 +599,7 @@ class TestPennyLaneBackend:
 
         state = full_circuit()
         assert state is not None
-        assert len(state) == 2 ** default_encoding.n_qubits
+        assert len(state) == 2**default_encoding.n_qubits
 
     def test_state_normalized(
         self,
@@ -1272,15 +1274,11 @@ class TestEqualityAndHashing:
 class TestRepr:
     """Tests for __repr__ string representation."""
 
-    def test_repr_contains_class_name(
-        self, default_encoding: AngleEncoding
-    ) -> None:
+    def test_repr_contains_class_name(self, default_encoding: AngleEncoding) -> None:
         """Test that repr contains class name."""
         assert "AngleEncoding" in repr(default_encoding)
 
-    def test_repr_contains_n_features(
-        self, default_encoding: AngleEncoding
-    ) -> None:
+    def test_repr_contains_n_features(self, default_encoding: AngleEncoding) -> None:
         """Test that repr contains n_features."""
         assert "n_features=4" in repr(default_encoding)
 
@@ -1410,7 +1408,7 @@ class TestConcurrentAccess:
         def generate_circuits(thread_id: int) -> list[Any]:
             circuits = []
             try:
-                for i in range(num_circuits_per_thread):
+                for _i in range(num_circuits_per_thread):
                     x = np.random.randn(4)
                     circuit = enc.get_circuit(x, backend="pennylane")
                     circuits.append(circuit)
@@ -1419,7 +1417,9 @@ class TestConcurrentAccess:
             return circuits
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [executor.submit(generate_circuits, i) for i in range(num_threads)]
+            futures = [
+                executor.submit(generate_circuits, i) for i in range(num_threads)
+            ]
             results = [f.result() for f in as_completed(futures)]
 
         assert len(errors) == 0, f"Thread errors: {errors}"
@@ -1465,7 +1465,14 @@ class TestGateCountBreakdown:
         enc = AngleEncoding(n_features=4)
         breakdown = enc.gate_count_breakdown()
 
-        expected_keys = {'rx', 'ry', 'rz', 'total_single_qubit', 'total_two_qubit', 'total'}
+        expected_keys = {
+            "rx",
+            "ry",
+            "rz",
+            "total_single_qubit",
+            "total_two_qubit",
+            "total",
+        }
         assert set(breakdown.keys()) == expected_keys
 
     def test_y_rotation_gate_counts(self) -> None:
@@ -1476,36 +1483,36 @@ class TestGateCountBreakdown:
         enc = AngleEncoding(n_features=4, rotation="Y", reps=1)
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['rx'] == 0
-        assert breakdown['ry'] == 4
-        assert breakdown['rz'] == 0
-        assert breakdown['total_single_qubit'] == 4
-        assert breakdown['total_two_qubit'] == 0
-        assert breakdown['total'] == 4
+        assert breakdown["rx"] == 0
+        assert breakdown["ry"] == 4
+        assert breakdown["rz"] == 0
+        assert breakdown["total_single_qubit"] == 4
+        assert breakdown["total_two_qubit"] == 0
+        assert breakdown["total"] == 4
 
     def test_x_rotation_gate_counts(self) -> None:
         """Test gate counts for X rotation."""
         enc = AngleEncoding(n_features=4, rotation="X", reps=1)
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['rx'] == 4
-        assert breakdown['ry'] == 0
-        assert breakdown['rz'] == 0
-        assert breakdown['total_single_qubit'] == 4
-        assert breakdown['total_two_qubit'] == 0
-        assert breakdown['total'] == 4
+        assert breakdown["rx"] == 4
+        assert breakdown["ry"] == 0
+        assert breakdown["rz"] == 0
+        assert breakdown["total_single_qubit"] == 4
+        assert breakdown["total_two_qubit"] == 0
+        assert breakdown["total"] == 4
 
     def test_z_rotation_gate_counts(self) -> None:
         """Test gate counts for Z rotation."""
         enc = AngleEncoding(n_features=4, rotation="Z", reps=1)
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['rx'] == 0
-        assert breakdown['ry'] == 0
-        assert breakdown['rz'] == 4
-        assert breakdown['total_single_qubit'] == 4
-        assert breakdown['total_two_qubit'] == 0
-        assert breakdown['total'] == 4
+        assert breakdown["rx"] == 0
+        assert breakdown["ry"] == 0
+        assert breakdown["rz"] == 4
+        assert breakdown["total_single_qubit"] == 4
+        assert breakdown["total_two_qubit"] == 0
+        assert breakdown["total"] == 4
 
     def test_multiple_reps_gate_counts(self) -> None:
         """Test gate counts with multiple repetitions.
@@ -1515,17 +1522,17 @@ class TestGateCountBreakdown:
         enc = AngleEncoding(n_features=4, rotation="Y", reps=3)
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['ry'] == 12
-        assert breakdown['total_single_qubit'] == 12
-        assert breakdown['total'] == 12
+        assert breakdown["ry"] == 12
+        assert breakdown["total_single_qubit"] == 12
+        assert breakdown["total"] == 12
 
     def test_single_feature_gate_counts(self) -> None:
         """Test gate counts with single feature."""
         enc = AngleEncoding(n_features=1, rotation="Y", reps=1)
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['ry'] == 1
-        assert breakdown['total'] == 1
+        assert breakdown["ry"] == 1
+        assert breakdown["total"] == 1
 
     @pytest.mark.parametrize("n_features", [1, 2, 4, 8, 16])
     def test_gate_counts_scale_linearly(self, n_features: int) -> None:
@@ -1533,8 +1540,8 @@ class TestGateCountBreakdown:
         enc = AngleEncoding(n_features=n_features, rotation="Y", reps=1)
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['total'] == n_features
-        assert breakdown['total_single_qubit'] == n_features
+        assert breakdown["total"] == n_features
+        assert breakdown["total_single_qubit"] == n_features
 
     @pytest.mark.parametrize("reps", [1, 2, 3, 5])
     def test_gate_counts_scale_with_reps(self, reps: int) -> None:
@@ -1543,8 +1550,8 @@ class TestGateCountBreakdown:
         breakdown = enc.gate_count_breakdown()
 
         expected_total = 4 * reps
-        assert breakdown['total'] == expected_total
-        assert breakdown['ry'] == expected_total
+        assert breakdown["total"] == expected_total
+        assert breakdown["ry"] == expected_total
 
     def test_two_qubit_gates_always_zero(self) -> None:
         """Test that two_qubit_gates is always 0 for angle encoding."""
@@ -1552,7 +1559,7 @@ class TestGateCountBreakdown:
             for reps in [1, 2, 3]:
                 enc = AngleEncoding(n_features=4, rotation=rotation, reps=reps)
                 breakdown = enc.gate_count_breakdown()
-                assert breakdown['total_two_qubit'] == 0
+                assert breakdown["total_two_qubit"] == 0
 
     def test_consistency_with_properties(self) -> None:
         """Test that breakdown total matches properties.gate_count."""
@@ -1560,9 +1567,9 @@ class TestGateCountBreakdown:
         breakdown = enc.gate_count_breakdown()
         props = enc.properties
 
-        assert breakdown['total'] == props.gate_count
-        assert breakdown['total_single_qubit'] == props.single_qubit_gates
-        assert breakdown['total_two_qubit'] == props.two_qubit_gates
+        assert breakdown["total"] == props.gate_count
+        assert breakdown["total_single_qubit"] == props.single_qubit_gates
+        assert breakdown["total_two_qubit"] == props.two_qubit_gates
 
 
 # =============================================================================
@@ -1584,41 +1591,41 @@ class TestResourceSummary:
         enc = AngleEncoding(n_features=4, rotation="Y", reps=2)
         summary = enc.resource_summary()
 
-        assert summary['n_qubits'] == 4
-        assert summary['n_features'] == 4
-        assert summary['depth'] == 2
-        assert summary['reps'] == 2
-        assert summary['rotation'] == 'Y'
+        assert summary["n_qubits"] == 4
+        assert summary["n_features"] == 4
+        assert summary["depth"] == 2
+        assert summary["reps"] == 2
+        assert summary["rotation"] == "Y"
 
     def test_gate_counts_included(self) -> None:
         """Test that gate counts are included in summary."""
         enc = AngleEncoding(n_features=4, rotation="Y", reps=1)
         summary = enc.resource_summary()
 
-        assert 'gate_counts' in summary
-        assert summary['gate_counts']['ry'] == 4
-        assert summary['gate_counts']['total'] == 4
+        assert "gate_counts" in summary
+        assert summary["gate_counts"]["ry"] == 4
+        assert summary["gate_counts"]["total"] == 4
 
     def test_encoding_characteristics(self) -> None:
         """Test encoding characteristics in summary."""
         enc = AngleEncoding(n_features=4)
         summary = enc.resource_summary()
 
-        assert summary['is_entangling'] is False
-        assert summary['simulability'] == 'simulable'
-        assert 'trainability_estimate' in summary
-        assert 0.0 <= summary['trainability_estimate'] <= 1.0
+        assert summary["is_entangling"] is False
+        assert summary["simulability"] == "simulable"
+        assert "trainability_estimate" in summary
+        assert 0.0 <= summary["trainability_estimate"] <= 1.0
 
     def test_hardware_requirements(self) -> None:
         """Test hardware requirements in summary."""
         enc = AngleEncoding(n_features=4, rotation="Y")
         summary = enc.resource_summary()
 
-        assert 'hardware_requirements' in summary
-        hw = summary['hardware_requirements']
+        assert "hardware_requirements" in summary
+        hw = summary["hardware_requirements"]
 
-        assert hw['connectivity'] == 'none'
-        assert hw['native_gates'] == ['RY']
+        assert hw["connectivity"] == "none"
+        assert hw["native_gates"] == ["RY"]
 
     @pytest.mark.parametrize("rotation", ["X", "Y", "Z"])
     def test_native_gates_match_rotation(self, rotation: str) -> None:
@@ -1626,8 +1633,8 @@ class TestResourceSummary:
         enc = AngleEncoding(n_features=4, rotation=rotation)
         summary = enc.resource_summary()
 
-        expected_gate = f'R{rotation}'
-        assert summary['hardware_requirements']['native_gates'] == [expected_gate]
+        expected_gate = f"R{rotation}"
+        assert summary["hardware_requirements"]["native_gates"] == [expected_gate]
 
     def test_consistency_with_properties(self) -> None:
         """Test consistency between summary and properties."""
@@ -1635,11 +1642,11 @@ class TestResourceSummary:
         summary = enc.resource_summary()
         props = enc.properties
 
-        assert summary['n_qubits'] == props.n_qubits
-        assert summary['depth'] == props.depth
-        assert summary['is_entangling'] == props.is_entangling
-        assert summary['simulability'] == props.simulability
-        assert summary['trainability_estimate'] == props.trainability_estimate
+        assert summary["n_qubits"] == props.n_qubits
+        assert summary["depth"] == props.depth
+        assert summary["is_entangling"] == props.is_entangling
+        assert summary["simulability"] == props.simulability
+        assert summary["trainability_estimate"] == props.trainability_estimate
 
     def test_consistency_with_gate_count_breakdown(self) -> None:
         """Test that summary gate_counts matches gate_count_breakdown."""
@@ -1647,7 +1654,7 @@ class TestResourceSummary:
         summary = enc.resource_summary()
         breakdown = enc.gate_count_breakdown()
 
-        assert summary['gate_counts'] == breakdown
+        assert summary["gate_counts"] == breakdown
 
     @pytest.mark.parametrize("n_features,reps", [(1, 1), (4, 2), (8, 3)])
     def test_various_configurations(self, n_features: int, reps: int) -> None:
@@ -1655,10 +1662,10 @@ class TestResourceSummary:
         enc = AngleEncoding(n_features=n_features, rotation="Y", reps=reps)
         summary = enc.resource_summary()
 
-        assert summary['n_qubits'] == n_features
-        assert summary['n_features'] == n_features
-        assert summary['depth'] == reps
-        assert summary['gate_counts']['total'] == n_features * reps
+        assert summary["n_qubits"] == n_features
+        assert summary["n_features"] == n_features
+        assert summary["depth"] == reps
+        assert summary["gate_counts"]["total"] == n_features * reps
 
 
 # =============================================================================
@@ -1676,8 +1683,8 @@ class TestInputRangeDebugLogging:
         enc = AngleEncoding(n_features=4)
         x = np.array([0.1, 0.2, 0.3, 0.4])
 
-        with caplog.at_level(logging.DEBUG, logger='encoding_atlas.encodings.angle'):
-            enc.get_circuit(x, backend='pennylane')
+        with caplog.at_level(logging.DEBUG, logger="encoding_atlas.encodings.angle"):
+            enc.get_circuit(x, backend="pennylane")
 
         assert "outside typical range" not in caplog.text
 
@@ -1688,8 +1695,8 @@ class TestInputRangeDebugLogging:
         enc = AngleEncoding(n_features=4)
         x = np.array([100.0, 200.0, 300.0, 400.0])
 
-        with caplog.at_level(logging.DEBUG, logger='encoding_atlas.encodings.angle'):
-            enc.get_circuit(x, backend='pennylane')
+        with caplog.at_level(logging.DEBUG, logger="encoding_atlas.encodings.angle"):
+            enc.get_circuit(x, backend="pennylane")
 
         assert "outside typical range" in caplog.text
 
@@ -1702,14 +1709,12 @@ class TestInputRangeDebugLogging:
         enc = AngleEncoding(n_features=4)
         x = np.array([-100.0, -200.0, -300.0, -400.0])
 
-        with caplog.at_level(logging.DEBUG, logger='encoding_atlas.encodings.angle'):
-            enc.get_circuit(x, backend='pennylane')
+        with caplog.at_level(logging.DEBUG, logger="encoding_atlas.encodings.angle"):
+            enc.get_circuit(x, backend="pennylane")
 
         assert "outside typical range" in caplog.text
 
-    def test_boundary_values_no_warning(
-        self, caplog: pytest.LogCaptureFixture
-    ) -> None:
+    def test_boundary_values_no_warning(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test that values within threshold don't trigger warning.
 
         Values within 4*pi threshold (~12.57) should not warn.
@@ -1719,8 +1724,8 @@ class TestInputRangeDebugLogging:
         enc = AngleEncoding(n_features=4)
         x = np.array([10.0, 10.0, 10.0, 10.0])
 
-        with caplog.at_level(logging.DEBUG, logger='encoding_atlas.encodings.angle'):
-            enc.get_circuit(x, backend='pennylane')
+        with caplog.at_level(logging.DEBUG, logger="encoding_atlas.encodings.angle"):
+            enc.get_circuit(x, backend="pennylane")
 
         assert "outside typical range" not in caplog.text
 
@@ -1736,8 +1741,8 @@ class TestInputRangeDebugLogging:
         enc = AngleEncoding(n_features=4)
         x = np.array([13.0, 0.0, 0.0, 0.0])
 
-        with caplog.at_level(logging.DEBUG, logger='encoding_atlas.encodings.angle'):
-            enc.get_circuit(x, backend='pennylane')
+        with caplog.at_level(logging.DEBUG, logger="encoding_atlas.encodings.angle"):
+            enc.get_circuit(x, backend="pennylane")
 
         assert "outside typical range" in caplog.text
 
@@ -1751,9 +1756,9 @@ class TestInputRangeDebugLogging:
         x_normal = np.array([0.1, 0.2, 0.3, 0.4])
         x_large = np.array([100.0, 200.0, 300.0, 400.0])
 
-        with caplog.at_level(logging.DEBUG, logger='encoding_atlas.encodings.angle'):
-            circuit_normal = enc.get_circuit(x_normal, backend='pennylane')
-            circuit_large = enc.get_circuit(x_large, backend='pennylane')
+        with caplog.at_level(logging.DEBUG, logger="encoding_atlas.encodings.angle"):
+            circuit_normal = enc.get_circuit(x_normal, backend="pennylane")
+            circuit_large = enc.get_circuit(x_large, backend="pennylane")
 
         assert callable(circuit_normal)
         assert callable(circuit_large)
@@ -1867,7 +1872,7 @@ class TestSlowSimulation:
         assert np.isclose(np.sum(np.abs(cirq_state) ** 2), 1.0, atol=1e-10)
 
         # All states should have the same dimension
-        assert len(pl_state) == len(qk_state) == len(cirq_state) == 2 ** enc.n_qubits
+        assert len(pl_state) == len(qk_state) == len(cirq_state) == 2**enc.n_qubits
 
         # Probability distributions should have same values (accounting for ordering)
         pl_probs = sorted(np.abs(pl_state) ** 2)
@@ -1913,23 +1918,26 @@ class TestSlowSimulation:
 
         state = full_circuit()
 
-        assert len(state) == 2 ** 10
+        assert len(state) == 2**10
         assert np.isclose(np.sum(np.abs(state) ** 2), 1.0, atol=1e-10)
 
     @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
     def test_batch_simulation_consistency(self) -> None:
         """Test that batch generation produces consistent results."""
         enc = AngleEncoding(n_features=4)
-        batch = np.array([
-            [0.1, 0.2, 0.3, 0.4],
-            [0.5, 0.6, 0.7, 0.8],
-        ])
+        batch = np.array(
+            [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.5, 0.6, 0.7, 0.8],
+            ]
+        )
 
         circuits = enc.get_circuits(batch, backend="pennylane")
         dev = qml.device("default.qubit", wires=enc.n_qubits)
 
         states = []
         for circuit_fn in circuits:
+
             @qml.qnode(dev)
             def full_circuit():
                 circuit_fn()
@@ -2032,12 +2040,12 @@ class TestCrossBackendStateFidelity:
 
         norm1 = np.sum(np.abs(state1) ** 2)
         norm2 = np.sum(np.abs(state2) ** 2)
-        assert np.isclose(norm1, 1.0, atol=1e-10), (
-            f"{name1} is not normalized: |norm|^2 = {norm1}"
-        )
-        assert np.isclose(norm2, 1.0, atol=1e-10), (
-            f"{name2} is not normalized: |norm|^2 = {norm2}"
-        )
+        assert np.isclose(
+            norm1, 1.0, atol=1e-10
+        ), f"{name1} is not normalized: |norm|^2 = {norm1}"
+        assert np.isclose(
+            norm2, 1.0, atol=1e-10
+        ), f"{name2} is not normalized: |norm|^2 = {norm2}"
 
         probs1 = sorted(np.abs(state1) ** 2)
         probs2 = sorted(np.abs(state2) ** 2)
@@ -2046,9 +2054,7 @@ class TestCrossBackendStateFidelity:
             probs1,
             probs2,
             atol=atol,
-            err_msg=(
-                f"Probability distributions differ between {name1} and {name2}"
-            ),
+            err_msg=(f"Probability distributions differ between {name1} and {name2}"),
         )
 
     @pytest.mark.skipif(
@@ -2109,7 +2115,7 @@ class TestCrossBackendStateFidelity:
         qk_state = self._get_qiskit_state(enc, x)
         cirq_state = self._get_cirq_state(enc, x)
 
-        expected_dim = 2 ** enc.n_qubits
+        expected_dim = 2**enc.n_qubits
         assert len(pl_state) == expected_dim
         assert len(qk_state) == expected_dim
         assert len(cirq_state) == expected_dim
@@ -2176,9 +2182,9 @@ class TestCrossBackendStateFidelity:
             (cirq_state, "Cirq"),
         ]:
             max_prob = np.max(np.abs(state) ** 2)
-            assert np.isclose(max_prob, 1.0, atol=1e-10), (
-                f"{name}: max probability should be 1.0 for zero angles"
-            )
+            assert np.isclose(
+                max_prob, 1.0, atol=1e-10
+            ), f"{name}: max probability should be 1.0 for zero angles"
 
     @pytest.mark.skipif(
         not (HAS_PENNYLANE and HAS_QISKIT and HAS_CIRQ),
@@ -2202,9 +2208,9 @@ class TestCrossBackendStateFidelity:
             (cirq_state, "Cirq"),
         ]:
             max_prob = np.max(np.abs(state) ** 2)
-            assert np.isclose(max_prob, 1.0, atol=1e-10), (
-                f"{name}: max probability should be 1.0 for pi rotation"
-            )
+            assert np.isclose(
+                max_prob, 1.0, atol=1e-10
+            ), f"{name}: max probability should be 1.0 for pi rotation"
 
         self._assert_states_equivalent(pl_state, qk_state, "PennyLane", "Qiskit")
         self._assert_states_equivalent(pl_state, cirq_state, "PennyLane", "Cirq")

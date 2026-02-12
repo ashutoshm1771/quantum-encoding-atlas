@@ -42,9 +42,10 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+from encoding_atlas.core.properties import EncodingProperties
+
 # Local imports
 from encoding_atlas.encodings.trainable import TrainableEncoding
-from encoding_atlas.core.properties import EncodingProperties
 
 # Conditional TYPE_CHECKING imports
 if TYPE_CHECKING:
@@ -108,11 +109,13 @@ def batch_data_4d() -> NDArray[np.floating]:
 
     Contains 3 samples with varying value ranges.
     """
-    return np.array([
-        [0.1, 0.2, 0.3, 0.4],
-        [0.5, 0.6, 0.7, 0.8],
-        [0.9, 1.0, 1.1, 1.2],
-    ])
+    return np.array(
+        [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.5, 0.6, 0.7, 0.8],
+            [0.9, 1.0, 1.1, 1.2],
+        ]
+    )
 
 
 @pytest.fixture
@@ -184,7 +187,9 @@ class TestInstantiation:
         enc = TrainableEncoding(n_features=4, entanglement=entanglement)  # type: ignore
         assert enc.entanglement == entanglement
 
-    @pytest.mark.parametrize("init", ["xavier", "he", "zeros", "random", "small_random"])
+    @pytest.mark.parametrize(
+        "init", ["xavier", "he", "zeros", "random", "small_random"]
+    )
     def test_initialization_strategies(self, init: str) -> None:
         """Test all initialization strategies."""
         enc = TrainableEncoding(n_features=4, initialization=init)  # type: ignore
@@ -213,8 +218,7 @@ class TestInstantiation:
         enc1 = TrainableEncoding(n_features=4, seed=42)
         enc2 = TrainableEncoding(n_features=4, seed=42)
         np.testing.assert_array_equal(
-            enc1.get_trainable_parameters(),
-            enc2.get_trainable_parameters()
+            enc1.get_trainable_parameters(), enc2.get_trainable_parameters()
         )
 
     def test_different_seeds_produce_different_params(self) -> None:
@@ -222,8 +226,7 @@ class TestInstantiation:
         enc1 = TrainableEncoding(n_features=4, seed=42)
         enc2 = TrainableEncoding(n_features=4, seed=43)
         assert not np.allclose(
-            enc1.get_trainable_parameters(),
-            enc2.get_trainable_parameters()
+            enc1.get_trainable_parameters(), enc2.get_trainable_parameters()
         )
 
     def test_instantiation_is_lazy(self) -> None:
@@ -396,8 +399,7 @@ class TestTrainableParameterManagement:
         new_params = np.ones((2, 4)) * 0.5
         default_encoding.set_trainable_parameters(new_params)
         np.testing.assert_array_almost_equal(
-            default_encoding.get_trainable_parameters(),
-            new_params
+            default_encoding.get_trainable_parameters(), new_params
         )
 
     def test_set_trainable_parameters_flat_array(
@@ -443,8 +445,7 @@ class TestTrainableParameterManagement:
         seeded_encoding.reset_parameters()
         # Should match original
         np.testing.assert_array_almost_equal(
-            seeded_encoding.get_trainable_parameters(),
-            original_params
+            seeded_encoding.get_trainable_parameters(), original_params
         )
 
     def test_reset_parameters_with_new_seed(
@@ -455,13 +456,14 @@ class TestTrainableParameterManagement:
         default_encoding.reset_parameters(seed=99999)
         # Should be different from original
         assert not np.allclose(
-            default_encoding.get_trainable_parameters(),
-            original_params
+            default_encoding.get_trainable_parameters(), original_params
         )
 
     def test_xavier_initialization_scale(self) -> None:
         """Test that Xavier initialization produces reasonable scale."""
-        enc = TrainableEncoding(n_features=16, n_layers=10, initialization="xavier", seed=42)
+        enc = TrainableEncoding(
+            n_features=16, n_layers=10, initialization="xavier", seed=42
+        )
         params = enc.get_trainable_parameters()
         # Xavier: scale = sqrt(2 / (n_in + n_out)) = sqrt(2 / 32) ≈ 0.25
         assert abs(np.std(params)) < 1.0  # Should be small
@@ -546,33 +548,25 @@ class TestInputValidation:
         validated = default_encoding._validate_input(sample_data_4d)
         assert validated.shape == (4,)
 
-    def test_wrong_feature_count(
-        self, default_encoding: TrainableEncoding
-    ) -> None:
+    def test_wrong_feature_count(self, default_encoding: TrainableEncoding) -> None:
         """Test that wrong feature count raises ValueError."""
         x = np.array([0.1, 0.2])  # 2 features, expected 4
         with pytest.raises(ValueError, match="Expected 4 features"):
             default_encoding._validate_input(x)
 
-    def test_nan_input_rejected(
-        self, default_encoding: TrainableEncoding
-    ) -> None:
+    def test_nan_input_rejected(self, default_encoding: TrainableEncoding) -> None:
         """Test that NaN values in input raise ValueError."""
         x = np.array([0.1, np.nan, 0.3, 0.4])
         with pytest.raises(ValueError, match="NaN"):
             default_encoding._validate_input(x)
 
-    def test_inf_input_rejected(
-        self, default_encoding: TrainableEncoding
-    ) -> None:
+    def test_inf_input_rejected(self, default_encoding: TrainableEncoding) -> None:
         """Test that infinite values in input raise ValueError."""
         x = np.array([0.1, np.inf, 0.3, 0.4])
         with pytest.raises(ValueError, match="infinite"):
             default_encoding._validate_input(x)
 
-    def test_list_input_accepted(
-        self, default_encoding: TrainableEncoding
-    ) -> None:
+    def test_list_input_accepted(self, default_encoding: TrainableEncoding) -> None:
         """Test that list input is converted to array."""
         x = [0.1, 0.2, 0.3, 0.4]
         validated = default_encoding._validate_input(x)
@@ -843,7 +837,9 @@ class TestMathematicalCorrectness:
     @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
     def test_zero_input_with_zero_params(self) -> None:
         """Test that zero input with zero params produces known state."""
-        enc = TrainableEncoding(n_features=4, n_layers=1, initialization="zeros", seed=42)
+        enc = TrainableEncoding(
+            n_features=4, n_layers=1, initialization="zeros", seed=42
+        )
         x = np.zeros(4)
 
         circuit_fn = enc.get_circuit(x, backend="pennylane")
@@ -914,27 +910,21 @@ class TestEdgeCases:
         assert enc.n_qubits == 20
         assert len(enc.get_entanglement_pairs()) == 19
 
-    def test_zero_valued_input(
-        self, default_encoding: TrainableEncoding
-    ) -> None:
+    def test_zero_valued_input(self, default_encoding: TrainableEncoding) -> None:
         """Test with all-zero input."""
         x = np.zeros(4)
         if HAS_PENNYLANE:
             circuit = default_encoding.get_circuit(x, backend="pennylane")
             assert callable(circuit)
 
-    def test_large_valued_input(
-        self, default_encoding: TrainableEncoding
-    ) -> None:
+    def test_large_valued_input(self, default_encoding: TrainableEncoding) -> None:
         """Test with large input values."""
         x = np.array([100.0, 200.0, 300.0, 400.0])
         if HAS_PENNYLANE:
             circuit = default_encoding.get_circuit(x, backend="pennylane")
             assert callable(circuit)
 
-    def test_negative_valued_input(
-        self, default_encoding: TrainableEncoding
-    ) -> None:
+    def test_negative_valued_input(self, default_encoding: TrainableEncoding) -> None:
         """Test with negative input values."""
         x = np.array([-0.5, -1.0, -1.5, -2.0])
         if HAS_PENNYLANE:
@@ -994,12 +984,14 @@ class TestNumericalStability:
         """Test encoding with values near pi boundaries."""
         enc = TrainableEncoding(n_features=4, n_layers=2, seed=42)
         eps = 1e-14
-        x = np.array([
-            np.pi - eps,
-            np.pi + eps,
-            2 * np.pi - eps,
-            2 * np.pi + eps,
-        ])
+        x = np.array(
+            [
+                np.pi - eps,
+                np.pi + eps,
+                2 * np.pi - eps,
+                2 * np.pi + eps,
+            ]
+        )
 
         circuit_fn = enc.get_circuit(x, backend="pennylane")
         dev = qml.device("default.qubit", wires=enc.n_qubits)
@@ -1151,8 +1143,7 @@ class TestSerialization:
         assert restored.trainable_rotation == enc.trainable_rotation
         assert restored.entanglement == enc.entanglement
         np.testing.assert_array_almost_equal(
-            restored.get_trainable_parameters(),
-            enc.get_trainable_parameters()
+            restored.get_trainable_parameters(), enc.get_trainable_parameters()
         )
 
     def test_pickle_equality(self) -> None:
@@ -1196,7 +1187,7 @@ class TestConcurrentAccess:
         def generate_circuits(thread_id: int) -> list[Any]:
             circuits = []
             try:
-                for i in range(num_circuits_per_thread):
+                for _i in range(num_circuits_per_thread):
                     x = np.random.randn(4)
                     if HAS_QISKIT:
                         circuit = enc.get_circuit(x, backend="qiskit")
@@ -1207,8 +1198,7 @@ class TestConcurrentAccess:
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
             futures = [
-                executor.submit(generate_circuits, i)
-                for i in range(num_threads)
+                executor.submit(generate_circuits, i) for i in range(num_threads)
             ]
             results = [f.result() for f in as_completed(futures)]
 
@@ -1234,10 +1224,7 @@ class TestConcurrentAccess:
                 errors.append(e)
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [
-                executor.submit(access_properties)
-                for _ in range(num_threads)
-            ]
+            futures = [executor.submit(access_properties) for _ in range(num_threads)]
             for f in as_completed(futures):
                 f.result()
 
@@ -1263,8 +1250,7 @@ class TestCopyMethod:
 
         # But have same parameters
         np.testing.assert_array_almost_equal(
-            enc.get_trainable_parameters(),
-            enc_copy.get_trainable_parameters()
+            enc.get_trainable_parameters(), enc_copy.get_trainable_parameters()
         )
 
     def test_copy_is_truly_independent(self) -> None:
@@ -1277,8 +1263,7 @@ class TestCopyMethod:
 
         # Original should be unchanged
         np.testing.assert_array_almost_equal(
-            enc.get_trainable_parameters(),
-            original_params
+            enc.get_trainable_parameters(), original_params
         )
 
 
@@ -1451,7 +1436,7 @@ class TestSlowSimulation:
         qk_state = self._get_qiskit_state(enc, x)
         cirq_state = self._get_cirq_state(enc, x)
 
-        expected_dim = 2 ** enc.n_qubits
+        expected_dim = 2**enc.n_qubits
         assert len(pl_state) == expected_dim
         assert len(qk_state) == expected_dim
         assert len(cirq_state) == expected_dim

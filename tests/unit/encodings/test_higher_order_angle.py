@@ -32,7 +32,6 @@ from __future__ import annotations
 import math
 import pickle
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from itertools import combinations
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -46,8 +45,6 @@ from encoding_atlas.encodings.higher_order_angle import (
 
 if TYPE_CHECKING:
     from typing import Any
-
-    from encoding_atlas.core.properties import EncodingProperties
 
 
 # =============================================================================
@@ -109,11 +106,13 @@ def batch_data_4d() -> NDArray[np.floating]:
     - [0.5, 0.6, 0.7, 0.8] (higher values)
     - [0.0, 0.0, 0.0, 0.0] (edge case: zeros)
     """
-    return np.array([
-        [0.1, 0.2, 0.3, 0.4],
-        [0.5, 0.6, 0.7, 0.8],
-        [0.0, 0.0, 0.0, 0.0],
-    ])
+    return np.array(
+        [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.5, 0.6, 0.7, 0.8],
+            [0.0, 0.0, 0.0, 0.0],
+        ]
+    )
 
 
 @pytest.fixture
@@ -207,9 +206,7 @@ class TestInstantiation:
 
     def test_include_first_order_false(self) -> None:
         """Test excluding first-order terms."""
-        enc = HigherOrderAngleEncoding(
-            n_features=4, order=2, include_first_order=False
-        )
+        enc = HigherOrderAngleEncoding(n_features=4, order=2, include_first_order=False)
         assert enc.include_first_order is False
         # Only second-order: C(4,2) = 6
         assert enc.n_terms == 6
@@ -342,9 +339,7 @@ class TestValidation:
     def test_degenerate_case_order1_no_first_order(self) -> None:
         """Test that order=1 with include_first_order=False raises ValueError."""
         with pytest.raises(ValueError, match="no terms"):
-            HigherOrderAngleEncoding(
-                n_features=4, order=1, include_first_order=False
-            )
+            HigherOrderAngleEncoding(n_features=4, order=1, include_first_order=False)
 
     def test_type_error_order_float(self) -> None:
         """Test that float order raises TypeError."""
@@ -456,9 +451,7 @@ class TestProperties:
         assert props.is_entangling is False
         assert props.simulability == "simulable"
 
-    def test_not_entangling(
-        self, default_encoding: HigherOrderAngleEncoding
-    ) -> None:
+    def test_not_entangling(self, default_encoding: HigherOrderAngleEncoding) -> None:
         """Test that encoding creates no entanglement."""
         assert default_encoding.properties.is_entangling is False
 
@@ -539,9 +532,7 @@ class TestTermGenerationBehavior:
 
     def test_terms_without_first_order(self) -> None:
         """Test term generation without first-order terms."""
-        enc = HigherOrderAngleEncoding(
-            n_features=4, order=2, include_first_order=False
-        )
+        enc = HigherOrderAngleEncoding(n_features=4, order=2, include_first_order=False)
         terms = enc.terms
 
         # Only second-order
@@ -561,9 +552,7 @@ class TestTermGenerationBehavior:
                 expected = sum(math.comb(n, k) for k in range(1, order + 1))
                 assert enc.n_terms == expected
 
-    def test_term_info(
-        self, default_encoding: HigherOrderAngleEncoding
-    ) -> None:
+    def test_term_info(self, default_encoding: HigherOrderAngleEncoding) -> None:
         """Test get_term_info returns correct structure."""
         info = default_encoding.get_term_info()
 
@@ -711,7 +700,7 @@ class TestPennyLaneBackend:
 
         state = full_circuit()
         assert state is not None
-        assert len(state) == 2 ** default_encoding.n_qubits
+        assert len(state) == 2**default_encoding.n_qubits
         # State should be valid (normalized)
         assert np.isclose(np.sum(np.abs(state) ** 2), 1.0, atol=1e-10)
 
@@ -1244,12 +1233,14 @@ class TestNumericalStability:
     def test_near_pi_multiples(self) -> None:
         """Test numerical stability near pi multiples."""
         enc = HigherOrderAngleEncoding(n_features=4, order=2)
-        x = np.array([
-            np.pi - 1e-14,
-            np.pi + 1e-14,
-            2 * np.pi - 1e-14,
-            np.pi / 2 + 1e-14,
-        ])
+        x = np.array(
+            [
+                np.pi - 1e-14,
+                np.pi + 1e-14,
+                2 * np.pi - 1e-14,
+                np.pi / 2 + 1e-14,
+            ]
+        )
 
         circuit_fn = enc.get_circuit(x, backend="pennylane")
         dev = qml.device("default.qubit", wires=enc.n_qubits)
@@ -1847,9 +1838,7 @@ class TestResourceSummary:
 
     def test_resource_summary_terms_by_order(self) -> None:
         """Test terms_by_order counts are correct."""
-        enc = HigherOrderAngleEncoding(
-            n_features=4, order=3, include_first_order=True
-        )
+        enc = HigherOrderAngleEncoding(n_features=4, order=3, include_first_order=True)
         summary = enc.resource_summary()
 
         terms_by_order = summary["terms_by_order"]
@@ -1892,11 +1881,13 @@ class TestParallelProcessing:
     def test_parallel_order_preserved(self) -> None:
         """Test that parallel processing preserves sample order."""
         enc = HigherOrderAngleEncoding(n_features=4, order=2)
-        X = np.array([
-            [0.1, 0.2, 0.3, 0.4],
-            [0.5, 0.6, 0.7, 0.8],
-            [0.9, 1.0, 1.1, 1.2],
-        ])
+        X = np.array(
+            [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.5, 0.6, 0.7, 0.8],
+                [0.9, 1.0, 1.1, 1.2],
+            ]
+        )
 
         # Get circuits with parallel processing
         circuits_par = enc.get_circuits(X, backend="pennylane", parallel=True)
@@ -1910,9 +1901,7 @@ class TestParallelProcessing:
         pytest.importorskip(
             "pennylane"
             if backend == "pennylane"
-            else "qiskit"
-            if backend == "qiskit"
-            else "cirq"
+            else "qiskit" if backend == "qiskit" else "cirq"
         )
         enc = HigherOrderAngleEncoding(n_features=3, order=2)
         rng = np.random.default_rng(42)
@@ -1963,9 +1952,7 @@ class TestWarnings:
 
             # Filter to only UserWarnings about term count
             term_warnings = [
-                warning
-                for warning in w
-                if "term count" in str(warning.message).lower()
+                warning for warning in w if "term count" in str(warning.message).lower()
             ]
             assert len(term_warnings) == 0
 
@@ -2125,7 +2112,7 @@ class TestSlowSimulation:
         cirq_state = np.array(cirq_result.final_state_vector)
 
         # All states should have same dimension
-        expected_dim = 2 ** enc.n_qubits
+        expected_dim = 2**enc.n_qubits
         assert len(pl_state) == expected_dim
         assert len(qk_state) == expected_dim
         assert len(cirq_state) == expected_dim
@@ -2302,10 +2289,16 @@ class TestSlowSimulation:
         cirq_state = np.array(cirq_result.final_state_vector)
 
         # All states should have same dimension (2^n_qubits = 16)
-        expected_dim = 2 ** enc.n_qubits
-        assert len(pl_state) == expected_dim, f"PennyLane: {len(pl_state)} != {expected_dim}"
-        assert len(qk_state) == expected_dim, f"Qiskit: {len(qk_state)} != {expected_dim}"
-        assert len(cirq_state) == expected_dim, f"Cirq: {len(cirq_state)} != {expected_dim}"
+        expected_dim = 2**enc.n_qubits
+        assert (
+            len(pl_state) == expected_dim
+        ), f"PennyLane: {len(pl_state)} != {expected_dim}"
+        assert (
+            len(qk_state) == expected_dim
+        ), f"Qiskit: {len(qk_state)} != {expected_dim}"
+        assert (
+            len(cirq_state) == expected_dim
+        ), f"Cirq: {len(cirq_state)} != {expected_dim}"
 
         # All states should be |0...0⟩ (first element is 1, rest are 0)
         expected_state = np.zeros(expected_dim, dtype=np.complex128)
@@ -2353,7 +2346,7 @@ class TestSlowSimulation:
         # All should have n_features qubits
         assert qk_qubits == enc.n_features, f"Qiskit qubits: {qk_qubits}"
         assert cirq_qubits == enc.n_features, f"Cirq qubits: {cirq_qubits}"
-        assert pl_dim == 2 ** enc.n_features, f"PennyLane state dim: {pl_dim}"
+        assert pl_dim == 2**enc.n_features, f"PennyLane state dim: {pl_dim}"
 
     @pytest.mark.skipif(
         not (HAS_PENNYLANE and HAS_QISKIT and HAS_CIRQ),
@@ -2393,7 +2386,7 @@ class TestSlowSimulation:
         cirq_state = np.array(cirq_result.final_state_vector)
 
         # All states should have same dimension
-        expected_dim = 2 ** enc.n_qubits
+        expected_dim = 2**enc.n_qubits
         assert len(pl_state) == expected_dim
         assert len(qk_state) == expected_dim
         assert len(cirq_state) == expected_dim
@@ -2431,10 +2424,9 @@ class TestDeterministicGateCounts:
         circuit_nonzero = enc.get_circuit(x_nonzero, backend="qiskit")
 
         # Count rotation gates (excluding barriers)
-        def count_rotations(circuit: "QuantumCircuit") -> int:
+        def count_rotations(circuit: QuantumCircuit) -> int:
             return sum(
-                1 for inst in circuit.data
-                if inst.operation.name in ("rx", "ry", "rz")
+                1 for inst in circuit.data if inst.operation.name in ("rx", "ry", "rz")
             )
 
         gates_zero = count_rotations(circuit_zero)
@@ -2455,7 +2447,8 @@ class TestDeterministicGateCounts:
 
                 circuit = enc.get_circuit(x, backend="qiskit")
                 actual_gates = sum(
-                    1 for inst in circuit.data
+                    1
+                    for inst in circuit.data
                     if inst.operation.name in ("rx", "ry", "rz")
                 )
 
@@ -2512,10 +2505,7 @@ class TestDeterministicGateCounts:
         circuit = enc.get_circuit(x_zero, backend="qiskit")
 
         gate_name = f"r{rotation.lower()}"
-        gate_count = sum(
-            1 for inst in circuit.data
-            if inst.operation.name == gate_name
-        )
+        gate_count = sum(1 for inst in circuit.data if inst.operation.name == gate_name)
 
         assert gate_count == enc.n_qubits * enc.reps
 
@@ -2527,10 +2517,7 @@ class TestDeterministicGateCounts:
             x = np.zeros(4)
 
             circuit = enc.get_circuit(x, backend="qiskit")
-            gate_count = sum(
-                1 for inst in circuit.data
-                if inst.operation.name == "ry"
-            )
+            gate_count = sum(1 for inst in circuit.data if inst.operation.name == "ry")
 
             expected = enc.n_qubits * reps
             assert gate_count == expected, f"reps={reps}: {gate_count} != {expected}"
@@ -2586,7 +2573,7 @@ class TestZeroAngleEdgeCases:
         state = full_circuit()
 
         # Ground state: |0000⟩ = [1, 0, 0, ..., 0]
-        expected = np.zeros(2 ** enc.n_qubits, dtype=np.complex128)
+        expected = np.zeros(2**enc.n_qubits, dtype=np.complex128)
         expected[0] = 1.0
 
         np.testing.assert_allclose(state, expected, atol=1e-10)
@@ -2613,7 +2600,7 @@ class TestZeroAngleEdgeCases:
         assert np.isclose(norm, 1.0, atol=1e-10)
 
         # State should NOT be ground state (since x[0] != 0)
-        ground_state = np.zeros(2 ** enc.n_qubits, dtype=np.complex128)
+        ground_state = np.zeros(2**enc.n_qubits, dtype=np.complex128)
         ground_state[0] = 1.0
         assert not np.allclose(state, ground_state, atol=1e-6)
 

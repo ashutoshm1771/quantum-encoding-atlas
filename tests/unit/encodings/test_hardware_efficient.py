@@ -108,11 +108,13 @@ def batch_data_4d() -> NDArray[np.floating]:
     - [0.5, 0.6, 0.7, 0.8] (moderate values)
     - [0.9, 1.0, 1.1, 1.2] (larger values)
     """
-    return np.array([
-        [0.1, 0.2, 0.3, 0.4],
-        [0.5, 0.6, 0.7, 0.8],
-        [0.9, 1.0, 1.1, 1.2],
-    ])
+    return np.array(
+        [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.5, 0.6, 0.7, 0.8],
+            [0.9, 1.0, 1.1, 1.2],
+        ]
+    )
 
 
 @pytest.fixture
@@ -626,7 +628,9 @@ class TestPennyLaneBackend:
 
         Full connectivity should create stronger correlations than linear.
         """
-        enc_linear = HardwareEfficientEncoding(n_features=4, entanglement="linear", reps=2)
+        enc_linear = HardwareEfficientEncoding(
+            n_features=4, entanglement="linear", reps=2
+        )
         enc_full = HardwareEfficientEncoding(n_features=4, entanglement="full", reps=2)
 
         dev = qml.device("default.qubit", wires=4)
@@ -649,7 +653,9 @@ class TestPennyLaneBackend:
 
         # States should be different (not perfectly overlapping)
         fidelity = np.abs(np.vdot(state_linear, state_full)) ** 2
-        assert fidelity < 0.9999, "Full and linear entanglement should produce different states"
+        assert (
+            fidelity < 0.9999
+        ), "Full and linear entanglement should produce different states"
 
 
 # =============================================================================
@@ -834,7 +840,9 @@ class TestCirqBackend:
         circuit = enc.get_circuit(sample_data_4d, backend="cirq")
         assert isinstance(circuit, cirq.Circuit)
         # Full entanglement should have more operations than linear
-        enc_linear = HardwareEfficientEncoding(n_features=4, entanglement="linear", reps=1)
+        enc_linear = HardwareEfficientEncoding(
+            n_features=4, entanglement="linear", reps=1
+        )
         circuit_linear = enc_linear.get_circuit(sample_data_4d, backend="cirq")
         # Convert generators to lists for length comparison
         full_ops = list(circuit.all_operations())
@@ -928,7 +936,9 @@ class TestMathematicalCorrectness:
         state = circuit()
         # Multiple non-zero amplitudes indicate superposition/entanglement
         non_zero_amplitudes = np.sum(np.abs(state) > 1e-10)
-        assert non_zero_amplitudes > 1, "Entangled state should have multiple amplitudes"
+        assert (
+            non_zero_amplitudes > 1
+        ), "Entangled state should have multiple amplitudes"
 
 
 # =============================================================================
@@ -1123,12 +1133,14 @@ class TestNumericalStability:
         enc = HardwareEfficientEncoding(n_features=4, reps=2)
         # Values very close to pi boundaries
         eps = 1e-14
-        x = np.array([
-            np.pi - eps,
-            np.pi + eps,
-            2 * np.pi - eps,
-            2 * np.pi + eps,
-        ])
+        x = np.array(
+            [
+                np.pi - eps,
+                np.pi + eps,
+                2 * np.pi - eps,
+                2 * np.pi + eps,
+            ]
+        )
 
         circuit_fn = enc.get_circuit(x, backend="pennylane")
         dev = qml.device("default.qubit", wires=enc.n_qubits)
@@ -1402,7 +1414,7 @@ class TestConcurrentAccess:
         def generate_circuits(thread_id: int) -> list[Any]:
             circuits = []
             try:
-                for i in range(num_circuits_per_thread):
+                for _i in range(num_circuits_per_thread):
                     x = np.random.randn(4)
                     if HAS_QISKIT:
                         circuit = enc.get_circuit(x, backend="qiskit")
@@ -1413,8 +1425,7 @@ class TestConcurrentAccess:
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
             futures = [
-                executor.submit(generate_circuits, i)
-                for i in range(num_threads)
+                executor.submit(generate_circuits, i) for i in range(num_threads)
             ]
             results = [f.result() for f in as_completed(futures)]
 
@@ -1442,10 +1453,7 @@ class TestConcurrentAccess:
                 errors.append(e)
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [
-                executor.submit(access_properties)
-                for _ in range(num_threads)
-            ]
+            futures = [executor.submit(access_properties) for _ in range(num_threads)]
             for f in as_completed(futures):
                 f.result()
 
@@ -1479,10 +1487,7 @@ class TestConcurrentAccess:
             return count
 
         with ThreadPoolExecutor(max_workers=len(encodings)) as executor:
-            futures = [
-                executor.submit(generate_for_encoding, enc)
-                for enc in encodings
-            ]
+            futures = [executor.submit(generate_for_encoding, enc) for enc in encodings]
             results = [f.result() for f in as_completed(futures)]
 
         assert len(errors) == 0
@@ -1569,12 +1574,12 @@ class TestSlowSimulation:
         # Both states must be normalized
         norm1 = np.sum(np.abs(state1) ** 2)
         norm2 = np.sum(np.abs(state2) ** 2)
-        assert np.isclose(norm1, 1.0, atol=1e-10), (
-            f"{name1} is not normalized: |norm|^2 = {norm1}"
-        )
-        assert np.isclose(norm2, 1.0, atol=1e-10), (
-            f"{name2} is not normalized: |norm|^2 = {norm2}"
-        )
+        assert np.isclose(
+            norm1, 1.0, atol=1e-10
+        ), f"{name1} is not normalized: |norm|^2 = {norm1}"
+        assert np.isclose(
+            norm2, 1.0, atol=1e-10
+        ), f"{name2} is not normalized: |norm|^2 = {norm2}"
 
         # Compare sorted probability distributions
         probs1 = sorted(np.abs(state1) ** 2)
@@ -1627,7 +1632,7 @@ class TestSlowSimulation:
         cirq_state = self._get_cirq_state(enc, x)
 
         # All states should have correct dimension: 2^n_qubits = 16
-        expected_dim = 2 ** enc.n_qubits
+        expected_dim = 2**enc.n_qubits
         assert len(pl_state) == expected_dim
         assert len(qk_state) == expected_dim
         assert len(cirq_state) == expected_dim
@@ -1653,14 +1658,10 @@ class TestSlowSimulation:
         cirq_state = self._get_cirq_state(enc, x)
 
         self._assert_states_equivalent(
-            pl_state, qk_state,
-            f"PennyLane (reps={reps})",
-            f"Qiskit (reps={reps})"
+            pl_state, qk_state, f"PennyLane (reps={reps})", f"Qiskit (reps={reps})"
         )
         self._assert_states_equivalent(
-            pl_state, cirq_state,
-            f"PennyLane (reps={reps})",
-            f"Cirq (reps={reps})"
+            pl_state, cirq_state, f"PennyLane (reps={reps})", f"Cirq (reps={reps})"
         )
 
     @pytest.mark.skipif(
@@ -1683,14 +1684,16 @@ class TestSlowSimulation:
         cirq_state = self._get_cirq_state(enc, x)
 
         self._assert_states_equivalent(
-            pl_state, qk_state,
+            pl_state,
+            qk_state,
             f"PennyLane (rotation={rotation})",
-            f"Qiskit (rotation={rotation})"
+            f"Qiskit (rotation={rotation})",
         )
         self._assert_states_equivalent(
-            pl_state, cirq_state,
+            pl_state,
+            cirq_state,
             f"PennyLane (rotation={rotation})",
-            f"Cirq (rotation={rotation})"
+            f"Cirq (rotation={rotation})",
         )
 
     @pytest.mark.skipif(
@@ -1699,9 +1702,7 @@ class TestSlowSimulation:
     )
     @pytest.mark.cross_backend
     @pytest.mark.parametrize("entanglement", ["linear", "circular", "full"])
-    def test_cross_backend_with_different_entanglement(
-        self, entanglement: str
-    ) -> None:
+    def test_cross_backend_with_different_entanglement(self, entanglement: str) -> None:
         """Test cross-backend equivalence with different entanglement patterns."""
         enc = HardwareEfficientEncoding(
             n_features=4,
@@ -1715,14 +1716,16 @@ class TestSlowSimulation:
         cirq_state = self._get_cirq_state(enc, x)
 
         self._assert_states_equivalent(
-            pl_state, qk_state,
+            pl_state,
+            qk_state,
             f"PennyLane (entanglement={entanglement})",
-            f"Qiskit (entanglement={entanglement})"
+            f"Qiskit (entanglement={entanglement})",
         )
         self._assert_states_equivalent(
-            pl_state, cirq_state,
+            pl_state,
+            cirq_state,
             f"PennyLane (entanglement={entanglement})",
-            f"Cirq (entanglement={entanglement})"
+            f"Cirq (entanglement={entanglement})",
         )
 
     @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")

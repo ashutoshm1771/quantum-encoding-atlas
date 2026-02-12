@@ -1,7 +1,5 @@
 # Basis Encoding
 
-**Author:** Ashutosh Mishra
-
 The simplest quantum data encoding — a direct one-to-one map from
 **classical bits** to **computational basis states**.
 
@@ -133,7 +131,7 @@ For the all-zeros case (best case):
   q₃: |0⟩ ─────────── |0⟩
 
   Result: |0000⟩
-  Depth:  0 (effectively)
+  Depth:  1 (the `depth` property always returns 1)
   Gates:  0 (no gates needed!)
 ```
 
@@ -232,7 +230,8 @@ Encode the binary string **[1, 0, 1]** using 3 qubits:
   ├──────────────────────┬──────────────────────────────────────────────┤
   │  Qubits required     │  n  (one per feature, linear scaling)       │
   │  Circuit depth       │  1  (constant, all gates parallel)          │
-  │  Gate count          │  0 to n  (data-dependent, only X gates)     │
+  │  Gate count          │  n  (worst-case; actual is 0 to n,          │
+  │                      │      data-dependent — see actual_gate_count) │
   │  Two-qubit gates     │  0  (never, no entanglement)                │
   │  Parameter count     │  0  (no trainable parameters)               │
   │  Entangling?         │  No  (always produces product states)       │
@@ -297,7 +296,7 @@ encoding's gate count depends on the input data:
   [1,1,1,1,1,1,1,1]    [1,1,1,1,1,1,1,1]   8       1      0%
   [1,0,1,0,1,0,1,0]    [1,0,1,0,1,0,1,0]   4       1     50%
   [1,0,0,0,0,0,0,0]    [1,0,0,0,0,0,0,0]   1       1     88%
-  [0,0,0,0,0,0,0,0]    [0,0,0,0,0,0,0,0]   0       0    100%
+  [0,0,0,0,0,0,0,0]    [0,0,0,0,0,0,0,0]   0       1    100%
 
   For sparse binary data (common in practice), the actual hardware
   cost is much lower than the worst-case bound.

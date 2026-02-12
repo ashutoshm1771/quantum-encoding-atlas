@@ -186,7 +186,7 @@ _logger = logging.getLogger(__name__)
 # Public API
 # =============================================================================
 
-__all__ = ['DataReuploading']
+__all__ = ["DataReuploading"]
 
 # =============================================================================
 # Module-Level Constants
@@ -236,6 +236,7 @@ _INPUT_RANGE_DEBUG_THRESHOLD: float = 4.0 * np.pi
 # =============================================================================
 # Type Definitions
 # =============================================================================
+
 
 class GateCountBreakdown(TypedDict):
     """Type definition for gate count breakdown dictionary.
@@ -414,7 +415,7 @@ class DataReuploading(BaseEncoding):
     information about the input is preserved and refined through layers.
     """
 
-    __slots__ = ('n_layers', '_n_qubits', '_entanglement_pairs')
+    __slots__ = ("n_layers", "_n_qubits", "_entanglement_pairs")
 
     def __init__(
         self,
@@ -473,9 +474,10 @@ class DataReuploading(BaseEncoding):
             raise ValueError(f"n_layers must be a positive integer, got {n_layers!r}")
 
         # Validate n_qubits if specified
-        if n_qubits is not None:
-            if isinstance(n_qubits, bool) or not isinstance(n_qubits, int) or n_qubits < 1:
-                raise ValueError(f"n_qubits must be a positive integer, got {n_qubits!r}")
+        if n_qubits is not None and (
+            isinstance(n_qubits, bool) or not isinstance(n_qubits, int) or n_qubits < 1
+        ):
+            raise ValueError(f"n_qubits must be a positive integer, got {n_qubits!r}")
 
         # =====================================================================
         # INITIALIZATION
@@ -877,7 +879,8 @@ class DataReuploading(BaseEncoding):
                 "connectivity": "linear",  # CNOT ladder only needs nearest-neighbor
                 "native_gates": ["RY", "CNOT"],
                 "min_qubit_count": self._n_qubits,
-                "estimated_circuit_time_us": gate_counts["total"] * 0.5,  # ~0.5μs per gate
+                "estimated_circuit_time_us": gate_counts["total"]
+                * 0.5,  # ~0.5μs per gate
             },
             # Recommendations
             "recommendations": recommendations,
@@ -1035,7 +1038,10 @@ class DataReuploading(BaseEncoding):
         # produce meaningful phase differences between encoded states.
         if _logger.isEnabledFor(logging.DEBUG):
             x_min, x_max = float(x_validated.min()), float(x_validated.max())
-            if abs(x_min) > _INPUT_RANGE_DEBUG_THRESHOLD or abs(x_max) > _INPUT_RANGE_DEBUG_THRESHOLD:
+            if (
+                abs(x_min) > _INPUT_RANGE_DEBUG_THRESHOLD
+                or abs(x_max) > _INPUT_RANGE_DEBUG_THRESHOLD
+            ):
                 _logger.debug(
                     "Input values [%.3g, %.3g] are outside optimal range [0, 2π]. "
                     "RY rotations are 2π-periodic, so any value works, but large "
@@ -1185,8 +1191,7 @@ class DataReuploading(BaseEncoding):
         else:
             # Sequential processing - use optimized path
             circuits = [
-                self._get_circuit_from_validated(x, backend)
-                for x in X_validated
+                self._get_circuit_from_validated(x, backend) for x in X_validated
             ]
             _logger.debug(
                 "Sequential batch processing completed: generated %d circuits",

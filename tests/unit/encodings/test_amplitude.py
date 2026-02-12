@@ -106,11 +106,13 @@ def batch_data_4d() -> NDArray[np.floating]:
     - [0.1, 0.2, 0.3, 0.4] (varied values)
     - [0.8, 0.6, 0.4, 0.2] (decreasing values)
     """
-    return np.array([
-        [0.5, 0.5, 0.5, 0.5],
-        [0.1, 0.2, 0.3, 0.4],
-        [0.8, 0.6, 0.4, 0.2],
-    ])
+    return np.array(
+        [
+            [0.5, 0.5, 0.5, 0.5],
+            [0.1, 0.2, 0.3, 0.4],
+            [0.8, 0.6, 0.4, 0.2],
+        ]
+    )
 
 
 @pytest.fixture
@@ -147,12 +149,12 @@ class TestInstantiation:
     def test_various_feature_counts(self) -> None:
         """Test instantiation with various feature counts."""
         test_cases = [
-            (1, 1),   # log2(1) = 0, but min is 1 qubit
-            (2, 1),   # log2(2) = 1
-            (3, 2),   # log2(3) = 1.58... -> 2
-            (4, 2),   # log2(4) = 2
-            (5, 3),   # log2(5) = 2.32... -> 3
-            (8, 3),   # log2(8) = 3
+            (1, 1),  # log2(1) = 0, but min is 1 qubit
+            (2, 1),  # log2(2) = 1
+            (3, 2),  # log2(3) = 1.58... -> 2
+            (4, 2),  # log2(4) = 2
+            (5, 3),  # log2(5) = 2.32... -> 3
+            (8, 3),  # log2(8) = 3
             (16, 4),  # log2(16) = 4
         ]
         for n_features, expected_qubits in test_cases:
@@ -305,7 +307,7 @@ class TestProperties:
         2^n states can be encoded with n qubits.
         """
         for n_qubits in [2, 3, 4, 5]:
-            n_features = 2 ** n_qubits
+            n_features = 2**n_qubits
             enc = AmplitudeEncoding(n_features=n_features)
             assert enc.n_qubits == n_qubits
 
@@ -316,7 +318,7 @@ class TestProperties:
         """
         enc = AmplitudeEncoding(n_features=8)
         # depth = 2^n_qubits = 2^3 = 8
-        assert enc.depth == 2 ** enc.n_qubits
+        assert enc.depth == 2**enc.n_qubits
 
     def test_properties_type(self) -> None:
         """Test that properties returns EncodingProperties instance."""
@@ -1103,7 +1105,7 @@ class TestConcurrentAccess:
         def generate_circuits(thread_id: int) -> list[Any]:
             circuits = []
             try:
-                for i in range(num_circuits_per_thread):
+                for _i in range(num_circuits_per_thread):
                     x = np.random.randn(4)
                     if HAS_PENNYLANE:
                         circuit = enc.get_circuit(x, backend="pennylane")
@@ -1113,7 +1115,9 @@ class TestConcurrentAccess:
             return circuits
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [executor.submit(generate_circuits, i) for i in range(num_threads)]
+            futures = [
+                executor.submit(generate_circuits, i) for i in range(num_threads)
+            ]
             results = [f.result() for f in as_completed(futures)]
 
         assert len(errors) == 0, f"Thread errors: {errors}"
@@ -1152,10 +1156,7 @@ class TestConcurrentAccess:
         results: list[Any] = []
         errors: list[Exception] = []
 
-        inputs = [
-            np.array([0.1 * i, 0.2 * i, 0.3 * i, 0.4 * i])
-            for i in range(1, 11)
-        ]
+        inputs = [np.array([0.1 * i, 0.2 * i, 0.3 * i, 0.4 * i]) for i in range(1, 11)]
 
         def generate_circuit(x: np.ndarray) -> None:
             try:
@@ -1165,10 +1166,7 @@ class TestConcurrentAccess:
             except Exception as e:
                 errors.append(e)
 
-        threads = [
-            threading.Thread(target=generate_circuit, args=(x,))
-            for x in inputs
-        ]
+        threads = [threading.Thread(target=generate_circuit, args=(x,)) for x in inputs]
         for t in threads:
             t.start()
         for t in threads:
@@ -1417,10 +1415,14 @@ class TestSlowSimulation:
 
         # Per-index probability match
         np.testing.assert_allclose(
-            np.abs(sv_pl) ** 2, np.abs(sv_qk) ** 2, atol=1e-6,
+            np.abs(sv_pl) ** 2,
+            np.abs(sv_qk) ** 2,
+            atol=1e-6,
         )
         np.testing.assert_allclose(
-            np.abs(sv_pl) ** 2, np.abs(sv_cirq) ** 2, atol=1e-6,
+            np.abs(sv_pl) ** 2,
+            np.abs(sv_cirq) ** 2,
+            atol=1e-6,
         )
 
     @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
@@ -1509,7 +1511,6 @@ class TestSlowSimulation:
         At exactly 12 qubits (4096 features), the unitary matrix is 4096x4096
         complex128 elements = 256 MB, which triggers the warning.
         """
-        import warnings as warnings_module
 
         enc = AmplitudeEncoding(n_features=4096)
         assert enc.n_qubits == 12
@@ -1539,7 +1540,8 @@ class TestSlowSimulation:
             enc.get_circuit(x, backend="cirq")
 
             memory_warnings = [
-                w for w in caught_warnings
+                w
+                for w in caught_warnings
                 if issubclass(w.category, UserWarning)
                 and "Cirq backend memory warning" in str(w.message)
             ]
@@ -1698,9 +1700,13 @@ class TestGateCountBreakdown:
         breakdown = enc.gate_count_breakdown()
 
         expected_keys = {
-            "rotation_gates", "cnot",
-            "total_single_qubit", "total_two_qubit", "total",
-            "state_dimension", "is_estimate",
+            "rotation_gates",
+            "cnot",
+            "total_single_qubit",
+            "total_two_qubit",
+            "total",
+            "state_dimension",
+            "is_estimate",
         }
         assert expected_keys == set(breakdown.keys())
 
@@ -1795,9 +1801,9 @@ class TestGateCountBreakdown:
         for i in range(1, len(counts)):
             # total = 2 * state_dim - 2, so ratio is ~2 for large state_dim
             ratio = counts[i] / counts[i - 1]
-            assert ratio > 1.5, (
-                f"Gate count did not scale: {counts[i-1]} -> {counts[i]}"
-            )
+            assert (
+                ratio > 1.5
+            ), f"Gate count did not scale: {counts[i-1]} -> {counts[i]}"
 
 
 # =============================================================================
@@ -1825,14 +1831,20 @@ class TestResourceSummary:
         summary = enc.resource_summary()
 
         expected_keys = {
-            "n_features", "n_qubits", "state_dimension",
-            "compression_ratio", "padding_zeros",
-            "depth", "normalize",
+            "n_features",
+            "n_qubits",
+            "state_dimension",
+            "compression_ratio",
+            "padding_zeros",
+            "depth",
+            "normalize",
             "theoretical_gate_count",
             "theoretical_single_qubit_gates",
             "theoretical_two_qubit_gates",
-            "is_entangling", "simulability",
-            "cirq_unitary_memory_bytes", "cirq_unitary_memory_human",
+            "is_entangling",
+            "simulability",
+            "cirq_unitary_memory_bytes",
+            "cirq_unitary_memory_human",
             "backend_notes",
         }
         assert expected_keys == set(summary.keys())

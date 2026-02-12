@@ -46,7 +46,6 @@ from encoding_atlas.core.protocols import (
     DataDependentResourceAnalyzable,
     DataTransformable,
     EntanglementQueryable,
-    ResourceAnalyzable,
 )
 
 if TYPE_CHECKING:
@@ -109,11 +108,14 @@ def batch_data_4d() -> NDArray[np.integer]:
     - [1, 1, 1, 1] -> |1111> (all ones)
     - [0, 0, 0, 0] -> |0000> (all zeros)
     """
-    return np.array([
-        [1, 0, 1, 0],
-        [1, 1, 1, 1],
-        [0, 0, 0, 0],
-    ], dtype=np.int64)
+    return np.array(
+        [
+            [1, 0, 1, 0],
+            [1, 1, 1, 1],
+            [0, 0, 0, 0],
+        ],
+        dtype=np.int64,
+    )
 
 
 @pytest.fixture
@@ -230,9 +232,9 @@ class TestProperties:
         """Test that n_qubits equals n_features (1:1 mapping)."""
         for n in [1, 2, 4, 8, 16]:
             enc = BasisEncoding(n_features=n)
-            assert enc.n_qubits == n, (
-                f"n_features={n}: expected n_qubits={n}, got {enc.n_qubits}"
-            )
+            assert (
+                enc.n_qubits == n
+            ), f"n_features={n}: expected n_qubits={n}, got {enc.n_qubits}"
 
     def test_depth_always_one(self) -> None:
         """Test that circuit depth is always 1 regardless of feature count.
@@ -382,7 +384,9 @@ class TestBinarizationBehavior:
         if HAS_QISKIT:
             circuit = enc.get_circuit(x, backend="qiskit")
             x_count = circuit.count_ops().get("x", 0)
-            assert x_count == 0, f"Expected 0 X gates for negative values, got {x_count}"
+            assert (
+                x_count == 0
+            ), f"Expected 0 X gates for negative values, got {x_count}"
 
     def test_large_positive_values_binarization(self) -> None:
         """Test that large positive values are mapped to 1."""
@@ -424,7 +428,9 @@ class TestInputValidation:
         validated = default_encoding._validate_input(binary_data_4d)
         assert validated.shape == (4,)
 
-    def test_valid_2d_input_single_sample(self, default_encoding: BasisEncoding) -> None:
+    def test_valid_2d_input_single_sample(
+        self, default_encoding: BasisEncoding
+    ) -> None:
         """Test that 2D input with single sample is flattened."""
         x = np.array([[1, 0, 1, 0]])  # Shape (1, 4)
         validated = default_encoding._validate_input(x)
@@ -437,7 +443,9 @@ class TestInputValidation:
         with pytest.raises(ValueError, match="Expected 4 features"):
             default_encoding._validate_input(x)
 
-    def test_wrong_feature_count_too_many(self, default_encoding: BasisEncoding) -> None:
+    def test_wrong_feature_count_too_many(
+        self, default_encoding: BasisEncoding
+    ) -> None:
         """Test that wrong feature count (too many) raises ValueError."""
         x = np.array([1, 0, 1, 0, 1, 0])  # 6 features, expected 4
         with pytest.raises(ValueError, match="Expected 4 features"):
@@ -549,7 +557,9 @@ class TestPennyLaneBackend:
         assert len(circuits) == 3
         assert all(callable(c) for c in circuits)
 
-    def test_all_zeros_produces_ground_state(self, default_encoding: BasisEncoding) -> None:
+    def test_all_zeros_produces_ground_state(
+        self, default_encoding: BasisEncoding
+    ) -> None:
         """Test that all-zeros input produces |0000> ground state."""
         x = np.array([0, 0, 0, 0])
         circuit_fn = default_encoding.get_circuit(x, backend="pennylane")
@@ -564,7 +574,9 @@ class TestPennyLaneBackend:
         # |0000> state: amplitude at index 0 should be 1
         assert np.isclose(np.abs(state[0]) ** 2, 1.0, atol=1e-10)
 
-    def test_all_ones_produces_all_ones_state(self, default_encoding: BasisEncoding) -> None:
+    def test_all_ones_produces_all_ones_state(
+        self, default_encoding: BasisEncoding
+    ) -> None:
         """Test that all-ones input produces |1111> state."""
         x = np.array([1, 1, 1, 1])
         circuit_fn = default_encoding.get_circuit(x, backend="pennylane")
@@ -749,7 +761,9 @@ class TestCirqBackend:
         moments = list(circuit.moments)
         assert len(moments) == 1, f"Expected 1 moment, got {len(moments)}"
 
-    def test_circuit_produces_correct_state(self, default_encoding: BasisEncoding) -> None:
+    def test_circuit_produces_correct_state(
+        self, default_encoding: BasisEncoding
+    ) -> None:
         """Test that circuit produces correct state vector."""
         x = np.array([1, 0, 1, 0])
         circuit = default_encoding.get_circuit(x, backend="cirq")
@@ -865,9 +879,9 @@ class TestMathematicalCorrectness:
 
             state = circuit()
             norm = np.sum(np.abs(state) ** 2)
-            assert np.isclose(norm, 1.0, atol=1e-10), (
-                f"State not normalized for input {x}: norm = {norm}"
-            )
+            assert np.isclose(
+                norm, 1.0, atol=1e-10
+            ), f"State not normalized for input {x}: norm = {norm}"
 
 
 # =============================================================================
@@ -1276,7 +1290,7 @@ class TestConcurrentAccess:
         def generate_circuits(thread_id: int) -> list[Any]:
             circuits = []
             try:
-                for i in range(num_circuits_per_thread):
+                for _i in range(num_circuits_per_thread):
                     x = np.random.randint(0, 2, size=4)
                     circuit = enc.get_circuit(x, backend="qiskit")
                     circuits.append(circuit)
@@ -1285,7 +1299,9 @@ class TestConcurrentAccess:
             return circuits
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [executor.submit(generate_circuits, i) for i in range(num_threads)]
+            futures = [
+                executor.submit(generate_circuits, i) for i in range(num_threads)
+            ]
             results = [f.result() for f in as_completed(futures)]
 
         # No errors should have occurred
@@ -1314,7 +1330,9 @@ class TestConcurrentAccess:
                 errors.append(e)
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [executor.submit(access_properties, i) for i in range(num_threads)]
+            futures = [
+                executor.submit(access_properties, i) for i in range(num_threads)
+            ]
             for f in as_completed(futures):
                 f.result()
 
@@ -1407,17 +1425,17 @@ class TestCustomThreshold:
     def test_threshold_nan_rejected(self) -> None:
         """Test that NaN threshold raises ValueError."""
         with pytest.raises(ValueError, match="finite"):
-            BasisEncoding(n_features=4, threshold=float('nan'))
+            BasisEncoding(n_features=4, threshold=float("nan"))
 
     def test_threshold_positive_inf_rejected(self) -> None:
         """Test that positive infinity threshold raises ValueError."""
         with pytest.raises(ValueError, match="finite"):
-            BasisEncoding(n_features=4, threshold=float('inf'))
+            BasisEncoding(n_features=4, threshold=float("inf"))
 
     def test_threshold_negative_inf_rejected(self) -> None:
         """Test that negative infinity threshold raises ValueError."""
         with pytest.raises(ValueError, match="finite"):
-            BasisEncoding(n_features=4, threshold=float('-inf'))
+            BasisEncoding(n_features=4, threshold=float("-inf"))
 
     def test_threshold_bool_rejected(self) -> None:
         """Test that boolean threshold raises TypeError."""
@@ -1603,15 +1621,19 @@ class TestCustomThreshold:
     def test_binarize_batch_custom_threshold(self) -> None:
         """Test binarize() with batch input and custom threshold."""
         enc = BasisEncoding(n_features=3, threshold=0.0)
-        X = np.array([
-            [-1.0, 0.0, 1.0],
-            [0.5, -0.5, 0.1],
-        ])
+        X = np.array(
+            [
+                [-1.0, 0.0, 1.0],
+                [0.5, -0.5, 0.1],
+            ]
+        )
         binary = enc.binarize(X)
-        expected = np.array([
-            [0, 0, 1],
-            [1, 0, 1],
-        ])
+        expected = np.array(
+            [
+                [0, 0, 1],
+                [1, 0, 1],
+            ]
+        )
         np.testing.assert_array_equal(binary, expected)
 
     # =========================================================================
@@ -1885,8 +1907,10 @@ class TestCustomThreshold:
                 pass  # States exist and are valid
 
         # Verify at least some states are different
-        unique_states = len(set(tuple(np.round(np.abs(s) ** 2, 5)) for s in states))
-        assert unique_states >= 2, "Different thresholds should produce different states"
+        unique_states = len({tuple(np.round(np.abs(s) ** 2, 5)) for s in states})
+        assert (
+            unique_states >= 2
+        ), "Different thresholds should produce different states"
 
 
 # =============================================================================
@@ -1972,9 +1996,9 @@ class TestSlowSimulation:
             for j in range(i + 1, len(states)):
                 # Inner product of orthogonal basis states should be 0
                 overlap = np.abs(np.vdot(states[i], states[j])) ** 2
-                assert overlap < 0.01, (
-                    f"States {i} and {j} should be orthogonal, overlap={overlap}"
-                )
+                assert (
+                    overlap < 0.01
+                ), f"States {i} and {j} should be orthogonal, overlap={overlap}"
 
     @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
     def test_reproducibility(self) -> None:
@@ -2030,12 +2054,14 @@ class TestSlowSimulation:
     def test_batch_consistency_across_backends(self) -> None:
         """Test that batch processing is consistent across backends."""
         enc = BasisEncoding(n_features=4)
-        batch = np.array([
-            [0, 0, 0, 0],
-            [1, 0, 0, 0],
-            [1, 1, 0, 0],
-            [1, 1, 1, 1],
-        ])
+        batch = np.array(
+            [
+                [0, 0, 0, 0],
+                [1, 0, 0, 0],
+                [1, 1, 0, 0],
+                [1, 1, 1, 1],
+            ]
+        )
 
         pl_circuits = enc.get_circuits(batch, backend="pennylane")
         qk_circuits = enc.get_circuits(batch, backend="qiskit")
@@ -2173,9 +2199,7 @@ class TestTransformInput:
         """Test that transform_input returns identical output to binarize."""
         enc = BasisEncoding(n_features=4)
         x = np.array([0.1, 0.9, 0.5, 0.51])
-        np.testing.assert_array_equal(
-            enc.transform_input(x), enc.binarize(x)
-        )
+        np.testing.assert_array_equal(enc.transform_input(x), enc.binarize(x))
 
     def test_transform_binary_data_idempotent(self) -> None:
         """Test that transform_input is idempotent for binary data.
@@ -2325,6 +2349,4 @@ class TestProtocolConformance:
 
         x = np.array([-0.5, 0.0, 0.5, 1.0])
         assert enc.actual_gate_count(x) == 2
-        np.testing.assert_array_equal(
-            enc.transform_input(x), np.array([0, 0, 1, 1])
-        )
+        np.testing.assert_array_equal(enc.transform_input(x), np.array([0, 0, 1, 1]))

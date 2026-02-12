@@ -183,7 +183,7 @@ _logger = logging.getLogger(__name__)
 # Public API
 # =============================================================================
 
-__all__ = ['HardwareEfficientEncoding']
+__all__ = ["HardwareEfficientEncoding"]
 
 # =============================================================================
 # Module-Level Constants
@@ -390,7 +390,7 @@ class HardwareEfficientEncoding(BaseEncoding):
     _VALID_ROTATIONS: frozenset[str] = frozenset({"X", "Y", "Z"})
     _VALID_ENTANGLEMENTS: frozenset[str] = frozenset({"linear", "circular", "full"})
 
-    __slots__ = ('reps', 'rotation', 'entanglement', '_entanglement_pairs')
+    __slots__ = ("reps", "rotation", "entanglement", "_entanglement_pairs")
 
     def __init__(
         self,
@@ -665,7 +665,7 @@ class HardwareEfficientEncoding(BaseEncoding):
         _logger.debug(
             "Generating circuit: backend=%r, input_shape=%s",
             backend,
-            getattr(x, 'shape', f'len={len(x)}'),
+            getattr(x, "shape", f"len={len(x)}"),
         )
 
         x_validated = self._validate_input(x)
@@ -835,8 +835,7 @@ class HardwareEfficientEncoding(BaseEncoding):
             # The batch was already validated above, so we can safely skip
             # per-sample validation for better performance
             circuits = [
-                self._get_circuit_from_validated(x, backend)
-                for x in X_validated
+                self._get_circuit_from_validated(x, backend) for x in X_validated
             ]
 
             _logger.debug(

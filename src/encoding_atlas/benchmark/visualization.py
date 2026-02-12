@@ -1,9 +1,9 @@
 """Visualization tools for benchmark results."""
 
-from typing import Dict, List, Any
+from typing import Any
 
 
-def plot_accuracy_comparison(results: Dict[str, List[float]]) -> Any:
+def plot_accuracy_comparison(results: dict[str, list[float]]) -> Any:
     """Plot accuracy comparison bar chart."""
     try:
         import matplotlib.pyplot as plt

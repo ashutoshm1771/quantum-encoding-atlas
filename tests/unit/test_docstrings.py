@@ -14,10 +14,8 @@ Run with: pytest tests/unit/test_docstrings.py -v
 
 from __future__ import annotations
 
-import ast
 import inspect
 import re
-from typing import Any, Callable, Dict, List, Set, Tuple, Type
 
 import numpy as np
 import pytest
@@ -39,13 +37,12 @@ from encoding_atlas import (
 from encoding_atlas.core.base import BaseEncoding
 from encoding_atlas.core.registry import get_encoding, list_encodings
 
-
 # =============================================================================
 # All Encoding Classes for Testing
 # =============================================================================
 
 
-ALL_ENCODING_CLASSES: List[Type[BaseEncoding]] = [
+ALL_ENCODING_CLASSES: list[type[BaseEncoding]] = [
     AngleEncoding,
     AmplitudeEncoding,
     BasisEncoding,
@@ -66,7 +63,7 @@ ALL_ENCODING_CLASSES: List[Type[BaseEncoding]] = [
 # =============================================================================
 
 
-def get_public_methods(cls: Type) -> List[str]:
+def get_public_methods(cls: type) -> list[str]:
     """Get names of public methods (not starting with _)."""
     return [
         name
@@ -75,7 +72,7 @@ def get_public_methods(cls: Type) -> List[str]:
     ]
 
 
-def get_public_properties(cls: Type) -> List[str]:
+def get_public_properties(cls: type) -> list[str]:
     """Get names of public properties."""
     return [
         name
@@ -105,7 +102,7 @@ def has_examples_section(docstring: str) -> bool:
     return "Examples" in docstring or "Example" in docstring
 
 
-def extract_code_examples(docstring: str) -> List[str]:
+def extract_code_examples(docstring: str) -> list[str]:
     """Extract code examples from docstring.
 
     Looks for:
@@ -115,11 +112,11 @@ def extract_code_examples(docstring: str) -> List[str]:
     if not docstring:
         return []
 
-    examples: List[str] = []
+    examples: list[str] = []
 
     # Extract >>> examples
     lines = docstring.split("\n")
-    current_example: List[str] = []
+    current_example: list[str] = []
     in_example = False
 
     for line in lines:
@@ -168,31 +165,28 @@ class TestDocstringPresence:
     """Tests for presence of docstrings."""
 
     @pytest.mark.parametrize("encoding_cls", ALL_ENCODING_CLASSES)
-    def test_class_has_docstring(self, encoding_cls: Type[BaseEncoding]) -> None:
+    def test_class_has_docstring(self, encoding_cls: type[BaseEncoding]) -> None:
         """Test that encoding class has a docstring."""
         docstring = encoding_cls.__doc__
         assert docstring is not None, f"{encoding_cls.__name__} missing class docstring"
-        assert len(docstring.strip()) > 10, (
-            f"{encoding_cls.__name__} docstring too short"
-        )
+        assert (
+            len(docstring.strip()) > 10
+        ), f"{encoding_cls.__name__} docstring too short"
 
     @pytest.mark.parametrize("encoding_cls", ALL_ENCODING_CLASSES)
-    def test_init_has_docstring(self, encoding_cls: Type[BaseEncoding]) -> None:
+    def test_init_has_docstring(self, encoding_cls: type[BaseEncoding]) -> None:
         """Test that __init__ has a docstring."""
         docstring = encoding_cls.__init__.__doc__
         # __init__ may inherit docstring from base class
         # Check if class-level docstring covers parameters
         class_doc = encoding_cls.__doc__ or ""
         has_param_docs = (
-            (docstring and len(docstring.strip()) > 10)
-            or has_parameters_section(class_doc)
-        )
+            docstring and len(docstring.strip()) > 10
+        ) or has_parameters_section(class_doc)
         assert has_param_docs, f"{encoding_cls.__name__}.__init__ missing documentation"
 
     @pytest.mark.parametrize("encoding_cls", ALL_ENCODING_CLASSES)
-    def test_get_circuit_has_docstring(
-        self, encoding_cls: Type[BaseEncoding]
-    ) -> None:
+    def test_get_circuit_has_docstring(self, encoding_cls: type[BaseEncoding]) -> None:
         """Test that get_circuit method has a docstring."""
         method = getattr(encoding_cls, "get_circuit", None)
         if method is None:
@@ -200,14 +194,12 @@ class TestDocstringPresence:
 
         # May inherit from base class
         docstring = method.__doc__
-        assert docstring is not None, (
-            f"{encoding_cls.__name__}.get_circuit missing docstring"
-        )
+        assert (
+            docstring is not None
+        ), f"{encoding_cls.__name__}.get_circuit missing docstring"
 
     @pytest.mark.parametrize("encoding_cls", ALL_ENCODING_CLASSES)
-    def test_properties_have_docstrings(
-        self, encoding_cls: Type[BaseEncoding]
-    ) -> None:
+    def test_properties_have_docstrings(self, encoding_cls: type[BaseEncoding]) -> None:
         """Test that public properties have docstrings."""
         missing = []
 
@@ -216,9 +208,8 @@ class TestDocstringPresence:
             if prop is None:
                 continue
 
-            if isinstance(prop, property):
-                if not prop.fget.__doc__:
-                    missing.append(name)
+            if isinstance(prop, property) and not prop.fget.__doc__:
+                missing.append(name)
 
         # Allow some missing (may be inherited with docs)
         if len(missing) > 2:
@@ -235,7 +226,7 @@ class TestDocstringCompleteness:
 
     @pytest.mark.parametrize("encoding_cls", ALL_ENCODING_CLASSES)
     def test_class_docstring_describes_encoding(
-        self, encoding_cls: Type[BaseEncoding]
+        self, encoding_cls: type[BaseEncoding]
     ) -> None:
         """Test that class docstring describes what the encoding does."""
         docstring = encoding_cls.__doc__ or ""
@@ -252,7 +243,7 @@ class TestDocstringCompleteness:
 
     @pytest.mark.parametrize("encoding_cls", ALL_ENCODING_CLASSES)
     def test_class_docstring_has_parameters(
-        self, encoding_cls: Type[BaseEncoding]
+        self, encoding_cls: type[BaseEncoding]
     ) -> None:
         """Test that class docstring documents parameters."""
         docstring = encoding_cls.__doc__ or ""
@@ -264,13 +255,13 @@ class TestDocstringCompleteness:
             or "Parameters" in docstring
         )
 
-        assert has_params, (
-            f"{encoding_cls.__name__} docstring missing parameter documentation"
-        )
+        assert (
+            has_params
+        ), f"{encoding_cls.__name__} docstring missing parameter documentation"
 
     @pytest.mark.parametrize("encoding_cls", ALL_ENCODING_CLASSES)
     def test_docstring_mentions_backend_support(
-        self, encoding_cls: Type[BaseEncoding]
+        self, encoding_cls: type[BaseEncoding]
     ) -> None:
         """Test that docstring mentions backend support."""
         docstring = encoding_cls.__doc__ or ""
@@ -295,17 +286,13 @@ class TestDocstringExamples:
     """Tests for docstring example code."""
 
     @pytest.mark.parametrize("encoding_cls", ALL_ENCODING_CLASSES)
-    def test_class_has_usage_example(
-        self, encoding_cls: Type[BaseEncoding]
-    ) -> None:
+    def test_class_has_usage_example(self, encoding_cls: type[BaseEncoding]) -> None:
         """Test that class docstring has a usage example."""
         docstring = encoding_cls.__doc__ or ""
 
         # Check for example section or code
         has_example = (
-            has_examples_section(docstring)
-            or ">>>" in docstring
-            or "```" in docstring
+            has_examples_section(docstring) or ">>>" in docstring or "```" in docstring
         )
 
         # Soft requirement - many encodings may not have examples yet
@@ -330,7 +317,7 @@ circuit = enc.get_circuit(x, backend='pennylane')
 
     @pytest.mark.parametrize("encoding_cls", ALL_ENCODING_CLASSES[:4])
     def test_encoding_can_be_used_as_documented(
-        self, encoding_cls: Type[BaseEncoding]
+        self, encoding_cls: type[BaseEncoding]
     ) -> None:
         """Test that encodings work as expected based on docs."""
         # Create encoding
@@ -366,7 +353,6 @@ class TestModuleDocumentation:
 
     def test_core_module_has_docstring(self) -> None:
         """Test that core module has a docstring."""
-        import encoding_atlas.core
 
         # Core module should have some documentation
         # May be in __init__.py or individual modules
@@ -398,7 +384,7 @@ class TestTypeHints:
     """Tests for type hint consistency."""
 
     @pytest.mark.parametrize("encoding_cls", ALL_ENCODING_CLASSES)
-    def test_init_has_type_hints(self, encoding_cls: Type[BaseEncoding]) -> None:
+    def test_init_has_type_hints(self, encoding_cls: type[BaseEncoding]) -> None:
         """Test that __init__ has type hints."""
         init = encoding_cls.__init__
         hints = getattr(init, "__annotations__", {})
@@ -413,7 +399,7 @@ class TestTypeHints:
 
     @pytest.mark.parametrize("encoding_cls", ALL_ENCODING_CLASSES)
     def test_get_circuit_has_return_hint(
-        self, encoding_cls: Type[BaseEncoding]
+        self, encoding_cls: type[BaseEncoding]
     ) -> None:
         """Test that get_circuit has return type hint."""
         method = getattr(encoding_cls, "get_circuit", None)
@@ -429,7 +415,6 @@ class TestTypeHints:
 
     def test_registry_functions_have_hints(self) -> None:
         """Test that registry functions have type hints."""
-        from encoding_atlas.core.registry import get_encoding, list_encodings
 
         # list_encodings
         hints = getattr(list_encodings, "__annotations__", {})
@@ -452,9 +437,9 @@ class TestAPIConsistency:
         """Test that all encodings document n_features parameter."""
         for cls in ALL_ENCODING_CLASSES:
             docstring = cls.__doc__ or ""
-            assert "n_features" in docstring or "features" in docstring.lower(), (
-                f"{cls.__name__} doesn't document n_features"
-            )
+            assert (
+                "n_features" in docstring or "features" in docstring.lower()
+            ), f"{cls.__name__} doesn't document n_features"
 
     def test_all_encodings_have_consistent_api(self) -> None:
         """Test that all encodings have consistent public API."""
@@ -463,21 +448,21 @@ class TestAPIConsistency:
         for cls in ALL_ENCODING_CLASSES:
             enc = cls(n_features=4)
             for attr in required_attrs:
-                assert hasattr(enc, attr), (
-                    f"{cls.__name__} missing required attribute: {attr}"
-                )
+                assert hasattr(
+                    enc, attr
+                ), f"{cls.__name__} missing required attribute: {attr}"
 
     def test_get_circuit_consistent_signature(self) -> None:
         """Test that get_circuit has consistent signature across encodings."""
         for cls in ALL_ENCODING_CLASSES:
-            method = getattr(cls, "get_circuit")
+            method = cls.get_circuit
             sig = inspect.signature(method)
             params = list(sig.parameters.keys())
 
             # Should have 'x' and 'backend' parameters
-            assert "x" in params or len(params) >= 2, (
-                f"{cls.__name__}.get_circuit missing 'x' parameter"
-            )
+            assert (
+                "x" in params or len(params) >= 2
+            ), f"{cls.__name__}.get_circuit missing 'x' parameter"
 
     def test_all_encodings_document_backends(self) -> None:
         """Test that encodings mention supported backends."""
@@ -508,7 +493,7 @@ class TestDocumentationQuality:
 
     def test_average_docstring_length(self) -> None:
         """Test that average docstring length meets minimum."""
-        lengths: List[int] = []
+        lengths: list[int] = []
 
         for cls in ALL_ENCODING_CLASSES:
             docstring = cls.__doc__ or ""
@@ -517,13 +502,13 @@ class TestDocumentationQuality:
         avg_length = sum(lengths) / len(lengths)
 
         # Average should be at least 200 characters
-        assert avg_length > 200, (
-            f"Average docstring length too short: {avg_length:.0f} chars"
-        )
+        assert (
+            avg_length > 200
+        ), f"Average docstring length too short: {avg_length:.0f} chars"
 
     def test_no_todo_in_docstrings(self) -> None:
         """Test that docstrings don't have unresolved TODOs."""
-        todos_found: List[Tuple[str, str]] = []
+        todos_found: list[tuple[str, str]] = []
 
         for cls in ALL_ENCODING_CLASSES:
             docstring = cls.__doc__ or ""
@@ -545,9 +530,9 @@ class TestDocumentationQuality:
         for cls in ALL_ENCODING_CLASSES:
             docstring = (cls.__doc__ or "").upper()
             for placeholder in placeholders:
-                assert placeholder not in docstring, (
-                    f"{cls.__name__} has placeholder docstring"
-                )
+                assert (
+                    placeholder not in docstring
+                ), f"{cls.__name__} has placeholder docstring"
 
     def test_docstrings_grammatically_correct(self) -> None:
         """Basic test that docstrings start with capital and end properly."""
@@ -557,11 +542,11 @@ class TestDocumentationQuality:
 
             if first_line:
                 # Should start with capital letter
-                assert first_line[0].isupper() or first_line[0] == '"', (
-                    f"{cls.__name__} docstring should start with capital"
-                )
+                assert (
+                    first_line[0].isupper() or first_line[0] == '"'
+                ), f"{cls.__name__} docstring should start with capital"
 
                 # Should end with period
-                assert first_line.rstrip().endswith((".","!")), (
-                    f"{cls.__name__} docstring first line should end with period"
-                )
+                assert first_line.rstrip().endswith(
+                    (".", "!")
+                ), f"{cls.__name__} docstring first line should end with period"

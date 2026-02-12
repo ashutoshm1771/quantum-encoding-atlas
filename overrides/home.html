@@ -1,0 +1,282 @@
+{% extends "main.html" %}
+
+{% block tabs %}
+  {{ super() }}
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="qea-hero">
+  <div class="qea-hero__version">v0.1 &middot; Open Source</div>
+  <h1 class="qea-hero__title">Quantum Encoding Atlas</h1>
+  <p class="qea-hero__subtitle">
+    A unified Python library for quantum data encodings.
+    16 encoding methods, 3 backends, and built-in analysis tools
+    for expressibility, entanglement, and trainability.
+  </p>
+  <div class="qea-hero__actions">
+    <a href="quickstart/" class="qea-btn--primary">
+      Get Started &rarr;
+    </a>
+    <a href="encodings/" class="qea-btn--secondary">
+      Explore Encodings
+    </a>
+    <a href="https://github.com/ashutoshm1771/quantum-encoding-atlas" class="qea-btn--secondary" target="_blank" rel="noopener">
+      GitHub &nearr;
+    </a>
+    <a href="https://pypi.org/project/encoding-atlas/" class="qea-btn--secondary" target="_blank" rel="noopener">
+      PyPI &nearr;
+    </a>
+  </div>
+  <div class="qea-hero__install">
+    <span class="qea-prompt">$</span>
+    <code id="qea-install-cmd">pip install encoding-atlas</code>
+    <button class="qea-copy-btn" onclick="navigator.clipboard.writeText('pip install encoding-atlas').then(function(){var b=document.querySelector('.qea-copy-btn');b.classList.add('copied');setTimeout(function(){b.classList.remove('copied')},1500)})" title="Copy to clipboard" aria-label="Copy to clipboard">
+      <svg class="qea-copy-icon" viewBox="0 0 24 24" width="18" height="18"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <svg class="qea-check-icon" viewBox="0 0 24 24" width="18" height="18"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+    </button>
+  </div>
+</section>
+
+<!-- Stats -->
+<section class="qea-stats">
+  <div class="qea-stat">
+    <div class="qea-stat__number">16</div>
+    <div class="qea-stat__label">Encodings</div>
+  </div>
+</section>
+
+<!-- Feature Cards -->
+<section class="qea-features">
+  <h2 class="qea-features__title">Why Quantum Encoding Atlas?</h2>
+  <p class="qea-features__subtitle">
+    Everything you need to encode classical data into quantum states &mdash; from research prototyping to production benchmarking.
+  </p>
+  <div class="qea-features__grid">
+
+    <div class="qea-feature-card">
+      <span class="qea-feature-card__icon">&#9883;</span>
+      <div class="qea-feature-card__title">16 Encoding Methods</div>
+      <p class="qea-feature-card__desc">
+        From simple angle rotations to equivariant feature maps, with a consistent
+        API across every encoding.
+      </p>
+      <a href="encodings/" class="qea-feature-card__link">
+        Browse encodings &rarr;
+      </a>
+    </div>
+
+    <div class="qea-feature-card">
+      <span class="qea-feature-card__icon">&#9881;</span>
+      <div class="qea-feature-card__title">Multi-Backend</div>
+      <p class="qea-feature-card__desc">
+        Generate circuits for PennyLane, Qiskit, and Cirq from the same encoding object.
+        Switch backends with one parameter.
+      </p>
+      <a href="quickstart/" class="qea-feature-card__link">
+        Quick start &rarr;
+      </a>
+    </div>
+
+    <div class="qea-feature-card">
+      <span class="qea-feature-card__icon">&#128202;</span>
+      <div class="qea-feature-card__title">Analysis Tools</div>
+      <p class="qea-feature-card__desc">
+        Compute expressibility, entanglement capability, trainability gradients,
+        and resource costs automatically.
+      </p>
+      <a href="concepts/encoding-properties/" class="qea-feature-card__link">
+        Learn more &rarr;
+      </a>
+    </div>
+
+    <div class="qea-feature-card">
+      <span class="qea-feature-card__icon">&#129517;</span>
+      <div class="qea-feature-card__title">Decision Guide</div>
+      <p class="qea-feature-card__desc">
+        Not sure which encoding to use? The built-in recommendation engine
+        suggests the best encoding for your problem.
+      </p>
+      <a href="guide/which-encoding/" class="qea-feature-card__link">
+        Get recommendations &rarr;
+      </a>
+    </div>
+
+    <div class="qea-feature-card">
+      <span class="qea-feature-card__icon">&#128220;</span>
+      <div class="qea-feature-card__title">Rich Documentation</div>
+      <p class="qea-feature-card__desc">
+        Every encoding has detailed theory, circuit diagrams, mathematical formulations,
+        and code examples.
+      </p>
+      <a href="concepts/" class="qea-feature-card__link">
+        Read the concepts &rarr;
+      </a>
+    </div>
+
+    <div class="qea-feature-card">
+      <span class="qea-feature-card__icon">&#9878;</span>
+      <div class="qea-feature-card__title">Benchmarking Suite</div>
+      <p class="qea-feature-card__desc">
+        Compare encodings head-to-head on real datasets with statistical rigor.
+        Visualize tradeoffs between cost and performance.
+      </p>
+      <a href="tutorials/benchmarking/" class="qea-feature-card__link">
+        Start benchmarking &rarr;
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- Workflow -->
+<section class="qea-workflow">
+  <div class="qea-workflow__inner">
+    <h2 class="qea-workflow__title">How It Works</h2>
+    <div class="qea-workflow__steps">
+      <div class="qea-workflow__step">
+        <div class="qea-workflow__step-num">1</div>
+        <div class="qea-workflow__step-title">Choose</div>
+        <div class="qea-workflow__step-desc">
+          Pick an encoding from our catalog or let the decision guide recommend one
+        </div>
+      </div>
+      <div class="qea-workflow__step">
+        <div class="qea-workflow__step-num">2</div>
+        <div class="qea-workflow__step-title">Encode</div>
+        <div class="qea-workflow__step-desc">
+          Create the encoding with a unified API and generate quantum circuits
+        </div>
+      </div>
+      <div class="qea-workflow__step">
+        <div class="qea-workflow__step-num">3</div>
+        <div class="qea-workflow__step-title">Analyze</div>
+        <div class="qea-workflow__step-desc">
+          Inspect expressibility, entanglement, trainability, and resource costs
+        </div>
+      </div>
+      <div class="qea-workflow__step">
+        <div class="qea-workflow__step-num">4</div>
+        <div class="qea-workflow__step-title">Compare</div>
+        <div class="qea-workflow__step-desc">
+          Benchmark against alternatives and visualize the tradeoff landscape
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Encoding Showcase -->
+<section class="qea-showcase">
+  <h2 class="qea-showcase__title">Encoding Catalog</h2>
+  <p class="qea-showcase__subtitle">
+    16 production-ready encodings covering simple rotations, kernel methods, variational circuits, and symmetry-preserving maps.
+  </p>
+  <div class="qea-showcase__grid">
+
+    <a href="encodings/angle/angle_encoding/" class="qea-encoding-card">
+      <div class="qea-encoding-card__name">Angle Encoding</div>
+      <div class="qea-encoding-card__class">AngleEncoding</div>
+      <div class="qea-encoding-card__desc">Single-qubit rotations for baselines and shallow circuits</div>
+      <div class="qea-encoding-card__badges">
+        <span class="qea-badge qea-badge--simulable">Simulable</span>
+      </div>
+    </a>
+
+    <a href="encodings/amplitude/amplitude_encoding/" class="qea-encoding-card">
+      <div class="qea-encoding-card__name">Amplitude Encoding</div>
+      <div class="qea-encoding-card__class">AmplitudeEncoding</div>
+      <div class="qea-encoding-card__desc">Encode data into state amplitudes for qubit-limited regimes</div>
+      <div class="qea-encoding-card__badges">
+        <span class="qea-badge qea-badge--entangling">Entangling</span>
+      </div>
+    </a>
+
+    <a href="encodings/iqp/iqp_encoding/" class="qea-encoding-card">
+      <div class="qea-encoding-card__name">IQP Encoding</div>
+      <div class="qea-encoding-card__class">IQPEncoding</div>
+      <div class="qea-encoding-card__desc">Instantaneous Quantum Polynomial circuits with provable hardness</div>
+      <div class="qea-encoding-card__badges">
+        <span class="qea-badge qea-badge--entangling">Entangling</span>
+      </div>
+    </a>
+
+    <a href="encodings/data_reuploading/data_reuploading/" class="qea-encoding-card">
+      <div class="qea-encoding-card__name">Data Re-uploading</div>
+      <div class="qea-encoding-card__class">DataReuploading</div>
+      <div class="qea-encoding-card__desc">Universal approximation through repeated data injection</div>
+      <div class="qea-encoding-card__badges">
+        <span class="qea-badge qea-badge--entangling">Entangling</span>
+        <span class="qea-badge qea-badge--variational">Variational</span>
+      </div>
+    </a>
+
+    <a href="encodings/zz_feature_map/zz_feature_map/" class="qea-encoding-card">
+      <div class="qea-encoding-card__name">ZZ Feature Map</div>
+      <div class="qea-encoding-card__class">ZZFeatureMap</div>
+      <div class="qea-encoding-card__desc">Pairwise ZZ interactions for quantum kernel methods</div>
+      <div class="qea-encoding-card__badges">
+        <span class="qea-badge qea-badge--entangling">Entangling</span>
+      </div>
+    </a>
+
+    <a href="encodings/hardware_efficient/hardware_efficient/" class="qea-encoding-card">
+      <div class="qea-encoding-card__name">Hardware Efficient</div>
+      <div class="qea-encoding-card__class">HardwareEfficientEncoding</div>
+      <div class="qea-encoding-card__desc">Optimized for NISQ hardware connectivity constraints</div>
+      <div class="qea-encoding-card__badges">
+        <span class="qea-badge qea-badge--entangling">Entangling</span>
+        <span class="qea-badge qea-badge--variational">Variational</span>
+      </div>
+    </a>
+
+    <a href="encodings/trainable/trainable_encoding/" class="qea-encoding-card">
+      <div class="qea-encoding-card__name">Trainable Encoding</div>
+      <div class="qea-encoding-card__class">TrainableEncoding</div>
+      <div class="qea-encoding-card__desc">Learnable parameters for task-adapted feature maps</div>
+      <div class="qea-encoding-card__badges">
+        <span class="qea-badge qea-badge--entangling">Entangling</span>
+        <span class="qea-badge qea-badge--variational">Variational</span>
+      </div>
+    </a>
+
+    <a href="encodings/so2_equivariant/so2_equivariant_feature_map/" class="qea-encoding-card">
+      <div class="qea-encoding-card__name">SO(2) Equivariant</div>
+      <div class="qea-encoding-card__class">SO2EquivariantFeatureMap</div>
+      <div class="qea-encoding-card__desc">Preserves continuous rotational symmetry in encoded data</div>
+      <div class="qea-encoding-card__badges">
+        <span class="qea-badge qea-badge--entangling">Entangling</span>
+        <span class="qea-badge qea-badge--equivariant">Equivariant</span>
+      </div>
+    </a>
+
+  </div>
+
+  <p style="text-align:center; margin-top: 2rem;">
+    <a href="encodings/" class="qea-feature-card__link" style="font-size: 1rem;">
+      View all 16 encodings &rarr;
+    </a>
+  </p>
+</section>
+
+<!-- Backends -->
+<section class="qea-backends">
+  <div class="qea-backends__title">Works with your favorite quantum framework</div>
+  <div class="qea-backends__logos">
+    <div class="qea-backends__logo">
+      <span>&#9889;</span> PennyLane
+    </div>
+    <div class="qea-backends__logo">
+      <span>&#9883;</span> Qiskit
+    </div>
+    <div class="qea-backends__logo">
+      <span>&#9878;</span> Cirq
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block footer %}
+  {{ super() }}
+{% endblock %}

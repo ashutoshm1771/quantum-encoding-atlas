@@ -11,11 +11,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from encoding_atlas.visualization import compare_encodings, EncodingComparison
+from encoding_atlas.visualization import EncodingComparison, compare_encodings
 from encoding_atlas.visualization.comparison import (
-    _get_encoding_data,
     _create_bar,
-    _format_text_comparison,
+    _get_encoding_data,
 )
 
 if TYPE_CHECKING:
@@ -297,7 +296,9 @@ class TestCompareEncodingsMatplotlib:
                     output="matplotlib",
                 )
 
-    def test_missing_matplotlib_raises(self, basic_encodings: list[str], monkeypatch) -> None:
+    def test_missing_matplotlib_raises(
+        self, basic_encodings: list[str], monkeypatch
+    ) -> None:
         """Test that missing matplotlib raises ImportError."""
         import sys
 
@@ -306,14 +307,17 @@ class TestCompareEncodingsMatplotlib:
         monkeypatch.setitem(sys.modules, "matplotlib.pyplot", None)
 
         # Need to reimport to trigger the check
-        from encoding_atlas.visualization import comparison
-
         # Force reimport
         import importlib
+
+        from encoding_atlas.visualization import comparison
+
         importlib.reload(comparison)
 
         # This should work (text output doesn't need matplotlib)
-        result = comparison.compare_encodings(basic_encodings, n_features=4, output="text")
+        result = comparison.compare_encodings(
+            basic_encodings, n_features=4, output="text"
+        )
         assert isinstance(result, str)
 
 
@@ -422,6 +426,6 @@ class TestRegression:
         # Most lines should start with │ or ┌ or └ or ├
         border_lines = [l for l in content_lines if l[0] in "│┌└├"]
         if border_lines:
-            widths = set(len(l) for l in border_lines)
+            widths = {len(l) for l in border_lines}
             # Allow some variation but should be mostly consistent
             assert len(widths) <= 3, f"Too many different line widths: {widths}"

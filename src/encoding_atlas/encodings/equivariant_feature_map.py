@@ -280,8 +280,8 @@ from __future__ import annotations
 import logging
 import warnings
 from abc import abstractmethod
-from typing import Any, Generic, Literal, TypedDict, TypeVar, cast
 from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Generic, Literal, TypedDict, TypeVar
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -342,17 +342,17 @@ _DEFAULT_STATISTICAL_SIGNIFICANCE: float = 0.01
 
 __all__ = [
     # Base class and implementations
-    'EquivariantFeatureMap',
-    'SO2EquivariantFeatureMap',
-    'CyclicEquivariantFeatureMap',
-    'SwapEquivariantFeatureMap',
+    "EquivariantFeatureMap",
+    "SO2EquivariantFeatureMap",
+    "CyclicEquivariantFeatureMap",
+    "SwapEquivariantFeatureMap",
     # Type definitions for gate count breakdowns
-    'SO2GateCountBreakdown',
-    'CyclicGateCountBreakdown',
-    'SwapGateCountBreakdown',
+    "SO2GateCountBreakdown",
+    "CyclicGateCountBreakdown",
+    "SwapGateCountBreakdown",
     # Type definitions for verification results
-    'EquivarianceVerificationResult',
-    'StatisticalVerificationResult',
+    "EquivarianceVerificationResult",
+    "StatisticalVerificationResult",
 ]
 
 # =============================================================================
@@ -360,7 +360,7 @@ __all__ = [
 # =============================================================================
 
 # Group element type variable (e.g., float for SO(2), int for Z_n)
-G = TypeVar('G')
+G = TypeVar("G")
 
 # =============================================================================
 # Type Definitions
@@ -531,7 +531,9 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
     __slots__ = ()
 
     @abstractmethod
-    def group_action(self, g: G, x: NDArray[np.floating[Any]]) -> NDArray[np.floating[Any]]:
+    def group_action(
+        self, g: G, x: NDArray[np.floating[Any]]
+    ) -> NDArray[np.floating[Any]]:
         """Apply group element g to input data x.
 
         This defines how the symmetry group acts on the classical input space.
@@ -662,10 +664,10 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
         import pennylane as qml
 
         # Generate circuit
-        circuit = self.get_circuit(x, backend='pennylane')
+        circuit = self.get_circuit(x, backend="pennylane")
 
         # Create a device and execute the circuit
-        dev = qml.device('default.qubit', wires=self.n_qubits)
+        dev = qml.device("default.qubit", wires=self.n_qubits)
 
         @qml.qnode(dev)
         def get_state():
@@ -735,7 +737,9 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
         x_array = self._validate_input(x)
         if x_array.ndim == 2:
             if x_array.shape[0] != 1:
-                raise ValueError("verify_equivariance requires a single sample, got batch")
+                raise ValueError(
+                    "verify_equivariance requires a single sample, got batch"
+                )
             x_array = x_array[0]
 
         # Get |ψ(x)⟩
@@ -806,7 +810,9 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
         x_array = self._validate_input(x)
         if x_array.ndim == 2:
             if x_array.shape[0] != 1:
-                raise ValueError("verify_equivariance_detailed requires a single sample")
+                raise ValueError(
+                    "verify_equivariance_detailed requires a single sample"
+                )
             x_array = x_array[0]
 
         # Get |ψ(x)⟩
@@ -825,10 +831,10 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
         is_equivariant = np.isclose(overlap, 1.0, atol=atol)
 
         return {
-            'equivariant': bool(is_equivariant),
-            'overlap': overlap,
-            'tolerance': atol,
-            'group_element': g,
+            "equivariant": bool(is_equivariant),
+            "overlap": overlap,
+            "tolerance": atol,
+            "group_element": g,
         }
 
     def verify_equivariance_on_generators(
@@ -1060,9 +1066,7 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
                 f"n_shots must be at least 100 for meaningful statistics, got {n_shots}"
             )
         if not (0 < significance < 1):
-            raise ValueError(
-                f"significance must be in (0, 1), got {significance}"
-            )
+            raise ValueError(f"significance must be in (0, 1), got {significance}")
 
         _logger.debug(
             f"Statistical verification: g={g}, n_shots={n_shots}, "
@@ -1081,14 +1085,14 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
         import pennylane as qml
 
         # Create device with shots
-        dev = qml.device('default.qubit', wires=self.n_qubits, shots=n_shots)
+        dev = qml.device("default.qubit", wires=self.n_qubits, shots=n_shots)
 
         # Circuit 1: Prepare |ψ(x)⟩, apply U(g), measure
         @qml.qnode(dev)
         def circuit_transformed() -> NDArray[np.integer[Any]]:
             """Generate samples from U(g)|ψ(x)⟩."""
             # Prepare |ψ(x)⟩
-            circuit_func = self.get_circuit(x_array, backend='pennylane')
+            circuit_func = self.get_circuit(x_array, backend="pennylane")
             circuit_func()
             # Apply U(g) as gates
             self._apply_group_unitary_as_gates(g)
@@ -1101,7 +1105,7 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
         @qml.qnode(dev)
         def circuit_direct() -> NDArray[np.integer[Any]]:
             """Generate samples from |ψ(g·x)⟩."""
-            circuit_func = self.get_circuit(gx, backend='pennylane')
+            circuit_func = self.get_circuit(gx, backend="pennylane")
             circuit_func()
             return qml.sample()
 
@@ -1113,9 +1117,7 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
         dist_transformed = self._samples_to_distribution(
             samples_transformed, self.n_qubits
         )
-        dist_direct = self._samples_to_distribution(
-            samples_direct, self.n_qubits
-        )
+        dist_direct = self._samples_to_distribution(samples_direct, self.n_qubits)
 
         # Perform chi-squared test for homogeneity
         # Add small epsilon to avoid division by zero
@@ -1151,23 +1153,24 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
             # Consider equivariant if TV distance is small
             is_equivariant = tv_distance < 0.1
             return {
-                'equivariant': is_equivariant,
-                'p_value': 1.0 - tv_distance if is_equivariant else tv_distance,
-                'test_statistic': tv_distance,
-                'significance': significance,
-                'n_shots': n_shots,
-                'group_element': g,
-                'method': 'total_variation',
-                'confidence_level': 1.0 - significance,
+                "equivariant": is_equivariant,
+                "p_value": 1.0 - tv_distance if is_equivariant else tv_distance,
+                "test_statistic": tv_distance,
+                "significance": significance,
+                "n_shots": n_shots,
+                "group_element": g,
+                "method": "total_variation",
+                "confidence_level": 1.0 - significance,
             }
 
         # Compute chi-squared statistic
         chi_squared = (
-            ((observed_transformed[valid_bins] - expected_counts[valid_bins]) ** 2
-             / expected_counts[valid_bins]).sum()
-            + ((observed_direct[valid_bins] - expected_counts[valid_bins]) ** 2
-               / expected_counts[valid_bins]).sum()
-        )
+            (observed_transformed[valid_bins] - expected_counts[valid_bins]) ** 2
+            / expected_counts[valid_bins]
+        ).sum() + (
+            (observed_direct[valid_bins] - expected_counts[valid_bins]) ** 2
+            / expected_counts[valid_bins]
+        ).sum()
 
         # Degrees of freedom: (number of valid bins - 1)
         dof = max(1, valid_bins.sum() - 1)
@@ -1175,6 +1178,7 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
         # Compute p-value using scipy's chi-squared distribution
         try:
             from scipy.stats import chi2
+
             p_value = float(1.0 - chi2.cdf(chi_squared, dof))
         except ImportError:
             # Fallback if scipy not available: use simple approximation
@@ -1194,14 +1198,14 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
         )
 
         return {
-            'equivariant': is_equivariant,
-            'p_value': p_value,
-            'test_statistic': float(chi_squared),
-            'significance': significance,
-            'n_shots': n_shots,
-            'group_element': g,
-            'method': 'chi_squared',
-            'confidence_level': 1.0 - significance,
+            "equivariant": is_equivariant,
+            "p_value": p_value,
+            "test_statistic": float(chi_squared),
+            "significance": significance,
+            "n_shots": n_shots,
+            "group_element": g,
+            "method": "chi_squared",
+            "confidence_level": 1.0 - significance,
         }
 
     def verify_equivariance_auto(
@@ -1270,7 +1274,7 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
                 f"> threshold={_EXACT_VERIFICATION_QUBIT_THRESHOLD})"
             )
             result = self.verify_equivariance_statistical(x, g, n_shots, significance)
-            return result['equivariant']
+            return result["equivariant"]
 
 
 # =============================================================================
@@ -1402,13 +1406,13 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
     _VALID_RADIAL_FUNCTIONS: frozenset[str] = frozenset({"gaussian", "uniform"})
 
     __slots__ = (
-        'max_angular_momentum',
-        'radial_function',
-        'radial_sigma',
-        'angular_momenta',
-        '_n_states',
-        '_n_qubits',
-        '_basis_map',
+        "max_angular_momentum",
+        "radial_function",
+        "radial_sigma",
+        "angular_momenta",
+        "_n_states",
+        "_n_qubits",
+        "_basis_map",
     )
 
     def __init__(
@@ -1478,7 +1482,9 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
         # Validate max_angular_momentum
         # =================================================================
         # Type check: must be integer (excluding bool)
-        if isinstance(max_angular_momentum, bool) or not isinstance(max_angular_momentum, int):
+        if isinstance(max_angular_momentum, bool) or not isinstance(
+            max_angular_momentum, int
+        ):
             raise TypeError(
                 f"max_angular_momentum must be an integer, "
                 f"got {type(max_angular_momentum).__name__}"
@@ -1539,7 +1545,9 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
         self._n_states = len(self.angular_momenta)
 
         # Number of qubits needed (at least 1 qubit)
-        self._n_qubits = max(1, int(np.ceil(np.log2(self._n_states)))) if self._n_states > 0 else 1
+        self._n_qubits = (
+            max(1, int(np.ceil(np.log2(self._n_states)))) if self._n_states > 0 else 1
+        )
 
         # Precompute basis state mapping
         self._basis_map = self._compute_angular_momentum_basis()
@@ -1601,7 +1609,9 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
         if self.max_angular_momentum == 1 and self._n_qubits == 2:
             # Spin-1 triplet states (symmetric subspace)
             basis[+1] = np.array([1, 0, 0, 0], dtype=complex)  # |00⟩
-            basis[0] = np.array([0, 1, 1, 0], dtype=complex) / np.sqrt(2)  # (|01⟩+|10⟩)/√2
+            basis[0] = np.array([0, 1, 1, 0], dtype=complex) / np.sqrt(
+                2
+            )  # (|01⟩+|10⟩)/√2
             basis[-1] = np.array([0, 0, 0, 1], dtype=complex)  # |11⟩
         else:
             # General case: use standard basis ordering
@@ -1650,7 +1660,7 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
             # For very large radii, all amplitudes may underflow to 0
             # Fall back to uniform distribution to maintain valid quantum state
             uniform_amp = 1.0 / np.sqrt(len(amplitudes))
-            return {m: uniform_amp for m in amplitudes}
+            return dict.fromkeys(amplitudes, uniform_amp)
         return {m: amplitudes[m] / norm for m in amplitudes}
 
     def _encode_state(
@@ -1865,7 +1875,9 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
         x_array = self._validate_input(x)
         if x_array.ndim == 2:
             if x_array.shape[0] != 1:
-                raise ValueError("get_circuit requires a single sample, use get_circuits for batches")
+                raise ValueError(
+                    "get_circuit requires a single sample, use get_circuits for batches"
+                )
             x_array = x_array[0]
 
         if backend == "pennylane":
@@ -1943,9 +1955,7 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
                     )
                 )
         else:
-            circuits = [
-                self.get_circuit(x, backend=backend) for x in X_array
-            ]
+            circuits = [self.get_circuit(x, backend=backend) for x in X_array]
 
         return circuits
 
@@ -2084,11 +2094,11 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
         n_state_prep = 2**self._n_qubits - 1  # Typical state prep cost
 
         return {
-            'state_preparation': n_state_prep,
-            'phase_gates': self._n_qubits,  # Phase rotations
-            'total_single_qubit': n_state_prep + self._n_qubits,
-            'total_two_qubit': 0,  # State prep may use CNOTs, but exact count varies
-            'total': n_state_prep + self._n_qubits,
+            "state_preparation": n_state_prep,
+            "phase_gates": self._n_qubits,  # Phase rotations
+            "total_single_qubit": n_state_prep + self._n_qubits,
+            "total_two_qubit": 0,  # State prep may use CNOTs, but exact count varies
+            "total": n_state_prep + self._n_qubits,
         }
 
     def _compute_properties(self) -> EncodingProperties:
@@ -2098,9 +2108,9 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
         return EncodingProperties(
             n_qubits=self.n_qubits,
             depth=self.depth,
-            gate_count=gate_breakdown['total'],
-            single_qubit_gates=gate_breakdown['total_single_qubit'],
-            two_qubit_gates=gate_breakdown['total_two_qubit'],
+            gate_count=gate_breakdown["total"],
+            single_qubit_gates=gate_breakdown["total_single_qubit"],
+            two_qubit_gates=gate_breakdown["total_two_qubit"],
             parameter_count=0,  # No trainable parameters
             is_entangling=True,  # State preparation generally creates entanglement
             simulability="not_simulable",  # Requires full quantum state
@@ -2342,7 +2352,7 @@ class CyclicEquivariantFeatureMap(EquivariantFeatureMap[int]):
     SwapEquivariantFeatureMap : Pair swap equivariance
     """
 
-    __slots__ = ('reps', 'coupling_strength', '_entanglement_pairs')
+    __slots__ = ("reps", "coupling_strength", "_entanglement_pairs")
 
     def __init__(
         self,
@@ -2355,20 +2365,61 @@ class CyclicEquivariantFeatureMap(EquivariantFeatureMap[int]):
         Parameters
         ----------
         n_features : int
-            Number of features (and qubits).
+            Number of features (and qubits). Must be at least 2 for
+            meaningful cyclic symmetry (Z_n with n >= 2).
         reps : int, default=2
             Number of encoding layer repetitions.
         coupling_strength : float, default=π/4
-            RZZ coupling strength.
+            RZZ coupling strength. Must be a finite number.
 
         Raises
         ------
+        TypeError
+            If n_features is not an integer (including bool).
+        ValueError
+            If n_features < 2 (cyclic symmetry requires at least 2 features).
         ValueError
             If reps < 1.
+        TypeError
+            If coupling_strength is not a number (including bool).
+        ValueError
+            If coupling_strength is not finite (inf or NaN).
         """
+        # =================================================================
+        # Validate n_features (cyclic symmetry requires n >= 2)
+        # =================================================================
+        if isinstance(n_features, bool) or not isinstance(n_features, int):
+            raise TypeError(
+                f"n_features must be an integer, got {type(n_features).__name__}"
+            )
+        if n_features < 2:
+            raise ValueError(
+                f"CyclicEquivariantFeatureMap requires n_features >= 2 for "
+                f"meaningful cyclic symmetry (Z_n group with n >= 2). "
+                f"Got n_features={n_features}. "
+                f"For single-feature encoding, use AngleEncoding instead."
+            )
+
+        # =================================================================
         # Validate reps
+        # =================================================================
         if isinstance(reps, bool) or not isinstance(reps, int) or reps < 1:
             raise ValueError(f"reps must be a positive integer, got {reps!r}")
+
+        # =================================================================
+        # Validate coupling_strength
+        # =================================================================
+        if not isinstance(coupling_strength, (int, float)) or isinstance(
+            coupling_strength, bool
+        ):
+            raise TypeError(
+                f"coupling_strength must be a number, "
+                f"got {type(coupling_strength).__name__}"
+            )
+        if not np.isfinite(coupling_strength):
+            raise ValueError(
+                f"coupling_strength must be finite, got {coupling_strength!r}"
+            )
 
         # Call parent constructor
         super().__init__(
@@ -2619,9 +2670,7 @@ class CyclicEquivariantFeatureMap(EquivariantFeatureMap[int]):
                     )
                 )
         else:
-            circuits = [
-                self.get_circuit(x, backend=backend) for x in X_array
-            ]
+            circuits = [self.get_circuit(x, backend=backend) for x in X_array]
 
         return circuits
 
@@ -2647,7 +2696,7 @@ class CyclicEquivariantFeatureMap(EquivariantFeatureMap[int]):
 
         def circuit() -> None:
             """Cyclic-equivariant encoding circuit."""
-            for rep in range(self.reps):
+            for _rep in range(self.reps):
                 # Layer 1: Equivariant local encoding
                 for i in range(n):
                     qml.RY(x[i], wires=i)
@@ -2679,13 +2728,13 @@ class CyclicEquivariantFeatureMap(EquivariantFeatureMap[int]):
         QuantumCircuit
             Qiskit quantum circuit.
         """
-        from qiskit import QuantumCircuit
         import numpy as np
+        from qiskit import QuantumCircuit
 
         n = self.n_qubits
         circuit = QuantumCircuit(n)
 
-        for rep in range(self.reps):
+        for _rep in range(self.reps):
             # Layer 1: RY encoding
             for i in range(n):
                 circuit.ry(x[i], i)
@@ -2725,7 +2774,7 @@ class CyclicEquivariantFeatureMap(EquivariantFeatureMap[int]):
         qubits = cirq.LineQubit.range(n)
         circuit = cirq.Circuit()
 
-        for rep in range(self.reps):
+        for _rep in range(self.reps):
             # Layer 1: RY encoding
             circuit.append([cirq.ry(x[i])(qubits[i]) for i in range(n)])
 
@@ -2762,12 +2811,12 @@ class CyclicEquivariantFeatureMap(EquivariantFeatureMap[int]):
         rx_count = n * self.reps
 
         return {
-            'ry': ry_count,
-            'rzz': rzz_count,
-            'rx': rx_count,
-            'total_single_qubit': ry_count + rx_count,
-            'total_two_qubit': rzz_count,
-            'total': ry_count + rzz_count + rx_count,
+            "ry": ry_count,
+            "rzz": rzz_count,
+            "rx": rx_count,
+            "total_single_qubit": ry_count + rx_count,
+            "total_two_qubit": rzz_count,
+            "total": ry_count + rzz_count + rx_count,
         }
 
     def _compute_properties(self) -> EncodingProperties:
@@ -2777,9 +2826,9 @@ class CyclicEquivariantFeatureMap(EquivariantFeatureMap[int]):
         return EncodingProperties(
             n_qubits=self.n_qubits,
             depth=self.depth,
-            gate_count=gate_breakdown['total'],
-            single_qubit_gates=gate_breakdown['total_single_qubit'],
-            two_qubit_gates=gate_breakdown['total_two_qubit'],
+            gate_count=gate_breakdown["total"],
+            single_qubit_gates=gate_breakdown["total_single_qubit"],
+            two_qubit_gates=gate_breakdown["total_two_qubit"],
             parameter_count=0,
             is_entangling=True,
             simulability="not_simulable",
@@ -3020,7 +3069,7 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
     CyclicEquivariantFeatureMap : Cyclic shift equivariance
     """
 
-    __slots__ = ('n_pairs', 'reps', '_entanglement_pairs')
+    __slots__ = ("n_pairs", "reps", "_entanglement_pairs")
 
     def __init__(
         self,
@@ -3122,12 +3171,9 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
             Tensor product of SWAP/Identity operators.
         """
         # Build tensor product of SWAP and Identity gates
-        SWAP = np.array([
-            [1, 0, 0, 0],
-            [0, 0, 1, 0],
-            [0, 1, 0, 0],
-            [0, 0, 0, 1]
-        ], dtype=complex)
+        SWAP = np.array(
+            [[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]], dtype=complex
+        )
         I2 = np.eye(4, dtype=complex)
 
         U = np.array([[1]], dtype=complex)
@@ -3279,9 +3325,7 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
                     )
                 )
         else:
-            circuits = [
-                self.get_circuit(x, backend=backend) for x in X_array
-            ]
+            circuits = [self.get_circuit(x, backend=backend) for x in X_array]
 
         return circuits
 
@@ -3318,7 +3362,7 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
             - CZ commutes with SWAP (symmetric two-qubit gate)
             - SWAP|00⟩ = |00⟩ (initial state is invariant)
             """
-            for rep in range(self.reps):
+            for _rep in range(self.reps):
                 # Layer 1: Direct feature encoding (RY(x[i]) on qubit i)
                 for i in range(n):
                     qml.RY(x[i], wires=i)
@@ -3356,7 +3400,7 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
         n = self.n_qubits
         circuit = QuantumCircuit(n)
 
-        for rep in range(self.reps):
+        for _rep in range(self.reps):
             # Layer 1: Direct feature encoding (RY(x[i]) on qubit i)
             for i in range(n):
                 circuit.ry(float(x[i]), i)
@@ -3395,7 +3439,7 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
         qubits = cirq.LineQubit.range(n)
         circuit = cirq.Circuit()
 
-        for rep in range(self.reps):
+        for _rep in range(self.reps):
             # Layer 1: Direct feature encoding (RY(x[i]) on qubit i)
             for i in range(n):
                 circuit.append(cirq.ry(float(x[i]))(qubits[i]))
@@ -3436,12 +3480,12 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
         cz_count = self.n_pairs * self.reps
 
         return {
-            'ry': ry_count,
-            'hadamard': hadamard_count,
-            'cz': cz_count,
-            'total_single_qubit': ry_count + hadamard_count,
-            'total_two_qubit': cz_count,
-            'total': ry_count + hadamard_count + cz_count,
+            "ry": ry_count,
+            "hadamard": hadamard_count,
+            "cz": cz_count,
+            "total_single_qubit": ry_count + hadamard_count,
+            "total_two_qubit": cz_count,
+            "total": ry_count + hadamard_count + cz_count,
         }
 
     def _compute_properties(self) -> EncodingProperties:
@@ -3451,9 +3495,9 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
         return EncodingProperties(
             n_qubits=self.n_qubits,
             depth=self.depth,
-            gate_count=gate_breakdown['total'],
-            single_qubit_gates=gate_breakdown['total_single_qubit'],
-            two_qubit_gates=gate_breakdown['total_two_qubit'],
+            gate_count=gate_breakdown["total"],
+            single_qubit_gates=gate_breakdown["total_single_qubit"],
+            two_qubit_gates=gate_breakdown["total_two_qubit"],
             parameter_count=0,
             is_entangling=True,
             simulability="not_simulable",

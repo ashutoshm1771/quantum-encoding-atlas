@@ -1815,7 +1815,7 @@ def compute_parameter_gradient(
         if observable == "pauli_z":
             warnings.warn(
                 'Observable "pauli_z" is deprecated. Use "global_z" for the '
-                "global Z⊗Z⊗...⊗Z observable, or \"local_z\" for Z on the first "
+                'global Z⊗Z⊗...⊗Z observable, or "local_z" for Z on the first '
                 "qubit only. This will be removed in a future version.",
                 DeprecationWarning,
                 stacklevel=2,

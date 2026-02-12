@@ -1,7 +1,5 @@
 # Hardware-Efficient Encoding
 
-**Author:** Ashutosh Mishra
-
 > A quantum data encoding designed to match native gate sets and connectivity
 > constraints of near-term (NISQ) quantum hardware, minimizing gate decomposition
 > overhead and reducing circuit depth.

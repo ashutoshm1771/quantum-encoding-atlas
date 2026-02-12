@@ -103,12 +103,14 @@ def batch_data_2d() -> NDArray[np.floating]:
     - [0.0, 1.0] (on y-axis)
     - [-0.5, 0.5] (negative x)
     """
-    return np.array([
-        [0.5, 0.3],
-        [1.0, 0.0],
-        [0.0, 1.0],
-        [-0.5, 0.5],
-    ])
+    return np.array(
+        [
+            [0.5, 0.3],
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [-0.5, 0.5],
+        ]
+    )
 
 
 @pytest.fixture
@@ -126,11 +128,13 @@ def batch_data_4d() -> NDArray[np.floating]:
     - [0.5, 0.6, 0.7, 0.8] (larger values)
     - [0.0, 0.0, 0.0, 0.0] (edge case: zeros)
     """
-    return np.array([
-        [0.1, 0.2, 0.3, 0.4],
-        [0.5, 0.6, 0.7, 0.8],
-        [0.0, 0.0, 0.0, 0.0],
-    ])
+    return np.array(
+        [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.5, 0.6, 0.7, 0.8],
+            [0.0, 0.0, 0.0, 0.0],
+        ]
+    )
 
 
 @pytest.fixture
@@ -341,13 +345,91 @@ class TestValidation:
 
     def test_cyclic_invalid_n_features_zero(self) -> None:
         """Test that n_features=0 raises ValueError."""
-        with pytest.raises(ValueError, match="n_features must be"):
+        with pytest.raises(ValueError, match="requires n_features >= 2"):
             CyclicEquivariantFeatureMap(n_features=0)
+
+    def test_cyclic_invalid_n_features_one(self) -> None:
+        """Test that n_features=1 raises ValueError.
+
+        Z_1 is the trivial group (only identity), and ring topology with a
+        single qubit produces a self-loop RZZ(wires=[0,0]) that crashes
+        all backends. This must be rejected at init.
+        """
+        with pytest.raises(ValueError, match="requires n_features >= 2"):
+            CyclicEquivariantFeatureMap(n_features=1)
 
     def test_cyclic_invalid_n_features_negative(self) -> None:
         """Test that negative n_features raises ValueError."""
-        with pytest.raises(ValueError, match="n_features must be"):
+        with pytest.raises(ValueError, match="requires n_features >= 2"):
             CyclicEquivariantFeatureMap(n_features=-1)
+
+    def test_cyclic_invalid_n_features_type_float(self) -> None:
+        """Test that float n_features raises TypeError."""
+        with pytest.raises(TypeError, match="n_features must be an integer"):
+            CyclicEquivariantFeatureMap(n_features=4.0)  # type: ignore[arg-type]
+
+    def test_cyclic_invalid_n_features_type_bool(self) -> None:
+        """Test that bool n_features raises TypeError.
+
+        Python's bool is a subclass of int, but should be rejected for clarity.
+        """
+        with pytest.raises(TypeError, match="n_features must be an integer"):
+            CyclicEquivariantFeatureMap(n_features=True)  # type: ignore[arg-type]
+
+    def test_cyclic_invalid_n_features_type_string(self) -> None:
+        """Test that string n_features raises TypeError."""
+        with pytest.raises(TypeError, match="n_features must be an integer"):
+            CyclicEquivariantFeatureMap(n_features="4")  # type: ignore[arg-type]
+
+    def test_cyclic_invalid_reps_type_bool(self) -> None:
+        """Test that bool reps raises ValueError."""
+        with pytest.raises(ValueError, match="reps must be a positive integer"):
+            CyclicEquivariantFeatureMap(n_features=4, reps=True)  # type: ignore[arg-type]
+
+    def test_cyclic_invalid_reps_type_float(self) -> None:
+        """Test that float reps raises ValueError."""
+        with pytest.raises(ValueError, match="reps must be a positive integer"):
+            CyclicEquivariantFeatureMap(n_features=4, reps=2.0)  # type: ignore[arg-type]
+
+    def test_cyclic_invalid_coupling_strength_inf(self) -> None:
+        """Test that infinite coupling_strength raises ValueError."""
+        with pytest.raises(ValueError, match="coupling_strength must be finite"):
+            CyclicEquivariantFeatureMap(n_features=4, coupling_strength=np.inf)
+
+    def test_cyclic_invalid_coupling_strength_neg_inf(self) -> None:
+        """Test that negative infinite coupling_strength raises ValueError."""
+        with pytest.raises(ValueError, match="coupling_strength must be finite"):
+            CyclicEquivariantFeatureMap(n_features=4, coupling_strength=-np.inf)
+
+    def test_cyclic_invalid_coupling_strength_nan(self) -> None:
+        """Test that NaN coupling_strength raises ValueError."""
+        with pytest.raises(ValueError, match="coupling_strength must be finite"):
+            CyclicEquivariantFeatureMap(n_features=4, coupling_strength=np.nan)
+
+    def test_cyclic_invalid_coupling_strength_type_string(self) -> None:
+        """Test that string coupling_strength raises TypeError."""
+        with pytest.raises(TypeError, match="coupling_strength must be a number"):
+            CyclicEquivariantFeatureMap(n_features=4, coupling_strength="0.5")  # type: ignore[arg-type]
+
+    def test_cyclic_invalid_coupling_strength_type_bool(self) -> None:
+        """Test that bool coupling_strength raises TypeError."""
+        with pytest.raises(TypeError, match="coupling_strength must be a number"):
+            CyclicEquivariantFeatureMap(n_features=4, coupling_strength=True)  # type: ignore[arg-type]
+
+    def test_cyclic_valid_coupling_strength_zero(self) -> None:
+        """Test that coupling_strength=0 is accepted (disables entanglement)."""
+        enc = CyclicEquivariantFeatureMap(n_features=4, coupling_strength=0.0)
+        assert enc.coupling_strength == 0.0
+
+    def test_cyclic_valid_coupling_strength_negative(self) -> None:
+        """Test that negative coupling_strength is accepted (mathematically valid)."""
+        enc = CyclicEquivariantFeatureMap(n_features=4, coupling_strength=-np.pi / 4)
+        assert enc.coupling_strength == -np.pi / 4
+
+    def test_cyclic_valid_coupling_strength_int(self) -> None:
+        """Test that integer coupling_strength is accepted."""
+        enc = CyclicEquivariantFeatureMap(n_features=4, coupling_strength=1)
+        assert enc.coupling_strength == 1
 
     # --- SwapEquivariantFeatureMap ---
 
@@ -377,7 +459,9 @@ class TestProperties:
 
     # --- SO2EquivariantFeatureMap ---
 
-    def test_so2_n_features_fixed_at_2(self, so2_encoding: SO2EquivariantFeatureMap) -> None:
+    def test_so2_n_features_fixed_at_2(
+        self, so2_encoding: SO2EquivariantFeatureMap
+    ) -> None:
         """Test that n_features is always 2 for SO(2) encoding."""
         assert so2_encoding.n_features == 2
 
@@ -401,7 +485,9 @@ class TestProperties:
         assert so2_encoding.depth > 0
         assert isinstance(so2_encoding.depth, int)
 
-    def test_so2_properties_object(self, so2_encoding: SO2EquivariantFeatureMap) -> None:
+    def test_so2_properties_object(
+        self, so2_encoding: SO2EquivariantFeatureMap
+    ) -> None:
         """Test that properties object is computed correctly."""
         props = so2_encoding.properties
         assert props.n_qubits == 2
@@ -474,9 +560,14 @@ class TestProperties:
         assert breakdown["ry"] == n * reps
         assert breakdown["hadamard"] == n * reps
         assert breakdown["cz"] == n_pairs * reps
-        assert breakdown["total_single_qubit"] == breakdown["ry"] + breakdown["hadamard"]
+        assert (
+            breakdown["total_single_qubit"] == breakdown["ry"] + breakdown["hadamard"]
+        )
         assert breakdown["total_two_qubit"] == breakdown["cz"]
-        assert breakdown["total"] == breakdown["total_single_qubit"] + breakdown["total_two_qubit"]
+        assert (
+            breakdown["total"]
+            == breakdown["total_single_qubit"] + breakdown["total_two_qubit"]
+        )
 
     def test_properties_cached(self, so2_encoding: SO2EquivariantFeatureMap) -> None:
         """Test that properties are cached (same object returned)."""
@@ -1118,11 +1209,10 @@ class TestEdgeCases:
         assert len(enc.angular_momenta) == 1  # Only m=0
         assert enc.n_qubits >= 1
 
-    def test_cyclic_single_qubit(self) -> None:
-        """Test cyclic encoding with single feature (trivial case)."""
-        enc = CyclicEquivariantFeatureMap(n_features=1)
-        assert enc.n_qubits == 1
-        assert enc.n_features == 1
+    def test_cyclic_single_qubit_rejected(self) -> None:
+        """Test that n_features=1 is rejected (trivial Z_1 group, self-loop RZZ)."""
+        with pytest.raises(ValueError, match="requires n_features >= 2"):
+            CyclicEquivariantFeatureMap(n_features=1)
 
     def test_cyclic_two_features(self) -> None:
         """Test cyclic encoding with minimum non-trivial case."""
@@ -1351,9 +1441,7 @@ class TestRepr:
 class TestBackendErrorHandling:
     """Tests for invalid backend handling."""
 
-    def test_so2_invalid_backend(
-        self, so2_encoding: SO2EquivariantFeatureMap
-    ) -> None:
+    def test_so2_invalid_backend(self, so2_encoding: SO2EquivariantFeatureMap) -> None:
         """Test that SO2 invalid backend raises ValueError."""
         x = np.array([0.5, 0.3])
         with pytest.raises(ValueError, match="Unknown backend"):
@@ -1401,9 +1489,7 @@ class TestBackendErrorHandling:
 class TestSerialization:
     """Tests for serialization (pickle) support."""
 
-    def test_so2_pickle_roundtrip(
-        self, so2_encoding: SO2EquivariantFeatureMap
-    ) -> None:
+    def test_so2_pickle_roundtrip(self, so2_encoding: SO2EquivariantFeatureMap) -> None:
         """Test that SO2 encoding can be pickled and unpickled."""
         pickled = pickle.dumps(so2_encoding)
         restored = pickle.loads(pickled)
@@ -1477,7 +1563,7 @@ class TestConcurrentAccess:
         def generate_circuits(thread_id: int) -> list[Any]:
             circuits = []
             try:
-                for i in range(num_circuits_per_thread):
+                for _i in range(num_circuits_per_thread):
                     x = np.random.randn(4)
                     circuit = cyclic_encoding.get_circuit(x, backend="qiskit")
                     circuits.append(circuit)
@@ -1717,9 +1803,9 @@ class TestSlowSimulation:
 
         # Qiskit uses LSB ordering; reverse to match PennyLane MSB
         n = cyclic_encoding.n_qubits
-        sv_qk_reordered = sv_qk.reshape([2] * n).transpose(
-            list(range(n))[::-1]
-        ).flatten()
+        sv_qk_reordered = (
+            sv_qk.reshape([2] * n).transpose(list(range(n))[::-1]).flatten()
+        )
 
         fidelity = np.abs(np.vdot(sv_pl, sv_qk_reordered)) ** 2
 
@@ -1778,9 +1864,7 @@ class TestSlowSimulation:
         [np.pi / 8, np.pi / 4, np.pi / 2, np.pi],
         ids=["pi/8", "pi/4", "pi/2", "pi"],
     )
-    def test_cyclic_fidelity_varying_coupling(
-        self, coupling_strength: float
-    ) -> None:
+    def test_cyclic_fidelity_varying_coupling(self, coupling_strength: float) -> None:
         """Test cross-backend fidelity across different coupling strengths.
 
         Ensures the RZZ parameter fix is correct for all coupling values,
@@ -1806,15 +1890,15 @@ class TestSlowSimulation:
         qk_circuit = enc.get_circuit(x, backend="qiskit")
         sv_qk = np.array(Statevector(qk_circuit))
         n = enc.n_qubits
-        sv_qk_reordered = sv_qk.reshape([2] * n).transpose(
-            list(range(n))[::-1]
-        ).flatten()
+        sv_qk_reordered = (
+            sv_qk.reshape([2] * n).transpose(list(range(n))[::-1]).flatten()
+        )
 
         fidelity = np.abs(np.vdot(sv_pl, sv_qk_reordered)) ** 2
 
-        assert fidelity > 0.9999, (
-            f"Fidelity {fidelity:.6f} at coupling_strength={coupling_strength:.4f}"
-        )
+        assert (
+            fidelity > 0.9999
+        ), f"Fidelity {fidelity:.6f} at coupling_strength={coupling_strength:.4f}"
 
     @pytest.mark.skipif(
         not (HAS_PENNYLANE and HAS_QISKIT),
@@ -1847,15 +1931,15 @@ class TestSlowSimulation:
         sv_qk = np.array(Statevector(qk_circuit))
 
         n = swap_encoding.n_qubits
-        sv_qk_reordered = sv_qk.reshape([2] * n).transpose(
-            list(range(n))[::-1]
-        ).flatten()
+        sv_qk_reordered = (
+            sv_qk.reshape([2] * n).transpose(list(range(n))[::-1]).flatten()
+        )
 
         fidelity = np.abs(np.vdot(sv_pl, sv_qk_reordered)) ** 2
 
-        assert fidelity > 0.9999, (
-            f"PennyLane-Qiskit fidelity is {fidelity:.6f} for swap encoding."
-        )
+        assert (
+            fidelity > 0.9999
+        ), f"PennyLane-Qiskit fidelity is {fidelity:.6f} for swap encoding."
 
     @pytest.mark.skipif(
         not (HAS_PENNYLANE and HAS_CIRQ),
@@ -1891,9 +1975,9 @@ class TestSlowSimulation:
 
         fidelity = np.abs(np.vdot(sv_pl, sv_cirq)) ** 2
 
-        assert fidelity > 0.9999, (
-            f"PennyLane-Cirq fidelity is {fidelity:.6f} for swap encoding."
-        )
+        assert (
+            fidelity > 0.9999
+        ), f"PennyLane-Cirq fidelity is {fidelity:.6f} for swap encoding."
 
 
 # =============================================================================
@@ -2081,7 +2165,9 @@ class TestStatisticalVerification:
                 successes += 1
 
         # At least n-1 should pass (allows for one statistical variation)
-        assert successes >= n - 1, f"Only {successes}/{n} shifts passed statistical test"
+        assert (
+            successes >= n - 1
+        ), f"Only {successes}/{n} shifts passed statistical test"
 
 
 # =============================================================================
@@ -2123,9 +2209,7 @@ class TestAutoVerification:
         sample_data_4d: NDArray[np.floating],
     ) -> None:
         """Test swap auto verification selects correct method."""
-        result = swap_encoding.verify_equivariance_auto(
-            sample_data_4d, [True, False]
-        )
+        result = swap_encoding.verify_equivariance_auto(sample_data_4d, [True, False])
         assert result is True
 
     def test_auto_verification_identity_element(
@@ -2334,7 +2418,9 @@ class TestResourceSummary:
         assert gate_counts["ry"] == n * reps
         assert gate_counts["rzz"] == n * reps
         assert gate_counts["rx"] == n * reps
-        assert gate_counts["total_single_qubit"] == gate_counts["ry"] + gate_counts["rx"]
+        assert (
+            gate_counts["total_single_qubit"] == gate_counts["ry"] + gate_counts["rx"]
+        )
         assert gate_counts["total_two_qubit"] == gate_counts["rzz"]
 
     # --- Swap Resource Summary ---
@@ -2409,7 +2495,10 @@ class TestResourceSummary:
         assert gate_counts["ry"] == n * reps
         assert gate_counts["hadamard"] == n * reps
         assert gate_counts["cz"] == n_pairs * reps
-        assert gate_counts["total_single_qubit"] == gate_counts["ry"] + gate_counts["hadamard"]
+        assert (
+            gate_counts["total_single_qubit"]
+            == gate_counts["ry"] + gate_counts["hadamard"]
+        )
         assert gate_counts["total_two_qubit"] == gate_counts["cz"]
 
     def test_swap_resource_summary_six_features(self) -> None:
@@ -2525,3 +2614,577 @@ class TestGetEntanglementPairs:
             # Each pair should be (2i, 2i+1)
             for i in range(n // 2):
                 assert (2 * i, 2 * i + 1) in pairs
+
+
+# =============================================================================
+# Test Class: Cyclic Encoding Extended Coverage
+# =============================================================================
+
+
+class TestCyclicExtendedCoverage:
+    """Extended tests for CyclicEquivariantFeatureMap production coverage.
+
+    These tests cover circuit execution, state vector correctness,
+    boundary conditions, and ensure all code paths are exercised across
+    all three backends.
+    """
+
+    # -------------------------------------------------------------------------
+    # Circuit Execution (actually run circuits, not just type-check)
+    # -------------------------------------------------------------------------
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_pennylane_produces_normalized_state(self) -> None:
+        """Verify PennyLane circuit produces a valid normalized quantum state."""
+        enc = CyclicEquivariantFeatureMap(n_features=4, reps=2)
+        dev = qml.device("default.qubit", wires=enc.n_qubits)
+        x = np.array([0.1, 0.5, 0.9, 1.3])
+
+        @qml.qnode(dev)
+        def get_state():
+            circuit = enc.get_circuit(x, backend="pennylane")
+            circuit()
+            return qml.state()
+
+        state = get_state()
+        # State must be normalized
+        assert np.isclose(np.linalg.norm(state), 1.0, atol=1e-10)
+        # State must not be the zero vector
+        assert np.linalg.norm(state) > 0.5
+        # Dimension must match 2^n_qubits
+        assert state.shape == (2**enc.n_qubits,)
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_pennylane_different_inputs_give_different_states(self) -> None:
+        """Verify that different input data produces different quantum states."""
+        enc = CyclicEquivariantFeatureMap(n_features=3, reps=2)
+        dev = qml.device("default.qubit", wires=enc.n_qubits)
+        x1 = np.array([0.1, 0.2, 0.3])
+        x2 = np.array([0.4, 0.5, 0.6])
+
+        @qml.qnode(dev)
+        def get_state(x):
+            circuit = enc.get_circuit(x, backend="pennylane")
+            circuit()
+            return qml.state()
+
+        s1 = get_state(x1)
+        s2 = get_state(x2)
+        # States should be different (overlap < 1)
+        overlap = np.abs(np.vdot(s1, s2))
+        assert overlap < 1.0 - 1e-6
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_pennylane_state_changes_with_reps(self) -> None:
+        """Verify that changing reps changes the quantum state."""
+        x = np.array([0.3, 0.7, 1.1, 0.5])
+        dev = qml.device("default.qubit", wires=4)
+
+        enc1 = CyclicEquivariantFeatureMap(n_features=4, reps=1)
+        enc2 = CyclicEquivariantFeatureMap(n_features=4, reps=3)
+
+        @qml.qnode(dev)
+        def get_state(enc):
+            circuit = enc.get_circuit(x, backend="pennylane")
+            circuit()
+            return qml.state()
+
+        s1 = get_state(enc1)
+        s2 = get_state(enc2)
+        overlap = np.abs(np.vdot(s1, s2))
+        assert overlap < 1.0 - 1e-6
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_pennylane_state_changes_with_coupling(self) -> None:
+        """Verify that changing coupling_strength changes the quantum state."""
+        x = np.array([0.3, 0.7, 1.1, 0.5])
+        dev = qml.device("default.qubit", wires=4)
+
+        enc1 = CyclicEquivariantFeatureMap(n_features=4, coupling_strength=0.1)
+        enc2 = CyclicEquivariantFeatureMap(n_features=4, coupling_strength=np.pi / 2)
+
+        @qml.qnode(dev)
+        def get_state(enc):
+            circuit = enc.get_circuit(x, backend="pennylane")
+            circuit()
+            return qml.state()
+
+        s1 = get_state(enc1)
+        s2 = get_state(enc2)
+        overlap = np.abs(np.vdot(s1, s2))
+        assert overlap < 1.0 - 1e-6
+
+    @pytest.mark.skipif(not HAS_QISKIT, reason="Qiskit not installed")
+    def test_cyclic_qiskit_circuit_executes(self) -> None:
+        """Verify Qiskit circuit can be executed to produce a valid statevector."""
+        enc = CyclicEquivariantFeatureMap(n_features=4, reps=2)
+        x = np.array([0.1, 0.5, 0.9, 1.3])
+        circuit = enc.get_circuit(x, backend="qiskit")
+        sv = Statevector(circuit)
+        # Must be normalized
+        probs = sv.probabilities()
+        assert np.isclose(probs.sum(), 1.0, atol=1e-10)
+        assert len(probs) == 2**enc.n_qubits
+
+    @pytest.mark.skipif(not HAS_CIRQ, reason="Cirq not installed")
+    def test_cyclic_cirq_circuit_executes(self) -> None:
+        """Verify Cirq circuit can be simulated to produce a valid statevector."""
+        enc = CyclicEquivariantFeatureMap(n_features=4, reps=2)
+        x = np.array([0.1, 0.5, 0.9, 1.3])
+        circuit = enc.get_circuit(x, backend="cirq")
+        simulator = cirq.Simulator()
+        result = simulator.simulate(circuit)
+        state = result.final_state_vector
+        assert np.isclose(np.linalg.norm(state), 1.0, atol=1e-10)
+        assert state.shape == (2**enc.n_qubits,)
+
+    # -------------------------------------------------------------------------
+    # Minimum n_features=2 boundary (smallest valid configuration)
+    # -------------------------------------------------------------------------
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_n_features_2_circuit_executes(self) -> None:
+        """Verify smallest valid cyclic encoding (n=2) produces a valid state."""
+        enc = CyclicEquivariantFeatureMap(n_features=2)
+        dev = qml.device("default.qubit", wires=2)
+        x = np.array([0.5, 1.2])
+
+        @qml.qnode(dev)
+        def get_state():
+            circuit = enc.get_circuit(x, backend="pennylane")
+            circuit()
+            return qml.state()
+
+        state = get_state()
+        assert np.isclose(np.linalg.norm(state), 1.0, atol=1e-10)
+        assert state.shape == (4,)
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_n_features_2_equivariance(self) -> None:
+        """Verify equivariance holds for smallest valid cyclic encoding (n=2)."""
+        enc = CyclicEquivariantFeatureMap(n_features=2)
+        x = np.array([0.3, 0.8])
+        # Only non-trivial shift is k=1
+        assert enc.verify_equivariance(x, 1, atol=1e-8)
+
+    def test_cyclic_n_features_2_properties(self) -> None:
+        """Verify properties are correct for smallest valid configuration."""
+        enc = CyclicEquivariantFeatureMap(n_features=2, reps=1)
+        props = enc.properties
+        assert props.n_qubits == 2
+        assert props.depth == 3  # 1 rep × 3 layers
+        assert props.is_entangling is True
+        assert props.two_qubit_gates == 2  # ring on 2 qubits: (0,1) and (1,0)
+
+    def test_cyclic_n_features_2_entanglement_pairs(self) -> None:
+        """Verify ring entanglement on 2 qubits gives 2 pairs."""
+        enc = CyclicEquivariantFeatureMap(n_features=2)
+        pairs = enc.get_entanglement_pairs()
+        # Ring on 2 qubits: (0,1) and (1,0)
+        assert len(pairs) == 2
+        assert (0, 1) in pairs
+        assert (1, 0) in pairs
+
+    # -------------------------------------------------------------------------
+    # Odd n_features (regression: ensures ring wraps correctly)
+    # -------------------------------------------------------------------------
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_odd_n_features_circuit_executes(self) -> None:
+        """Verify circuit works for odd n_features (ring wrap-around edge case)."""
+        enc = CyclicEquivariantFeatureMap(n_features=3, reps=2)
+        dev = qml.device("default.qubit", wires=3)
+        x = np.array([0.2, 0.5, 0.8])
+
+        @qml.qnode(dev)
+        def get_state():
+            circuit = enc.get_circuit(x, backend="pennylane")
+            circuit()
+            return qml.state()
+
+        state = get_state()
+        assert np.isclose(np.linalg.norm(state), 1.0, atol=1e-10)
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_odd_n_features_equivariance(self) -> None:
+        """Verify equivariance for odd n_features (all shifts)."""
+        enc = CyclicEquivariantFeatureMap(n_features=3)
+        x = np.array([0.2, 0.5, 0.8])
+        for k in range(3):
+            assert enc.verify_equivariance(x, k, atol=1e-8)
+
+    def test_cyclic_odd_n_features_entanglement_ring(self) -> None:
+        """Verify ring wrap-around for odd n_features."""
+        enc = CyclicEquivariantFeatureMap(n_features=5)
+        pairs = enc.get_entanglement_pairs()
+        assert len(pairs) == 5
+        # Check wrap-around edge
+        assert (4, 0) in pairs
+
+    # -------------------------------------------------------------------------
+    # coupling_strength=0 (product state, no entanglement)
+    # -------------------------------------------------------------------------
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_zero_coupling_produces_product_state(self) -> None:
+        """Verify coupling_strength=0 produces a product (separable) state.
+
+        With zero coupling, the RZZ gates become identity. The circuit is just
+        alternating RY(x_i) and RX(pi/6) layers — a product state encoding.
+        """
+        enc = CyclicEquivariantFeatureMap(n_features=3, reps=1, coupling_strength=0.0)
+        dev = qml.device("default.qubit", wires=3)
+        x = np.array([0.5, 1.0, 1.5])
+
+        @qml.qnode(dev)
+        def get_state():
+            circuit = enc.get_circuit(x, backend="pennylane")
+            circuit()
+            return qml.state()
+
+        state = get_state()
+        assert np.isclose(np.linalg.norm(state), 1.0, atol=1e-10)
+
+        # For a product state, the reduced density matrix of any qubit
+        # should be pure (Tr(rho^2) = 1). Compute for qubit 0.
+        state_reshaped = state.reshape(2, 2**2)
+        rho_0 = state_reshaped @ state_reshaped.conj().T
+        purity = np.real(np.trace(rho_0 @ rho_0))
+        assert np.isclose(
+            purity, 1.0, atol=1e-8
+        ), f"Expected pure reduced state (product state), got purity={purity}"
+
+    # -------------------------------------------------------------------------
+    # Negative coupling_strength (valid, inverse rotation)
+    # -------------------------------------------------------------------------
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_negative_coupling_equivariance(self) -> None:
+        """Verify equivariance holds with negative coupling strength."""
+        enc = CyclicEquivariantFeatureMap(n_features=4, coupling_strength=-np.pi / 3)
+        x = np.array([0.1, 0.4, 0.7, 1.0])
+        assert enc.verify_equivariance(x, 1, atol=1e-8)
+
+    # -------------------------------------------------------------------------
+    # Batch circuit generation
+    # -------------------------------------------------------------------------
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_batch_circuits_pennylane_all_callable(self) -> None:
+        """Verify batch circuit generation returns callable circuits."""
+        enc = CyclicEquivariantFeatureMap(n_features=4)
+        X = np.array(
+            [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.5, 0.6, 0.7, 0.8],
+                [1.0, 1.1, 1.2, 1.3],
+            ]
+        )
+        circuits = enc.get_circuits(X, backend="pennylane")
+        assert len(circuits) == 3
+        for c in circuits:
+            assert callable(c)
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_batch_circuits_parallel(self) -> None:
+        """Verify parallel batch generation produces same results as sequential."""
+        enc = CyclicEquivariantFeatureMap(n_features=4)
+        X = np.array(
+            [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.5, 0.6, 0.7, 0.8],
+                [1.0, 1.1, 1.2, 1.3],
+            ]
+        )
+        sequential = enc.get_circuits(X, backend="pennylane", parallel=False)
+        parallel = enc.get_circuits(
+            X, backend="pennylane", parallel=True, max_workers=2
+        )
+        assert len(sequential) == len(parallel)
+        # Both should produce the same number of callable circuits
+        for s, p in zip(sequential, parallel):
+            assert callable(s)
+            assert callable(p)
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_batch_single_sample(self) -> None:
+        """Verify batch circuit generation with single sample (1D input)."""
+        enc = CyclicEquivariantFeatureMap(n_features=3)
+        x = np.array([0.1, 0.2, 0.3])
+        circuits = enc.get_circuits(x, backend="pennylane")
+        assert len(circuits) == 1
+        assert callable(circuits[0])
+
+    # -------------------------------------------------------------------------
+    # Group algebra correctness
+    # -------------------------------------------------------------------------
+
+    def test_cyclic_group_action_identity(self) -> None:
+        """Verify k=0 (identity element) leaves data unchanged."""
+        enc = CyclicEquivariantFeatureMap(n_features=5)
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        np.testing.assert_array_equal(enc.group_action(0, x), x)
+
+    def test_cyclic_group_action_full_cycle(self) -> None:
+        """Verify n shifts = identity (group order)."""
+        enc = CyclicEquivariantFeatureMap(n_features=4)
+        x = np.array([1.0, 2.0, 3.0, 4.0])
+        np.testing.assert_array_equal(enc.group_action(4, x), x)
+
+    def test_cyclic_group_action_negative_shift(self) -> None:
+        """Verify negative shifts work correctly (inverse elements)."""
+        enc = CyclicEquivariantFeatureMap(n_features=4)
+        x = np.array([1.0, 2.0, 3.0, 4.0])
+        # Shift by -1 should be same as shift by 3
+        np.testing.assert_array_equal(
+            enc.group_action(-1, x),
+            enc.group_action(3, x),
+        )
+
+    def test_cyclic_group_action_composition(self) -> None:
+        """Verify group composition: σ^a ∘ σ^b = σ^(a+b)."""
+        enc = CyclicEquivariantFeatureMap(n_features=5)
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        # Apply shift by 2 then shift by 3 = shift by 5 = identity
+        result = enc.group_action(3, enc.group_action(2, x))
+        np.testing.assert_array_equal(result, x)
+
+    def test_cyclic_unitary_is_unitary(self) -> None:
+        """Verify U(k) is actually unitary: U @ U^† = I."""
+        enc = CyclicEquivariantFeatureMap(n_features=4)
+        for k in range(4):
+            U = enc.unitary_representation(k)
+            identity = np.eye(2**4)
+            np.testing.assert_allclose(
+                U @ U.conj().T,
+                identity,
+                atol=1e-12,
+                err_msg=f"U({k}) is not unitary",
+            )
+
+    def test_cyclic_unitary_identity_for_k0(self) -> None:
+        """Verify U(0) = identity matrix."""
+        enc = CyclicEquivariantFeatureMap(n_features=3)
+        U = enc.unitary_representation(0)
+        np.testing.assert_allclose(U, np.eye(2**3), atol=1e-12)
+
+    def test_cyclic_unitary_homomorphism(self) -> None:
+        """Verify group homomorphism: U(a) @ U(b) = U((a+b) mod n)."""
+        enc = CyclicEquivariantFeatureMap(n_features=4)
+        for a in range(4):
+            for b in range(4):
+                U_a = enc.unitary_representation(a)
+                U_b = enc.unitary_representation(b)
+                U_ab = enc.unitary_representation((a + b) % 4)
+                np.testing.assert_allclose(
+                    U_a @ U_b,
+                    U_ab,
+                    atol=1e-12,
+                    err_msg=f"U({a}) @ U({b}) != U({(a + b) % 4})",
+                )
+
+    def test_cyclic_generators_single_element(self) -> None:
+        """Verify cyclic group generator is [1]."""
+        enc = CyclicEquivariantFeatureMap(n_features=6)
+        assert enc.group_generators() == [1]
+
+    # -------------------------------------------------------------------------
+    # Properties and resource summary
+    # -------------------------------------------------------------------------
+
+    def test_cyclic_properties_consistency_various_sizes(self) -> None:
+        """Verify properties are internally consistent for various n and reps."""
+        for n in [2, 3, 5, 8]:
+            for reps in [1, 2, 4]:
+                enc = CyclicEquivariantFeatureMap(n_features=n, reps=reps)
+                props = enc.properties
+                assert props.n_qubits == n
+                assert props.depth == 3 * reps
+                assert props.single_qubit_gates == 2 * n * reps  # RY + RX
+                assert props.two_qubit_gates == n * reps  # RZZ ring
+                assert (
+                    props.gate_count == props.single_qubit_gates + props.two_qubit_gates
+                )
+                assert props.is_entangling is True
+                assert props.simulability == "not_simulable"
+
+    def test_cyclic_gate_count_breakdown_consistency(self) -> None:
+        """Verify gate_count_breakdown internal consistency."""
+        enc = CyclicEquivariantFeatureMap(n_features=6, reps=3)
+        gcb = enc.gate_count_breakdown()
+        assert gcb["ry"] == 6 * 3
+        assert gcb["rzz"] == 6 * 3
+        assert gcb["rx"] == 6 * 3
+        assert gcb["total_single_qubit"] == gcb["ry"] + gcb["rx"]
+        assert gcb["total_two_qubit"] == gcb["rzz"]
+        assert gcb["total"] == gcb["total_single_qubit"] + gcb["total_two_qubit"]
+
+    def test_cyclic_resource_summary_symmetry_group(self) -> None:
+        """Verify resource summary contains correct symmetry group name."""
+        for n in [2, 4, 7]:
+            enc = CyclicEquivariantFeatureMap(n_features=n)
+            summary = enc.resource_summary()
+            assert summary["symmetry_group"] == f"Z_{n}"
+            assert summary["cyclic_order"] == n
+
+    def test_cyclic_resource_summary_hardware_requirements(self) -> None:
+        """Verify resource summary contains hardware connectivity info."""
+        enc = CyclicEquivariantFeatureMap(n_features=4)
+        summary = enc.resource_summary()
+        assert summary["hardware_requirements"]["connectivity"] == "ring"
+        assert "RY" in summary["hardware_requirements"]["native_gates"]
+        assert "RZZ" in summary["hardware_requirements"]["native_gates"]
+        assert "RX" in summary["hardware_requirements"]["native_gates"]
+
+    def test_cyclic_resource_summary_verification_methods(self) -> None:
+        """Verify resource summary lists all verification methods."""
+        enc = CyclicEquivariantFeatureMap(n_features=4)
+        summary = enc.resource_summary()
+        assert len(summary["verification_methods"]) == 3
+        assert any("exact" in m for m in summary["verification_methods"])
+        assert any("statistical" in m for m in summary["verification_methods"])
+        assert any("automatic" in m for m in summary["verification_methods"])
+
+    # -------------------------------------------------------------------------
+    # __repr__ coverage
+    # -------------------------------------------------------------------------
+
+    def test_cyclic_repr_roundtrip_readable(self) -> None:
+        """Verify __repr__ contains all configuration parameters."""
+        enc = CyclicEquivariantFeatureMap(n_features=5, reps=3, coupling_strength=0.5)
+        r = repr(enc)
+        assert "CyclicEquivariantFeatureMap" in r
+        assert "n_features=5" in r
+        assert "reps=3" in r
+        assert "coupling_strength=0.5" in r
+
+    # -------------------------------------------------------------------------
+    # Config and equality (inherited from BaseEncoding)
+    # -------------------------------------------------------------------------
+
+    def test_cyclic_config_stores_parameters(self) -> None:
+        """Verify config dict contains all constructor parameters."""
+        enc = CyclicEquivariantFeatureMap(n_features=4, reps=3, coupling_strength=0.5)
+        config = enc.config
+        assert config["reps"] == 3
+        assert config["coupling_strength"] == 0.5
+
+    def test_cyclic_equality_same_params(self) -> None:
+        """Verify two encodings with same params are equal."""
+        enc1 = CyclicEquivariantFeatureMap(
+            n_features=4, reps=2, coupling_strength=np.pi / 4
+        )
+        enc2 = CyclicEquivariantFeatureMap(
+            n_features=4, reps=2, coupling_strength=np.pi / 4
+        )
+        assert enc1 == enc2
+
+    def test_cyclic_equality_different_params(self) -> None:
+        """Verify two encodings with different params are not equal."""
+        enc1 = CyclicEquivariantFeatureMap(n_features=4, reps=2)
+        enc2 = CyclicEquivariantFeatureMap(n_features=4, reps=3)
+        assert enc1 != enc2
+
+    def test_cyclic_hash_consistency(self) -> None:
+        """Verify equal encodings have same hash (dict/set usability)."""
+        enc1 = CyclicEquivariantFeatureMap(n_features=4, reps=2)
+        enc2 = CyclicEquivariantFeatureMap(n_features=4, reps=2)
+        assert hash(enc1) == hash(enc2)
+        # Can be used as dict key
+        d = {enc1: "test"}
+        assert d[enc2] == "test"
+
+    # -------------------------------------------------------------------------
+    # Pickle roundtrip
+    # -------------------------------------------------------------------------
+
+    def test_cyclic_pickle_roundtrip_preserves_state(self) -> None:
+        """Verify pickle serialization preserves all encoding state."""
+        enc = CyclicEquivariantFeatureMap(n_features=5, reps=3, coupling_strength=0.7)
+        data = pickle.dumps(enc)
+        restored = pickle.loads(data)
+        assert restored.n_features == enc.n_features
+        assert restored.reps == enc.reps
+        assert restored.coupling_strength == enc.coupling_strength
+        assert restored.get_entanglement_pairs() == enc.get_entanglement_pairs()
+        assert restored == enc
+
+    # -------------------------------------------------------------------------
+    # Large n_features warning
+    # -------------------------------------------------------------------------
+
+    def test_cyclic_large_n_features_emits_warning(self) -> None:
+        """Verify that n_features > 20 emits a UserWarning about hardware."""
+        with pytest.warns(UserWarning, match="ring topology"):
+            CyclicEquivariantFeatureMap(n_features=21)
+
+    def test_cyclic_n_features_at_threshold_no_warning(self) -> None:
+        """Verify that n_features=20 does NOT emit a warning."""
+        import warnings as _warnings
+
+        with _warnings.catch_warnings():
+            _warnings.simplefilter("error")
+            # Should not raise
+            CyclicEquivariantFeatureMap(n_features=20)
+
+    # -------------------------------------------------------------------------
+    # Input validation edge cases (inherited from BaseEncoding)
+    # -------------------------------------------------------------------------
+
+    def test_cyclic_rejects_wrong_dimension_input(self) -> None:
+        """Verify that mismatched input dimension raises ValueError."""
+        enc = CyclicEquivariantFeatureMap(n_features=4)
+        with pytest.raises(ValueError):
+            enc.get_circuit(np.array([0.1, 0.2, 0.3]), backend="pennylane")
+
+    def test_cyclic_rejects_nan_input(self) -> None:
+        """Verify that NaN input raises ValueError."""
+        enc = CyclicEquivariantFeatureMap(n_features=3)
+        with pytest.raises(ValueError):
+            enc.get_circuit(np.array([0.1, np.nan, 0.3]), backend="pennylane")
+
+    def test_cyclic_rejects_inf_input(self) -> None:
+        """Verify that inf input raises ValueError."""
+        enc = CyclicEquivariantFeatureMap(n_features=3)
+        with pytest.raises(ValueError):
+            enc.get_circuit(np.array([0.1, np.inf, 0.3]), backend="pennylane")
+
+    def test_cyclic_rejects_batch_in_get_circuit(self) -> None:
+        """Verify that batch input in get_circuit raises ValueError."""
+        enc = CyclicEquivariantFeatureMap(n_features=3)
+        X = np.array([[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]])
+        with pytest.raises(ValueError, match="single sample"):
+            enc.get_circuit(X, backend="pennylane")
+
+    # -------------------------------------------------------------------------
+    # Equivariance verification edge cases
+    # -------------------------------------------------------------------------
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_equivariance_on_generators(self) -> None:
+        """Verify equivariance_on_generators works for cyclic encoding."""
+        enc = CyclicEquivariantFeatureMap(n_features=4)
+        x = np.array([0.1, 0.3, 0.5, 0.7])
+        assert enc.verify_equivariance_on_generators(x, atol=1e-8)
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_equivariance_detailed_returns_all_keys(self) -> None:
+        """Verify verify_equivariance_detailed returns correct dict structure."""
+        enc = CyclicEquivariantFeatureMap(n_features=3)
+        x = np.array([0.2, 0.5, 0.8])
+        result = enc.verify_equivariance_detailed(x, 1, atol=1e-8)
+        assert "equivariant" in result
+        assert "overlap" in result
+        assert "tolerance" in result
+        assert "group_element" in result
+        assert result["equivariant"] is True
+        assert result["overlap"] > 0.9999
+        assert result["tolerance"] == 1e-8
+        assert result["group_element"] == 1
+
+    @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
+    def test_cyclic_equivariance_with_2d_single_sample_input(self) -> None:
+        """Verify equivariance works when input is shape (1, n_features)."""
+        enc = CyclicEquivariantFeatureMap(n_features=3)
+        x = np.array([[0.2, 0.5, 0.8]])  # shape (1, 3)
+        assert enc.verify_equivariance(x, 1, atol=1e-8)

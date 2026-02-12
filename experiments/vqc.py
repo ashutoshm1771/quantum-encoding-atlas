@@ -120,12 +120,12 @@ class VQCClassifier:
         n_var_layers = self.n_var_layers
 
         # Create device
-        self._device = qml.device("default.qubit", wires=n_qubits)
+        self._device = qml.device("lightning.qubit", wires=n_qubits)
 
         # Store encoding reference for closure
         encoding = self.encoding
 
-        @qml.qnode(self._device, interface="autograd")
+        @qml.qnode(self._device, interface="autograd", diff_method="adjoint")
         def circuit(x: NDArray[np.floating], params: NDArray[np.floating]) -> float:
             """VQC circuit: encoding + variational + measurement.
 

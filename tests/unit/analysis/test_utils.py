@@ -33,34 +33,32 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_array_almost_equal
 
-from encoding_atlas.core.exceptions import (
-    AnalysisError,
-    NumericalInstabilityError,
-    SimulationError,
-    ValidationError,
-)
 from encoding_atlas.analysis._utils import (
+    compute_all_parameter_gradients,
+    compute_fidelity,
+    compute_linear_entropy,
+    # Gradient computation
+    compute_parameter_gradient,
+    compute_purity,
+    compute_von_neumann_entropy,
+    create_rng,
+    # Random sampling
+    generate_random_parameters,
+    # Quantum operations
+    partial_trace_single_qubit,
+    partial_trace_subsystem,
     # Simulation
     simulate_encoding_statevector,
     simulate_encoding_statevectors_batch,
     # Validation
     validate_encoding_for_analysis,
     validate_statevector,
-    # Quantum operations
-    partial_trace_single_qubit,
-    partial_trace_subsystem,
-    compute_fidelity,
-    compute_purity,
-    compute_linear_entropy,
-    compute_von_neumann_entropy,
-    # Gradient computation
-    compute_parameter_gradient,
-    compute_all_parameter_gradients,
-    # Random sampling
-    generate_random_parameters,
-    create_rng,
 )
-
+from encoding_atlas.core.exceptions import (
+    AnalysisError,
+    NumericalInstabilityError,
+    ValidationError,
+)
 
 # =============================================================================
 # Test: validate_statevector
@@ -578,36 +576,48 @@ class TestSimulateEncodingStatevectorPennylane:
         """Test that different inputs produce different states."""
         x1 = np.array([0.0, 0.0])
         x2 = np.array([np.pi, np.pi])
-        state1 = simulate_encoding_statevector(sample_encoding_2q, x1, backend="pennylane")
-        state2 = simulate_encoding_statevector(sample_encoding_2q, x2, backend="pennylane")
+        state1 = simulate_encoding_statevector(
+            sample_encoding_2q, x1, backend="pennylane"
+        )
+        state2 = simulate_encoding_statevector(
+            sample_encoding_2q, x2, backend="pennylane"
+        )
         fidelity = compute_fidelity(state1, state2)
         assert fidelity < 0.99  # States should be different
 
     def test_zero_input_initial_state(self, sample_encoding_2q):
         """Test that zero input gives deterministic state."""
         x = np.array([0.0, 0.0])
-        state = simulate_encoding_statevector(sample_encoding_2q, x, backend="pennylane")
+        state = simulate_encoding_statevector(
+            sample_encoding_2q, x, backend="pennylane"
+        )
         # For AngleEncoding with RY and angle 0, state should be |00⟩
-        assert_allclose(np.abs(state[0])**2, 1.0, atol=1e-10)
+        assert_allclose(np.abs(state[0]) ** 2, 1.0, atol=1e-10)
 
     def test_wrong_feature_count_raises(self, sample_encoding_2q):
         """Test that wrong feature count raises error."""
         wrong_features = np.array([0.1, 0.2, 0.3])  # 3 features, but encoding expects 2
         with pytest.raises(ValidationError, match="features"):
-            simulate_encoding_statevector(sample_encoding_2q, wrong_features, backend="pennylane")
+            simulate_encoding_statevector(
+                sample_encoding_2q, wrong_features, backend="pennylane"
+            )
 
     def test_nan_input_raises(self, sample_encoding_2q, features_with_nan):
         """Test that NaN input raises error."""
         # Create features with correct size but containing NaN
         nan_features = np.array([0.1, np.nan])
         with pytest.raises(ValidationError, match="NaN"):
-            simulate_encoding_statevector(sample_encoding_2q, nan_features, backend="pennylane")
+            simulate_encoding_statevector(
+                sample_encoding_2q, nan_features, backend="pennylane"
+            )
 
     def test_inf_input_raises(self, sample_encoding_2q):
         """Test that infinite input raises error."""
         inf_features = np.array([0.1, np.inf])
         with pytest.raises(ValidationError, match="infinite"):
-            simulate_encoding_statevector(sample_encoding_2q, inf_features, backend="pennylane")
+            simulate_encoding_statevector(
+                sample_encoding_2q, inf_features, backend="pennylane"
+            )
 
     def test_2d_input_raises(self, sample_encoding_2q):
         """Test that 2D input raises error."""
@@ -618,7 +628,9 @@ class TestSimulateEncodingStatevectorPennylane:
     def test_invalid_encoding_raises(self, sample_features_2d):
         """Test that invalid encoding raises error."""
         with pytest.raises(AnalysisError, match="BaseEncoding"):
-            simulate_encoding_statevector("not_an_encoding", sample_features_2d, backend="pennylane")
+            simulate_encoding_statevector(
+                "not_an_encoding", sample_features_2d, backend="pennylane"
+            )
 
 
 # =============================================================================
@@ -702,14 +714,22 @@ class TestCrossBackendConsistency:
         x2 = np.array([0.5, 0.8])
 
         # Test PennyLane fidelity
-        state1_pl = simulate_encoding_statevector(sample_encoding_2q, x1, backend="pennylane")
-        state2_pl = simulate_encoding_statevector(sample_encoding_2q, x2, backend="pennylane")
+        state1_pl = simulate_encoding_statevector(
+            sample_encoding_2q, x1, backend="pennylane"
+        )
+        state2_pl = simulate_encoding_statevector(
+            sample_encoding_2q, x2, backend="pennylane"
+        )
         fidelity_pl = compute_fidelity(state1_pl, state2_pl)
         assert 0.0 <= fidelity_pl <= 1.0
 
         # Test Qiskit fidelity
-        state1_qk = simulate_encoding_statevector(sample_encoding_2q, x1, backend="qiskit")
-        state2_qk = simulate_encoding_statevector(sample_encoding_2q, x2, backend="qiskit")
+        state1_qk = simulate_encoding_statevector(
+            sample_encoding_2q, x1, backend="qiskit"
+        )
+        state2_qk = simulate_encoding_statevector(
+            sample_encoding_2q, x2, backend="qiskit"
+        )
         fidelity_qk = compute_fidelity(state1_qk, state2_qk)
         assert 0.0 <= fidelity_qk <= 1.0
 
@@ -742,7 +762,9 @@ class TestSimulateEncodingStatevectorsBatch:
             assert state.shape == (4,)
             assert_allclose(np.linalg.norm(state), 1.0, atol=1e-10)
 
-    def test_batch_matches_individual(self, sample_encoding_2q, sample_features_batch_2d):
+    def test_batch_matches_individual(
+        self, sample_encoding_2q, sample_features_batch_2d
+    ):
         """Test that batch results match individual simulation."""
         batch_states = simulate_encoding_statevectors_batch(
             sample_encoding_2q, sample_features_batch_2d, backend="pennylane"
@@ -824,17 +846,15 @@ class TestComputeAllParameterGradients:
 
     def test_gradient_vector_shape(self, sample_encoding_2q, sample_features_2d):
         """Test that gradient vector has correct shape."""
-        grads = compute_all_parameter_gradients(
-            sample_encoding_2q, sample_features_2d
-        )
+        grads = compute_all_parameter_gradients(sample_encoding_2q, sample_features_2d)
         assert grads.shape == (2,)  # 2 features = 2 parameters
         assert grads.dtype == np.float64
 
-    def test_gradient_vector_matches_individual(self, sample_encoding_2q, sample_features_2d):
+    def test_gradient_vector_matches_individual(
+        self, sample_encoding_2q, sample_features_2d
+    ):
         """Test that gradient vector matches individual computations."""
-        grads = compute_all_parameter_gradients(
-            sample_encoding_2q, sample_features_2d
-        )
+        grads = compute_all_parameter_gradients(sample_encoding_2q, sample_features_2d)
         for i in range(len(sample_features_2d)):
             individual_grad = compute_parameter_gradient(
                 sample_encoding_2q, sample_features_2d, param_index=i

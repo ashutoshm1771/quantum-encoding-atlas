@@ -18,17 +18,15 @@ import pytest
 
 # Try to import hypothesis, skip all tests if not available
 hypothesis = pytest.importorskip("hypothesis")
-from hypothesis import given, strategies as st, settings, assume, HealthCheck
+from hypothesis import HealthCheck, assume, given, settings
+from hypothesis import strategies as st
 
 from encoding_atlas import (
-    AngleEncoding,
     AmplitudeEncoding,
+    AngleEncoding,
     IQPEncoding,
     ZZFeatureMap,
-    PauliFeatureMap,
-    HigherOrderAngleEncoding,
 )
-
 
 # =============================================================================
 # CUSTOM STRATEGIES
@@ -63,7 +61,9 @@ class TestNormalizationProperties:
     """Property: all encodings produce normalized quantum states."""
 
     @given(float_list(4))
-    @settings(max_examples=100, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+    @settings(
+        max_examples=100, deadline=None, suppress_health_check=[HealthCheck.too_slow]
+    )
     def test_angle_encoding_always_normalized(self, data) -> None:
         """Property: AngleEncoding always produces a normalized state."""
         qml = pytest.importorskip("pennylane")
@@ -83,7 +83,9 @@ class TestNormalizationProperties:
         assert np.isclose(norm, 1.0, atol=1e-10), f"State not normalized: {norm}"
 
     @given(float_list(4, min_value=0.01, max_value=10))
-    @settings(max_examples=100, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+    @settings(
+        max_examples=100, deadline=None, suppress_health_check=[HealthCheck.too_slow]
+    )
     def test_amplitude_encoding_always_normalized(self, data) -> None:
         """Property: AmplitudeEncoding always produces normalized state."""
         qml = pytest.importorskip("pennylane")
@@ -106,7 +108,9 @@ class TestNormalizationProperties:
         assert np.isclose(norm, 1.0, atol=1e-10), f"State not normalized: {norm}"
 
     @given(float_list(4))
-    @settings(max_examples=100, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+    @settings(
+        max_examples=100, deadline=None, suppress_health_check=[HealthCheck.too_slow]
+    )
     def test_iqp_encoding_always_normalized(self, data) -> None:
         """Property: IQPEncoding always produces normalized state."""
         qml = pytest.importorskip("pennylane")
@@ -126,7 +130,9 @@ class TestNormalizationProperties:
         assert np.isclose(norm, 1.0, atol=1e-10), f"State not normalized: {norm}"
 
     @given(float_list(4))
-    @settings(max_examples=100, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+    @settings(
+        max_examples=100, deadline=None, suppress_health_check=[HealthCheck.too_slow]
+    )
     def test_zz_feature_map_always_normalized(self, data) -> None:
         """Property: ZZFeatureMap always produces normalized state."""
         qml = pytest.importorskip("pennylane")
@@ -155,7 +161,9 @@ class TestDeterminismProperties:
     """Property: same input always produces same output."""
 
     @given(float_list(4))
-    @settings(max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+    @settings(
+        max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow]
+    )
     def test_angle_encoding_deterministic(self, data) -> None:
         """Property: AngleEncoding is deterministic."""
         pytest.importorskip("qiskit")
@@ -173,7 +181,9 @@ class TestDeterminismProperties:
         np.testing.assert_allclose(state1, state2, atol=1e-14)
 
     @given(float_list(4))
-    @settings(max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+    @settings(
+        max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow]
+    )
     def test_iqp_encoding_deterministic(self, data) -> None:
         """Property: IQPEncoding is deterministic."""
         pytest.importorskip("qiskit")
@@ -191,7 +201,9 @@ class TestDeterminismProperties:
         np.testing.assert_allclose(state1, state2, atol=1e-14)
 
     @given(float_list(4))
-    @settings(max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+    @settings(
+        max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow]
+    )
     def test_zz_feature_map_deterministic(self, data) -> None:
         """Property: ZZFeatureMap is deterministic."""
         pytest.importorskip("qiskit")
@@ -254,7 +266,9 @@ class TestNumericalStabilityProperties:
     """Properties for numerical stability."""
 
     @given(float_list(4, min_value=-100, max_value=100))
-    @settings(max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+    @settings(
+        max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow]
+    )
     def test_large_values_produce_valid_state(self, data) -> None:
         """Property: large input values still produce valid states."""
         pytest.importorskip("qiskit")
@@ -274,7 +288,9 @@ class TestNumericalStabilityProperties:
         assert np.all(np.isfinite(state)), "State contains NaN or Inf"
 
     @given(st.lists(valid_floats(-1e-10, 1e-10), min_size=4, max_size=4))
-    @settings(max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+    @settings(
+        max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow]
+    )
     def test_tiny_values_produce_valid_state(self, data) -> None:
         """Property: very small input values still produce valid states."""
         pytest.importorskip("qiskit")
@@ -355,7 +371,9 @@ class TestEncodingComparisonProperties:
     """Properties comparing different encodings."""
 
     @given(float_list(4))
-    @settings(max_examples=30, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+    @settings(
+        max_examples=30, deadline=None, suppress_health_check=[HealthCheck.too_slow]
+    )
     def test_different_encodings_different_states(self, data) -> None:
         """Property: different encodings produce different states (usually)."""
         pytest.importorskip("qiskit")
@@ -393,7 +411,9 @@ class TestCircuitGenerationProperties:
     """Properties for circuit generation."""
 
     @given(float_list(4))
-    @settings(max_examples=30, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+    @settings(
+        max_examples=30, deadline=None, suppress_health_check=[HealthCheck.too_slow]
+    )
     def test_circuit_generation_no_exception(self, data) -> None:
         """Property: circuit generation never raises for valid input."""
         x = np.array(data)

@@ -101,11 +101,13 @@ def batch_data_4d() -> NDArray[np.floating]:
     - [0.5, 0.6, 0.7, 0.8] (higher values)
     - [0.0, 0.0, 0.0, 0.0] (edge case: zeros)
     """
-    return np.array([
-        [0.1, 0.2, 0.3, 0.4],
-        [0.5, 0.6, 0.7, 0.8],
-        [0.0, 0.0, 0.0, 0.0],
-    ])
+    return np.array(
+        [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.5, 0.6, 0.7, 0.8],
+            [0.0, 0.0, 0.0, 0.0],
+        ]
+    )
 
 
 @pytest.fixture
@@ -591,9 +593,7 @@ class TestProperties:
         props2 = default_encoding.properties
         assert props1 is props2
 
-    def test_trainability_estimate_exists(
-        self, default_encoding: QAOAEncoding
-    ) -> None:
+    def test_trainability_estimate_exists(self, default_encoding: QAOAEncoding) -> None:
         """Test trainability estimate is computed."""
         props = default_encoding.properties
         assert props.trainability_estimate is not None
@@ -807,7 +807,7 @@ class TestPennyLaneBackend:
 
         state = full_circuit()
         assert state is not None
-        assert len(state) == 2 ** default_encoding.n_qubits
+        assert len(state) == 2**default_encoding.n_qubits
 
     def test_state_normalized(
         self,
@@ -1621,7 +1621,7 @@ class TestConcurrentAccess:
         def generate_circuits(thread_id: int) -> list[Any]:
             circuits = []
             try:
-                for i in range(num_circuits_per_thread):
+                for _i in range(num_circuits_per_thread):
                     x = np.random.randn(4)
                     circuit = enc.get_circuit(x, backend="pennylane")
                     circuits.append(circuit)
@@ -1630,7 +1630,9 @@ class TestConcurrentAccess:
             return circuits
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [executor.submit(generate_circuits, i) for i in range(num_threads)]
+            futures = [
+                executor.submit(generate_circuits, i) for i in range(num_threads)
+            ]
             results = [f.result() for f in as_completed(futures)]
 
         # No errors should have occurred
@@ -1667,9 +1669,7 @@ class TestConcurrentAccess:
     def test_concurrent_different_encodings(self) -> None:
         """Test that multiple encodings can be used concurrently."""
         encodings = [
-            QAOAEncoding(n_features=n, reps=r)
-            for n in [2, 4, 6]
-            for r in [1, 2]
+            QAOAEncoding(n_features=n, reps=r) for n in [2, 4, 6] for r in [1, 2]
         ]
         results: list[tuple[int, int]] = []
         errors: list[Exception] = []
@@ -1742,8 +1742,7 @@ class TestHighRepsWarning:
 
             # Filter for UserWarnings about barren plateaus
             barren_warnings = [
-                warning for warning in w
-                if "barren" in str(warning.message).lower()
+                warning for warning in w if "barren" in str(warning.message).lower()
             ]
             assert len(barren_warnings) == 0
 
@@ -1757,8 +1756,7 @@ class TestHighRepsWarning:
 
             # Should have a warning about barren plateaus
             barren_warnings = [
-                warning for warning in w
-                if "barren" in str(warning.message).lower()
+                warning for warning in w if "barren" in str(warning.message).lower()
             ]
             assert len(barren_warnings) == 1
             assert "reps=11" in str(barren_warnings[0].message)
@@ -1772,8 +1770,7 @@ class TestHighRepsWarning:
             QAOAEncoding(n_features=4, reps=50)
 
             barren_warnings = [
-                warning for warning in w
-                if "barren" in str(warning.message).lower()
+                warning for warning in w if "barren" in str(warning.message).lower()
             ]
             assert len(barren_warnings) == 1
 
@@ -2046,7 +2043,8 @@ class TestFullEntanglementWarning:
 
             # Filter for full entanglement warnings
             full_ent_warnings = [
-                warning for warning in w
+                warning
+                for warning in w
                 if "full entanglement" in str(warning.message).lower()
             ]
             assert len(full_ent_warnings) == 0
@@ -2061,7 +2059,8 @@ class TestFullEntanglementWarning:
 
             # Should have a warning about full entanglement
             full_ent_warnings = [
-                warning for warning in w
+                warning
+                for warning in w
                 if "full entanglement" in str(warning.message).lower()
             ]
             assert len(full_ent_warnings) == 1
@@ -2077,7 +2076,8 @@ class TestFullEntanglementWarning:
 
             # Filter for full entanglement warnings
             full_ent_warnings = [
-                warning for warning in w
+                warning
+                for warning in w
                 if "full entanglement" in str(warning.message).lower()
             ]
             assert len(full_ent_warnings) == 0
@@ -2149,11 +2149,13 @@ class TestParallelBatchProcessing:
         enc = QAOAEncoding(n_features=4, reps=1)
 
         # Create distinct inputs
-        X = np.array([
-            [0.1, 0.1, 0.1, 0.1],
-            [1.0, 1.0, 1.0, 1.0],
-            [2.0, 2.0, 2.0, 2.0],
-        ])
+        X = np.array(
+            [
+                [0.1, 0.1, 0.1, 0.1],
+                [1.0, 1.0, 1.0, 1.0],
+                [2.0, 2.0, 2.0, 2.0],
+            ]
+        )
 
         circuits_parallel = enc.get_circuits(X, backend="pennylane", parallel=True)
         circuits_sequential = enc.get_circuits(X, backend="pennylane", parallel=False)
@@ -2162,6 +2164,7 @@ class TestParallelBatchProcessing:
 
         # Execute circuits and compare states
         for i in range(len(X)):
+
             @qml.qnode(dev)
             def circuit_par():
                 circuits_parallel[i]()

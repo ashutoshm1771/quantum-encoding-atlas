@@ -1,7 +1,5 @@
 # Hamiltonian Encoding
 
-**Author:** Ashutosh Mishra
-
 A physics-motivated quantum data encoding that maps classical features into
 quantum states through **time evolution under a data-dependent Hamiltonian**.
 Creates rich **entanglement structures** via configurable two-qubit interactions.
@@ -780,7 +778,7 @@ especially important for Hamiltonian encoding.
 ## 18. Resource Scaling
 
 ```
-  IQP type, full entanglement, reps=2:
+  IQP type, full entanglement, reps=2 (initial H layer counted once):
 
   n_features | Pairs | H gates | RZ gates | CNOT gates | Total | Depth
   -----------+-------+---------+----------+------------+-------+------
