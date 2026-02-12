@@ -1,13 +1,13 @@
 """Encoding registry system."""
 
-from typing import TYPE_CHECKING, Any, Type
+from typing import TYPE_CHECKING, Any
 
 from encoding_atlas.core.exceptions import RegistryError
 
 if TYPE_CHECKING:
     from encoding_atlas.core.base import BaseEncoding
 
-_ENCODING_REGISTRY: dict[str, Type["BaseEncoding"]] = {}
+_ENCODING_REGISTRY: dict[str, type["BaseEncoding"]] = {}
 
 
 def register_encoding(name: str) -> Any:
@@ -30,7 +30,7 @@ def register_encoding(name: str) -> Any:
     ...     pass
     """
 
-    def decorator(cls: Type["BaseEncoding"]) -> Type["BaseEncoding"]:
+    def decorator(cls: type["BaseEncoding"]) -> type["BaseEncoding"]:
         if name in _ENCODING_REGISTRY:
             raise RegistryError(f"Encoding '{name}' is already registered")
         _ENCODING_REGISTRY[name] = cls

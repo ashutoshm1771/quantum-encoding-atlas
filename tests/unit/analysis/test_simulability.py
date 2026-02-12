@@ -23,7 +23,7 @@ Test Categories
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -105,8 +105,12 @@ class TestCheckSimulability:
         reason_lower = result["reason"].lower()
         assert "iqp" in reason_lower
         # Recommendations should still note practical brute-force feasibility
-        assert any("brute" in r.lower() or "statevector" in r.lower() or "feasible" in r.lower()
-                   for r in result["recommendations"])
+        assert any(
+            "brute" in r.lower()
+            or "statevector" in r.lower()
+            or "feasible" in r.lower()
+            for r in result["recommendations"]
+        )
 
     def test_detailed_false_returns_minimal_result(self, sample_encoding_2q):
         """Test that detailed=False returns minimal but complete result."""
@@ -864,9 +868,8 @@ class TestSimulabilityRegressions:
             assert result1["is_simulable"] is True
 
         # Entangling should typically not be simulable (with non-Clifford gates)
-        if (
-            result2["details"]["is_entangling"] is True
-            and not result2["details"].get("is_clifford", False)
+        if result2["details"]["is_entangling"] is True and not result2["details"].get(
+            "is_clifford", False
         ):
             # Could be conditionally_simulable or not_simulable
             assert result2["simulability_class"] in (
@@ -903,7 +906,9 @@ class TestCirqBackendSimulability:
         from encoding_atlas import IQPEncoding
 
         enc = IQPEncoding(n_features=4, reps=1)
-        entropy = estimate_entanglement_bound(enc, n_samples=20, seed=42, backend="cirq")
+        entropy = estimate_entanglement_bound(
+            enc, n_samples=20, seed=42, backend="cirq"
+        )
 
         # IQP encoding should produce entanglement
         assert entropy > 0.0
@@ -915,8 +920,12 @@ class TestCirqBackendSimulability:
         from encoding_atlas import IQPEncoding
 
         enc = IQPEncoding(n_features=4, reps=1)
-        entropy1 = estimate_entanglement_bound(enc, n_samples=10, seed=42, backend="cirq")
-        entropy2 = estimate_entanglement_bound(enc, n_samples=10, seed=42, backend="cirq")
+        entropy1 = estimate_entanglement_bound(
+            enc, n_samples=10, seed=42, backend="cirq"
+        )
+        entropy2 = estimate_entanglement_bound(
+            enc, n_samples=10, seed=42, backend="cirq"
+        )
 
         assert entropy1 == entropy2
 
@@ -937,7 +946,9 @@ class TestCirqBackendSimulability:
         n_qubits = enc.n_qubits
         max_entropy = n_qubits / 2
 
-        entropy = estimate_entanglement_bound(enc, n_samples=10, seed=42, backend="cirq")
+        entropy = estimate_entanglement_bound(
+            enc, n_samples=10, seed=42, backend="cirq"
+        )
 
         assert entropy <= max_entropy + 1e-10  # Small tolerance for numerical error
 
@@ -965,7 +976,11 @@ class TestCrossBackendConsistency:
     """
 
     def test_entanglement_bound_non_entangling_all_backends(
-        self, sample_encoding_4q, skip_if_no_pennylane, skip_if_no_qiskit, skip_if_no_cirq
+        self,
+        sample_encoding_4q,
+        skip_if_no_pennylane,
+        skip_if_no_qiskit,
+        skip_if_no_cirq,
     ):
         """Test that non-entangling encoding gives zero entropy on all backends."""
         entropy_pennylane = estimate_entanglement_bound(
@@ -1499,8 +1514,12 @@ class TestGetEntanglementPatternStrategies:
             is_entangling=True,
             n_qubits=4,
             entanglement_pairs=[
-                (0, 1), (0, 2), (0, 3),
-                (1, 2), (1, 3), (2, 3),
+                (0, 1),
+                (0, 2),
+                (0, 3),
+                (1, 2),
+                (1, 3),
+                (2, 3),
             ],
         )
         assert _get_entanglement_pattern(mock) == "full"
@@ -1540,9 +1559,13 @@ class TestGetEntanglementPatternStrategies:
 
             def _compute_properties(self):
                 return EncodingProperties(
-                    n_qubits=4, depth=1, gate_count=6,
-                    single_qubit_gates=3, two_qubit_gates=3,
-                    parameter_count=4, is_entangling=True,
+                    n_qubits=4,
+                    depth=1,
+                    gate_count=6,
+                    single_qubit_gates=3,
+                    two_qubit_gates=3,
+                    parameter_count=4,
+                    is_entangling=True,
                     simulability="not_simulable",
                 )
 
@@ -1667,8 +1690,9 @@ class TestCheckSimulabilityDecisionBranches:
         result = check_simulability(enc)
         assert result["simulability_class"] == "conditionally_simulable"
         assert "circular" in result["reason"].lower()
-        assert any("mps" in r.lower() or "dmrg" in r.lower()
-                    for r in result["recommendations"])
+        assert any(
+            "mps" in r.lower() or "dmrg" in r.lower() for r in result["recommendations"]
+        )
 
     def test_case5_full_entanglement_not_simulable(self):
         """Case 5: Full entanglement circuit is not simulable regardless of size.
@@ -1709,8 +1733,10 @@ class TestCheckSimulabilityDecisionBranches:
         result = check_simulability(mock)
         assert result["is_simulable"] is False
         assert result["simulability_class"] == "not_simulable"
-        assert any("tensor" in r.lower() or "quantum hardware" in r.lower()
-                    for r in result["recommendations"])
+        assert any(
+            "tensor" in r.lower() or "quantum hardware" in r.lower()
+            for r in result["recommendations"]
+        )
 
     def test_case5_large_iqp_circuit(self):
         """Large IQP circuit mentions provable hardness."""
@@ -1967,9 +1993,7 @@ class TestEstimateEntanglementBoundEdgeCases:
         mock_simulate.side_effect = RuntimeError("sim failed")
 
         with pytest.raises(AnalysisError, match="All .* simulations failed"):
-            estimate_entanglement_bound(
-                entangling_encoding_4q, n_samples=5, seed=42
-            )
+            estimate_entanglement_bound(entangling_encoding_4q, n_samples=5, seed=42)
 
     @patch("encoding_atlas.analysis._utils.simulate_encoding_statevector")
     def test_partial_simulation_failures_still_succeed(
@@ -2020,9 +2044,7 @@ class TestEstimateEntanglementBoundEdgeCases:
         mock_simulate.side_effect = side_effect
 
         with pytest.raises(AnalysisError, match="not available"):
-            estimate_entanglement_bound(
-                entangling_encoding_4q, n_samples=5, seed=42
-            )
+            estimate_entanglement_bound(entangling_encoding_4q, n_samples=5, seed=42)
 
     @patch("encoding_atlas.analysis._utils.simulate_encoding_statevector")
     def test_early_validation_import_error(self, mock_simulate, entangling_encoding_4q):
@@ -2030,9 +2052,7 @@ class TestEstimateEntanglementBoundEdgeCases:
         mock_simulate.side_effect = ImportError("no pennylane")
 
         with pytest.raises(AnalysisError, match="not available"):
-            estimate_entanglement_bound(
-                entangling_encoding_4q, n_samples=5, seed=42
-            )
+            estimate_entanglement_bound(entangling_encoding_4q, n_samples=5, seed=42)
 
 
 # =============================================================================
@@ -2134,7 +2154,9 @@ class TestFallbackRecommendations:
         result = check_simulability(mock)
         assert result["is_simulable"] is True
         assert result["simulability_class"] == "simulable"
-        assert any("standard simulation" in r.lower() for r in result["recommendations"])
+        assert any(
+            "standard simulation" in r.lower() for r in result["recommendations"]
+        )
 
     def test_case6_not_simulable_fallback_recommendations(self):
         """Fallback not-simulable encoding with no prior recommendations gets default recs.
@@ -2152,8 +2174,10 @@ class TestFallbackRecommendations:
         )
         result = check_simulability(mock)
         assert result["is_simulable"] is False
-        assert any("statevector" in r.lower() or "tensor" in r.lower()
-                    for r in result["recommendations"])
+        assert any(
+            "statevector" in r.lower() or "tensor" in r.lower()
+            for r in result["recommendations"]
+        )
 
 
 class TestGetEntanglementPatternAdditional:
@@ -2187,9 +2211,13 @@ class TestGetEntanglementPatternAdditional:
 
             def _compute_properties(self):
                 return EncodingProperties(
-                    n_qubits=4, depth=1, gate_count=6,
-                    single_qubit_gates=3, two_qubit_gates=3,
-                    parameter_count=4, is_entangling=True,
+                    n_qubits=4,
+                    depth=1,
+                    gate_count=6,
+                    single_qubit_gates=3,
+                    two_qubit_gates=3,
+                    parameter_count=4,
+                    is_entangling=True,
                     simulability="not_simulable",
                 )
 
@@ -2229,9 +2257,13 @@ class TestGetEntanglementPatternAdditional:
 
             def _compute_properties(self):
                 return EncodingProperties(
-                    n_qubits=4, depth=1, gate_count=6,
-                    single_qubit_gates=3, two_qubit_gates=3,
-                    parameter_count=4, is_entangling=True,
+                    n_qubits=4,
+                    depth=1,
+                    gate_count=6,
+                    single_qubit_gates=3,
+                    two_qubit_gates=3,
+                    parameter_count=4,
+                    is_entangling=True,
                     simulability="not_simulable",
                 )
 
@@ -2270,9 +2302,13 @@ class TestGetEntanglementPatternAdditional:
 
             def _compute_properties(self):
                 return EncodingProperties(
-                    n_qubits=4, depth=1, gate_count=6,
-                    single_qubit_gates=3, two_qubit_gates=3,
-                    parameter_count=4, is_entangling=True,
+                    n_qubits=4,
+                    depth=1,
+                    gate_count=6,
+                    single_qubit_gates=3,
+                    two_qubit_gates=3,
+                    parameter_count=4,
+                    is_entangling=True,
                     simulability="not_simulable",
                 )
 
@@ -2312,7 +2348,9 @@ class TestComputeBipartiteEntropyNumerical:
         """
         from unittest.mock import patch
 
-        state = np.array([1.0 / np.sqrt(2), 0, 0, 1.0 / np.sqrt(2)], dtype=np.complex128)
+        state = np.array(
+            [1.0 / np.sqrt(2), 0, 0, 1.0 / np.sqrt(2)], dtype=np.complex128
+        )
         with patch("numpy.linalg.eigvalsh", side_effect=np.linalg.LinAlgError("test")):
             entropy = _compute_bipartite_entropy(state, n_qubits=2, cut_position=1)
         assert entropy == 0.0
@@ -2324,7 +2362,9 @@ class TestComputeBipartiteEntropyNumerical:
         """
         from unittest.mock import patch
 
-        state = np.array([1.0 / np.sqrt(2), 0, 0, 1.0 / np.sqrt(2)], dtype=np.complex128)
+        state = np.array(
+            [1.0 / np.sqrt(2), 0, 0, 1.0 / np.sqrt(2)], dtype=np.complex128
+        )
         # Mock eigvalsh to return all-negative eigenvalues
         mock_eigenvalues = np.array([-1e-20, -1e-20], dtype=np.float64)
         with patch("numpy.linalg.eigvalsh", return_value=mock_eigenvalues):
@@ -2352,6 +2392,7 @@ class TestEstimateEntanglementBoundMemoryWarning:
         # The function will warn but then fail on simulation (mock can't simulate)
         # We just verify the warning is issued
         import warnings as warn_mod
+
         with warn_mod.catch_warnings(record=True) as w:
             warn_mod.simplefilter("always")
             try:
@@ -2361,7 +2402,8 @@ class TestEstimateEntanglementBoundMemoryWarning:
 
             # Check that memory warning was issued
             memory_warnings = [
-                x for x in w
+                x
+                for x in w
                 if issubclass(x.category, UserWarning)
                 and "memory" in str(x.message).lower()
             ]

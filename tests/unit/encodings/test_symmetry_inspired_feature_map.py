@@ -39,10 +39,7 @@ import numpy as np
 import pytest
 
 from encoding_atlas.encodings.symmetry_inspired_feature_map import (
-    CovariantFeatureMap,
-    CovariantGateBreakdown,
     SymmetryInspiredFeatureMap,
-    SymmetryInspiredGateBreakdown,
     convert_state_vector_ordering,
     estimate_circuit_resources,
     estimate_memory_usage,
@@ -50,7 +47,6 @@ from encoding_atlas.encodings.symmetry_inspired_feature_map import (
 )
 
 if TYPE_CHECKING:
-    from typing import Any
 
     from numpy.typing import NDArray
 
@@ -111,11 +107,13 @@ def batch_data_4d() -> NDArray[np.floating]:
     - [0.5, 0.6, 0.7, 0.8] (higher values)
     - [0.0, 0.0, 0.0, 0.0] (edge case: zeros)
     """
-    return np.array([
-        [0.1, 0.2, 0.3, 0.4],
-        [0.5, 0.6, 0.7, 0.8],
-        [0.0, 0.0, 0.0, 0.0],
-    ])
+    return np.array(
+        [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.5, 0.6, 0.7, 0.8],
+            [0.0, 0.0, 0.0, 0.0],
+        ]
+    )
 
 
 @pytest.fixture
@@ -612,7 +610,7 @@ class TestPennyLaneBackend:
 
         state = full_circuit()
         assert state is not None
-        assert len(state) == 2 ** default_encoding.n_qubits
+        assert len(state) == 2**default_encoding.n_qubits
 
     def test_state_normalized(
         self,
@@ -880,7 +878,7 @@ class TestMathematicalCorrectness:
         angles = enc.compute_encoding_angles(x)
 
         # Polynomial mapping: theta = x + x^2
-        expected = x + x ** 2
+        expected = x + x**2
         np.testing.assert_allclose(angles["encoding"], expected)
 
     def test_rotation_equivariant_angle_radius(self) -> None:
@@ -1081,12 +1079,14 @@ class TestNumericalStability:
     def test_near_pi_multiples(self) -> None:
         """Test numerical stability near pi multiples."""
         enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="cyclic", reps=2)
-        x = np.array([
-            np.pi - 1e-14,
-            np.pi + 1e-14,
-            2 * np.pi - 1e-14,
-            np.pi / 2 + 1e-14,
-        ])
+        x = np.array(
+            [
+                np.pi - 1e-14,
+                np.pi + 1e-14,
+                2 * np.pi - 1e-14,
+                np.pi / 2 + 1e-14,
+            ]
+        )
 
         circuit_fn = enc.get_circuit(x, backend="pennylane")
         dev = qml.device("default.qubit", wires=enc.n_qubits)
@@ -1429,10 +1429,7 @@ class TestConcurrentAccess:
         enc._properties = None  # type: ignore
 
         # Create and start threads
-        threads = [
-            threading.Thread(target=access_properties)
-            for _ in range(n_threads)
-        ]
+        threads = [threading.Thread(target=access_properties) for _ in range(n_threads)]
         for t in threads:
             t.start()
         for t in threads:
@@ -1443,9 +1440,9 @@ class TestConcurrentAccess:
 
         # All results should be the same object (cached)
         assert len(results) == n_threads
-        assert all(r is results[0] for r in results), (
-            "All threads should get the same cached properties object"
-        )
+        assert all(
+            r is results[0] for r in results
+        ), "All threads should get the same cached properties object"
 
     def test_thread_safe_property_values_consistent(self) -> None:
         """Test that property values are consistent across threads.
@@ -1455,10 +1452,7 @@ class TestConcurrentAccess:
         import threading
 
         enc = SymmetryInspiredFeatureMap(
-            n_features=6,
-            symmetry="reflection",
-            reps=3,
-            entanglement="circular"
+            n_features=6, symmetry="reflection", reps=3, entanglement="circular"
         )
 
         results: list[tuple[int, int, int, bool]] = []
@@ -1467,16 +1461,17 @@ class TestConcurrentAccess:
         def collect_property_values() -> None:
             """Worker that collects property values."""
             props = enc.properties
-            results.append((
-                props.n_qubits,
-                props.depth,
-                props.gate_count,
-                props.is_entangling,
-            ))
+            results.append(
+                (
+                    props.n_qubits,
+                    props.depth,
+                    props.gate_count,
+                    props.is_entangling,
+                )
+            )
 
         threads = [
-            threading.Thread(target=collect_property_values)
-            for _ in range(n_threads)
+            threading.Thread(target=collect_property_values) for _ in range(n_threads)
         ]
         for t in threads:
             t.start()
@@ -1485,9 +1480,9 @@ class TestConcurrentAccess:
 
         # All threads should have collected the same values
         assert len(results) == n_threads
-        assert all(r == results[0] for r in results), (
-            "All threads should see identical property values"
-        )
+        assert all(
+            r == results[0] for r in results
+        ), "All threads should see identical property values"
 
     def test_concurrent_circuit_generation(self) -> None:
         """Test that concurrent circuit generation is safe.
@@ -1502,10 +1497,7 @@ class TestConcurrentAccess:
         errors: list[Exception] = []
 
         # Different input data for each thread
-        inputs = [
-            np.array([0.1 * i, 0.2 * i, 0.3 * i, 0.4 * i])
-            for i in range(1, 11)
-        ]
+        inputs = [np.array([0.1 * i, 0.2 * i, 0.3 * i, 0.4 * i]) for i in range(1, 11)]
 
         def generate_circuit(x: NDArray[np.floating]) -> None:
             """Worker that generates a circuit."""
@@ -1515,10 +1507,7 @@ class TestConcurrentAccess:
             except Exception as e:
                 errors.append(e)
 
-        threads = [
-            threading.Thread(target=generate_circuit, args=(x,))
-            for x in inputs
-        ]
+        threads = [threading.Thread(target=generate_circuit, args=(x,)) for x in inputs]
         for t in threads:
             t.start()
         for t in threads:
@@ -1588,11 +1577,13 @@ class TestParallelBatchProcessing:
         to those generated sequentially.
         """
         enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="rotation")
-        X = np.array([
-            [0.1, 0.2, 0.3, 0.4],
-            [0.5, 0.6, 0.7, 0.8],
-            [0.9, 1.0, 1.1, 1.2],
-        ])
+        X = np.array(
+            [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.5, 0.6, 0.7, 0.8],
+                [0.9, 1.0, 1.1, 1.2],
+            ]
+        )
 
         # Generate sequentially
         circuits_seq = enc.get_circuits(X, backend="pennylane", parallel=False)
@@ -1616,11 +1607,13 @@ class TestParallelBatchProcessing:
         parallel vs sequential generation.
         """
         enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="cyclic")
-        X = np.array([
-            [0.1, 0.2, 0.3, 0.4],
-            [0.5, 0.6, 0.7, 0.8],
-            [0.9, 1.0, 1.1, 1.2],
-        ])
+        X = np.array(
+            [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.5, 0.6, 0.7, 0.8],
+                [0.9, 1.0, 1.1, 1.2],
+            ]
+        )
 
         circuits_seq = enc.get_circuits(X, backend="qiskit", parallel=False)
         circuits_par = enc.get_circuits(X, backend="qiskit", parallel=True)
@@ -1640,11 +1633,13 @@ class TestParallelBatchProcessing:
         parallel vs sequential generation.
         """
         enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="reflection")
-        X = np.array([
-            [0.1, 0.2, 0.3, 0.4],
-            [0.5, 0.6, 0.7, 0.8],
-            [0.9, 1.0, 1.1, 1.2],
-        ])
+        X = np.array(
+            [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.5, 0.6, 0.7, 0.8],
+                [0.9, 1.0, 1.1, 1.2],
+            ]
+        )
 
         circuits_seq = enc.get_circuits(X, backend="cirq", parallel=False)
         circuits_par = enc.get_circuits(X, backend="cirq", parallel=True)
@@ -1667,12 +1662,14 @@ class TestParallelBatchProcessing:
         )
 
         # Create distinctly different input samples
-        X = np.array([
-            [0.0, 0.0, 0.0, 0.0],      # All zeros
-            [1.0, 1.0, 1.0, 1.0],      # All ones
-            [0.5, 0.5, 0.5, 0.5],      # All halves
-            [np.pi, np.pi, np.pi, np.pi],  # All pi
-        ])
+        X = np.array(
+            [
+                [0.0, 0.0, 0.0, 0.0],  # All zeros
+                [1.0, 1.0, 1.0, 1.0],  # All ones
+                [0.5, 0.5, 0.5, 0.5],  # All halves
+                [np.pi, np.pi, np.pi, np.pi],  # All pi
+            ]
+        )
 
         # Generate multiple times to catch potential ordering bugs
         for _ in range(5):
@@ -1757,15 +1754,18 @@ class TestParallelBatchProcessing:
         Execute the circuits and verify normalization.
         """
         enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="rotation")
-        X = np.array([
-            [0.1, 0.2, 0.3, 0.4],
-            [0.5, 0.6, 0.7, 0.8],
-        ])
+        X = np.array(
+            [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.5, 0.6, 0.7, 0.8],
+            ]
+        )
 
         circuits = enc.get_circuits(X, backend="pennylane", parallel=True)
         dev = qml.device("default.qubit", wires=enc.n_qubits)
 
         for circuit_fn in circuits:
+
             @qml.qnode(dev)
             def full_circuit():
                 circuit_fn()
@@ -1971,11 +1971,11 @@ class TestGateCountBreakdown:
 
         # Single qubit gates
         expected_single = (
-            breakdown["hadamard"] +
-            breakdown["ry_encoding"] +
-            breakdown["rz_equivariant"] +
-            breakdown["rz_entanglement"] +
-            breakdown["ry_entanglement"]
+            breakdown["hadamard"]
+            + breakdown["ry_encoding"]
+            + breakdown["rz_equivariant"]
+            + breakdown["rz_entanglement"]
+            + breakdown["ry_entanglement"]
         )
         assert breakdown["total_single_qubit"] == expected_single
 
@@ -2302,14 +2302,17 @@ class TestMemoryEstimation:
         assert "state_vector_bytes" not in mem_without
         assert "state_vector_bytes" in mem_with
         # 16 bytes per complex128
-        assert mem_with["state_vector_bytes"] == 2 ** 4 * 16
+        assert mem_with["state_vector_bytes"] == 2**4 * 16
 
     def test_full_entanglement_more_memory(self) -> None:
         """Test that full entanglement uses more memory than linear."""
         mem_linear = estimate_memory_usage(10, "cyclic", 2, "linear")
         mem_full = estimate_memory_usage(10, "cyclic", 2, "full")
 
-        assert mem_full["entanglement_pairs_bytes"] > mem_linear["entanglement_pairs_bytes"]
+        assert (
+            mem_full["entanglement_pairs_bytes"]
+            > mem_linear["entanglement_pairs_bytes"]
+        )
         assert mem_full["total_instance_bytes"] > mem_linear["total_instance_bytes"]
 
     def test_no_entanglement_minimal_pairs(self) -> None:
@@ -2330,7 +2333,10 @@ class TestMemoryEstimation:
         mem_linear = estimate_memory_usage(10, "cyclic", 2, "linear")
         mem_full = estimate_memory_usage(10, "cyclic", 2, "full")
 
-        assert mem_full["recommended_max_features"] < mem_linear["recommended_max_features"]
+        assert (
+            mem_full["recommended_max_features"]
+            < mem_linear["recommended_max_features"]
+        )
 
     def test_validation_errors(self) -> None:
         """Test that invalid parameters raise errors."""
@@ -2358,7 +2364,7 @@ class TestMemoryEstimation:
         )
 
         assert "state_vector_mb" in mem
-        expected_mb = (2 ** 10 * 16) / (1024 * 1024)
+        expected_mb = (2**10 * 16) / (1024 * 1024)
         np.testing.assert_allclose(mem["state_vector_mb"], expected_mb)
 
 
@@ -2478,7 +2484,7 @@ class TestSlowSimulation:
         assert np.isclose(np.sum(np.abs(cirq_state) ** 2), 1.0, atol=1e-10)
 
         # All states should have the same dimension
-        assert len(pl_state) == len(qk_state) == len(cirq_state) == 2 ** enc.n_qubits
+        assert len(pl_state) == len(qk_state) == len(cirq_state) == 2**enc.n_qubits
 
         # Probability distributions should have the same set of values
         # (accounting for different qubit ordering conventions)
@@ -2548,9 +2554,9 @@ class TestSlowSimulation:
         atol: float = 1e-6,
     ) -> None:
         """Assert two quantum states are equivalent up to qubit ordering."""
-        assert len(state1) == len(state2), (
-            f"{name1} and {name2} have different dimensions"
-        )
+        assert len(state1) == len(
+            state2
+        ), f"{name1} and {name2} have different dimensions"
 
         norm1 = np.sum(np.abs(state1) ** 2)
         norm2 = np.sum(np.abs(state2) ** 2)
@@ -2576,7 +2582,7 @@ class TestSlowSimulation:
         qk_state = self._get_qiskit_state(enc, x)
         cirq_state = self._get_cirq_state(enc, x)
 
-        expected_dim = 2 ** enc.n_qubits
+        expected_dim = 2**enc.n_qubits
         assert len(pl_state) == expected_dim
         assert len(qk_state) == expected_dim
         assert len(cirq_state) == expected_dim
@@ -2659,7 +2665,7 @@ class TestSlowSimulation:
         qk_state = self._get_qiskit_state(enc, x)
         cirq_state = self._get_cirq_state(enc, x)
 
-        expected_dim = 2 ** enc.n_qubits
+        expected_dim = 2**enc.n_qubits
         assert len(pl_state) == expected_dim
         assert len(qk_state) == expected_dim
         assert len(cirq_state) == expected_dim
@@ -2744,3 +2750,694 @@ class TestSlowSimulation:
 
         self._assert_states_equivalent(pl_state, qk_state, "PennyLane", "Qiskit")
         self._assert_states_equivalent(pl_state, cirq_state, "PennyLane", "Cirq")
+
+
+# =============================================================================
+# Test Class: measure_trainability
+# =============================================================================
+
+
+@pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane required")
+class TestMeasureTrainability:
+    """Tests for the measure_trainability() method.
+
+    Covers:
+    - Return value structure and types
+    - Statistical validity (variance, mean, std relationships)
+    - Reproducibility via seed
+    - Local vs global cost observable behavior
+    - All symmetry types
+    - Input validation (n_samples, cost_observable, seed, x)
+    - Empirical trainability scaling
+    - Edge cases (2D input, minimal n_samples)
+    """
+
+    # -----------------------------------------------------------------
+    # Return value structure
+    # -----------------------------------------------------------------
+
+    def test_return_keys(self, default_encoding: SymmetryInspiredFeatureMap) -> None:
+        """Test that result contains all documented keys."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(x, n_samples=10, seed=42)
+
+        expected_keys = {
+            "gradient_variance",
+            "gradient_mean",
+            "gradient_std",
+            "empirical_trainability",
+            "heuristic_trainability",
+            "gradients",
+            "n_samples",
+            "cost_observable",
+        }
+        assert set(result.keys()) == expected_keys
+
+    def test_return_types(self, default_encoding: SymmetryInspiredFeatureMap) -> None:
+        """Test that all return values have correct types."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(x, n_samples=10, seed=42)
+
+        assert isinstance(result["gradient_variance"], float)
+        assert isinstance(result["gradient_mean"], float)
+        assert isinstance(result["gradient_std"], float)
+        assert isinstance(result["empirical_trainability"], float)
+        assert isinstance(result["heuristic_trainability"], float)
+        assert isinstance(result["gradients"], np.ndarray)
+        assert isinstance(result["n_samples"], int)
+        assert isinstance(result["cost_observable"], str)
+
+    def test_gradients_array_shape(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that gradients array has correct shape matching n_samples."""
+        n_samples = 15
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(x, n_samples=n_samples, seed=42)
+
+        assert result["gradients"].shape == (n_samples,)
+        assert result["n_samples"] == n_samples
+
+    def test_cost_observable_echoed(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that cost_observable is echoed back in the result."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        result_local = default_encoding.measure_trainability(
+            x, n_samples=10, seed=42, cost_observable="local"
+        )
+        assert result_local["cost_observable"] == "local"
+
+        result_global = default_encoding.measure_trainability(
+            x, n_samples=10, seed=42, cost_observable="global"
+        )
+        assert result_global["cost_observable"] == "global"
+
+    # -----------------------------------------------------------------
+    # Statistical validity
+    # -----------------------------------------------------------------
+
+    def test_gradient_variance_non_negative(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that gradient variance is non-negative."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(x, n_samples=20, seed=42)
+
+        assert result["gradient_variance"] >= 0.0
+
+    def test_gradient_mean_non_negative(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that mean absolute gradient is non-negative."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(x, n_samples=20, seed=42)
+
+        assert result["gradient_mean"] >= 0.0
+
+    def test_gradient_std_non_negative(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that gradient standard deviation is non-negative."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(x, n_samples=20, seed=42)
+
+        assert result["gradient_std"] >= 0.0
+
+    def test_variance_std_consistency(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that variance equals std^2 (fundamental statistical identity)."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(x, n_samples=30, seed=42)
+
+        np.testing.assert_allclose(
+            result["gradient_variance"],
+            result["gradient_std"] ** 2,
+            rtol=1e-10,
+        )
+
+    def test_variance_matches_raw_gradients(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that reported variance matches actual variance of raw gradients."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(x, n_samples=20, seed=42)
+
+        expected_variance = float(np.var(result["gradients"]))
+        expected_mean = float(np.mean(np.abs(result["gradients"])))
+        expected_std = float(np.std(result["gradients"]))
+
+        np.testing.assert_allclose(
+            result["gradient_variance"], expected_variance, rtol=1e-10
+        )
+        np.testing.assert_allclose(result["gradient_mean"], expected_mean, rtol=1e-10)
+        np.testing.assert_allclose(result["gradient_std"], expected_std, rtol=1e-10)
+
+    def test_gradients_are_finite(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that all computed gradients are finite (no NaN or Inf)."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(x, n_samples=20, seed=42)
+
+        assert np.all(np.isfinite(result["gradients"]))
+
+    def test_non_zero_gradients_for_shallow_circuit(self) -> None:
+        """Test that a shallow circuit produces non-trivial gradients.
+
+        A 2-qubit, 1-rep circuit with local cost should have measurable
+        gradient variance (far from barren plateau regime).
+        """
+        enc = SymmetryInspiredFeatureMap(n_features=2, symmetry="cyclic", reps=1)
+        x = np.array([0.5, 1.0])
+        result = enc.measure_trainability(x, n_samples=50, seed=42)
+
+        # A shallow circuit should have non-vanishing gradients
+        assert result["gradient_variance"] > 1e-8
+
+    # -----------------------------------------------------------------
+    # Empirical trainability scaling
+    # -----------------------------------------------------------------
+
+    def test_empirical_trainability_range(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that empirical trainability is in [0, 1]."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(x, n_samples=20, seed=42)
+
+        assert 0.0 <= result["empirical_trainability"] <= 1.0
+
+    def test_empirical_trainability_scaling_formula(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that empirical_trainability = min(1.0, variance * 10.0)."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(x, n_samples=20, seed=42)
+
+        expected = min(1.0, result["gradient_variance"] * 10.0)
+        np.testing.assert_allclose(
+            result["empirical_trainability"], expected, rtol=1e-10
+        )
+
+    def test_heuristic_trainability_matches_properties(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that heuristic_trainability comes from properties."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(x, n_samples=10, seed=42)
+
+        assert (
+            result["heuristic_trainability"]
+            == default_encoding.properties.trainability_estimate
+        )
+
+    # -----------------------------------------------------------------
+    # Reproducibility
+    # -----------------------------------------------------------------
+
+    def test_seed_reproducibility(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that same seed produces identical results."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        result1 = default_encoding.measure_trainability(x, n_samples=20, seed=123)
+        result2 = default_encoding.measure_trainability(x, n_samples=20, seed=123)
+
+        np.testing.assert_array_equal(result1["gradients"], result2["gradients"])
+        assert result1["gradient_variance"] == result2["gradient_variance"]
+        assert result1["gradient_mean"] == result2["gradient_mean"]
+
+    def test_different_seeds_produce_different_results(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that different seeds produce different gradient samples."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        result1 = default_encoding.measure_trainability(x, n_samples=20, seed=1)
+        result2 = default_encoding.measure_trainability(x, n_samples=20, seed=2)
+
+        # Different seeds should sample different theta values
+        assert not np.array_equal(result1["gradients"], result2["gradients"])
+
+    # -----------------------------------------------------------------
+    # Local vs global cost observable
+    # -----------------------------------------------------------------
+
+    def test_local_observable(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that local observable produces valid results."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(
+            x, n_samples=20, seed=42, cost_observable="local"
+        )
+
+        assert result["gradient_variance"] >= 0.0
+        assert np.all(np.isfinite(result["gradients"]))
+
+    def test_global_observable(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that global observable produces valid results."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(
+            x, n_samples=20, seed=42, cost_observable="global"
+        )
+
+        assert result["gradient_variance"] >= 0.0
+        assert np.all(np.isfinite(result["gradients"]))
+
+    def test_local_vs_global_different_variances(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that local and global observables give different variance values.
+
+        For the same encoding, local and global cost functions sample different
+        observables, so the gradient distributions should generally differ.
+        """
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        local = default_encoding.measure_trainability(
+            x, n_samples=50, seed=42, cost_observable="local"
+        )
+        global_ = default_encoding.measure_trainability(
+            x, n_samples=50, seed=42, cost_observable="global"
+        )
+
+        # The variances are computed from different observables, so they
+        # should not be identical (even with the same seed, because the
+        # same theta values are used but the measurement operator differs).
+        assert local["gradient_variance"] != global_["gradient_variance"]
+
+    # -----------------------------------------------------------------
+    # All symmetry types
+    # -----------------------------------------------------------------
+
+    @pytest.mark.parametrize(
+        "symmetry",
+        ["rotation", "cyclic", "reflection", "full"],
+    )
+    def test_all_symmetry_types(self, symmetry: str) -> None:
+        """Test measure_trainability works for every symmetry type."""
+        enc = SymmetryInspiredFeatureMap(n_features=4, symmetry=symmetry, reps=1)
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = enc.measure_trainability(x, n_samples=10, seed=42)
+
+        assert result["gradient_variance"] >= 0.0
+        assert result["gradients"].shape == (10,)
+        assert np.all(np.isfinite(result["gradients"]))
+
+    @pytest.mark.parametrize("entanglement", ["none", "linear", "circular", "full"])
+    def test_all_entanglement_patterns(self, entanglement: str) -> None:
+        """Test measure_trainability works for every entanglement pattern."""
+        enc = SymmetryInspiredFeatureMap(
+            n_features=4, symmetry="cyclic", reps=1, entanglement=entanglement
+        )
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = enc.measure_trainability(x, n_samples=10, seed=42)
+
+        assert result["gradient_variance"] >= 0.0
+        assert np.all(np.isfinite(result["gradients"]))
+
+    def test_no_entanglement_encoding(self) -> None:
+        """Test trainability with entanglement='none' (product state)."""
+        enc = SymmetryInspiredFeatureMap(
+            n_features=4, symmetry="cyclic", reps=1, entanglement="none"
+        )
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = enc.measure_trainability(
+            x, n_samples=20, seed=42, cost_observable="local"
+        )
+
+        # Product state with local observable should be highly trainable
+        assert result["gradient_variance"] >= 0.0
+        assert np.all(np.isfinite(result["gradients"]))
+
+    # -----------------------------------------------------------------
+    # Input validation
+    # -----------------------------------------------------------------
+
+    def test_n_samples_too_small_raises(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that n_samples < 10 raises ValueError."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        with pytest.raises(ValueError, match="n_samples must be at least 10"):
+            default_encoding.measure_trainability(x, n_samples=5, seed=42)
+
+    def test_n_samples_boundary_10(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that n_samples=10 (minimum) works."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(x, n_samples=10, seed=42)
+
+        assert result["gradients"].shape == (10,)
+
+    def test_n_samples_non_integer_raises(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that non-integer n_samples raises TypeError."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        with pytest.raises(TypeError, match="n_samples must be an integer"):
+            default_encoding.measure_trainability(x, n_samples=10.5, seed=42)
+
+    def test_n_samples_numpy_integer_accepted(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that numpy integer n_samples is accepted."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(
+            x, n_samples=np.int64(10), seed=42
+        )
+
+        assert result["n_samples"] == 10
+
+    def test_invalid_cost_observable_raises(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that invalid cost_observable raises ValueError."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        with pytest.raises(ValueError, match="cost_observable must be one of"):
+            default_encoding.measure_trainability(
+                x, n_samples=10, cost_observable="invalid"
+            )
+
+    def test_non_integer_seed_raises(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that non-integer seed raises TypeError."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+
+        with pytest.raises(TypeError, match="seed must be an integer or None"):
+            default_encoding.measure_trainability(x, n_samples=10, seed="abc")
+
+    def test_seed_none_accepted(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that seed=None is accepted (non-reproducible mode)."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(x, n_samples=10, seed=None)
+
+        assert result["gradient_variance"] >= 0.0
+
+    def test_seed_numpy_integer_accepted(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that numpy integer seed is accepted."""
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = default_encoding.measure_trainability(
+            x, n_samples=10, seed=np.int32(42)
+        )
+
+        assert result["gradient_variance"] >= 0.0
+
+    def test_wrong_input_shape_raises(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that input with wrong number of features raises ValueError."""
+        x_wrong = np.array([0.1, 0.2])  # 2 features, encoding expects 4
+
+        with pytest.raises(ValueError):
+            default_encoding.measure_trainability(x_wrong, n_samples=10, seed=42)
+
+    def test_batch_input_single_sample_accepted(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that 2D input with single sample is accepted."""
+        x_2d = np.array([[0.1, 0.2, 0.3, 0.4]])  # shape (1, 4)
+        result = default_encoding.measure_trainability(x_2d, n_samples=10, seed=42)
+
+        assert result["gradient_variance"] >= 0.0
+
+    def test_batch_input_multiple_samples_raises(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that 2D input with multiple samples raises ValueError."""
+        x_multi = np.array(
+            [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.5, 0.6, 0.7, 0.8],
+            ]
+        )  # shape (2, 4)
+
+        with pytest.raises(ValueError, match="Expected single sample"):
+            default_encoding.measure_trainability(x_multi, n_samples=10, seed=42)
+
+    def test_list_input_accepted(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test that list input (not ndarray) is accepted."""
+        x_list = [0.1, 0.2, 0.3, 0.4]
+        result = default_encoding.measure_trainability(x_list, n_samples=10, seed=42)
+
+        assert result["gradient_variance"] >= 0.0
+
+    # -----------------------------------------------------------------
+    # Edge cases
+    # -----------------------------------------------------------------
+
+    def test_two_qubit_encoding(self) -> None:
+        """Test trainability measurement with minimal qubit count (2)."""
+        enc = SymmetryInspiredFeatureMap(n_features=2, symmetry="cyclic", reps=1)
+        x = np.array([0.5, 1.0])
+        result = enc.measure_trainability(x, n_samples=10, seed=42)
+
+        assert result["gradient_variance"] >= 0.0
+        assert result["gradients"].shape == (10,)
+
+    def test_zero_input_data(
+        self, default_encoding: SymmetryInspiredFeatureMap
+    ) -> None:
+        """Test trainability with all-zero input."""
+        x = np.array([0.0, 0.0, 0.0, 0.0])
+        result = default_encoding.measure_trainability(x, n_samples=10, seed=42)
+
+        assert np.all(np.isfinite(result["gradients"]))
+        assert result["gradient_variance"] >= 0.0
+
+    @pytest.mark.parametrize("feature_map", ["angle", "fourier", "polynomial"])
+    def test_all_feature_maps(self, feature_map: str) -> None:
+        """Test trainability works with all feature mapping types."""
+        enc = SymmetryInspiredFeatureMap(
+            n_features=4, symmetry="rotation", reps=1, feature_map=feature_map
+        )
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = enc.measure_trainability(x, n_samples=10, seed=42)
+
+        assert result["gradient_variance"] >= 0.0
+        assert np.all(np.isfinite(result["gradients"]))
+
+    def test_global_observable_single_qubit_fallback(self) -> None:
+        """Test global observable on 2-qubit encoding (minimal tensor product)."""
+        enc = SymmetryInspiredFeatureMap(n_features=2, symmetry="cyclic", reps=1)
+        x = np.array([0.3, 0.7])
+        result = enc.measure_trainability(
+            x, n_samples=10, seed=42, cost_observable="global"
+        )
+
+        assert result["gradient_variance"] >= 0.0
+        assert result["cost_observable"] == "global"
+
+    def test_higher_reps(self) -> None:
+        """Test trainability with higher circuit repetitions."""
+        enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="rotation", reps=4)
+        x = np.array([0.1, 0.2, 0.3, 0.4])
+        result = enc.measure_trainability(x, n_samples=15, seed=42)
+
+        assert result["gradient_variance"] >= 0.0
+        assert np.all(np.isfinite(result["gradients"]))
+
+    # -----------------------------------------------------------------
+    # Consistency between runs on same encoding
+    # -----------------------------------------------------------------
+
+    def test_same_encoding_same_input_consistent_variance(self) -> None:
+        """Test that repeated calls with same seed give same variance.
+
+        This also verifies that the method does not mutate encoding state.
+        """
+        enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="cyclic", reps=1)
+        x = np.array([0.5, 0.6, 0.7, 0.8])
+
+        result1 = enc.measure_trainability(x, n_samples=20, seed=99)
+        result2 = enc.measure_trainability(x, n_samples=20, seed=99)
+
+        assert result1["gradient_variance"] == result2["gradient_variance"]
+        np.testing.assert_array_equal(result1["gradients"], result2["gradients"])
+
+
+# =============================================================================
+# Test Class: get_layer_structure
+# =============================================================================
+
+
+class TestLayerStructure:
+    """Tests for the get_layer_structure() method.
+
+    Covers:
+    - Return value structure and types
+    - Layer counts per repetition
+    - Layer content for each symmetry type
+    - Entanglement='none' omits the entanglement layer
+    - Multi-rep layer indexing
+    """
+
+    def test_return_keys(self, default_encoding: SymmetryInspiredFeatureMap) -> None:
+        """Test that result contains all documented top-level keys."""
+        structure = default_encoding.get_layer_structure()
+
+        expected_keys = {
+            "n_qubits",
+            "n_reps",
+            "total_layers",
+            "layers_per_rep",
+            "symmetry",
+            "entanglement",
+            "feature_map",
+            "layers",
+        }
+        assert set(structure.keys()) == expected_keys
+
+    def test_layer_count_with_entanglement(self) -> None:
+        """Test 4 layers per rep when entanglement is enabled."""
+        enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="rotation", reps=1)
+        structure = enc.get_layer_structure()
+
+        assert structure["layers_per_rep"] == 4
+        assert structure["total_layers"] == 4
+        assert len(structure["layers"]) == 4
+
+    def test_layer_count_without_entanglement(self) -> None:
+        """Test 3 layers per rep when entanglement='none'."""
+        enc = SymmetryInspiredFeatureMap(
+            n_features=4, symmetry="cyclic", reps=1, entanglement="none"
+        )
+        structure = enc.get_layer_structure()
+
+        assert structure["layers_per_rep"] == 3
+        assert structure["total_layers"] == 3
+        assert len(structure["layers"]) == 3
+
+    def test_multi_rep_layer_count(self) -> None:
+        """Test total_layers = reps * layers_per_rep."""
+        enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="cyclic", reps=3)
+        structure = enc.get_layer_structure()
+
+        assert structure["total_layers"] == 3 * structure["layers_per_rep"]
+        assert len(structure["layers"]) == structure["total_layers"]
+
+    def test_layer_order_single_rep(self) -> None:
+        """Test layer ordering: hadamard -> encoding -> equivariant -> entanglement."""
+        enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="rotation", reps=1)
+        structure = enc.get_layer_structure()
+        names = [layer["name"] for layer in structure["layers"]]
+
+        assert names == ["hadamard", "encoding", "equivariant", "entanglement"]
+
+    def test_layer_order_no_entanglement(self) -> None:
+        """Test layer ordering without entanglement layer."""
+        enc = SymmetryInspiredFeatureMap(
+            n_features=4, symmetry="cyclic", reps=1, entanglement="none"
+        )
+        structure = enc.get_layer_structure()
+        names = [layer["name"] for layer in structure["layers"]]
+
+        assert names == ["hadamard", "encoding", "equivariant"]
+
+    def test_hadamard_layer_content(self) -> None:
+        """Test hadamard layer has correct gate types and qubit count."""
+        enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="cyclic", reps=1)
+        structure = enc.get_layer_structure()
+        h_layer = structure["layers"][0]
+
+        assert h_layer["name"] == "hadamard"
+        assert h_layer["gate_types"] == ["H"]
+        assert h_layer["qubits"] == [0, 1, 2, 3]
+        assert h_layer["n_gates"] == 4
+
+    def test_encoding_layer_content(self) -> None:
+        """Test encoding layer has RY gates on all qubits."""
+        enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="cyclic", reps=1)
+        structure = enc.get_layer_structure()
+        enc_layer = structure["layers"][1]
+
+        assert enc_layer["name"] == "encoding"
+        assert enc_layer["gate_types"] == ["RY"]
+        assert enc_layer["n_gates"] == 4
+
+    def test_equivariant_layer_content(self) -> None:
+        """Test equivariant layer has RZ gates on all qubits."""
+        enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="cyclic", reps=1)
+        structure = enc.get_layer_structure()
+        eq_layer = structure["layers"][2]
+
+        assert eq_layer["name"] == "equivariant"
+        assert eq_layer["gate_types"] == ["RZ"]
+        assert eq_layer["n_gates"] == 4
+
+    @pytest.mark.parametrize(
+        "symmetry, expected_gates",
+        [
+            ("rotation", ["CRZ"]),
+            ("cyclic", ["CNOT", "RZ"]),
+            ("reflection", ["CZ", "RZ"]),
+            ("full", ["CNOT", "RY"]),
+        ],
+    )
+    def test_entanglement_layer_gate_types(
+        self, symmetry: str, expected_gates: list[str]
+    ) -> None:
+        """Test entanglement layer has correct gate types for each symmetry."""
+        enc = SymmetryInspiredFeatureMap(n_features=4, symmetry=symmetry, reps=1)
+        structure = enc.get_layer_structure()
+        ent_layer = structure["layers"][-1]
+
+        assert ent_layer["name"] == "entanglement"
+        assert ent_layer["gate_types"] == expected_gates
+
+    def test_entanglement_layer_has_qubit_pairs(self) -> None:
+        """Test entanglement layer includes qubit_pairs."""
+        enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="cyclic", reps=1)
+        structure = enc.get_layer_structure()
+        ent_layer = structure["layers"][-1]
+
+        assert "qubit_pairs" in ent_layer
+        assert len(ent_layer["qubit_pairs"]) > 0
+
+    def test_layer_indices_sequential(self) -> None:
+        """Test that layer indices are sequential starting from 0."""
+        enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="cyclic", reps=2)
+        structure = enc.get_layer_structure()
+        indices = [layer["index"] for layer in structure["layers"]]
+
+        assert indices == list(range(len(indices)))
+
+    def test_rep_annotation_on_layers(self) -> None:
+        """Test that each layer is annotated with its repetition number."""
+        enc = SymmetryInspiredFeatureMap(n_features=4, symmetry="cyclic", reps=2)
+        structure = enc.get_layer_structure()
+
+        for layer in structure["layers"]:
+            assert "rep" in layer
+            assert 0 <= layer["rep"] < 2
+
+    def test_metadata_matches_encoding(self) -> None:
+        """Test that structure metadata matches encoding configuration."""
+        enc = SymmetryInspiredFeatureMap(
+            n_features=6, symmetry="reflection", reps=3, feature_map="fourier"
+        )
+        structure = enc.get_layer_structure()
+
+        assert structure["n_qubits"] == 6
+        assert structure["n_reps"] == 3
+        assert structure["symmetry"] == "reflection"
+        assert structure["entanglement"] == "linear"  # default
+        assert structure["feature_map"] == "fourier"

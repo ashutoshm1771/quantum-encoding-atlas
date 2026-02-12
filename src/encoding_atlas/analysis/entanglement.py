@@ -122,12 +122,6 @@ from typing import Any, Literal, TypedDict, Union, overload
 import numpy as np
 from numpy.typing import NDArray
 
-from encoding_atlas.core.base import BaseEncoding
-from encoding_atlas.core.exceptions import (
-    InsufficientSamplesError,
-    SimulationError,
-    ValidationError,
-)
 from encoding_atlas.analysis._utils import (
     compute_purity,
     create_rng,
@@ -137,7 +131,12 @@ from encoding_atlas.analysis._utils import (
     validate_encoding_for_analysis,
     validate_statevector,
 )
-
+from encoding_atlas.core.base import BaseEncoding
+from encoding_atlas.core.exceptions import (
+    InsufficientSamplesError,
+    SimulationError,
+    ValidationError,
+)
 
 # =============================================================================
 # Type Checking Imports and Type Definitions
@@ -463,9 +462,7 @@ def compute_entanglement_capability(
 
     # Validate measure parameter
     if measure not in ("meyer_wallach", "scott"):
-        raise ValueError(
-            f"measure must be 'meyer_wallach' or 'scott', got {measure!r}"
-        )
+        raise ValueError(f"measure must be 'meyer_wallach' or 'scott', got {measure!r}")
 
     # Validate backend parameter
     if backend not in ("pennylane", "qiskit", "cirq"):
@@ -489,9 +486,7 @@ def compute_entanglement_capability(
         else:
             # Validate user-provided k
             if not isinstance(scott_k, (int, np.integer)) or scott_k < 1:
-                raise ValueError(
-                    f"scott_k must be a positive integer, got {scott_k!r}"
-                )
+                raise ValueError(f"scott_k must be a positive integer, got {scott_k!r}")
             if scott_k > max_k:
                 raise ValueError(
                     f"scott_k={scott_k} exceeds maximum valid value of {max_k} "
@@ -543,9 +538,7 @@ def compute_entanglement_capability(
 
         try:
             # Simulate circuit to get statevector
-            statevector = simulate_encoding_statevector(
-                encoding, x, backend=backend
-            )
+            statevector = simulate_encoding_statevector(encoding, x, backend=backend)
 
             # Compute entanglement measure
             if measure == "meyer_wallach":
@@ -596,7 +589,9 @@ def compute_entanglement_capability(
     entanglement_capability = float(np.mean(entanglement_samples))
 
     # Standard error of the mean: std / sqrt(n)
-    std_dev = float(np.std(entanglement_samples, ddof=1))  # Sample std with Bessel correction
+    std_dev = float(
+        np.std(entanglement_samples, ddof=1)
+    )  # Sample std with Bessel correction
     std_error = std_dev / np.sqrt(n_samples)
 
     # Per-qubit average entanglement
@@ -926,5 +921,3 @@ def compute_scott_measure(
 
     # Clamp to [0, 1]
     return float(np.clip(normalized_measure, 0.0, 1.0))
-
-

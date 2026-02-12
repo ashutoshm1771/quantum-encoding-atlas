@@ -114,7 +114,6 @@ References
 from __future__ import annotations
 
 import logging
-import math
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
@@ -551,29 +550,27 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
     # Note: BaseEncoding also uses __slots__, so the full benefit is realized.
     # =========================================================================
     __slots__ = (
-        'symmetry',
-        'reps',
-        'entanglement',
-        'feature_map',
-        'include_barriers',
-        '_entanglement_pairs',
-        '_symmetry_params',
+        "symmetry",
+        "reps",
+        "entanglement",
+        "feature_map",
+        "include_barriers",
+        "_entanglement_pairs",
+        "_symmetry_params",
     )
 
     # Valid symmetry types
-    _VALID_SYMMETRIES: frozenset[str] = frozenset({
-        "rotation", "cyclic", "reflection", "full"
-    })
+    _VALID_SYMMETRIES: frozenset[str] = frozenset(
+        {"rotation", "cyclic", "reflection", "full"}
+    )
 
     # Valid entanglement patterns
-    _VALID_ENTANGLEMENT: frozenset[str] = frozenset({
-        "full", "linear", "circular", "none"
-    })
+    _VALID_ENTANGLEMENT: frozenset[str] = frozenset(
+        {"full", "linear", "circular", "none"}
+    )
 
     # Valid feature mapping types
-    _VALID_FEATURE_MAPS: frozenset[str] = frozenset({
-        "angle", "fourier", "polynomial"
-    })
+    _VALID_FEATURE_MAPS: frozenset[str] = frozenset({"angle", "fourier", "polynomial"})
 
     # =========================================================================
     # TRAINABILITY ESTIMATION CONSTANTS
@@ -704,9 +701,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
 
         # Validate symmetry
         if not isinstance(symmetry, str):
-            raise TypeError(
-                f"symmetry must be a string, got {type(symmetry).__name__}"
-            )
+            raise TypeError(f"symmetry must be a string, got {type(symmetry).__name__}")
         symmetry_lower = symmetry.lower()
         if symmetry_lower not in self._VALID_SYMMETRIES:
             raise ValueError(
@@ -716,9 +711,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
 
         # Validate reps
         if not isinstance(reps, (int, np.integer)):
-            raise TypeError(
-                f"reps must be an integer, got {type(reps).__name__}"
-            )
+            raise TypeError(f"reps must be an integer, got {type(reps).__name__}")
         reps = int(reps)
         if reps < 1:
             raise ValueError(f"reps must be at least 1, got {reps}")
@@ -1406,7 +1399,8 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         """
         _logger.debug(
             "Generating circuit: backend=%r, input_shape=%s",
-            backend, getattr(x, 'shape', f'len={len(x)}')
+            backend,
+            getattr(x, "shape", f"len={len(x)}"),
         )
 
         # Validate and convert input
@@ -1535,11 +1529,12 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         during circuit generation, and each circuit is generated
         independently. Key design elements ensuring thread safety:
 
-        - All configuration attributes are immutable after ``__init__``
+        - All configuration attributes are set once in ``__init__`` and
+          never mutated afterwards
         - Precomputed values (``_entanglement_pairs``, ``_symmetry_params``)
-          are stored as tuples/MappingProxyType for immutability
+          are only read during circuit generation — no write access occurs
         - Input validation creates defensive copies to prevent data races
-        - No shared mutable state is accessed during circuit generation
+        - No shared mutable state is written during circuit generation
 
         **Order Preservation:**
 
@@ -1603,8 +1598,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
             # The batch was already validated above, so we can safely skip
             # per-sample validation for better performance
             circuits = [
-                self._get_circuit_from_validated(x, backend)
-                for x in X_validated
+                self._get_circuit_from_validated(x, backend) for x in X_validated
             ]
 
             _logger.debug(
@@ -1745,7 +1739,9 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
                 )
             else:
                 symmetry_params_mutable[key] = value
-        symmetry_params: MappingProxyType[str, Any] = MappingProxyType(symmetry_params_mutable)
+        symmetry_params: MappingProxyType[str, Any] = MappingProxyType(
+            symmetry_params_mutable
+        )
 
         # Precompute angles for encoding layer as immutable tuple
         encoding_angles: tuple[float, ...] = tuple(
@@ -1774,7 +1770,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
             interaction_angles, pairs, symmetry_params) are immutable to
             prevent accidental modification after circuit creation.
             """
-            for rep in range(reps):
+            for _rep in range(reps):
                 # Layer 1: Initial encoding (Hadamard + RY)
                 for i in range(n_qubits):
                     qml.Hadamard(wires=i)
@@ -1942,12 +1938,12 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         qubits = cirq.LineQubit.range(self.n_qubits)
         moments: list[Any] = []
 
-        for rep in range(self.reps):
+        for _rep in range(self.reps):
             # Layer 1: Initial encoding (Hadamard + RY)
             # Hadamard layer - all qubits in parallel
-            moments.append(cirq.Moment([
-                cirq.H(qubits[i]) for i in range(self.n_qubits)
-            ]))
+            moments.append(
+                cirq.Moment([cirq.H(qubits[i]) for i in range(self.n_qubits)])
+            )
 
             # RY encoding layer - all qubits in parallel
             ry_gates = []
@@ -1981,7 +1977,9 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
                 if n_pairs > 0:
                     # Precompute all interaction angles
                     angles = [
-                        self._compute_interaction_angle(x, pair_indices[p][0], pair_indices[p][1])
+                        self._compute_interaction_angle(
+                            x, pair_indices[p][0], pair_indices[p][1]
+                        )
                         for p in range(n_pairs)
                     ]
 
@@ -1994,7 +1992,9 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
 
                     # Step 2: CNOT on all pairs (parallel - no qubit overlap)
                     cnot_gates_1 = [
-                        cirq.CNOT(qubits[pair_indices[p][0]], qubits[pair_indices[p][1]])
+                        cirq.CNOT(
+                            qubits[pair_indices[p][0]], qubits[pair_indices[p][1]]
+                        )
                         for p in range(n_pairs)
                     ]
                     moments.append(cirq.Moment(cnot_gates_1))
@@ -2008,7 +2008,9 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
 
                     # Step 4: CNOT on all pairs (parallel)
                     cnot_gates_2 = [
-                        cirq.CNOT(qubits[pair_indices[p][0]], qubits[pair_indices[p][1]])
+                        cirq.CNOT(
+                            qubits[pair_indices[p][0]], qubits[pair_indices[p][1]]
+                        )
                         for p in range(n_pairs)
                     ]
                     moments.append(cirq.Moment(cnot_gates_2))
@@ -2020,11 +2022,13 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
                 ops = []
                 for i, j in self._entanglement_pairs:
                     angle = self._compute_interaction_angle(x, i, j)
-                    ops.extend([
-                        cirq.CNOT(qubits[i], qubits[j]),
-                        cirq.rz(angle)(qubits[j]),
-                        cirq.CNOT(qubits[i], qubits[j]),
-                    ])
+                    ops.extend(
+                        [
+                            cirq.CNOT(qubits[i], qubits[j]),
+                            cirq.rz(angle)(qubits[j]),
+                            cirq.CNOT(qubits[i], qubits[j]),
+                        ]
+                    )
                 # Let Cirq optimize the moment placement
                 entangle_circuit = cirq.Circuit(ops)
                 moments.extend(entangle_circuit.moments)
@@ -2035,11 +2039,13 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
                 ops = []
                 for i, j in self._entanglement_pairs:
                     angle = self._compute_interaction_angle(x, i, j)
-                    ops.extend([
-                        cirq.CZ(qubits[i], qubits[j]),
-                        cirq.rz(angle)(qubits[i]),
-                        cirq.rz(angle)(qubits[j]),
-                    ])
+                    ops.extend(
+                        [
+                            cirq.CZ(qubits[i], qubits[j]),
+                            cirq.rz(angle)(qubits[i]),
+                            cirq.rz(angle)(qubits[j]),
+                        ]
+                    )
                 entangle_circuit = cirq.Circuit(ops)
                 moments.extend(entangle_circuit.moments)
 
@@ -2049,13 +2055,15 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
                 ops = []
                 for i, j in self._entanglement_pairs:
                     angle = self._compute_interaction_angle(x, i, j)
-                    ops.extend([
-                        cirq.CNOT(qubits[i], qubits[j]),
-                        cirq.ry(angle)(qubits[j]),
-                        cirq.CNOT(qubits[j], qubits[i]),
-                        cirq.ry(-angle / 2)(qubits[i]),
-                        cirq.CNOT(qubits[i], qubits[j]),
-                    ])
+                    ops.extend(
+                        [
+                            cirq.CNOT(qubits[i], qubits[j]),
+                            cirq.ry(angle)(qubits[j]),
+                            cirq.CNOT(qubits[j], qubits[i]),
+                            cirq.ry(-angle / 2)(qubits[i]),
+                            cirq.CNOT(qubits[i], qubits[j]),
+                        ]
+                    )
                 entangle_circuit = cirq.Circuit(ops)
                 moments.extend(entangle_circuit.moments)
 
@@ -2106,10 +2114,10 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
 
         # Total counts
         single_qubit_gates = self.reps * (
-            h_gates_per_rep +
-            ry_encoding_gates_per_rep +
-            rz_equivariant_gates_per_rep +
-            single_rotation_from_entangle
+            h_gates_per_rep
+            + ry_encoding_gates_per_rep
+            + rz_equivariant_gates_per_rep
+            + single_rotation_from_entangle
         )
         two_qubit_gates = self.reps * two_qubit_gates_per_rep
         total_gates = single_qubit_gates + two_qubit_gates
@@ -2132,7 +2140,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
             self._TRAINABILITY_MIN,
             self._TRAINABILITY_BASE
             - self._TRAINABILITY_DEPTH_PENALTY * self.depth
-            - self._TRAINABILITY_PAIR_PENALTY * n_pairs
+            - self._TRAINABILITY_PAIR_PENALTY * n_pairs,
         )
 
         # Build notes
@@ -2223,10 +2231,15 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
     def get_symmetry_info(self) -> dict[str, Any]:
         """Get detailed information about the symmetry configuration.
 
+        Returns a *defensive copy* of the internal symmetry configuration.
+        Callers may freely modify the returned dictionary without affecting
+        the encoding's internal state.
+
         Returns
         -------
         dict
-            Dictionary containing symmetry-specific information.
+            Dictionary containing symmetry-specific information.  All mutable
+            values (lists of pairs, etc.) are copies of the internal data.
 
         Examples
         --------
@@ -2237,13 +2250,17 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         >>> info['n_pairs']
         2
         """
-        info = {
+        info: dict[str, Any] = {
             "type": self.symmetry,
             "entanglement_pattern": self.entanglement,
-            "entanglement_pairs": self._entanglement_pairs,
+            "entanglement_pairs": list(self._entanglement_pairs),
             "n_entanglement_pairs": len(self._entanglement_pairs),
         }
-        info.update(self._symmetry_params)
+        # Deep-copy symmetry params so callers cannot mutate internal state.
+        # Values may be lists of tuples (pair_indices, mirror_pairs, etc.)
+        # which need to be copied to prevent shared-reference leakage.
+        for key, value in self._symmetry_params.items():
+            info[key] = list(value) if isinstance(value, list) else value
         return info
 
     def get_layer_structure(self) -> dict[str, Any]:
@@ -2317,54 +2334,62 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
 
         for rep in range(self.reps):
             # Layer 1: Hadamard layer
-            layers.append({
-                "index": layer_idx,
-                "rep": rep,
-                "name": "hadamard",
-                "gate_types": ["H"],
-                "qubits": list(range(n)),
-                "n_gates": n,
-                "description": f"Create superposition (rep {rep + 1})",
-            })
+            layers.append(
+                {
+                    "index": layer_idx,
+                    "rep": rep,
+                    "name": "hadamard",
+                    "gate_types": ["H"],
+                    "qubits": list(range(n)),
+                    "n_gates": n,
+                    "description": f"Create superposition (rep {rep + 1})",
+                }
+            )
             layer_idx += 1
 
             # Layer 2: Encoding layer (RY rotations)
-            layers.append({
-                "index": layer_idx,
-                "rep": rep,
-                "name": "encoding",
-                "gate_types": ["RY"],
-                "qubits": list(range(n)),
-                "n_gates": n,
-                "description": f"Feature encoding via RY rotations (rep {rep + 1})",
-            })
+            layers.append(
+                {
+                    "index": layer_idx,
+                    "rep": rep,
+                    "name": "encoding",
+                    "gate_types": ["RY"],
+                    "qubits": list(range(n)),
+                    "n_gates": n,
+                    "description": f"Feature encoding via RY rotations (rep {rep + 1})",
+                }
+            )
             layer_idx += 1
 
             # Layer 3: Equivariant layer (RZ rotations)
-            layers.append({
-                "index": layer_idx,
-                "rep": rep,
-                "name": "equivariant",
-                "gate_types": ["RZ"],
-                "qubits": list(range(n)),
-                "n_gates": n,
-                "description": f"Symmetry-aware RZ rotations (rep {rep + 1})",
-            })
+            layers.append(
+                {
+                    "index": layer_idx,
+                    "rep": rep,
+                    "name": "equivariant",
+                    "gate_types": ["RZ"],
+                    "qubits": list(range(n)),
+                    "n_gates": n,
+                    "description": f"Symmetry-aware RZ rotations (rep {rep + 1})",
+                }
+            )
             layer_idx += 1
 
             # Layer 4: Entanglement layer (if applicable)
             if self.entanglement != "none" and self._entanglement_pairs:
                 entanglement_info = self._get_entanglement_layer_info()
-                layers.append({
-                    "index": layer_idx,
-                    "rep": rep,
-                    "name": "entanglement",
-                    "gate_types": entanglement_info["gate_types"],
-                    "qubit_pairs": self._entanglement_pairs,
-                    "n_gates": entanglement_info["n_gates"],
-                    "depth_contribution": self._compute_entanglement_depth(),
-                    "description": f"{self.symmetry}-inspired entanglement (rep {rep + 1})",
-                })
+                layers.append(
+                    {
+                        "index": layer_idx,
+                        "rep": rep,
+                        "name": "entanglement",
+                        "gate_types": entanglement_info["gate_types"],
+                        "qubit_pairs": list(self._entanglement_pairs),
+                        "n_gates": entanglement_info["n_gates"],
+                        "depth_contribution": self._compute_entanglement_depth(),
+                        "description": f"{self.symmetry}-inspired entanglement (rep {rep + 1})",
+                    }
+                )
                 layer_idx += 1
 
         # Compute layers per rep
@@ -2517,8 +2542,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
 
         # Calculate totals
         total_single_qubit = (
-            h_gates + ry_encoding + rz_equivariant +
-            rz_entanglement + ry_entanglement
+            h_gates + ry_encoding + rz_equivariant + rz_entanglement + ry_entanglement
         )
 
         # For two-qubit gates, CRZ is counted as 2 CNOTs for hardware estimation
@@ -2530,8 +2554,15 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         _logger.debug(
             "Gate breakdown: H=%d, RY_enc=%d, RZ_eq=%d, RZ_ent=%d, "
             "RY_ent=%d, CNOT=%d, CRZ=%d, CZ=%d, total=%d",
-            h_gates, ry_encoding, rz_equivariant, rz_entanglement,
-            ry_entanglement, cnot_gates, crz_gates, cz_gates, total
+            h_gates,
+            ry_encoding,
+            rz_equivariant,
+            rz_entanglement,
+            ry_entanglement,
+            cnot_gates,
+            crz_gates,
+            cz_gates,
+            total,
         )
 
         return CovariantGateBreakdown(
@@ -2697,7 +2728,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
             "symmetry=%s, entanglement=%s",
             self.n_qubits,
             self.depth,
-            gate_counts['total'],
+            gate_counts["total"],
             self.symmetry,
             self.entanglement,
         )
@@ -2737,20 +2768,27 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         if x_validated.ndim == 2:
             x_validated = x_validated[0]
 
-        encoding_angles = np.array([
-            self._apply_feature_map(x_validated, i)
-            for i in range(self.n_qubits)
-        ])
+        encoding_angles = np.array(
+            [self._apply_feature_map(x_validated, i) for i in range(self.n_qubits)]
+        )
 
-        equivariant_angles = np.array([
-            self._apply_equivariant_angle(x_validated, i)
-            for i in range(self.n_qubits)
-        ])
+        equivariant_angles = np.array(
+            [
+                self._apply_equivariant_angle(x_validated, i)
+                for i in range(self.n_qubits)
+            ]
+        )
 
-        interaction_angles = np.array([
-            self._compute_interaction_angle(x_validated, i, j)
-            for i, j in self._entanglement_pairs
-        ]) if self._entanglement_pairs else np.array([])
+        interaction_angles = (
+            np.array(
+                [
+                    self._compute_interaction_angle(x_validated, i, j)
+                    for i, j in self._entanglement_pairs
+                ]
+            )
+            if self._entanglement_pairs
+            else np.array([])
+        )
 
         return {
             "encoding": encoding_angles,
@@ -2996,7 +3034,11 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
             grad_value = grad_fn(theta)
 
             # Handle both scalar and array gradient returns
-            gradients[i] = float(grad_value) if np.isscalar(grad_value) else float(grad_value.item())
+            gradients[i] = (
+                float(grad_value)
+                if np.isscalar(grad_value)
+                else float(grad_value.item())
+            )
 
         # =====================================================================
         # COMPUTE STATISTICS
@@ -3051,15 +3093,17 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
 
     def __hash__(self) -> int:
         """Return hash of the encoding."""
-        return hash((
-            self.__class__.__name__,
-            self.n_features,
-            self.symmetry,
-            self.reps,
-            self.entanglement,
-            self.feature_map,
-            self.include_barriers,
-        ))
+        return hash(
+            (
+                self.__class__.__name__,
+                self.n_features,
+                self.symmetry,
+                self.reps,
+                self.entanglement,
+                self.feature_map,
+                self.include_barriers,
+            )
+        )
 
     # =========================================================================
     # SERIALIZATION SUPPORT
@@ -3101,17 +3145,17 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
 
         # Get slots from all classes in the MRO (method resolution order)
         for cls in type(self).__mro__:
-            if hasattr(cls, '__slots__'):
+            if hasattr(cls, "__slots__"):
                 for slot in cls.__slots__:
                     if hasattr(self, slot):
                         state[slot] = getattr(self, slot)
 
         # Remove cached properties (will be recomputed on access)
-        state['_properties'] = None
+        state["_properties"] = None
 
         # Remove threading lock (cannot be pickled, will be recreated)
-        if '_properties_lock' in state:
-            del state['_properties_lock']
+        if "_properties_lock" in state:
+            del state["_properties_lock"]
 
         return state
 
@@ -3188,7 +3232,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         entanglement: str,
         feature_map: str,
         include_barriers: bool,
-    ) -> "SymmetryInspiredFeatureMap":
+    ) -> SymmetryInspiredFeatureMap:
         """Reconstruct instance from pickled constructor arguments.
 
         This is a helper method for __reduce__ that suppresses the warning
@@ -3445,9 +3489,7 @@ def estimate_circuit_resources(
 
     # Validate symmetry
     if not isinstance(symmetry, str):
-        raise TypeError(
-            f"symmetry must be a string, got {type(symmetry).__name__}"
-        )
+        raise TypeError(f"symmetry must be a string, got {type(symmetry).__name__}")
     symmetry_lower = symmetry.lower()
     valid_symmetries = {"rotation", "cyclic", "reflection", "full"}
     if symmetry_lower not in valid_symmetries:
@@ -3477,9 +3519,7 @@ def estimate_circuit_resources(
 
     # Validate rotation symmetry requires even n_features
     if symmetry_lower == "rotation" and n % 2 != 0:
-        raise ValueError(
-            f"rotation symmetry requires even n_features, got {n}"
-        )
+        raise ValueError(f"rotation symmetry requires even n_features, got {n}")
 
     # =========================================================================
     # COMPUTE ENTANGLEMENT PAIRS COUNT
@@ -3655,15 +3695,13 @@ def convert_state_vector_ordering(
 
     # Validate n_qubits
     if not isinstance(n_qubits, (int, np.integer)):
-        raise TypeError(
-            f"n_qubits must be an integer, got {type(n_qubits).__name__}"
-        )
+        raise TypeError(f"n_qubits must be an integer, got {type(n_qubits).__name__}")
     n_qubits = int(n_qubits)
     if n_qubits < 1:
         raise ValueError(f"n_qubits must be at least 1, got {n_qubits}")
 
     # Validate state_vector size matches n_qubits
-    expected_size = 2 ** n_qubits
+    expected_size = 2**n_qubits
     if len(state_vector) != expected_size:
         raise ValueError(
             f"state_vector length ({len(state_vector)}) must equal "
@@ -3673,13 +3711,9 @@ def convert_state_vector_ordering(
     # Validate source and target
     valid_orderings = {"big", "little"}
     if source not in valid_orderings:
-        raise ValueError(
-            f"source must be 'big' or 'little', got '{source}'"
-        )
+        raise ValueError(f"source must be 'big' or 'little', got '{source}'")
     if target not in valid_orderings:
-        raise ValueError(
-            f"target must be 'big' or 'little', got '{target}'"
-        )
+        raise ValueError(f"target must be 'big' or 'little', got '{target}'")
 
     # ==========================================================================
     # FAST PATH: No conversion needed
@@ -3944,9 +3978,7 @@ def estimate_memory_usage(
 
     # Validate symmetry
     if not isinstance(symmetry, str):
-        raise TypeError(
-            f"symmetry must be a string, got {type(symmetry).__name__}"
-        )
+        raise TypeError(f"symmetry must be a string, got {type(symmetry).__name__}")
     symmetry_lower = symmetry.lower()
     valid_symmetries = {"rotation", "cyclic", "reflection", "full"}
     if symmetry_lower not in valid_symmetries:
@@ -3976,9 +4008,7 @@ def estimate_memory_usage(
 
     # Validate rotation symmetry requires even n_features
     if symmetry_lower == "rotation" and n % 2 != 0:
-        raise ValueError(
-            f"rotation symmetry requires even n_features, got {n}"
-        )
+        raise ValueError(f"rotation symmetry requires even n_features, got {n}")
 
     # ==========================================================================
     # COMPUTE ENTANGLEMENT PAIRS COUNT
@@ -4020,12 +4050,12 @@ def estimate_memory_usage(
     # _n_features (int), reps (int), symmetry (str), entanglement (str),
     # feature_map (str), include_barriers (bool)
     primitives_overhead = (
-        INT_SIZE +  # _n_features
-        INT_SIZE +  # reps
-        (STR_BASE + 10) +  # symmetry (avg length ~8)
-        (STR_BASE + 10) +  # entanglement
-        (STR_BASE + 12) +  # feature_map
-        28  # bool
+        INT_SIZE  # _n_features
+        + INT_SIZE  # reps
+        + (STR_BASE + 10)  # symmetry (avg length ~8)
+        + (STR_BASE + 10)  # entanglement
+        + (STR_BASE + 12)  # feature_map
+        + 28  # bool
     )
 
     instance_bytes = instance_base + primitives_overhead
@@ -4059,9 +4089,7 @@ def estimate_memory_usage(
 
     # Total instance footprint
     total_instance_bytes = (
-        instance_bytes +
-        entanglement_pairs_bytes +
-        symmetry_params_bytes
+        instance_bytes + entanglement_pairs_bytes + symmetry_params_bytes
     )
 
     # Per-circuit angle computation (temporary memory during get_circuit)
@@ -4076,16 +4104,11 @@ def estimate_memory_usage(
     interaction_angles_bytes = NP_ARRAY_BASE + (n_pairs * 8)
 
     circuit_angles_bytes = (
-        encoding_angles_bytes +
-        equivariant_angles_bytes +
-        interaction_angles_bytes
+        encoding_angles_bytes + equivariant_angles_bytes + interaction_angles_bytes
     )
 
     # State vector memory (optional, exponential!)
-    if include_state_vector:
-        state_vector_bytes = (2 ** n) * COMPLEX_NP
-    else:
-        state_vector_bytes = 0
+    state_vector_bytes = 2**n * COMPLEX_NP if include_state_vector else 0
 
     total_per_circuit_bytes = circuit_angles_bytes + state_vector_bytes
 
@@ -4095,13 +4118,9 @@ def estimate_memory_usage(
 
     # Heuristic: recommend max features based on entanglement pattern
     # Full entanglement has quadratic memory growth, others are linear
-    if entanglement_lower == "full":
-        # Quadratic growth: keep pairs under ~10000 for reasonable memory
-        # n(n-1)/2 < 10000 → n < 142, but practical limit is lower
-        recommended_max = 50  # ~1225 pairs, manageable
-    else:
-        # Linear growth: much more scalable
-        recommended_max = 500  # Very generous limit
+    # Quadratic growth: keep pairs under ~10000 (~1225 pairs at 50, manageable)
+    # Linear growth: much more scalable (very generous limit)
+    recommended_max = 50 if entanglement_lower == "full" else 500
 
     # ==========================================================================
     # RETURN COMPREHENSIVE MEMORY DICTIONARY

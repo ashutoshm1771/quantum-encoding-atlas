@@ -6,14 +6,14 @@ demonstration/
 # Claude Code local settings
 .claude/
 
+# MkDocs build output
+site/
+
 # Type checking cache
 .mypy_cache/
 
 # Linter cache
 .ruff_cache/
-
-# Windows artifacts
-nul
 
 # Auto-generated version file (setuptools-scm)
 src/encoding_atlas/_version.py
@@ -63,9 +63,11 @@ htmlcov/
 
 # Test notebooks (not for distribution)
 notebooks/test_encoding_atlas.ipynb
+notebooks/test/
 
 # Experiment results (reproducible outputs)
 experiments/results/
+experiments/plotting_journal.py
 
 # Verification folder (temporary)
 verification/

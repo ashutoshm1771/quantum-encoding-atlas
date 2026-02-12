@@ -1,7 +1,5 @@
 # IQP Encoding
 
-**Author:** Ashutosh Mishra
-
 A quantum data encoding based on **Instantaneous Quantum Polynomial** circuits —
 diagonal phase gates sandwiched between Hadamard layers — producing highly
 entangled states with **provable classical hardness** guarantees.
@@ -601,8 +599,8 @@ More entanglement and depth increase expressivity but risk **barren plateaus**
   │                    SCALING RECOMMENDATIONS                       │
   ├──────────────────────────────────────────────────────────────────┤
   │                                                                  │
-  │  1. Scale features to [0, π] or [-π/2, π/2]                     │
-  │     → RZ(2x) gives full [0, 2π] phase range                     │
+  │  1. Scale features to [0, 2π] or [-π, π]                         │
+  │     → RZ(2x) gives full [0, 4π] phase range                     │
   │                                                                  │
   │  2. Standardize features to similar scales BEFORE encoding       │
   │     → Prevents one feature pair from dominating ZZ phases        │

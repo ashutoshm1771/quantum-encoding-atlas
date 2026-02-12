@@ -103,11 +103,13 @@ def batch_data_4d() -> NDArray[np.floating]:
     - [0.5, 0.6, 0.7, 0.8] (mid-range values)
     - [0.9, 1.0, 1.1, 1.2] (higher values)
     """
-    return np.array([
-        [0.1, 0.2, 0.3, 0.4],
-        [0.5, 0.6, 0.7, 0.8],
-        [0.9, 1.0, 1.1, 1.2],
-    ])
+    return np.array(
+        [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.5, 0.6, 0.7, 0.8],
+            [0.9, 1.0, 1.1, 1.2],
+        ]
+    )
 
 
 @pytest.fixture
@@ -1047,12 +1049,14 @@ class TestNumericalStability:
         """
         enc = PauliFeatureMap(n_features=4, paulis=["Z", "ZZ"], reps=2)
         eps = 1e-14
-        x = np.array([
-            np.pi - eps,
-            np.pi + eps,
-            2 * np.pi - eps,
-            2 * np.pi + eps,
-        ])
+        x = np.array(
+            [
+                np.pi - eps,
+                np.pi + eps,
+                2 * np.pi - eps,
+                2 * np.pi + eps,
+            ]
+        )
 
         circuit_fn = enc.get_circuit(x, backend="pennylane")
         dev = qml.device("default.qubit", wires=enc.n_qubits)
@@ -1326,7 +1330,7 @@ class TestConcurrentAccess:
         def generate_circuits(thread_id: int) -> list[Any]:
             circuits = []
             try:
-                for i in range(num_circuits_per_thread):
+                for _i in range(num_circuits_per_thread):
                     x = np.random.randn(4)
                     circuit = enc.get_circuit(x, backend="qiskit")
                     circuits.append(circuit)
@@ -1395,9 +1399,7 @@ class TestConcurrentAccess:
 
         if backends:
             with ThreadPoolExecutor(max_workers=len(backends)) as executor:
-                futures = [
-                    executor.submit(generate_for_backend, b) for b in backends
-                ]
+                futures = [executor.submit(generate_for_backend, b) for b in backends]
                 results = [f.result() for f in as_completed(futures)]
 
             assert len(errors) == 0
@@ -1466,9 +1468,9 @@ class TestSlowSimulation:
         Compares sorted probability distributions to account for different
         qubit ordering conventions between backends.
         """
-        assert len(state1) == len(state2), (
-            f"{name1} and {name2} have different dimensions"
-        )
+        assert len(state1) == len(
+            state2
+        ), f"{name1} and {name2} have different dimensions"
 
         # Both states must be normalized
         norm1 = np.sum(np.abs(state1) ** 2)
@@ -1568,14 +1570,16 @@ class TestSlowSimulation:
         cirq_state = self._get_cirq_state(enc, x)
 
         self._assert_states_equivalent(
-            pl_state, qk_state,
+            pl_state,
+            qk_state,
             f"PennyLane (ent={entanglement})",
-            f"Qiskit (ent={entanglement})"
+            f"Qiskit (ent={entanglement})",
         )
         self._assert_states_equivalent(
-            pl_state, cirq_state,
+            pl_state,
+            cirq_state,
             f"PennyLane (ent={entanglement})",
-            f"Cirq (ent={entanglement})"
+            f"Cirq (ent={entanglement})",
         )
 
     @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
@@ -1871,8 +1875,16 @@ class TestPauliFeatureMapGateCountBreakdown:
         breakdown = enc.gate_count_breakdown()
 
         expected_keys = {
-            'hadamard', 'rx', 'ry', 'rz', 'rz_two_qubit', 'cnot',
-            'basis_change', 'total_single_qubit', 'total_two_qubit', 'total'
+            "hadamard",
+            "rx",
+            "ry",
+            "rz",
+            "rz_two_qubit",
+            "cnot",
+            "basis_change",
+            "total_single_qubit",
+            "total_two_qubit",
+            "total",
         }
         assert set(breakdown.keys()) == expected_keys
 
@@ -1885,7 +1897,9 @@ class TestPauliFeatureMapGateCountBreakdown:
 
     def test_all_values_non_negative(self) -> None:
         """Test that all gate count values are non-negative."""
-        enc = PauliFeatureMap(n_features=4, reps=2, paulis=["X", "Y", "Z", "XX", "YY", "ZZ"])
+        enc = PauliFeatureMap(
+            n_features=4, reps=2, paulis=["X", "Y", "Z", "XX", "YY", "ZZ"]
+        )
         breakdown = enc.gate_count_breakdown()
 
         assert all(v >= 0 for v in breakdown.values())
@@ -1897,7 +1911,7 @@ class TestPauliFeatureMapGateCountBreakdown:
             breakdown = enc.gate_count_breakdown()
 
             expected = n * reps
-            assert breakdown['hadamard'] == expected
+            assert breakdown["hadamard"] == expected
 
     def test_rz_count_z_pauli(self) -> None:
         """Test RZ gate count with Z Pauli: n * reps."""
@@ -1906,25 +1920,25 @@ class TestPauliFeatureMapGateCountBreakdown:
             breakdown = enc.gate_count_breakdown()
 
             expected = n * reps
-            assert breakdown['rz'] == expected
+            assert breakdown["rz"] == expected
 
     def test_rx_count_x_pauli(self) -> None:
         """Test RX gate count with X Pauli: n * reps."""
         enc = PauliFeatureMap(n_features=4, reps=2, paulis=["X"])
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['rx'] == 8  # 4 * 2
-        assert breakdown['ry'] == 0
-        assert breakdown['rz'] == 0
+        assert breakdown["rx"] == 8  # 4 * 2
+        assert breakdown["ry"] == 0
+        assert breakdown["rz"] == 0
 
     def test_ry_count_y_pauli(self) -> None:
         """Test RY gate count with Y Pauli: n * reps."""
         enc = PauliFeatureMap(n_features=4, reps=2, paulis=["Y"])
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['ry'] == 8  # 4 * 2
-        assert breakdown['rx'] == 0
-        assert breakdown['rz'] == 0
+        assert breakdown["ry"] == 8  # 4 * 2
+        assert breakdown["rx"] == 0
+        assert breakdown["rz"] == 0
 
     def test_cnot_count_full_entanglement(self) -> None:
         """Test CNOT count with full entanglement: 2 * n_pairs * n_two_paulis * reps."""
@@ -1936,7 +1950,7 @@ class TestPauliFeatureMapGateCountBreakdown:
 
             n_pairs = n * (n - 1) // 2
             expected = 2 * n_pairs * reps  # 1 two-qubit Pauli
-            assert breakdown['cnot'] == expected
+            assert breakdown["cnot"] == expected
 
     def test_cnot_count_linear_entanglement(self) -> None:
         """Test CNOT count with linear entanglement: 2 * (n-1) * n_two_paulis * reps."""
@@ -1948,28 +1962,32 @@ class TestPauliFeatureMapGateCountBreakdown:
 
             n_pairs = n - 1
             expected = 2 * n_pairs * reps
-            assert breakdown['cnot'] == expected
+            assert breakdown["cnot"] == expected
 
     def test_cnot_count_multiple_two_paulis(self) -> None:
         """Test CNOT count with multiple two-qubit Paulis scales correctly."""
         enc1 = PauliFeatureMap(n_features=4, reps=1, paulis=["ZZ"], entanglement="full")
-        enc2 = PauliFeatureMap(n_features=4, reps=1, paulis=["ZZ", "XX"], entanglement="full")
-        enc3 = PauliFeatureMap(n_features=4, reps=1, paulis=["ZZ", "XX", "YY"], entanglement="full")
+        enc2 = PauliFeatureMap(
+            n_features=4, reps=1, paulis=["ZZ", "XX"], entanglement="full"
+        )
+        enc3 = PauliFeatureMap(
+            n_features=4, reps=1, paulis=["ZZ", "XX", "YY"], entanglement="full"
+        )
 
         bd1 = enc1.gate_count_breakdown()
         bd2 = enc2.gate_count_breakdown()
         bd3 = enc3.gate_count_breakdown()
 
         # CNOT count should scale linearly with number of two-qubit Paulis
-        assert bd2['cnot'] == 2 * bd1['cnot']
-        assert bd3['cnot'] == 3 * bd1['cnot']
+        assert bd2["cnot"] == 2 * bd1["cnot"]
+        assert bd3["cnot"] == 3 * bd1["cnot"]
 
     def test_basis_change_zz_no_basis_change(self) -> None:
         """Test that ZZ Pauli requires no basis change gates."""
         enc = PauliFeatureMap(n_features=4, reps=1, paulis=["ZZ"])
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['basis_change'] == 0
+        assert breakdown["basis_change"] == 0
 
     def test_basis_change_xx_pauli(self) -> None:
         """Test basis change count for XX Pauli.
@@ -1982,7 +2000,7 @@ class TestPauliFeatureMapGateCountBreakdown:
         n_pairs = 6  # 4*3/2
         # Each X qubit needs 2 H gates (before + after), 2 qubits per pair
         expected = n_pairs * 4  # 4 gates per pair
-        assert breakdown['basis_change'] == expected
+        assert breakdown["basis_change"] == expected
 
     def test_basis_change_yy_pauli(self) -> None:
         """Test basis change count for YY Pauli.
@@ -1995,7 +2013,7 @@ class TestPauliFeatureMapGateCountBreakdown:
         n_pairs = 6  # 4*3/2
         # Each Y qubit needs 4 gates (Sdg, H, H, S), 2 qubits per pair
         expected = n_pairs * 8  # 8 gates per pair
-        assert breakdown['basis_change'] == expected
+        assert breakdown["basis_change"] == expected
 
     def test_basis_change_xz_mixed_pauli(self) -> None:
         """Test basis change count for XZ Pauli (mixed).
@@ -2007,7 +2025,7 @@ class TestPauliFeatureMapGateCountBreakdown:
 
         n_pairs = 6
         expected = n_pairs * 2  # Only the X qubit needs basis change
-        assert breakdown['basis_change'] == expected
+        assert breakdown["basis_change"] == expected
 
     def test_total_single_qubit_gates(self) -> None:
         """Test total single-qubit gates is sum of all single-qubit gate types."""
@@ -2015,25 +2033,29 @@ class TestPauliFeatureMapGateCountBreakdown:
         breakdown = enc.gate_count_breakdown()
 
         expected = (
-            breakdown['hadamard'] + breakdown['rx'] + breakdown['ry'] +
-            breakdown['rz'] + breakdown['rz_two_qubit'] + breakdown['basis_change']
+            breakdown["hadamard"]
+            + breakdown["rx"]
+            + breakdown["ry"]
+            + breakdown["rz"]
+            + breakdown["rz_two_qubit"]
+            + breakdown["basis_change"]
         )
-        assert breakdown['total_single_qubit'] == expected
+        assert breakdown["total_single_qubit"] == expected
 
     def test_total_two_qubit_gates(self) -> None:
         """Test total two-qubit gates equals CNOT count."""
         enc = PauliFeatureMap(n_features=4, reps=2, paulis=["Z", "ZZ"])
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['total_two_qubit'] == breakdown['cnot']
+        assert breakdown["total_two_qubit"] == breakdown["cnot"]
 
     def test_total_gate_count(self) -> None:
         """Test total gate count is sum of single and two-qubit gates."""
         enc = PauliFeatureMap(n_features=4, reps=2, paulis=["Z", "ZZ"])
         breakdown = enc.gate_count_breakdown()
 
-        expected = breakdown['total_single_qubit'] + breakdown['total_two_qubit']
-        assert breakdown['total'] == expected
+        expected = breakdown["total_single_qubit"] + breakdown["total_two_qubit"]
+        assert breakdown["total"] == expected
 
     def test_specific_example_z_zz_4_qubits_2_reps_full(self) -> None:
         """Test specific known values for n=4, reps=2, paulis=["Z","ZZ"], full.
@@ -2051,19 +2073,21 @@ class TestPauliFeatureMapGateCountBreakdown:
         - Total two: 24
         - Total: 52
         """
-        enc = PauliFeatureMap(n_features=4, reps=2, paulis=["Z", "ZZ"], entanglement="full")
+        enc = PauliFeatureMap(
+            n_features=4, reps=2, paulis=["Z", "ZZ"], entanglement="full"
+        )
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['hadamard'] == 8
-        assert breakdown['rx'] == 0
-        assert breakdown['ry'] == 0
-        assert breakdown['rz'] == 8
-        assert breakdown['rz_two_qubit'] == 12
-        assert breakdown['cnot'] == 24
-        assert breakdown['basis_change'] == 0
-        assert breakdown['total_single_qubit'] == 28
-        assert breakdown['total_two_qubit'] == 24
-        assert breakdown['total'] == 52
+        assert breakdown["hadamard"] == 8
+        assert breakdown["rx"] == 0
+        assert breakdown["ry"] == 0
+        assert breakdown["rz"] == 8
+        assert breakdown["rz_two_qubit"] == 12
+        assert breakdown["cnot"] == 24
+        assert breakdown["basis_change"] == 0
+        assert breakdown["total_single_qubit"] == 28
+        assert breakdown["total_two_qubit"] == 24
+        assert breakdown["total"] == 52
 
     def test_specific_example_z_zz_4_qubits_2_reps_linear(self) -> None:
         """Test specific known values for n=4, reps=2, paulis=["Z","ZZ"], linear.
@@ -2079,26 +2103,28 @@ class TestPauliFeatureMapGateCountBreakdown:
         - Total two: 12
         - Total: 34
         """
-        enc = PauliFeatureMap(n_features=4, reps=2, paulis=["Z", "ZZ"], entanglement="linear")
+        enc = PauliFeatureMap(
+            n_features=4, reps=2, paulis=["Z", "ZZ"], entanglement="linear"
+        )
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['hadamard'] == 8
-        assert breakdown['rz'] == 8
-        assert breakdown['rz_two_qubit'] == 6
-        assert breakdown['cnot'] == 12
-        assert breakdown['total_single_qubit'] == 22
-        assert breakdown['total_two_qubit'] == 12
-        assert breakdown['total'] == 34
+        assert breakdown["hadamard"] == 8
+        assert breakdown["rz"] == 8
+        assert breakdown["rz_two_qubit"] == 6
+        assert breakdown["cnot"] == 12
+        assert breakdown["total_single_qubit"] == 22
+        assert breakdown["total_two_qubit"] == 12
+        assert breakdown["total"] == 34
 
     def test_single_paulis_only_no_cnots(self) -> None:
         """Test that single-qubit-only Paulis produce zero CNOTs."""
         enc = PauliFeatureMap(n_features=4, reps=2, paulis=["X", "Y", "Z"])
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['cnot'] == 0
-        assert breakdown['rz_two_qubit'] == 0
-        assert breakdown['basis_change'] == 0
-        assert breakdown['total_two_qubit'] == 0
+        assert breakdown["cnot"] == 0
+        assert breakdown["rz_two_qubit"] == 0
+        assert breakdown["basis_change"] == 0
+        assert breakdown["total_two_qubit"] == 0
 
     def test_breakdown_matches_properties(self) -> None:
         """Test that breakdown matches properties gate counts."""
@@ -2106,33 +2132,39 @@ class TestPauliFeatureMapGateCountBreakdown:
         breakdown = enc.gate_count_breakdown()
         props = enc.properties
 
-        assert breakdown['total'] == props.gate_count
-        assert breakdown['total_single_qubit'] == props.single_qubit_gates
-        assert breakdown['total_two_qubit'] == props.two_qubit_gates
+        assert breakdown["total"] == props.gate_count
+        assert breakdown["total_single_qubit"] == props.single_qubit_gates
+        assert breakdown["total_two_qubit"] == props.two_qubit_gates
 
     def test_different_entanglement_topologies(self) -> None:
         """Test breakdown ordering for all entanglement topologies."""
         n = 5
         reps = 2
 
-        enc_full = PauliFeatureMap(n_features=n, reps=reps, paulis=["Z", "ZZ"], entanglement="full")
-        enc_linear = PauliFeatureMap(n_features=n, reps=reps, paulis=["Z", "ZZ"], entanglement="linear")
-        enc_circular = PauliFeatureMap(n_features=n, reps=reps, paulis=["Z", "ZZ"], entanglement="circular")
+        enc_full = PauliFeatureMap(
+            n_features=n, reps=reps, paulis=["Z", "ZZ"], entanglement="full"
+        )
+        enc_linear = PauliFeatureMap(
+            n_features=n, reps=reps, paulis=["Z", "ZZ"], entanglement="linear"
+        )
+        enc_circular = PauliFeatureMap(
+            n_features=n, reps=reps, paulis=["Z", "ZZ"], entanglement="circular"
+        )
 
         bd_full = enc_full.gate_count_breakdown()
         bd_linear = enc_linear.gate_count_breakdown()
         bd_circular = enc_circular.gate_count_breakdown()
 
         # Full has most gates (most pairs)
-        assert bd_full['total'] > bd_linear['total']
-        assert bd_full['total'] > bd_circular['total']
+        assert bd_full["total"] > bd_linear["total"]
+        assert bd_full["total"] > bd_circular["total"]
 
         # Circular has one more pair than linear for n > 2
-        assert bd_circular['cnot'] > bd_linear['cnot']
+        assert bd_circular["cnot"] > bd_linear["cnot"]
 
         # Hadamard and single-qubit rotation counts should be the same
-        assert bd_full['hadamard'] == bd_linear['hadamard'] == bd_circular['hadamard']
-        assert bd_full['rz'] == bd_linear['rz'] == bd_circular['rz']
+        assert bd_full["hadamard"] == bd_linear["hadamard"] == bd_circular["hadamard"]
+        assert bd_full["rz"] == bd_linear["rz"] == bd_circular["rz"]
 
 
 # =============================================================================
@@ -2187,13 +2219,15 @@ class TestPauliFeatureMapParallelBatchProcessing:
         """Test that parallel processing preserves sample order."""
         enc = PauliFeatureMap(n_features=4, reps=1, paulis=["Z", "ZZ"])
 
-        X = np.array([
-            [0.0, 0.0, 0.0, 0.0],
-            [1.0, 1.0, 1.0, 1.0],
-            [2.0, 2.0, 2.0, 2.0],
-            [3.0, 3.0, 3.0, 3.0],
-            [4.0, 4.0, 4.0, 4.0],
-        ])
+        X = np.array(
+            [
+                [0.0, 0.0, 0.0, 0.0],
+                [1.0, 1.0, 1.0, 1.0],
+                [2.0, 2.0, 2.0, 2.0],
+                [3.0, 3.0, 3.0, 3.0],
+                [4.0, 4.0, 4.0, 4.0],
+            ]
+        )
 
         circuits_parallel = enc.get_circuits(X, backend="pennylane", parallel=True)
         circuits_sequential = enc.get_circuits(X, backend="pennylane", parallel=False)
@@ -2201,6 +2235,7 @@ class TestPauliFeatureMapParallelBatchProcessing:
         dev = qml.device("default.qubit", wires=4)
 
         for i in range(len(X)):
+
             @qml.qnode(dev)
             def run_parallel():
                 circuits_parallel[i]()
@@ -2291,17 +2326,21 @@ class TestPauliFeatureMapModuleConfiguration:
 
     def test_valid_paulis_constants(self) -> None:
         """Test valid Pauli constants contain all expected terms."""
-        assert PauliFeatureMap._VALID_SINGLE_PAULIS == frozenset({"X", "Y", "Z"})
-        assert PauliFeatureMap._VALID_TWO_PAULIS == frozenset({
-            "XX", "YY", "ZZ", "XY", "XZ", "YZ", "YX", "ZX", "ZY"
-        })
+        assert frozenset({"X", "Y", "Z"}) == PauliFeatureMap._VALID_SINGLE_PAULIS
+        assert (
+            frozenset({"XX", "YY", "ZZ", "XY", "XZ", "YZ", "YX", "ZX", "ZY"})
+            == PauliFeatureMap._VALID_TWO_PAULIS
+        )
         assert PauliFeatureMap._VALID_PAULIS == (
             PauliFeatureMap._VALID_SINGLE_PAULIS | PauliFeatureMap._VALID_TWO_PAULIS
         )
 
     def test_valid_entanglement_constant(self) -> None:
         """Test valid entanglement constant contains all valid options."""
-        assert PauliFeatureMap._VALID_ENTANGLEMENT == frozenset({"full", "linear", "circular"})
+        assert (
+            frozenset({"full", "linear", "circular"})
+            == PauliFeatureMap._VALID_ENTANGLEMENT
+        )
 
         # All valid options should work
         for ent in PauliFeatureMap._VALID_ENTANGLEMENT:
@@ -2310,14 +2349,18 @@ class TestPauliFeatureMapModuleConfiguration:
 
     def test_warning_threshold_constant(self) -> None:
         """Test that the full entanglement warning threshold is set correctly."""
-        from encoding_atlas.encodings.pauli_feature_map import _FULL_ENTANGLEMENT_WARNING_THRESHOLD
+        from encoding_atlas.encodings.pauli_feature_map import (
+            _FULL_ENTANGLEMENT_WARNING_THRESHOLD,
+        )
 
         assert isinstance(_FULL_ENTANGLEMENT_WARNING_THRESHOLD, int)
         assert _FULL_ENTANGLEMENT_WARNING_THRESHOLD == 12
 
     def test_input_range_threshold_constant(self) -> None:
         """Test input range debug threshold constant."""
-        from encoding_atlas.encodings.pauli_feature_map import _INPUT_RANGE_DEBUG_THRESHOLD
+        from encoding_atlas.encodings.pauli_feature_map import (
+            _INPUT_RANGE_DEBUG_THRESHOLD,
+        )
 
         assert isinstance(_INPUT_RANGE_DEBUG_THRESHOLD, float)
         assert np.isclose(_INPUT_RANGE_DEBUG_THRESHOLD, 4.0 * np.pi)
@@ -2452,7 +2495,9 @@ class TestPauliFeatureMapFullEntanglementWarning:
 
     def test_threshold_constant_exists(self) -> None:
         """Test that the threshold constant exists and has the expected value."""
-        from encoding_atlas.encodings.pauli_feature_map import _FULL_ENTANGLEMENT_WARNING_THRESHOLD
+        from encoding_atlas.encodings.pauli_feature_map import (
+            _FULL_ENTANGLEMENT_WARNING_THRESHOLD,
+        )
 
         assert isinstance(_FULL_ENTANGLEMENT_WARNING_THRESHOLD, int)
         assert _FULL_ENTANGLEMENT_WARNING_THRESHOLD == 12
@@ -2466,7 +2511,8 @@ class TestPauliFeatureMapFullEntanglementWarning:
             _ = PauliFeatureMap(n_features=12, paulis=["Z", "ZZ"], entanglement="full")
 
         entanglement_warnings = [
-            x for x in w
+            x
+            for x in w
             if issubclass(x.category, UserWarning)
             and "Full entanglement" in str(x.message)
         ]
@@ -2481,7 +2527,8 @@ class TestPauliFeatureMapFullEntanglementWarning:
             _ = PauliFeatureMap(n_features=13, paulis=["Z", "ZZ"], entanglement="full")
 
         entanglement_warnings = [
-            x for x in w
+            x
+            for x in w
             if issubclass(x.category, UserWarning)
             and "Full entanglement" in str(x.message)
         ]
@@ -2500,10 +2547,13 @@ class TestPauliFeatureMapFullEntanglementWarning:
 
         with warn_mod.catch_warnings(record=True) as w:
             warn_mod.simplefilter("always")
-            _ = PauliFeatureMap(n_features=20, paulis=["Z", "X", "Y"], entanglement="full")
+            _ = PauliFeatureMap(
+                n_features=20, paulis=["Z", "X", "Y"], entanglement="full"
+            )
 
         entanglement_warnings = [
-            x for x in w
+            x
+            for x in w
             if issubclass(x.category, UserWarning)
             and "Full entanglement" in str(x.message)
         ]
@@ -2515,10 +2565,13 @@ class TestPauliFeatureMapFullEntanglementWarning:
 
         with warn_mod.catch_warnings(record=True) as w:
             warn_mod.simplefilter("always")
-            _ = PauliFeatureMap(n_features=20, paulis=["Z", "ZZ"], entanglement="linear")
+            _ = PauliFeatureMap(
+                n_features=20, paulis=["Z", "ZZ"], entanglement="linear"
+            )
 
         entanglement_warnings = [
-            x for x in w
+            x
+            for x in w
             if issubclass(x.category, UserWarning)
             and "Full entanglement" in str(x.message)
         ]
@@ -2530,10 +2583,13 @@ class TestPauliFeatureMapFullEntanglementWarning:
 
         with warn_mod.catch_warnings(record=True) as w:
             warn_mod.simplefilter("always")
-            _ = PauliFeatureMap(n_features=20, paulis=["Z", "ZZ"], entanglement="circular")
+            _ = PauliFeatureMap(
+                n_features=20, paulis=["Z", "ZZ"], entanglement="circular"
+            )
 
         entanglement_warnings = [
-            x for x in w
+            x
+            for x in w
             if issubclass(x.category, UserWarning)
             and "Full entanglement" in str(x.message)
         ]
@@ -2545,10 +2601,13 @@ class TestPauliFeatureMapFullEntanglementWarning:
 
         with warn_mod.catch_warnings(record=True) as w:
             warn_mod.simplefilter("always")
-            _ = PauliFeatureMap(n_features=15, reps=2, paulis=["Z", "ZZ"], entanglement="full")
+            _ = PauliFeatureMap(
+                n_features=15, reps=2, paulis=["Z", "ZZ"], entanglement="full"
+            )
 
         entanglement_warnings = [
-            x for x in w
+            x
+            for x in w
             if issubclass(x.category, UserWarning)
             and "Full entanglement" in str(x.message)
         ]
@@ -2571,7 +2630,8 @@ class TestPauliFeatureMapFullEntanglementWarning:
             )
 
         entanglement_warnings = [
-            x for x in w
+            x
+            for x in w
             if issubclass(x.category, UserWarning)
             and "Full entanglement" in str(x.message)
         ]
@@ -2592,7 +2652,8 @@ class TestPauliFeatureMapFullEntanglementWarning:
             _ = PauliFeatureMap(n_features=15, paulis=["Z", "ZZ"], entanglement="full")
 
         entanglement_warnings = [
-            x for x in w
+            x
+            for x in w
             if issubclass(x.category, UserWarning)
             and "Full entanglement" in str(x.message)
         ]
@@ -2602,15 +2663,21 @@ class TestPauliFeatureMapFullEntanglementWarning:
         warning_filename = entanglement_warnings[0].filename
         assert "test_pauli_feature_map" in warning_filename
 
-    def test_logger_warning_also_emitted(self, caplog: pytest.LogCaptureFixture) -> None:
+    def test_logger_warning_also_emitted(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """Test that _logger.warning is also called alongside warnings.warn."""
         import logging
         import warnings as warn_mod
 
         with warn_mod.catch_warnings():
             warn_mod.simplefilter("always")
-            with caplog.at_level(logging.WARNING, logger="encoding_atlas.encodings.pauli_feature_map"):
-                _ = PauliFeatureMap(n_features=13, paulis=["Z", "ZZ"], entanglement="full")
+            with caplog.at_level(
+                logging.WARNING, logger="encoding_atlas.encodings.pauli_feature_map"
+            ):
+                _ = PauliFeatureMap(
+                    n_features=13, paulis=["Z", "ZZ"], entanglement="full"
+                )
 
         warning_records = [r for r in caplog.records if r.levelno == logging.WARNING]
         assert len(warning_records) == 1
@@ -2630,16 +2697,25 @@ class TestPauliFeatureMapGateCountBreakdownTypedDict:
         """Test that GateCountBreakdown can be imported."""
         from encoding_atlas.encodings.pauli_feature_map import GateCountBreakdown
 
-        assert hasattr(GateCountBreakdown, '__annotations__')
+        assert hasattr(GateCountBreakdown, "__annotations__")
         expected_keys = {
-            'hadamard', 'rx', 'ry', 'rz', 'rz_two_qubit', 'cnot',
-            'basis_change', 'total_single_qubit', 'total_two_qubit', 'total'
+            "hadamard",
+            "rx",
+            "ry",
+            "rz",
+            "rz_two_qubit",
+            "cnot",
+            "basis_change",
+            "total_single_qubit",
+            "total_two_qubit",
+            "total",
         }
         assert set(GateCountBreakdown.__annotations__.keys()) == expected_keys
 
     def test_all_annotations_are_int(self) -> None:
         """Test that all TypedDict fields are annotated as int."""
         from typing import get_type_hints
+
         from encoding_atlas.encodings.pauli_feature_map import GateCountBreakdown
 
         hints = get_type_hints(GateCountBreakdown)
@@ -2660,7 +2736,7 @@ class TestPauliFeatureMapGateCountBreakdownTypedDict:
 
         # Dict operations should work
         assert len(breakdown) == 10
-        assert 'hadamard' in breakdown
+        assert "hadamard" in breakdown
         assert list(breakdown.keys()) is not None
         assert list(breakdown.values()) is not None
         assert list(breakdown.items()) is not None
@@ -2687,18 +2763,29 @@ class TestPauliFeatureMapResourceSummary:
         summary = enc.resource_summary()
 
         expected_keys = {
-            "n_qubits", "n_features", "depth", "reps",
-            "paulis", "single_paulis", "two_paulis",
-            "entanglement", "entanglement_pairs", "n_entanglement_pairs",
+            "n_qubits",
+            "n_features",
+            "depth",
+            "reps",
+            "paulis",
+            "single_paulis",
+            "two_paulis",
+            "entanglement",
+            "entanglement_pairs",
+            "n_entanglement_pairs",
             "gate_counts",
-            "is_entangling", "simulability", "trainability_estimate",
+            "is_entangling",
+            "simulability",
+            "trainability_estimate",
             "hardware_requirements",
         }
         assert expected_keys.issubset(set(summary.keys()))
 
     def test_basic_values(self) -> None:
         """Test basic values in resource summary."""
-        enc = PauliFeatureMap(n_features=4, reps=2, paulis=["Z", "ZZ"], entanglement="full")
+        enc = PauliFeatureMap(
+            n_features=4, reps=2, paulis=["Z", "ZZ"], entanglement="full"
+        )
         summary = enc.resource_summary()
 
         assert summary["n_qubits"] == 4
@@ -2713,7 +2800,9 @@ class TestPauliFeatureMapResourceSummary:
 
     def test_entanglement_pairs_match(self) -> None:
         """Test that entanglement pairs in summary match get_entanglement_pairs()."""
-        enc = PauliFeatureMap(n_features=4, reps=2, paulis=["Z", "ZZ"], entanglement="linear")
+        enc = PauliFeatureMap(
+            n_features=4, reps=2, paulis=["Z", "ZZ"], entanglement="linear"
+        )
         summary = enc.resource_summary()
 
         assert summary["entanglement_pairs"] == enc.get_entanglement_pairs()
@@ -2819,8 +2908,18 @@ class TestPauliFeatureMapResourceSummary:
         """Test resource summary for different configurations."""
         configs = [
             {"n_features": 2, "paulis": ["Z"], "reps": 1, "entanglement": "full"},
-            {"n_features": 4, "paulis": ["Z", "ZZ"], "reps": 2, "entanglement": "linear"},
-            {"n_features": 6, "paulis": ["X", "Y", "XX", "YY"], "reps": 3, "entanglement": "circular"},
+            {
+                "n_features": 4,
+                "paulis": ["Z", "ZZ"],
+                "reps": 2,
+                "entanglement": "linear",
+            },
+            {
+                "n_features": 6,
+                "paulis": ["X", "Y", "XX", "YY"],
+                "reps": 3,
+                "entanglement": "circular",
+            },
         ]
 
         for config in configs:

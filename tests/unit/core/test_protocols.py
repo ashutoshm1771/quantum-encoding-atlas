@@ -13,9 +13,10 @@ Test Categories
 5. **Non-Conformance Tests**: Verify non-implementing encodings don't match
 """
 
-import pytest
-import numpy as np
 from typing import Any
+
+import numpy as np
+import pytest
 
 
 class TestProtocolImports:
@@ -24,25 +25,25 @@ class TestProtocolImports:
     def test_import_from_core_protocols(self) -> None:
         """Test importing protocols from core.protocols module."""
         from encoding_atlas.core.protocols import (
-            ResourceAnalyzable,
             DataDependentResourceAnalyzable,
-            EntanglementQueryable,
             DataTransformable,
+            EntanglementQueryable,
+            ResourceAnalyzable,
         )
 
         # Verify they are Protocol classes
-        assert hasattr(ResourceAnalyzable, '__protocol_attrs__') or True
-        assert hasattr(DataDependentResourceAnalyzable, '__protocol_attrs__') or True
-        assert hasattr(EntanglementQueryable, '__protocol_attrs__') or True
-        assert hasattr(DataTransformable, '__protocol_attrs__') or True
+        assert hasattr(ResourceAnalyzable, "__protocol_attrs__") or True
+        assert hasattr(DataDependentResourceAnalyzable, "__protocol_attrs__") or True
+        assert hasattr(EntanglementQueryable, "__protocol_attrs__") or True
+        assert hasattr(DataTransformable, "__protocol_attrs__") or True
 
     def test_import_from_core_init(self) -> None:
         """Test importing protocols from core module."""
         from encoding_atlas.core import (
-            ResourceAnalyzable,
             DataDependentResourceAnalyzable,
-            EntanglementQueryable,
             DataTransformable,
+            EntanglementQueryable,
+            ResourceAnalyzable,
         )
 
         assert ResourceAnalyzable is not None
@@ -53,10 +54,10 @@ class TestProtocolImports:
     def test_import_from_main_package(self) -> None:
         """Test importing protocols from main package."""
         from encoding_atlas import (
-            ResourceAnalyzable,
             DataDependentResourceAnalyzable,
-            EntanglementQueryable,
             DataTransformable,
+            EntanglementQueryable,
+            ResourceAnalyzable,
         )
 
         assert ResourceAnalyzable is not None
@@ -67,10 +68,10 @@ class TestProtocolImports:
     def test_import_type_guards(self) -> None:
         """Test importing type guard functions."""
         from encoding_atlas.core.protocols import (
-            is_resource_analyzable,
             is_data_dependent_resource_analyzable,
-            is_entanglement_queryable,
             is_data_transformable,
+            is_entanglement_queryable,
+            is_resource_analyzable,
         )
 
         assert callable(is_resource_analyzable)
@@ -88,15 +89,15 @@ class TestResourceAnalyzableProtocol:
         from encoding_atlas import (
             AmplitudeEncoding,
             AngleEncoding,
-            IQPEncoding,
-            ZZFeatureMap,
-            HardwareEfficientEncoding,
             DataReuploading,
-            HigherOrderAngleEncoding,
             HamiltonianEncoding,
+            HardwareEfficientEncoding,
+            HigherOrderAngleEncoding,
+            IQPEncoding,
+            PauliFeatureMap,
             QAOAEncoding,
             SymmetryInspiredFeatureMap,
-            PauliFeatureMap,
+            ZZFeatureMap,
         )
 
         return [
@@ -118,18 +119,20 @@ class TestResourceAnalyzableProtocol:
         from encoding_atlas.core.protocols import ResourceAnalyzable
 
         for enc in resource_analyzable_encodings:
-            assert isinstance(enc, ResourceAnalyzable), (
-                f"{enc.__class__.__name__} should implement ResourceAnalyzable"
-            )
+            assert isinstance(
+                enc, ResourceAnalyzable
+            ), f"{enc.__class__.__name__} should implement ResourceAnalyzable"
 
-    def test_type_guard_function(self, resource_analyzable_encodings: list[Any]) -> None:
+    def test_type_guard_function(
+        self, resource_analyzable_encodings: list[Any]
+    ) -> None:
         """Test that type guard function works correctly."""
         from encoding_atlas.core.protocols import is_resource_analyzable
 
         for enc in resource_analyzable_encodings:
-            assert is_resource_analyzable(enc), (
-                f"is_resource_analyzable({enc.__class__.__name__}) should return True"
-            )
+            assert is_resource_analyzable(
+                enc
+            ), f"is_resource_analyzable({enc.__class__.__name__}) should return True"
 
     def test_resource_summary_callable(
         self, resource_analyzable_encodings: list[Any]
@@ -140,9 +143,9 @@ class TestResourceAnalyzableProtocol:
         for enc in resource_analyzable_encodings:
             if isinstance(enc, ResourceAnalyzable):
                 summary = enc.resource_summary()
-                assert isinstance(summary, dict), (
-                    f"{enc.__class__.__name__}.resource_summary() should return dict"
-                )
+                assert isinstance(
+                    summary, dict
+                ), f"{enc.__class__.__name__}.resource_summary() should return dict"
 
     def test_gate_count_breakdown_callable(
         self, resource_analyzable_encodings: list[Any]
@@ -153,13 +156,13 @@ class TestResourceAnalyzableProtocol:
         for enc in resource_analyzable_encodings:
             if isinstance(enc, ResourceAnalyzable):
                 breakdown = enc.gate_count_breakdown()
-                assert isinstance(breakdown, dict), (
-                    f"{enc.__class__.__name__}.gate_count_breakdown() should return dict"
-                )
+                assert isinstance(
+                    breakdown, dict
+                ), f"{enc.__class__.__name__}.gate_count_breakdown() should return dict"
                 # Verify required fields
-                assert "total" in breakdown or "total_single_qubit" in breakdown, (
-                    f"{enc.__class__.__name__}.gate_count_breakdown() missing required fields"
-                )
+                assert (
+                    "total" in breakdown or "total_single_qubit" in breakdown
+                ), f"{enc.__class__.__name__}.gate_count_breakdown() missing required fields"
 
 
 class TestDataDependentResourceAnalyzableProtocol:
@@ -179,9 +182,9 @@ class TestDataDependentResourceAnalyzableProtocol:
         from encoding_atlas.core.protocols import DataDependentResourceAnalyzable
 
         for enc in data_dependent_encodings:
-            assert isinstance(enc, DataDependentResourceAnalyzable), (
-                f"{enc.__class__.__name__} should implement DataDependentResourceAnalyzable"
-            )
+            assert isinstance(
+                enc, DataDependentResourceAnalyzable
+            ), f"{enc.__class__.__name__} should implement DataDependentResourceAnalyzable"
 
     def test_type_guard_function(self, data_dependent_encodings: list[Any]) -> None:
         """Test that type guard function works correctly."""
@@ -204,9 +207,9 @@ class TestDataDependentResourceAnalyzableProtocol:
         for enc in data_dependent_encodings:
             if isinstance(enc, DataDependentResourceAnalyzable):
                 summary = enc.resource_summary(x)
-                assert isinstance(summary, dict), (
-                    f"{enc.__class__.__name__}.resource_summary(x) should return dict"
-                )
+                assert isinstance(
+                    summary, dict
+                ), f"{enc.__class__.__name__}.resource_summary(x) should return dict"
 
     def test_actual_gate_count(self, data_dependent_encodings: list[Any]) -> None:
         """Test that actual_gate_count(x) returns correct type."""
@@ -217,9 +220,9 @@ class TestDataDependentResourceAnalyzableProtocol:
         for enc in data_dependent_encodings:
             if isinstance(enc, DataDependentResourceAnalyzable):
                 count = enc.actual_gate_count(x)
-                assert isinstance(count, int), (
-                    f"{enc.__class__.__name__}.actual_gate_count(x) should return int"
-                )
+                assert isinstance(
+                    count, int
+                ), f"{enc.__class__.__name__}.actual_gate_count(x) should return int"
                 assert count >= 0, "Gate count should be non-negative"
 
 
@@ -230,13 +233,13 @@ class TestEntanglementQueryableProtocol:
     def entanglement_queryable_encodings(self) -> list[Any]:
         """Get list of encodings that should implement EntanglementQueryable."""
         from encoding_atlas import (
-            IQPEncoding,
-            ZZFeatureMap,
-            HardwareEfficientEncoding,
             DataReuploading,
+            HardwareEfficientEncoding,
+            IQPEncoding,
+            PauliFeatureMap,
             QAOAEncoding,
             SymmetryInspiredFeatureMap,
-            PauliFeatureMap,
+            ZZFeatureMap,
         )
 
         return [
@@ -265,9 +268,9 @@ class TestEntanglementQueryableProtocol:
         from encoding_atlas.core.protocols import EntanglementQueryable
 
         for enc in entanglement_queryable_encodings:
-            assert isinstance(enc, EntanglementQueryable), (
-                f"{enc.__class__.__name__} should implement EntanglementQueryable"
-            )
+            assert isinstance(
+                enc, EntanglementQueryable
+            ), f"{enc.__class__.__name__} should implement EntanglementQueryable"
 
     def test_type_guard_function(
         self, entanglement_queryable_encodings: list[Any]
@@ -276,9 +279,9 @@ class TestEntanglementQueryableProtocol:
         from encoding_atlas.core.protocols import is_entanglement_queryable
 
         for enc in entanglement_queryable_encodings:
-            assert is_entanglement_queryable(enc), (
-                f"is_entanglement_queryable({enc.__class__.__name__}) should return True"
-            )
+            assert is_entanglement_queryable(
+                enc
+            ), f"is_entanglement_queryable({enc.__class__.__name__}) should return True"
 
     def test_get_entanglement_pairs_callable(
         self, entanglement_queryable_encodings: list[Any]
@@ -289,16 +292,16 @@ class TestEntanglementQueryableProtocol:
         for enc in entanglement_queryable_encodings:
             if isinstance(enc, EntanglementQueryable):
                 pairs = enc.get_entanglement_pairs()
-                assert isinstance(pairs, list), (
-                    f"{enc.__class__.__name__}.get_entanglement_pairs() should return list"
-                )
+                assert isinstance(
+                    pairs, list
+                ), f"{enc.__class__.__name__}.get_entanglement_pairs() should return list"
                 # Verify pairs are tuples of ints
                 for pair in pairs:
                     assert isinstance(pair, tuple), "Each pair should be a tuple"
                     assert len(pair) == 2, "Each pair should have 2 elements"
-                    assert all(isinstance(q, int) for q in pair), (
-                        "Pair elements should be integers"
-                    )
+                    assert all(
+                        isinstance(q, int) for q in pair
+                    ), "Pair elements should be integers"
 
     def test_non_entangling_not_queryable(
         self, non_entangling_encodings: list[Any]
@@ -311,9 +314,9 @@ class TestEntanglementQueryableProtocol:
             # depending on implementation. If it does, pairs should be empty.
             if isinstance(enc, EntanglementQueryable):
                 pairs = enc.get_entanglement_pairs()
-                assert pairs == [], (
-                    f"Non-entangling {enc.__class__.__name__} should return empty pairs"
-                )
+                assert (
+                    pairs == []
+                ), f"Non-entangling {enc.__class__.__name__} should return empty pairs"
 
 
 class TestDataTransformableProtocol:
@@ -326,7 +329,7 @@ class TestDataTransformableProtocol:
     @pytest.fixture
     def data_transformable_encodings(self) -> list[Any]:
         """Get list of encodings that should implement DataTransformable."""
-        from encoding_atlas import BasisEncoding, AmplitudeEncoding
+        from encoding_atlas import AmplitudeEncoding, BasisEncoding
 
         return [
             BasisEncoding(n_features=4),
@@ -343,9 +346,9 @@ class TestDataTransformableProtocol:
                 return np.array(x)
 
         obj = MockDataTransformable()
-        assert isinstance(obj, DataTransformable), (
-            "DataTransformable should be runtime checkable"
-        )
+        assert isinstance(
+            obj, DataTransformable
+        ), "DataTransformable should be runtime checkable"
 
     def test_type_guard_function_with_mock(self) -> None:
         """Test that type guard function works with conforming objects."""
@@ -356,9 +359,9 @@ class TestDataTransformableProtocol:
                 return np.array(x)
 
         obj = MockDataTransformable()
-        assert is_data_transformable(obj), (
-            "is_data_transformable() should return True for conforming objects"
-        )
+        assert is_data_transformable(
+            obj
+        ), "is_data_transformable() should return True for conforming objects"
 
     def test_non_conforming_fails_check(self) -> None:
         """Test that objects without transform_input fail the check."""
@@ -368,31 +371,27 @@ class TestDataTransformableProtocol:
             pass
 
         obj = NotDataTransformable()
-        assert not isinstance(obj, DataTransformable), (
-            "Objects without transform_input should not match DataTransformable"
-        )
+        assert not isinstance(
+            obj, DataTransformable
+        ), "Objects without transform_input should not match DataTransformable"
 
-    def test_isinstance_check(
-        self, data_transformable_encodings: list[Any]
-    ) -> None:
+    def test_isinstance_check(self, data_transformable_encodings: list[Any]) -> None:
         """Test that DataTransformable encodings pass isinstance check."""
         from encoding_atlas.core.protocols import DataTransformable
 
         for enc in data_transformable_encodings:
-            assert isinstance(enc, DataTransformable), (
-                f"{enc.__class__.__name__} should implement DataTransformable"
-            )
+            assert isinstance(
+                enc, DataTransformable
+            ), f"{enc.__class__.__name__} should implement DataTransformable"
 
-    def test_type_guard_function(
-        self, data_transformable_encodings: list[Any]
-    ) -> None:
+    def test_type_guard_function(self, data_transformable_encodings: list[Any]) -> None:
         """Test that type guard function works correctly."""
         from encoding_atlas.core.protocols import is_data_transformable
 
         for enc in data_transformable_encodings:
-            assert is_data_transformable(enc), (
-                f"is_data_transformable({enc.__class__.__name__}) should return True"
-            )
+            assert is_data_transformable(
+                enc
+            ), f"is_data_transformable({enc.__class__.__name__}) should return True"
 
     def test_basis_encoding_transform_input(self) -> None:
         """Test BasisEncoding.transform_input() binarization behavior."""
@@ -407,9 +406,12 @@ class TestDataTransformableProtocol:
         result = enc.transform_input(x)
 
         assert isinstance(result, np.ndarray)
-        assert result.tolist() == [0, 1, 0, 1], (
-            "Values > 0.5 should become 1, values <= 0.5 should become 0"
-        )
+        assert result.tolist() == [
+            0,
+            1,
+            0,
+            1,
+        ], "Values > 0.5 should become 1, values <= 0.5 should become 0"
 
     def test_basis_encoding_transform_input_custom_threshold(self) -> None:
         """Test BasisEncoding.transform_input() with custom threshold."""
@@ -419,9 +421,12 @@ class TestDataTransformableProtocol:
         x = np.array([-0.5, 0.5, -0.1, 0.1])
         result = enc.transform_input(x)
 
-        assert result.tolist() == [0, 1, 0, 1], (
-            "With threshold=0.0, negative values become 0, positive become 1"
-        )
+        assert result.tolist() == [
+            0,
+            1,
+            0,
+            1,
+        ], "With threshold=0.0, negative values become 0, positive become 1"
 
     def test_basis_encoding_transform_equals_binarize(self) -> None:
         """Test that transform_input() is consistent with binarize()."""
@@ -434,8 +439,9 @@ class TestDataTransformableProtocol:
         binarize_result = enc.binarize(x)
 
         np.testing.assert_array_equal(
-            transform_result, binarize_result,
-            err_msg="transform_input() should produce same result as binarize()"
+            transform_result,
+            binarize_result,
+            err_msg="transform_input() should produce same result as binarize()",
         )
 
     def test_amplitude_encoding_transform_input(self) -> None:
@@ -453,13 +459,15 @@ class TestDataTransformableProtocol:
         assert isinstance(result, np.ndarray)
         # Check unit norm
         np.testing.assert_almost_equal(
-            np.linalg.norm(result), 1.0,
-            err_msg="Transformed data should have unit L2 norm"
+            np.linalg.norm(result),
+            1.0,
+            err_msg="Transformed data should have unit L2 norm",
         )
         # Check values (3, 4, 0, 0) normalized to (0.6, 0.8, 0, 0)
         np.testing.assert_array_almost_equal(
-            result, [0.6, 0.8, 0.0, 0.0],
-            err_msg="Normalization should produce correct values"
+            result,
+            [0.6, 0.8, 0.0, 0.0],
+            err_msg="Normalization should produce correct values",
         )
 
     def test_amplitude_encoding_transform_input_padding(self) -> None:
@@ -472,8 +480,9 @@ class TestDataTransformableProtocol:
 
         assert len(result) == 4, "Result should be padded to power of 2"
         np.testing.assert_array_almost_equal(
-            result, [1.0, 0.0, 0.0, 0.0],
-            err_msg="Single feature should normalize to 1.0 with zeros padded"
+            result,
+            [1.0, 0.0, 0.0, 0.0],
+            err_msg="Single feature should normalize to 1.0 with zeros padded",
         )
 
     def test_amplitude_encoding_transform_input_zero_vector_error(self) -> None:
@@ -542,10 +551,10 @@ class TestProtocolNonConformance:
     def test_type_guards_return_false_for_non_conforming(self) -> None:
         """Test that type guards return False for non-conforming objects."""
         from encoding_atlas.core.protocols import (
-            is_resource_analyzable,
             is_data_dependent_resource_analyzable,
-            is_entanglement_queryable,
             is_data_transformable,
+            is_entanglement_queryable,
+            is_resource_analyzable,
         )
 
         class NotAnEncoding:
@@ -563,9 +572,9 @@ class TestProtocolUsagePatterns:
 
     def test_generic_resource_analysis_function(self) -> None:
         """Test writing a generic function using ResourceAnalyzable."""
-        from encoding_atlas import IQPEncoding, AngleEncoding
-        from encoding_atlas.core.protocols import ResourceAnalyzable
+        from encoding_atlas import AngleEncoding, IQPEncoding
         from encoding_atlas.core.base import BaseEncoding
+        from encoding_atlas.core.protocols import ResourceAnalyzable
 
         def get_total_gates(enc: BaseEncoding) -> int | None:
             """Get total gates if encoding supports resource analysis."""
@@ -588,12 +597,12 @@ class TestProtocolUsagePatterns:
 
     def test_capability_discovery_pattern(self) -> None:
         """Test discovering capabilities of an encoding."""
-        from encoding_atlas import IQPEncoding, BasisEncoding
+        from encoding_atlas import BasisEncoding, IQPEncoding
         from encoding_atlas.core.protocols import (
-            ResourceAnalyzable,
-            EntanglementQueryable,
-            DataTransformable,
             DataDependentResourceAnalyzable,
+            DataTransformable,
+            EntanglementQueryable,
+            ResourceAnalyzable,
         )
 
         # Test IQPEncoding capabilities
@@ -631,7 +640,7 @@ class TestProtocolUsagePatterns:
 
     def test_encoding_comparison_using_protocols(self) -> None:
         """Test comparing encodings using protocol capabilities."""
-        from encoding_atlas import IQPEncoding, AngleEncoding
+        from encoding_atlas import AngleEncoding, IQPEncoding
         from encoding_atlas.core.protocols import ResourceAnalyzable
 
         encodings = [
@@ -644,15 +653,19 @@ class TestProtocolUsagePatterns:
         for enc in encodings:
             if isinstance(enc, ResourceAnalyzable):
                 breakdown = enc.gate_count_breakdown()
-                gate_counts.append({
-                    "name": enc.__class__.__name__,
-                    "total": breakdown.get("total", 0),
-                })
+                gate_counts.append(
+                    {
+                        "name": enc.__class__.__name__,
+                        "total": breakdown.get("total", 0),
+                    }
+                )
 
         assert len(gate_counts) == 2
         # IQPEncoding should have more gates than AngleEncoding
         iqp_gates = next(g["total"] for g in gate_counts if g["name"] == "IQPEncoding")
-        angle_gates = next(g["total"] for g in gate_counts if g["name"] == "AngleEncoding")
+        angle_gates = next(
+            g["total"] for g in gate_counts if g["name"] == "AngleEncoding"
+        )
         assert iqp_gates > angle_gates
 
 
@@ -662,10 +675,10 @@ class TestProtocolDocumentation:
     def test_protocols_have_docstrings(self) -> None:
         """Test that all protocols have docstrings."""
         from encoding_atlas.core.protocols import (
-            ResourceAnalyzable,
             DataDependentResourceAnalyzable,
-            EntanglementQueryable,
             DataTransformable,
+            EntanglementQueryable,
+            ResourceAnalyzable,
         )
 
         protocols = [
@@ -676,29 +689,29 @@ class TestProtocolDocumentation:
         ]
 
         for protocol in protocols:
-            assert protocol.__doc__ is not None, (
-                f"{protocol.__name__} should have a docstring"
-            )
-            assert len(protocol.__doc__) > 100, (
-                f"{protocol.__name__} docstring should be comprehensive"
-            )
+            assert (
+                protocol.__doc__ is not None
+            ), f"{protocol.__name__} should have a docstring"
+            assert (
+                len(protocol.__doc__) > 100
+            ), f"{protocol.__name__} docstring should be comprehensive"
 
     def test_module_has_docstring(self) -> None:
         """Test that protocols module has a docstring."""
         from encoding_atlas.core import protocols
 
         assert protocols.__doc__ is not None
-        assert len(protocols.__doc__) > 500, (
-            "protocols module should have comprehensive documentation"
-        )
+        assert (
+            len(protocols.__doc__) > 500
+        ), "protocols module should have comprehensive documentation"
 
     def test_type_guards_have_docstrings(self) -> None:
         """Test that type guard functions have docstrings."""
         from encoding_atlas.core.protocols import (
-            is_resource_analyzable,
             is_data_dependent_resource_analyzable,
-            is_entanglement_queryable,
             is_data_transformable,
+            is_entanglement_queryable,
+            is_resource_analyzable,
         )
 
         functions = [
@@ -709,6 +722,4 @@ class TestProtocolDocumentation:
         ]
 
         for func in functions:
-            assert func.__doc__ is not None, (
-                f"{func.__name__} should have a docstring"
-            )
+            assert func.__doc__ is not None, f"{func.__name__} should have a docstring"

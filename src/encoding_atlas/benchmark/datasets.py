@@ -1,7 +1,6 @@
 """Standard datasets for benchmarking."""
 
 import numpy as np
-from typing import Tuple
 
 _DATASETS = ["iris", "moons", "circles", "linear", "xor"]
 
@@ -15,7 +14,7 @@ def get_dataset(
     name: str,
     n_samples: int = 200,
     seed: int | None = None,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Get a benchmark dataset.
 
     Parameters
@@ -42,6 +41,7 @@ def get_dataset(
     if name == "iris":
         try:
             from sklearn.datasets import load_iris
+
             data = load_iris()
             X, y = data.data[:, :2], data.target
             # Binary classification
@@ -53,6 +53,7 @@ def get_dataset(
     elif name == "moons":
         try:
             from sklearn.datasets import make_moons
+
             return make_moons(n_samples=n_samples, noise=0.1, random_state=seed)
         except ImportError:
             raise ImportError("sklearn required for moons dataset")
@@ -60,7 +61,10 @@ def get_dataset(
     elif name == "circles":
         try:
             from sklearn.datasets import make_circles
-            return make_circles(n_samples=n_samples, noise=0.1, factor=0.5, random_state=seed)
+
+            return make_circles(
+                n_samples=n_samples, noise=0.1, factor=0.5, random_state=seed
+            )
         except ImportError:
             raise ImportError("sklearn required for circles dataset")
 

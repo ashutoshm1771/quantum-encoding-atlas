@@ -108,7 +108,7 @@ _logger = logging.getLogger(__name__)
 # Public API
 # =============================================================================
 
-__all__ = ['ZZFeatureMap']
+__all__ = ["ZZFeatureMap"]
 
 # =============================================================================
 # Module-Level Constants
@@ -168,6 +168,7 @@ _INPUT_RANGE_DEBUG_THRESHOLD: float = 4.0 * np.pi
 # =============================================================================
 # Type Definitions
 # =============================================================================
+
 
 class GateCountBreakdown(TypedDict):
     """Type definition for gate count breakdown dictionary.
@@ -440,7 +441,7 @@ class ZZFeatureMap(BaseEncoding):
     # Memory-efficient slot-based attribute storage.
     # Only instance attributes specific to this class are listed here.
     # Attributes from BaseEncoding are handled by its own __slots__.
-    __slots__ = ('reps', 'entanglement', '_entanglement_pairs')
+    __slots__ = ("reps", "entanglement", "_entanglement_pairs")
 
     # =========================================================================
     # Initialization
@@ -504,9 +505,7 @@ class ZZFeatureMap(BaseEncoding):
                 f"reps must be a positive integer, got {type(reps).__name__}"
             )
         if reps < 1:
-            raise ValueError(
-                f"reps must be a positive integer (>= 1), got {reps}"
-            )
+            raise ValueError(f"reps must be a positive integer (>= 1), got {reps}")
 
         # =====================================================================
         # ENTANGLEMENT VALIDATION
@@ -547,10 +546,7 @@ class ZZFeatureMap(BaseEncoding):
         # =====================================================================
         # Warn about potentially excessive gate count with full entanglement.
         # This matches the pattern used by IQPEncoding and other encodings.
-        if (
-            entanglement == "full"
-            and n_features > _FULL_ENTANGLEMENT_WARNING_THRESHOLD
-        ):
+        if entanglement == "full" and n_features > _FULL_ENTANGLEMENT_WARNING_THRESHOLD:
             n_pairs = len(self._entanglement_pairs)
             cnot_count = 2 * n_pairs * reps
             warnings.warn(
@@ -759,7 +755,9 @@ class ZZFeatureMap(BaseEncoding):
         """
         if entanglement == "full":
             # All-to-all connectivity: every pair (i, j) with i < j
-            pairs = [(i, j) for i in range(n_features) for j in range(i + 1, n_features)]
+            pairs = [
+                (i, j) for i in range(n_features) for j in range(i + 1, n_features)
+            ]
         elif entanglement == "linear":
             # Nearest-neighbor connectivity: only (i, i+1) pairs
             pairs = [(i, i + 1) for i in range(n_features - 1)]
@@ -1006,7 +1004,7 @@ class ZZFeatureMap(BaseEncoding):
             "entanglement=%s, pairs=%d",
             self.n_qubits,
             self.depth,
-            gate_counts['total'],
+            gate_counts["total"],
             self.entanglement,
             len(pairs),
         )
@@ -1081,7 +1079,7 @@ class ZZFeatureMap(BaseEncoding):
         _logger.debug(
             "get_circuit called: backend=%r, input_shape=%s",
             backend,
-            getattr(x, 'shape', f'len={len(x)}' if hasattr(x, '__len__') else 'scalar'),
+            getattr(x, "shape", f"len={len(x)}" if hasattr(x, "__len__") else "scalar"),
         )
 
         # Validate and preprocess input
@@ -1095,7 +1093,10 @@ class ZZFeatureMap(BaseEncoding):
         # unexpected kernel geometry.
         if _logger.isEnabledFor(logging.DEBUG):
             x_min, x_max = float(x_validated.min()), float(x_validated.max())
-            if abs(x_min) > _INPUT_RANGE_DEBUG_THRESHOLD or abs(x_max) > _INPUT_RANGE_DEBUG_THRESHOLD:
+            if (
+                abs(x_min) > _INPUT_RANGE_DEBUG_THRESHOLD
+                or abs(x_max) > _INPUT_RANGE_DEBUG_THRESHOLD
+            ):
                 _logger.debug(
                     "Input values [%.3g, %.3g] are outside optimal range [0, 2π]. "
                     "The (π - x) phase convention works best with scaled inputs. "
@@ -1251,8 +1252,7 @@ class ZZFeatureMap(BaseEncoding):
             # Sequential processing (default behavior)
             # Use optimized internal method to avoid re-validation
             circuits = [
-                self._get_circuit_from_validated(x, backend)
-                for x in X_validated
+                self._get_circuit_from_validated(x, backend) for x in X_validated
             ]
 
             _logger.debug(
@@ -1546,10 +1546,11 @@ class ZZFeatureMap(BaseEncoding):
         return EncodingProperties(
             n_qubits=self.n_features,
             depth=self.depth,
-            gate_count=breakdown['total'],
-            single_qubit_gates=breakdown['total_single_qubit'],
-            two_qubit_gates=breakdown['total_two_qubit'],
-            parameter_count=self.reps * (self.n_features + len(self._get_entanglement_pairs())),
+            gate_count=breakdown["total"],
+            single_qubit_gates=breakdown["total_single_qubit"],
+            two_qubit_gates=breakdown["total_two_qubit"],
+            parameter_count=self.reps
+            * (self.n_features + len(self._get_entanglement_pairs())),
             is_entangling=True,
             simulability="not_simulable",
             trainability_estimate=max(0.3, 0.85 - 0.1 * self.reps),

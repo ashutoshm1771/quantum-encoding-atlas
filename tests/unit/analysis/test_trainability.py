@@ -76,7 +76,6 @@ from encoding_atlas.core.exceptions import (
     SimulationError,
 )
 
-
 # =============================================================================
 # Test: estimate_trainability - Basic Functionality
 # =============================================================================
@@ -290,7 +289,9 @@ class TestEstimateTrainabilityObservables:
             assert result["gradient_variance"] >= 0.0, f"{obs}: negative variance"
             assert 0.0 <= result["trainability_estimate"] <= 1.0, f"{obs}: score OOB"
             assert result["barren_plateau_risk"] in {
-                "low", "medium", "high"
+                "low",
+                "medium",
+                "high",
             }, f"{obs}: bad risk"
 
 
@@ -579,16 +580,12 @@ class TestComputeGradientVariance:
 
     def test_returns_float(self, sample_encoding_2q) -> None:
         """Return type is float."""
-        variance = compute_gradient_variance(
-            sample_encoding_2q, n_samples=20, seed=42
-        )
+        variance = compute_gradient_variance(sample_encoding_2q, n_samples=20, seed=42)
         assert isinstance(variance, float)
 
     def test_non_negative(self, sample_encoding_2q) -> None:
         """Variance is non-negative."""
-        variance = compute_gradient_variance(
-            sample_encoding_2q, n_samples=20, seed=42
-        )
+        variance = compute_gradient_variance(sample_encoding_2q, n_samples=20, seed=42)
         assert variance >= 0.0
 
     def test_reproducible(self, sample_encoding_2q) -> None:
@@ -599,9 +596,7 @@ class TestComputeGradientVariance:
 
     def test_matches_detailed_result(self, sample_encoding_2q) -> None:
         """Variance matches detailed result from estimate_trainability."""
-        variance = compute_gradient_variance(
-            sample_encoding_2q, n_samples=30, seed=42
-        )
+        variance = compute_gradient_variance(sample_encoding_2q, n_samples=30, seed=42)
         detailed = estimate_trainability(
             sample_encoding_2q, n_samples=30, seed=42, return_details=True
         )
@@ -636,9 +631,7 @@ class TestDetectBarrenPlateau:
 
     def test_high_risk_for_low_variance(self) -> None:
         """Very low variance gives high risk."""
-        risk = detect_barren_plateau(
-            gradient_variance=1e-10, n_qubits=4, n_params=16
-        )
+        risk = detect_barren_plateau(gradient_variance=1e-10, n_qubits=4, n_params=16)
         assert risk == "high"
 
     def test_medium_risk_for_borderline_variance(self) -> None:
@@ -649,9 +642,7 @@ class TestDetectBarrenPlateau:
         - medium_threshold = 1e-3
         Variance 1e-5 is between them, so risk is 'medium'.
         """
-        risk = detect_barren_plateau(
-            gradient_variance=1e-5, n_qubits=4, n_params=16
-        )
+        risk = detect_barren_plateau(gradient_variance=1e-5, n_qubits=4, n_params=16)
         assert risk == "medium"
 
     def test_scaling_with_qubits(self) -> None:
@@ -773,14 +764,10 @@ class TestDetectBarrenPlateau:
 
     def test_single_qubit_system(self) -> None:
         """Single-qubit system uses base thresholds (n_qubits <= 4)."""
-        risk = detect_barren_plateau(
-            gradient_variance=0.01, n_qubits=1, n_params=1
-        )
+        risk = detect_barren_plateau(gradient_variance=0.01, n_qubits=1, n_params=1)
         assert risk == "low"
 
-        risk = detect_barren_plateau(
-            gradient_variance=1e-8, n_qubits=1, n_params=1
-        )
+        risk = detect_barren_plateau(gradient_variance=1e-8, n_qubits=1, n_params=1)
         assert risk == "high"
 
 
@@ -839,9 +826,7 @@ class TestKnownValues:
         )
         assert np.all(result["per_parameter_variance"] >= 0)
 
-    def test_trainability_consistent_with_variance(
-        self, sample_encoding_2q
-    ) -> None:
+    def test_trainability_consistent_with_variance(self, sample_encoding_2q) -> None:
         """Higher gradient variance corresponds to higher trainability score.
 
         Uses _variance_to_trainability relationship: the score is a monotone
@@ -856,9 +841,7 @@ class TestKnownValues:
         )
         # Verify the score is consistent with the variance
         expected_score = _variance_to_trainability(result["gradient_variance"])
-        assert_allclose(
-            result["trainability_estimate"], expected_score, atol=1e-10
-        )
+        assert_allclose(result["trainability_estimate"], expected_score, atol=1e-10)
 
 
 # =============================================================================
@@ -886,9 +869,7 @@ class TestNumericalStability:
     def test_detect_barren_plateau_many_qubits(self) -> None:
         """Detection handles many qubits without numerical issues."""
         # Should not raise or produce invalid results
-        risk = detect_barren_plateau(
-            gradient_variance=1e-6, n_qubits=20, n_params=80
-        )
+        risk = detect_barren_plateau(gradient_variance=1e-6, n_qubits=20, n_params=80)
         assert risk in {"low", "medium", "high"}
 
     def test_trainability_score_clamped(
@@ -1096,9 +1077,7 @@ class TestEncodingIntegration:
 
     def test_with_iqp_encoding(self, entangling_encoding_4q) -> None:
         """IQP encoding produces valid trainability estimate."""
-        result = estimate_trainability(
-            entangling_encoding_4q, n_samples=20, seed=42
-        )
+        result = estimate_trainability(entangling_encoding_4q, n_samples=20, seed=42)
         assert 0.0 <= result <= 1.0
 
     def test_comparison_angle_vs_iqp(
@@ -1106,12 +1085,8 @@ class TestEncodingIntegration:
     ) -> None:
         """Angle and IQP encodings produce valid (comparable) results."""
         # Use same seed for fair comparison
-        train_angle = estimate_trainability(
-            sample_encoding_4q, n_samples=50, seed=42
-        )
-        train_iqp = estimate_trainability(
-            entangling_encoding_4q, n_samples=50, seed=42
-        )
+        train_angle = estimate_trainability(sample_encoding_4q, n_samples=50, seed=42)
+        train_iqp = estimate_trainability(entangling_encoding_4q, n_samples=50, seed=42)
 
         # Both should be valid
         assert 0.0 <= train_angle <= 1.0
@@ -1163,18 +1138,14 @@ class TestErrorMessages:
         assert exc_info.value.minimum_samples == _MIN_SAMPLES_ERROR
         assert exc_info.value.metric == "trainability"
 
-    def test_invalid_observable_shows_options(
-        self, sample_encoding_2q
-    ) -> None:
+    def test_invalid_observable_shows_options(self, sample_encoding_2q) -> None:
         """Invalid observable error message lists valid options."""
         with pytest.raises(ValueError, match="observable") as exc_info:
             estimate_trainability(sample_encoding_2q, n_samples=20, observable="bad")
         error_msg = str(exc_info.value).lower()
         assert "observable" in error_msg
 
-    def test_invalid_backend_shows_options(
-        self, sample_encoding_2q
-    ) -> None:
+    def test_invalid_backend_shows_options(self, sample_encoding_2q) -> None:
         """Invalid backend error message lists valid options."""
         with pytest.raises(ValueError, match="backend") as exc_info:
             estimate_trainability(sample_encoding_2q, n_samples=20, backend="bad")
@@ -1241,9 +1212,7 @@ class TestVarianceToTrainability:
         test_values = [0.0, 1e-300, 1e-15, 1e-10, 1e-5, 0.001, 0.1, 1.0, 1e5, 1e100]
         for v in test_values:
             score = _variance_to_trainability(v)
-            assert 0.0 <= score <= 1.0, (
-                f"Score {score} out of [0,1] for variance {v}"
-            )
+            assert 0.0 <= score <= 1.0, f"Score {score} out of [0,1] for variance {v}"
 
 
 # =============================================================================
@@ -1463,12 +1432,8 @@ class TestComputeExpectationValue:
         enc = AngleEncoding(n_features=2)
         x = np.array([0.0, np.pi])
 
-        pauli_z_val = _compute_expectation_value(
-            enc, x, "pauli_z", "pennylane"
-        )
-        global_z_val = _compute_expectation_value(
-            enc, x, "global_z", "pennylane"
-        )
+        pauli_z_val = _compute_expectation_value(enc, x, "pauli_z", "pennylane")
+        global_z_val = _compute_expectation_value(enc, x, "global_z", "pennylane")
 
         assert_allclose(pauli_z_val, 1.0, atol=1e-10)
         assert_allclose(global_z_val, -1.0, atol=1e-10)
@@ -1513,12 +1478,10 @@ class TestComputeEncodingGradients:
         for n_features in [1, 2, 4]:
             enc = AngleEncoding(n_features=n_features)
             x = np.zeros(n_features, dtype=np.float64)
-            grads = _compute_encoding_gradients(
-                enc, x, "computational", "pennylane"
-            )
-            assert grads.shape == (n_features,), (
-                f"Expected shape ({n_features},), got {grads.shape}"
-            )
+            grads = _compute_encoding_gradients(enc, x, "computational", "pennylane")
+            assert grads.shape == (
+                n_features,
+            ), f"Expected shape ({n_features},), got {grads.shape}"
 
     def test_gradient_values_finite(self) -> None:
         """All gradient values are finite (no NaN or Inf)."""
@@ -1526,9 +1489,7 @@ class TestComputeEncodingGradients:
 
         enc = AngleEncoding(n_features=3)
         x = np.array([0.5, 1.0, 1.5], dtype=np.float64)
-        grads = _compute_encoding_gradients(
-            enc, x, "computational", "pennylane"
-        )
+        grads = _compute_encoding_gradients(enc, x, "computational", "pennylane")
         assert np.all(np.isfinite(grads))
 
     def test_known_gradient_computational(self) -> None:
@@ -1542,9 +1503,7 @@ class TestComputeEncodingGradients:
 
         enc = AngleEncoding(n_features=1)
         x = np.array([np.pi / 4], dtype=np.float64)
-        grads = _compute_encoding_gradients(
-            enc, x, "computational", "pennylane"
-        )
+        grads = _compute_encoding_gradients(enc, x, "computational", "pennylane")
         expected = -np.sqrt(2) / 4
         assert_allclose(grads[0], expected, atol=1e-8)
 
@@ -1559,9 +1518,7 @@ class TestComputeEncodingGradients:
 
         enc = AngleEncoding(n_features=1)
         x = np.array([np.pi / 4], dtype=np.float64)
-        grads = _compute_encoding_gradients(
-            enc, x, "pauli_z", "pennylane"
-        )
+        grads = _compute_encoding_gradients(enc, x, "pauli_z", "pennylane")
         expected = -np.sqrt(2) / 2
         assert_allclose(grads[0], expected, atol=1e-8)
 
@@ -1579,9 +1536,7 @@ class TestComputeEncodingGradients:
         h = 1e-5
 
         # Parameter-shift gradient
-        ps_grads = _compute_encoding_gradients(
-            enc, x, "computational", "pennylane"
-        )
+        ps_grads = _compute_encoding_gradients(enc, x, "computational", "pennylane")
 
         # Finite-difference gradient
         x_plus = x.copy()
@@ -1634,9 +1589,7 @@ class TestComputeEncodingGradients:
 
         enc = AngleEncoding(n_features=2)
         x = np.array([np.pi / 4, 0.0], dtype=np.float64)
-        grads = _compute_encoding_gradients(
-            enc, x, "computational", "pennylane"
-        )
+        grads = _compute_encoding_gradients(enc, x, "computational", "pennylane")
 
         assert grads.shape == (2,)
         assert_allclose(grads[0], -np.sqrt(2) / 4, atol=1e-8)
@@ -1669,14 +1622,17 @@ class TestParameterCountEdgeCases:
         n_features = sample_encoding_2q.n_features
         mock_gradients = np.array([0.1] * n_features, dtype=np.float64)
 
-        with patch.object(
-            type(sample_encoding_2q),
-            "properties",
-            new_callable=PropertyMock,
-            side_effect=RuntimeError("properties unavailable"),
-        ), patch(
-            "encoding_atlas.analysis.trainability._compute_encoding_gradients",
-            return_value=mock_gradients,
+        with (
+            patch.object(
+                type(sample_encoding_2q),
+                "properties",
+                new_callable=PropertyMock,
+                side_effect=RuntimeError("properties unavailable"),
+            ),
+            patch(
+                "encoding_atlas.analysis.trainability._compute_encoding_gradients",
+                return_value=mock_gradients,
+            ),
         ):
             result = estimate_trainability(
                 sample_encoding_2q, n_samples=20, seed=42, return_details=True
@@ -1686,9 +1642,7 @@ class TestParameterCountEdgeCases:
         assert result["n_successful_samples"] == 20
         assert result["n_failed_samples"] == 0
 
-    def test_parameter_count_zero_uses_n_features(
-        self, sample_encoding_2q
-    ) -> None:
+    def test_parameter_count_zero_uses_n_features(self, sample_encoding_2q) -> None:
         """Uses n_features as effective n_params when parameter_count is 0.
 
         Non-parameterized encodings (parameter_count=0) have no trainable
@@ -1701,14 +1655,17 @@ class TestParameterCountEdgeCases:
         mock_props = MagicMock()
         mock_props.parameter_count = 0
 
-        with patch.object(
-            type(sample_encoding_2q),
-            "properties",
-            new_callable=PropertyMock,
-            return_value=mock_props,
-        ), patch(
-            "encoding_atlas.analysis.trainability._compute_encoding_gradients",
-            return_value=mock_gradients,
+        with (
+            patch.object(
+                type(sample_encoding_2q),
+                "properties",
+                new_callable=PropertyMock,
+                return_value=mock_props,
+            ),
+            patch(
+                "encoding_atlas.analysis.trainability._compute_encoding_gradients",
+                return_value=mock_gradients,
+            ),
         ):
             result = estimate_trainability(
                 sample_encoding_2q, n_samples=20, seed=42, return_details=True
@@ -1736,9 +1693,7 @@ class TestGradientFailureHandling:
     simulation backend issues.
     """
 
-    def test_simulation_error_counted_as_failure(
-        self, sample_encoding_2q
-    ) -> None:
+    def test_simulation_error_counted_as_failure(self, sample_encoding_2q) -> None:
         """SimulationError during gradient computation is counted as failure."""
         n_features = sample_encoding_2q.n_features
         call_count = [0]
@@ -1761,9 +1716,7 @@ class TestGradientFailureHandling:
         assert result["n_successful_samples"] == 18
         assert result["n_samples"] == 20
 
-    def test_numerical_instability_counted_as_failure(
-        self, sample_encoding_2q
-    ) -> None:
+    def test_numerical_instability_counted_as_failure(self, sample_encoding_2q) -> None:
         """NumericalInstabilityError during gradient is counted as failure."""
         n_features = sample_encoding_2q.n_features
         call_count = [0]
@@ -1787,9 +1740,7 @@ class TestGradientFailureHandling:
         assert result["n_failed_samples"] == 1
         assert result["n_successful_samples"] == 19
 
-    def test_unexpected_exception_counted_as_failure(
-        self, sample_encoding_2q
-    ) -> None:
+    def test_unexpected_exception_counted_as_failure(self, sample_encoding_2q) -> None:
         """Unexpected exception (e.g., RuntimeError) is counted as failure.
 
         The generic except handler catches any exception not covered by
@@ -1833,24 +1784,22 @@ class TestGradientFailureHandling:
                 raise SimulationError("test failure")
             return np.array([0.1] * n_features, dtype=np.float64)
 
-        with patch(
-            "encoding_atlas.analysis.trainability._compute_encoding_gradients",
-            side_effect=mock_gradients,
-        ):
-            with pytest.raises(
+        with (
+            patch(
+                "encoding_atlas.analysis.trainability._compute_encoding_gradients",
+                side_effect=mock_gradients,
+            ),
+            pytest.raises(
                 SimulationError, match="Too many gradient computations failed"
-            ) as exc_info:
-                estimate_trainability(
-                    sample_encoding_2q, n_samples=20, seed=42
-                )
+            ) as exc_info,
+        ):
+            estimate_trainability(sample_encoding_2q, n_samples=20, seed=42)
 
         assert exc_info.value.details["n_failed"] == 5
         assert exc_info.value.details["n_samples"] == 20
         assert exc_info.value.details["failure_fraction"] > _MAX_FAILURE_FRACTION
 
-    def test_insufficient_successful_samples_raises(
-        self, sample_encoding_2q
-    ) -> None:
+    def test_insufficient_successful_samples_raises(self, sample_encoding_2q) -> None:
         """SimulationError raised when too few samples succeed.
 
         When the failure fraction is at the threshold (20%, passes the >20%
@@ -1869,23 +1818,19 @@ class TestGradientFailureHandling:
                 raise SimulationError("test failure")
             return np.array([0.1] * n_features, dtype=np.float64)
 
-        with patch(
-            "encoding_atlas.analysis.trainability._compute_encoding_gradients",
-            side_effect=mock_gradients,
+        with (
+            patch(
+                "encoding_atlas.analysis.trainability._compute_encoding_gradients",
+                side_effect=mock_gradients,
+            ),
+            pytest.raises(SimulationError, match="successful samples") as exc_info,
         ):
-            with pytest.raises(
-                SimulationError, match="successful samples"
-            ) as exc_info:
-                estimate_trainability(
-                    sample_encoding_2q, n_samples=10, seed=42
-                )
+            estimate_trainability(sample_encoding_2q, n_samples=10, seed=42)
 
         assert exc_info.value.details["n_successful"] < _MIN_SAMPLES_ERROR
         assert exc_info.value.details["n_failed"] == 2
 
-    def test_gradient_dimension_mismatch_triggers_pad(
-        self, sample_encoding_2q
-    ) -> None:
+    def test_gradient_dimension_mismatch_triggers_pad(self, sample_encoding_2q) -> None:
         """Gradients with fewer elements than n_features are padded.
 
         When _compute_encoding_gradients returns an array with fewer
@@ -1960,14 +1905,14 @@ class TestNumericalInstabilityDetection:
         enc = AngleEncoding(n_features=1)
         x = np.array([0.5], dtype=np.float64)
 
-        with patch(
-            "encoding_atlas.analysis.trainability._compute_expectation_value",
-            return_value=float("nan"),
+        with (
+            patch(
+                "encoding_atlas.analysis.trainability._compute_expectation_value",
+                return_value=float("nan"),
+            ),
+            pytest.raises(NumericalInstabilityError, match="invalid value") as exc_info,
         ):
-            with pytest.raises(
-                NumericalInstabilityError, match="invalid value"
-            ) as exc_info:
-                _compute_encoding_gradients(enc, x, "computational", "pennylane")
+            _compute_encoding_gradients(enc, x, "computational", "pennylane")
 
         assert exc_info.value.operation == "parameter_shift"
         assert exc_info.value.details["param_index"] == 0
@@ -1992,14 +1937,14 @@ class TestNumericalInstabilityDetection:
                 return float("inf")
             return 0.5  # exp_minus is normal
 
-        with patch(
-            "encoding_atlas.analysis.trainability._compute_expectation_value",
-            side_effect=mock_exp_value,
+        with (
+            patch(
+                "encoding_atlas.analysis.trainability._compute_expectation_value",
+                side_effect=mock_exp_value,
+            ),
+            pytest.raises(NumericalInstabilityError, match="invalid value") as exc_info,
         ):
-            with pytest.raises(
-                NumericalInstabilityError, match="invalid value"
-            ) as exc_info:
-                _compute_encoding_gradients(enc, x, "computational", "pennylane")
+            _compute_encoding_gradients(enc, x, "computational", "pennylane")
 
         assert exc_info.value.operation == "parameter_shift"
         assert np.isinf(exc_info.value.value)
@@ -2011,12 +1956,14 @@ class TestNumericalInstabilityDetection:
         enc = AngleEncoding(n_features=1)
         x = np.array([0.5], dtype=np.float64)
 
-        with patch(
-            "encoding_atlas.analysis.trainability._compute_expectation_value",
-            return_value=float("-inf"),
+        with (
+            patch(
+                "encoding_atlas.analysis.trainability._compute_expectation_value",
+                return_value=float("-inf"),
+            ),
+            pytest.raises(NumericalInstabilityError),
         ):
-            with pytest.raises(NumericalInstabilityError):
-                _compute_encoding_gradients(enc, x, "computational", "pennylane")
+            _compute_encoding_gradients(enc, x, "computational", "pennylane")
 
     def test_nan_on_second_param_reports_correct_index(self) -> None:
         """NaN on second parameter reports param_index=1 in error details.
@@ -2039,12 +1986,14 @@ class TestNumericalInstabilityDetection:
                 return 0.5
             return float("nan")
 
-        with patch(
-            "encoding_atlas.analysis.trainability._compute_expectation_value",
-            side_effect=mock_exp_value,
+        with (
+            patch(
+                "encoding_atlas.analysis.trainability._compute_expectation_value",
+                side_effect=mock_exp_value,
+            ),
+            pytest.raises(NumericalInstabilityError) as exc_info,
         ):
-            with pytest.raises(NumericalInstabilityError) as exc_info:
-                _compute_encoding_gradients(enc, x, "computational", "pennylane")
+            _compute_encoding_gradients(enc, x, "computational", "pennylane")
 
         assert exc_info.value.details["param_index"] == 1
 
@@ -2055,12 +2004,14 @@ class TestNumericalInstabilityDetection:
         enc = AngleEncoding(n_features=1)
         x = np.array([1.5], dtype=np.float64)
 
-        with patch(
-            "encoding_atlas.analysis.trainability._compute_expectation_value",
-            return_value=float("nan"),
+        with (
+            patch(
+                "encoding_atlas.analysis.trainability._compute_expectation_value",
+                return_value=float("nan"),
+            ),
+            pytest.raises(NumericalInstabilityError) as exc_info,
         ):
-            with pytest.raises(NumericalInstabilityError) as exc_info:
-                _compute_encoding_gradients(enc, x, "computational", "pennylane")
+            _compute_encoding_gradients(enc, x, "computational", "pennylane")
 
         details = exc_info.value.details
         assert "param_index" in details
@@ -2090,18 +2041,16 @@ class TestVerboseProgressLogging:
 
         mock_enc = _make_mock_encoding(n_features=2, n_qubits=2)
 
-        with patch(
-            "encoding_atlas.analysis.trainability._compute_encoding_gradients",
-            return_value=np.array([0.1, -0.1], dtype=np.float64),
+        with (
+            patch(
+                "encoding_atlas.analysis.trainability._compute_encoding_gradients",
+                return_value=np.array([0.1, -0.1], dtype=np.float64),
+            ),
+            caplog.at_level(logging.INFO),
         ):
-            with caplog.at_level(logging.INFO):
-                estimate_trainability(
-                    mock_enc, n_samples=20, seed=42, verbose=True
-                )
+            estimate_trainability(mock_enc, n_samples=20, seed=42, verbose=True)
 
-        progress_msgs = [
-            r for r in caplog.records if "Progress" in r.getMessage()
-        ]
+        progress_msgs = [r for r in caplog.records if "Progress" in r.getMessage()]
         assert len(progress_msgs) > 0
 
     def test_verbose_logs_completion_summary(self, caplog) -> None:
@@ -2110,14 +2059,14 @@ class TestVerboseProgressLogging:
 
         mock_enc = _make_mock_encoding(n_features=2, n_qubits=2)
 
-        with patch(
-            "encoding_atlas.analysis.trainability._compute_encoding_gradients",
-            return_value=np.array([0.1, -0.1], dtype=np.float64),
+        with (
+            patch(
+                "encoding_atlas.analysis.trainability._compute_encoding_gradients",
+                return_value=np.array([0.1, -0.1], dtype=np.float64),
+            ),
+            caplog.at_level(logging.INFO),
         ):
-            with caplog.at_level(logging.INFO):
-                estimate_trainability(
-                    mock_enc, n_samples=20, seed=42, verbose=True
-                )
+            estimate_trainability(mock_enc, n_samples=20, seed=42, verbose=True)
 
         completion_msgs = [
             r for r in caplog.records if "complete" in r.getMessage().lower()
@@ -2130,18 +2079,16 @@ class TestVerboseProgressLogging:
 
         mock_enc = _make_mock_encoding(n_features=3, n_qubits=3)
 
-        with patch(
-            "encoding_atlas.analysis.trainability._compute_encoding_gradients",
-            return_value=np.array([0.1, -0.1, 0.2], dtype=np.float64),
+        with (
+            patch(
+                "encoding_atlas.analysis.trainability._compute_encoding_gradients",
+                return_value=np.array([0.1, -0.1, 0.2], dtype=np.float64),
+            ),
+            caplog.at_level(logging.INFO),
         ):
-            with caplog.at_level(logging.INFO):
-                estimate_trainability(
-                    mock_enc, n_samples=15, seed=42, verbose=True
-                )
+            estimate_trainability(mock_enc, n_samples=15, seed=42, verbose=True)
 
-        estimating_msgs = [
-            r for r in caplog.records if "Estimating" in r.getMessage()
-        ]
+        estimating_msgs = [r for r in caplog.records if "Estimating" in r.getMessage()]
         assert len(estimating_msgs) > 0
 
     def test_verbose_with_failures_reports_failed_count(self, caplog) -> None:
@@ -2158,14 +2105,14 @@ class TestVerboseProgressLogging:
                 raise SimulationError("fail")
             return np.array([0.1, -0.1], dtype=np.float64)
 
-        with patch(
-            "encoding_atlas.analysis.trainability._compute_encoding_gradients",
-            side_effect=_gradient_side_effect,
+        with (
+            patch(
+                "encoding_atlas.analysis.trainability._compute_encoding_gradients",
+                side_effect=_gradient_side_effect,
+            ),
+            caplog.at_level(logging.INFO),
         ):
-            with caplog.at_level(logging.INFO):
-                estimate_trainability(
-                    mock_enc, n_samples=20, seed=42, verbose=True
-                )
+            estimate_trainability(mock_enc, n_samples=20, seed=42, verbose=True)
 
         progress_msgs = [
             r for r in caplog.records if "failed" in r.getMessage().lower()
@@ -2251,9 +2198,7 @@ class TestVarianceToTrainabilityExtended:
         """
         variance = 0.05
         expected_log_ratio = np.log10(variance / _REFERENCE_VARIANCE)
-        expected_score = 1.0 / (
-            1.0 + np.exp(-_SIGMOID_STEEPNESS * expected_log_ratio)
-        )
+        expected_score = 1.0 / (1.0 + np.exp(-_SIGMOID_STEEPNESS * expected_log_ratio))
         actual = _variance_to_trainability(variance)
         assert_allclose(actual, expected_score, atol=1e-12)
 
@@ -2360,9 +2305,9 @@ class TestComputeProbZeroFirstQubitExtended:
             state = (real + 1j * imag).astype(np.complex128)
             state /= np.linalg.norm(state)
             prob = _compute_prob_zero_first_qubit(state, n_qubits)
-            assert 0.0 <= prob <= 1.0 + 1e-10, (
-                f"Probability {prob} out of range for {n_qubits} qubits"
-            )
+            assert (
+                0.0 <= prob <= 1.0 + 1e-10
+            ), f"Probability {prob} out of range for {n_qubits} qubits"
 
 
 # =============================================================================
@@ -2412,9 +2357,7 @@ class TestComputeExpectationValueExtended:
         rng = np.random.default_rng(42)
         for _ in range(5):
             x = rng.uniform(0, 2 * np.pi, size=2).astype(np.float64)
-            result = _compute_expectation_value(
-                enc, x, "computational", "pennylane"
-            )
+            result = _compute_expectation_value(enc, x, "computational", "pennylane")
             assert 0.0 <= result <= 1.0 + 1e-10
 
     def test_pauli_z_in_range(self) -> None:
@@ -2425,9 +2368,7 @@ class TestComputeExpectationValueExtended:
         rng = np.random.default_rng(42)
         for _ in range(5):
             x = rng.uniform(0, 2 * np.pi, size=2).astype(np.float64)
-            result = _compute_expectation_value(
-                enc, x, "pauli_z", "pennylane"
-            )
+            result = _compute_expectation_value(enc, x, "pauli_z", "pennylane")
             assert -1.0 - 1e-10 <= result <= 1.0 + 1e-10
 
     def test_global_z_in_range(self) -> None:
@@ -2438,9 +2379,7 @@ class TestComputeExpectationValueExtended:
         rng = np.random.default_rng(42)
         for _ in range(5):
             x = rng.uniform(0, 2 * np.pi, size=2).astype(np.float64)
-            result = _compute_expectation_value(
-                enc, x, "global_z", "pennylane"
-            )
+            result = _compute_expectation_value(enc, x, "global_z", "pennylane")
             assert -1.0 - 1e-10 <= result <= 1.0 + 1e-10
 
 
@@ -2465,9 +2404,7 @@ class TestComputeEncodingGradientsExtended:
 
         enc = AngleEncoding(n_features=2)
         x = np.array([0.5, 1.0], dtype=np.float64)
-        grads = _compute_encoding_gradients(
-            enc, x, "computational", "pennylane"
-        )
+        grads = _compute_encoding_gradients(enc, x, "computational", "pennylane")
         assert grads.dtype == np.float64
 
     def test_gradient_does_not_modify_input(self) -> None:
@@ -2510,9 +2447,7 @@ class TestComputeEncodingGradientsExtended:
 
         enc = AngleEncoding(n_features=1)
         x = np.array([np.pi / 2], dtype=np.float64)
-        grads = _compute_encoding_gradients(
-            enc, x, "computational", "pennylane"
-        )
+        grads = _compute_encoding_gradients(enc, x, "computational", "pennylane")
         assert_allclose(grads[0], -0.5, atol=1e-8)
 
 
@@ -2526,9 +2461,7 @@ class TestDetectBarrenPlateauScaling:
 
     def test_size_factor_at_4_qubits(self) -> None:
         """At n_qubits=4, size_factor=1.0 (base thresholds unchanged)."""
-        risk = detect_barren_plateau(
-            gradient_variance=5e-7, n_qubits=4, n_params=16
-        )
+        risk = detect_barren_plateau(gradient_variance=5e-7, n_qubits=4, n_params=16)
         assert risk == "high"
 
     def test_size_factor_at_6_qubits(self) -> None:
@@ -2736,9 +2669,7 @@ class TestEstimateTrainabilityMockIntegration:
             "encoding_atlas.analysis.trainability._compute_encoding_gradients",
             side_effect=_capture_backend,
         ):
-            estimate_trainability(
-                mock_enc, n_samples=15, seed=42, backend="qiskit"
-            )
+            estimate_trainability(mock_enc, n_samples=15, seed=42, backend="qiskit")
 
         assert all(b == "qiskit" for b in captured_backends)
 
@@ -2789,12 +2720,14 @@ class TestEstimateTrainabilityMockIntegration:
         """100% failure rate raises SimulationError."""
         mock_enc = _make_mock_encoding(n_features=2, n_qubits=2)
 
-        with patch(
-            "encoding_atlas.analysis.trainability._compute_encoding_gradients",
-            side_effect=SimulationError("always fails"),
+        with (
+            patch(
+                "encoding_atlas.analysis.trainability._compute_encoding_gradients",
+                side_effect=SimulationError("always fails"),
+            ),
+            pytest.raises(SimulationError, match="Too many gradient"),
         ):
-            with pytest.raises(SimulationError, match="Too many gradient"):
-                estimate_trainability(mock_enc, n_samples=15, seed=42)
+            estimate_trainability(mock_enc, n_samples=15, seed=42)
 
     def test_excessive_failure_error_includes_all_details(self) -> None:
         """SimulationError from excessive failures includes all detail fields."""
@@ -2808,12 +2741,14 @@ class TestEstimateTrainabilityMockIntegration:
                 raise SimulationError("fail")
             return np.array([0.1, -0.1], dtype=np.float64)
 
-        with patch(
-            "encoding_atlas.analysis.trainability._compute_encoding_gradients",
-            side_effect=_gradient_side_effect,
+        with (
+            patch(
+                "encoding_atlas.analysis.trainability._compute_encoding_gradients",
+                side_effect=_gradient_side_effect,
+            ),
+            pytest.raises(SimulationError) as exc_info,
         ):
-            with pytest.raises(SimulationError) as exc_info:
-                estimate_trainability(mock_enc, n_samples=20, seed=42)
+            estimate_trainability(mock_enc, n_samples=20, seed=42)
 
         exc = exc_info.value
         assert exc.backend == "pennylane"
@@ -2881,9 +2816,9 @@ class TestPublicAPI:
         from encoding_atlas.analysis import trainability
 
         for name in trainability.__all__:
-            assert hasattr(trainability, name), (
-                f"{name!r} is in __all__ but not defined in the module"
-            )
+            assert hasattr(
+                trainability, name
+            ), f"{name!r} is in __all__ but not defined in the module"
 
     def test_trainability_result_in_analysis_init(self) -> None:
         """TrainabilityResult is re-exported from analysis __init__."""

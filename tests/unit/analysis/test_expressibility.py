@@ -29,17 +29,14 @@ References
 from __future__ import annotations
 
 import logging
-import warnings
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import numpy as np
 import pytest
-from numpy.typing import NDArray
 
 from encoding_atlas.analysis._utils import create_rng
 from encoding_atlas.analysis.expressibility import (
-    ExpressibilityResult,
     _DEFAULT_N_BINS,
     _DEFAULT_N_SAMPLES,
     _MAX_KL_DIVERGENCE,
@@ -61,7 +58,7 @@ from encoding_atlas.core.exceptions import (
 )
 
 if TYPE_CHECKING:
-    from encoding_atlas.core.base import BaseEncoding
+    pass
 
 # Suppress expected low-sample-count warnings in tests that intentionally use
 # small n_samples for speed.  The test that explicitly checks warning emission
@@ -78,6 +75,7 @@ pytestmark = pytest.mark.filterwarnings("ignore:n_samples.*low:UserWarning")
 def simple_encoding_2q():
     """Create a simple 2-qubit AngleEncoding for testing."""
     from encoding_atlas import AngleEncoding
+
     return AngleEncoding(n_features=2)
 
 
@@ -85,6 +83,7 @@ def simple_encoding_2q():
 def simple_encoding_4q():
     """Create a simple 4-qubit AngleEncoding for testing."""
     from encoding_atlas import AngleEncoding
+
     return AngleEncoding(n_features=4)
 
 
@@ -92,6 +91,7 @@ def simple_encoding_4q():
 def entangling_encoding_4q():
     """Create an entangling 4-qubit IQPEncoding for testing."""
     from encoding_atlas import IQPEncoding
+
     return IQPEncoding(n_features=4, reps=1)
 
 
@@ -99,6 +99,7 @@ def entangling_encoding_4q():
 def single_qubit_encoding():
     """Create a single-qubit encoding for edge case testing."""
     from encoding_atlas import AngleEncoding
+
     return AngleEncoding(n_features=1)
 
 
@@ -110,9 +111,7 @@ def single_qubit_encoding():
 class TestComputeExpressibilityBasic:
     """Test basic functionality of compute_expressibility."""
 
-    def test_returns_float_by_default(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_returns_float_by_default(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that default return is a float."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -161,9 +160,7 @@ class TestComputeExpressibilityBasic:
         )
         assert 0.0 <= result <= 1.0
 
-    def test_kl_divergence_non_negative(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_kl_divergence_non_negative(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that KL divergence is non-negative."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -174,9 +171,7 @@ class TestComputeExpressibilityBasic:
         )
         assert result["kl_divergence"] >= 0.0
 
-    def test_reproducibility_with_seed(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_reproducibility_with_seed(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that same seed produces same result."""
         result1 = compute_expressibility(
             simple_encoding_2q,
@@ -211,9 +206,7 @@ class TestComputeExpressibilityBasic:
         # Should be different (with very high probability)
         assert result1 != result2
 
-    def test_n_samples_stored_correctly(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_n_samples_stored_correctly(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that n_samples is stored in result."""
         n_samples = 75
         result = compute_expressibility(
@@ -225,9 +218,7 @@ class TestComputeExpressibilityBasic:
         )
         assert result["n_samples"] == n_samples
 
-    def test_n_bins_stored_correctly(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_n_bins_stored_correctly(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that n_bins is stored in result."""
         n_bins = 25
         result = compute_expressibility(
@@ -257,9 +248,7 @@ class TestComputeExpressibilityDistributions:
         )
         assert result["fidelity_distribution"].shape == (n_bins,)
 
-    def test_haar_distribution_shape(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_haar_distribution_shape(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that Haar distribution has correct shape."""
         n_bins = 20
         result = compute_expressibility(
@@ -271,9 +260,7 @@ class TestComputeExpressibilityDistributions:
         )
         assert result["haar_distribution"].shape == (n_bins,)
 
-    def test_bin_edges_shape(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_bin_edges_shape(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that bin edges has correct shape (n_bins + 1)."""
         n_bins = 20
         result = compute_expressibility(
@@ -285,9 +272,7 @@ class TestComputeExpressibilityDistributions:
         )
         assert result["bin_edges"].shape == (n_bins + 1,)
 
-    def test_distributions_sum_to_one(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_distributions_sum_to_one(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that probability distributions sum to approximately 1."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -299,9 +284,7 @@ class TestComputeExpressibilityDistributions:
         assert np.isclose(result["fidelity_distribution"].sum(), 1.0, atol=1e-6)
         assert np.isclose(result["haar_distribution"].sum(), 1.0, atol=1e-6)
 
-    def test_distributions_non_negative(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_distributions_non_negative(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that all distribution values are non-negative."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -332,9 +315,7 @@ class TestInputValidation:
         with pytest.raises(AnalysisError, match="Expected BaseEncoding"):
             compute_expressibility(None)
 
-    def test_n_samples_too_small_raises_error(
-        self, simple_encoding_2q
-    ):
+    def test_n_samples_too_small_raises_error(self, simple_encoding_2q):
         """Test that n_samples < MIN_SAMPLES_ERROR raises InsufficientSamplesError."""
         with pytest.raises(InsufficientSamplesError):
             compute_expressibility(
@@ -356,9 +337,7 @@ class TestInputValidation:
                 seed=42,
             )
 
-    def test_n_bins_too_small_raises_error(
-        self, simple_encoding_2q
-    ):
+    def test_n_bins_too_small_raises_error(self, simple_encoding_2q):
         """Test that n_bins < 10 raises ValueError."""
         with pytest.raises(ValueError, match="n_bins must be at least 10"):
             compute_expressibility(
@@ -367,9 +346,7 @@ class TestInputValidation:
                 n_bins=5,  # Below minimum
             )
 
-    def test_n_bins_larger_than_n_samples_raises_error(
-        self, simple_encoding_2q
-    ):
+    def test_n_bins_larger_than_n_samples_raises_error(self, simple_encoding_2q):
         """Test that n_bins > n_samples raises ValueError."""
         with pytest.raises(ValueError, match="n_bins.*cannot exceed n_samples"):
             compute_expressibility(
@@ -378,9 +355,7 @@ class TestInputValidation:
                 n_bins=100,  # More bins than samples
             )
 
-    def test_invalid_input_range_order(
-        self, simple_encoding_2q
-    ):
+    def test_invalid_input_range_order(self, simple_encoding_2q):
         """Test that input_range with min >= max raises error."""
         with pytest.raises(ValueError, match="input_range"):
             compute_expressibility(
@@ -390,9 +365,7 @@ class TestInputValidation:
                 input_range=(2.0, 1.0),  # Invalid: max < min
             )
 
-    def test_invalid_input_range_equal(
-        self, simple_encoding_2q
-    ):
+    def test_invalid_input_range_equal(self, simple_encoding_2q):
         """Test that input_range with min == max raises error."""
         with pytest.raises(ValueError, match="input_range"):
             compute_expressibility(
@@ -402,9 +375,7 @@ class TestInputValidation:
                 input_range=(1.0, 1.0),  # Invalid: equal
             )
 
-    def test_invalid_backend(
-        self, simple_encoding_2q
-    ):
+    def test_invalid_backend(self, simple_encoding_2q):
         """Test that invalid backend raises ValueError."""
         with pytest.raises(ValueError, match="backend must be"):
             compute_expressibility(
@@ -414,9 +385,7 @@ class TestInputValidation:
                 backend="invalid_backend",
             )
 
-    def test_negative_n_samples(
-        self, simple_encoding_2q
-    ):
+    def test_negative_n_samples(self, simple_encoding_2q):
         """Test that negative n_samples raises ValueError."""
         with pytest.raises(ValueError, match="n_samples must be a positive"):
             compute_expressibility(
@@ -425,9 +394,7 @@ class TestInputValidation:
                 n_bins=20,
             )
 
-    def test_zero_n_samples(
-        self, simple_encoding_2q
-    ):
+    def test_zero_n_samples(self, simple_encoding_2q):
         """Test that zero n_samples raises ValueError."""
         with pytest.raises(ValueError, match="n_samples must be a positive"):
             compute_expressibility(
@@ -436,9 +403,7 @@ class TestInputValidation:
                 n_bins=20,
             )
 
-    def test_float_n_samples_raises_error(
-        self, simple_encoding_2q
-    ):
+    def test_float_n_samples_raises_error(self, simple_encoding_2q):
         """Test that float n_samples raises ValueError.
 
         n_samples must be an int. Passing a float (even one with no
@@ -450,9 +415,7 @@ class TestInputValidation:
                 n_samples=50.0,
             )
 
-    def test_float_n_bins_raises_error(
-        self, simple_encoding_2q
-    ):
+    def test_float_n_bins_raises_error(self, simple_encoding_2q):
         """Test that float n_bins raises ValueError.
 
         n_bins must be an int. Passing a float should be rejected.
@@ -482,9 +445,7 @@ class TestInputValidation:
             seed=42,
         )
 
-    def test_negative_n_bins_raises_error(
-        self, simple_encoding_2q
-    ):
+    def test_negative_n_bins_raises_error(self, simple_encoding_2q):
         """Test that negative n_bins raises ValueError."""
         with pytest.raises(ValueError, match="n_bins must be a positive integer"):
             compute_expressibility(
@@ -493,9 +454,7 @@ class TestInputValidation:
                 n_bins=-5,
             )
 
-    def test_n_bins_zero_raises_error(
-        self, simple_encoding_2q
-    ):
+    def test_n_bins_zero_raises_error(self, simple_encoding_2q):
         """Test that n_bins=0 raises ValueError."""
         with pytest.raises(ValueError, match="n_bins must be a positive integer"):
             compute_expressibility(
@@ -504,9 +463,7 @@ class TestInputValidation:
                 n_bins=0,
             )
 
-    def test_input_range_wrong_length(
-        self, simple_encoding_2q
-    ):
+    def test_input_range_wrong_length(self, simple_encoding_2q):
         """Test that input_range with wrong length raises ValueError."""
         with pytest.raises(ValueError, match="input_range must have 2 elements"):
             compute_expressibility(
@@ -682,9 +639,7 @@ class TestComputeHaarDistribution:
 class TestComputeFidelityDistribution:
     """Test the compute_fidelity_distribution function."""
 
-    def test_returns_correct_shape(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_returns_correct_shape(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that returned array has correct shape."""
         n_samples = 50
         fidelities = compute_fidelity_distribution(
@@ -694,9 +649,7 @@ class TestComputeFidelityDistribution:
         )
         assert fidelities.shape == (n_samples,)
 
-    def test_all_values_in_valid_range(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_all_values_in_valid_range(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that all fidelities are in [0, 1]."""
         fidelities = compute_fidelity_distribution(
             simple_encoding_2q,
@@ -706,9 +659,7 @@ class TestComputeFidelityDistribution:
         assert np.all(fidelities >= 0.0)
         assert np.all(fidelities <= 1.0)
 
-    def test_reproducibility_with_seed(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_reproducibility_with_seed(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that same seed produces same results."""
         fid1 = compute_fidelity_distribution(
             simple_encoding_2q,
@@ -722,9 +673,7 @@ class TestComputeFidelityDistribution:
         )
         np.testing.assert_array_equal(fid1, fid2)
 
-    def test_invalid_n_samples_raises_error(
-        self, simple_encoding_2q
-    ):
+    def test_invalid_n_samples_raises_error(self, simple_encoding_2q):
         """Test that invalid n_samples raises error."""
         with pytest.raises(InsufficientSamplesError):
             compute_fidelity_distribution(
@@ -732,9 +681,7 @@ class TestComputeFidelityDistribution:
                 n_samples=5,  # Below minimum
             )
 
-    def test_invalid_input_range(
-        self, simple_encoding_2q
-    ):
+    def test_invalid_input_range(self, simple_encoding_2q):
         """Test that invalid input_range raises error."""
         with pytest.raises(ValueError, match="input_range"):
             compute_fidelity_distribution(
@@ -743,9 +690,7 @@ class TestComputeFidelityDistribution:
                 input_range=(2.0, 1.0),  # Invalid
             )
 
-    def test_qiskit_backend(
-        self, simple_encoding_2q, skip_if_no_qiskit
-    ):
+    def test_qiskit_backend(self, simple_encoding_2q, skip_if_no_qiskit):
         """Test compute_fidelity_distribution with Qiskit backend."""
         n_samples = 50
         fidelities = compute_fidelity_distribution(
@@ -758,9 +703,7 @@ class TestComputeFidelityDistribution:
         assert np.all(fidelities >= 0.0)
         assert np.all(fidelities <= 1.0)
 
-    def test_cirq_backend(
-        self, simple_encoding_2q, skip_if_no_cirq
-    ):
+    def test_cirq_backend(self, simple_encoding_2q, skip_if_no_cirq):
         """Test compute_fidelity_distribution with Cirq backend."""
         n_samples = 50
         fidelities = compute_fidelity_distribution(
@@ -773,9 +716,7 @@ class TestComputeFidelityDistribution:
         assert np.all(fidelities >= 0.0)
         assert np.all(fidelities <= 1.0)
 
-    def test_invalid_backend_raises_error(
-        self, simple_encoding_2q
-    ):
+    def test_invalid_backend_raises_error(self, simple_encoding_2q):
         """Test that invalid backend raises ValueError."""
         with pytest.raises(ValueError, match="backend must be"):
             compute_fidelity_distribution(
@@ -802,9 +743,7 @@ class TestComputeFidelityDistribution:
         )
         np.testing.assert_array_equal(fid1, fid2)
 
-    def test_cirq_reproducibility_with_seed(
-        self, simple_encoding_2q, skip_if_no_cirq
-    ):
+    def test_cirq_reproducibility_with_seed(self, simple_encoding_2q, skip_if_no_cirq):
         """Test that Cirq backend produces reproducible fidelity distributions."""
         fid1 = compute_fidelity_distribution(
             simple_encoding_2q,
@@ -829,9 +768,7 @@ class TestComputeFidelityDistribution:
 class TestNumericalStability:
     """Test numerical stability and edge cases."""
 
-    def test_single_qubit_encoding(
-        self, single_qubit_encoding, skip_if_no_pennylane
-    ):
+    def test_single_qubit_encoding(self, single_qubit_encoding, skip_if_no_pennylane):
         """Test that single qubit encoding works correctly."""
         result = compute_expressibility(
             single_qubit_encoding,
@@ -841,9 +778,7 @@ class TestNumericalStability:
         )
         assert 0.0 <= result <= 1.0
 
-    def test_narrow_input_range(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_narrow_input_range(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test with narrow input range."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -855,9 +790,7 @@ class TestNumericalStability:
         # Should still produce valid result
         assert 0.0 <= result <= 1.0
 
-    def test_wide_input_range(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_wide_input_range(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test with wide input range."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -868,9 +801,7 @@ class TestNumericalStability:
         )
         assert 0.0 <= result <= 1.0
 
-    def test_minimum_valid_samples(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_minimum_valid_samples(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test with minimum valid sample count."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -940,9 +871,7 @@ class TestStatisticalProperties:
         )
         assert 0.0 <= result["mean_fidelity"] <= 1.0
 
-    def test_std_fidelity_non_negative(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_std_fidelity_non_negative(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that std fidelity is non-negative."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -1028,9 +957,7 @@ class TestBackendConsistency:
         )
         assert 0.0 <= result <= 1.0
 
-    def test_qiskit_produces_valid_result(
-        self, simple_encoding_2q, skip_if_no_qiskit
-    ):
+    def test_qiskit_produces_valid_result(self, simple_encoding_2q, skip_if_no_qiskit):
         """Test that Qiskit backend produces valid results.
 
         This test verifies that the Qiskit backend can successfully compute
@@ -1045,9 +972,7 @@ class TestBackendConsistency:
         )
         assert 0.0 <= result <= 1.0
 
-    def test_cirq_produces_valid_result(
-        self, simple_encoding_2q, skip_if_no_cirq
-    ):
+    def test_cirq_produces_valid_result(self, simple_encoding_2q, skip_if_no_cirq):
         """Test that Cirq backend produces valid results.
 
         This test verifies that the Cirq backend can successfully compute
@@ -1090,9 +1015,7 @@ class TestBackendConsistency:
         }
         assert set(result.keys()) == required_keys
 
-    def test_cirq_reproducibility_with_seed(
-        self, simple_encoding_2q, skip_if_no_cirq
-    ):
+    def test_cirq_reproducibility_with_seed(self, simple_encoding_2q, skip_if_no_cirq):
         """Test that Cirq backend produces reproducible results with same seed."""
         result1 = compute_expressibility(
             simple_encoding_2q,
@@ -1731,9 +1654,7 @@ class TestConstants:
 class TestTypeAnnotations:
     """Test that return types match documentation."""
 
-    def test_expressibility_result_type(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_expressibility_result_type(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test ExpressibilityResult has correct types."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -1764,9 +1685,7 @@ class TestMultipleEncodings:
     """Test expressibility computation with various encodings."""
 
     @pytest.mark.parametrize("n_features", [2, 3, 4])
-    def test_angle_encoding_various_sizes(
-        self, n_features, skip_if_no_pennylane
-    ):
+    def test_angle_encoding_various_sizes(self, n_features, skip_if_no_pennylane):
         """Test AngleEncoding with various sizes."""
         from encoding_atlas import AngleEncoding
 
@@ -1780,9 +1699,7 @@ class TestMultipleEncodings:
         assert 0.0 <= result <= 1.0
 
     @pytest.mark.parametrize("reps", [1, 2])
-    def test_iqp_encoding_various_reps(
-        self, reps, skip_if_no_pennylane
-    ):
+    def test_iqp_encoding_various_reps(self, reps, skip_if_no_pennylane):
         """Test IQPEncoding with various repetitions."""
         from encoding_atlas import IQPEncoding
 
@@ -1805,9 +1722,7 @@ class TestMultipleEncodings:
 class TestExpressibilityPerformance:
     """Performance tests for expressibility computation."""
 
-    def test_large_sample_count(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_large_sample_count(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test with larger sample count (slow)."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -1817,9 +1732,7 @@ class TestExpressibilityPerformance:
         )
         assert 0.0 <= result <= 1.0
 
-    def test_convergence_with_samples(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_convergence_with_samples(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that results converge as samples increase."""
         sample_counts = [100, 500, 1000]
         results = []
@@ -1882,6 +1795,7 @@ class TestExpressibilityPerformance:
         Performance Target: < 60 seconds for n_samples=500, n_qubits=4
         """
         import time
+
         from encoding_atlas import AngleEncoding
 
         enc = AngleEncoding(n_features=4)
@@ -1945,12 +1859,12 @@ class TestHighQubitCountNumericalStability:
         # Verify no numerical issues
         assert np.isfinite(result["expressibility"]), "Expressibility is not finite"
         assert np.isfinite(result["kl_divergence"]), "KL divergence is not finite"
-        assert np.all(np.isfinite(result["fidelity_distribution"])), (
-            "Fidelity distribution contains non-finite values"
-        )
-        assert np.all(np.isfinite(result["haar_distribution"])), (
-            "Haar distribution contains non-finite values"
-        )
+        assert np.all(
+            np.isfinite(result["fidelity_distribution"])
+        ), "Fidelity distribution contains non-finite values"
+        assert np.all(
+            np.isfinite(result["haar_distribution"])
+        ), "Haar distribution contains non-finite values"
 
         # Verify valid range
         assert 0.0 <= result["expressibility"] <= 1.0
@@ -1982,12 +1896,12 @@ class TestHighQubitCountNumericalStability:
         # Verify no numerical issues
         assert np.isfinite(result["expressibility"]), "Expressibility is not finite"
         assert np.isfinite(result["kl_divergence"]), "KL divergence is not finite"
-        assert np.all(np.isfinite(result["fidelity_distribution"])), (
-            "Fidelity distribution contains non-finite values"
-        )
-        assert np.all(np.isfinite(result["haar_distribution"])), (
-            "Haar distribution contains non-finite values"
-        )
+        assert np.all(
+            np.isfinite(result["fidelity_distribution"])
+        ), "Fidelity distribution contains non-finite values"
+        assert np.all(
+            np.isfinite(result["haar_distribution"])
+        ), "Haar distribution contains non-finite values"
 
         # Verify valid range
         assert 0.0 <= result["expressibility"] <= 1.0
@@ -2056,20 +1970,20 @@ class TestHighQubitCountNumericalStability:
             haar_dist = compute_haar_distribution(n_qubits, fidelity_values)
 
             # Should be finite
-            assert np.all(np.isfinite(haar_dist)), (
-                f"Haar distribution contains non-finite values for {n_qubits} qubits"
-            )
+            assert np.all(
+                np.isfinite(haar_dist)
+            ), f"Haar distribution contains non-finite values for {n_qubits} qubits"
 
             # Should be non-negative
-            assert np.all(haar_dist >= 0), (
-                f"Haar distribution contains negative values for {n_qubits} qubits"
-            )
+            assert np.all(
+                haar_dist >= 0
+            ), f"Haar distribution contains negative values for {n_qubits} qubits"
 
             # Should sum to approximately 1 (normalized probability)
             dist_sum = np.sum(haar_dist)
-            assert 0.99 <= dist_sum <= 1.01, (
-                f"Haar distribution sum is {dist_sum} for {n_qubits} qubits"
-            )
+            assert (
+                0.99 <= dist_sum <= 1.01
+            ), f"Haar distribution sum is {dist_sum} for {n_qubits} qubits"
 
     def test_entangling_encoding_high_qubit_stability(self, skip_if_no_pennylane):
         """Test numerical stability with entangling encoding at higher qubits.
@@ -2092,9 +2006,9 @@ class TestHighQubitCountNumericalStability:
         # Verify no numerical issues
         assert np.isfinite(result["expressibility"]), "Expressibility is not finite"
         assert np.isfinite(result["kl_divergence"]), "KL divergence is not finite"
-        assert np.all(np.isfinite(result["fidelity_distribution"])), (
-            "Fidelity distribution contains non-finite values"
-        )
+        assert np.all(
+            np.isfinite(result["fidelity_distribution"])
+        ), "Fidelity distribution contains non-finite values"
 
         # Verify valid range
         assert 0.0 <= result["expressibility"] <= 1.0
@@ -2113,9 +2027,7 @@ class TestNBinsAutoSelection:
     is sensible for the given sample size.
     """
 
-    def test_auto_selects_default_bins(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_auto_selects_default_bins(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that n_bins=None selects _DEFAULT_N_BINS when n_samples is large."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -2126,9 +2038,7 @@ class TestNBinsAutoSelection:
         )
         assert result["n_bins"] == _DEFAULT_N_BINS
 
-    def test_auto_clamps_to_n_samples(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_auto_clamps_to_n_samples(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that n_bins=None clamps to n_samples when samples < default bins."""
         n_samples = 30
         result = compute_expressibility(
@@ -2156,9 +2066,7 @@ class TestNBinsAutoSelection:
         assert result["haar_distribution"].shape == (expected_bins,)
         assert result["bin_edges"].shape == (expected_bins + 1,)
 
-    def test_auto_selection_at_boundary(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_auto_selection_at_boundary(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test n_bins=None when n_samples exactly equals _DEFAULT_N_BINS."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -2211,9 +2119,7 @@ class TestExpressibilityResultConsistency:
             f"formula result {expected:.10f}"
         )
 
-    def test_bin_edges_span_zero_to_one(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_bin_edges_span_zero_to_one(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that bin edges span the full fidelity range [0, 1]."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -2349,72 +2255,76 @@ class TestSampleFidelitiesErrorHandling:
 
     def test_simulation_error_reraise(self, simple_encoding_2q):
         """Test that SimulationError from simulate_encoding_statevector is re-raised."""
-        with patch(
-            "encoding_atlas.analysis.expressibility.simulate_encoding_statevector",
-            side_effect=SimulationError("Backend crashed", backend="pennylane"),
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility.simulate_encoding_statevector",
+                side_effect=SimulationError("Backend crashed", backend="pennylane"),
+            ),
+            pytest.raises(SimulationError, match="Backend crashed"),
         ):
-            with pytest.raises(SimulationError, match="Backend crashed"):
+            _sample_fidelities(
+                encoding=simple_encoding_2q,
+                n_samples=1,
+                n_features=simple_encoding_2q.n_features,
+                input_range=(0.0, 2.0 * np.pi),
+                rng=create_rng(42),
+                backend="pennylane",
+                verbose=False,
+            )
+
+    def test_generic_exception_wrapped_in_simulation_error(self, simple_encoding_2q):
+        """Test that non-SimulationError exceptions are wrapped in SimulationError."""
+        mock_state = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.complex128)
+
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility.simulate_encoding_statevector",
+                return_value=mock_state,
+            ),
+            patch(
+                "encoding_atlas.analysis.expressibility.compute_fidelity",
+                side_effect=ValueError("Invalid state dimensions"),
+            ),
+            pytest.raises(SimulationError, match="Failed to compute fidelity"),
+        ):
+            _sample_fidelities(
+                encoding=simple_encoding_2q,
+                n_samples=5,
+                n_features=simple_encoding_2q.n_features,
+                input_range=(0.0, 2.0 * np.pi),
+                rng=create_rng(42),
+                backend="pennylane",
+                verbose=False,
+            )
+
+    def test_wrapped_error_contains_context_details(self, simple_encoding_2q):
+        """Test that wrapped SimulationError contains sample index and error details."""
+        mock_state = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.complex128)
+
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility.simulate_encoding_statevector",
+                return_value=mock_state,
+            ),
+            patch(
+                "encoding_atlas.analysis.expressibility.compute_fidelity",
+                side_effect=RuntimeError("Unexpected failure"),
+            ),
+        ):
+            with pytest.raises(SimulationError) as exc_info:
                 _sample_fidelities(
                     encoding=simple_encoding_2q,
-                    n_samples=1,
+                    n_samples=3,
                     n_features=simple_encoding_2q.n_features,
                     input_range=(0.0, 2.0 * np.pi),
                     rng=create_rng(42),
                     backend="pennylane",
                     verbose=False,
                 )
-
-    def test_generic_exception_wrapped_in_simulation_error(
-        self, simple_encoding_2q
-    ):
-        """Test that non-SimulationError exceptions are wrapped in SimulationError."""
-        mock_state = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.complex128)
-
-        with patch(
-            "encoding_atlas.analysis.expressibility.simulate_encoding_statevector",
-            return_value=mock_state,
-        ):
-            with patch(
-                "encoding_atlas.analysis.expressibility.compute_fidelity",
-                side_effect=ValueError("Invalid state dimensions"),
-            ):
-                with pytest.raises(SimulationError, match="Failed to compute fidelity"):
-                    _sample_fidelities(
-                        encoding=simple_encoding_2q,
-                        n_samples=5,
-                        n_features=simple_encoding_2q.n_features,
-                        input_range=(0.0, 2.0 * np.pi),
-                        rng=create_rng(42),
-                        backend="pennylane",
-                        verbose=False,
-                    )
-
-    def test_wrapped_error_contains_context_details(self, simple_encoding_2q):
-        """Test that wrapped SimulationError contains sample index and error details."""
-        mock_state = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.complex128)
-
-        with patch(
-            "encoding_atlas.analysis.expressibility.simulate_encoding_statevector",
-            return_value=mock_state,
-        ):
-            with patch(
-                "encoding_atlas.analysis.expressibility.compute_fidelity",
-                side_effect=RuntimeError("Unexpected failure"),
-            ):
-                with pytest.raises(SimulationError) as exc_info:
-                    _sample_fidelities(
-                        encoding=simple_encoding_2q,
-                        n_samples=3,
-                        n_features=simple_encoding_2q.n_features,
-                        input_range=(0.0, 2.0 * np.pi),
-                        rng=create_rng(42),
-                        backend="pennylane",
-                        verbose=False,
-                    )
-                assert "sample_index" in exc_info.value.details
-                assert exc_info.value.details["sample_index"] == 0
-                assert exc_info.value.details["error_type"] == "RuntimeError"
-                assert "Unexpected failure" in exc_info.value.details["error_message"]
+            assert "sample_index" in exc_info.value.details
+            assert exc_info.value.details["sample_index"] == 0
+            assert exc_info.value.details["error_type"] == "RuntimeError"
+            assert "Unexpected failure" in exc_info.value.details["error_message"]
 
 
 # =============================================================================
@@ -2434,49 +2344,53 @@ class TestSampleFidelitiesClamping:
         """Test that fidelity values < 0 are clamped to 0."""
         mock_state = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.complex128)
 
-        with patch(
-            "encoding_atlas.analysis.expressibility.simulate_encoding_statevector",
-            return_value=mock_state,
-        ):
-            with patch(
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility.simulate_encoding_statevector",
+                return_value=mock_state,
+            ),
+            patch(
                 "encoding_atlas.analysis.expressibility.compute_fidelity",
                 return_value=-0.05,
-            ):
-                fidelities = _sample_fidelities(
-                    encoding=simple_encoding_2q,
-                    n_samples=10,
-                    n_features=simple_encoding_2q.n_features,
-                    input_range=(0.0, 2.0 * np.pi),
-                    rng=create_rng(42),
-                    backend="pennylane",
-                    verbose=False,
-                )
-                assert np.all(fidelities >= 0.0)
-                assert np.all(fidelities == 0.0)
+            ),
+        ):
+            fidelities = _sample_fidelities(
+                encoding=simple_encoding_2q,
+                n_samples=10,
+                n_features=simple_encoding_2q.n_features,
+                input_range=(0.0, 2.0 * np.pi),
+                rng=create_rng(42),
+                backend="pennylane",
+                verbose=False,
+            )
+            assert np.all(fidelities >= 0.0)
+            assert np.all(fidelities == 0.0)
 
     def test_fidelity_above_one_clamped_to_one(self, simple_encoding_2q):
         """Test that fidelity values > 1 are clamped to 1."""
         mock_state = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.complex128)
 
-        with patch(
-            "encoding_atlas.analysis.expressibility.simulate_encoding_statevector",
-            return_value=mock_state,
-        ):
-            with patch(
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility.simulate_encoding_statevector",
+                return_value=mock_state,
+            ),
+            patch(
                 "encoding_atlas.analysis.expressibility.compute_fidelity",
                 return_value=1.0001,
-            ):
-                fidelities = _sample_fidelities(
-                    encoding=simple_encoding_2q,
-                    n_samples=10,
-                    n_features=simple_encoding_2q.n_features,
-                    input_range=(0.0, 2.0 * np.pi),
-                    rng=create_rng(42),
-                    backend="pennylane",
-                    verbose=False,
-                )
-                assert np.all(fidelities <= 1.0)
-                assert np.all(fidelities == 1.0)
+            ),
+        ):
+            fidelities = _sample_fidelities(
+                encoding=simple_encoding_2q,
+                n_samples=10,
+                n_features=simple_encoding_2q.n_features,
+                input_range=(0.0, 2.0 * np.pi),
+                rng=create_rng(42),
+                backend="pennylane",
+                verbose=False,
+            )
+            assert np.all(fidelities <= 1.0)
+            assert np.all(fidelities == 1.0)
 
 
 # =============================================================================
@@ -2508,7 +2422,8 @@ class TestSampleFidelitiesVerboseLogging:
             )
 
         sampled_msgs = [
-            r for r in caplog.records
+            r
+            for r in caplog.records
             if r.levelname == "DEBUG" and "Sampled" in r.message
         ]
         # 50 samples with log_interval=5, expect logs at 5,10,...,50 → 10 messages
@@ -2530,7 +2445,8 @@ class TestSampleFidelitiesVerboseLogging:
             )
 
         sampled_msgs = [
-            r for r in caplog.records
+            r
+            for r in caplog.records
             if r.levelname == "DEBUG" and "Sampled" in r.message
         ]
         assert len(sampled_msgs) == 0
@@ -2679,70 +2595,73 @@ class TestDegenerateFidelityDistribution:
     that prevents downstream KL divergence computation from failing.
     """
 
-    def test_fallback_to_uniform_on_zero_histogram(
-        self, simple_encoding_2q, caplog
-    ):
+    def test_fallback_to_uniform_on_zero_histogram(self, simple_encoding_2q, caplog):
         """Test that all-zero histogram triggers uniform distribution fallback."""
         mock_fidelities = np.random.default_rng(99).uniform(0, 1, 50)
 
-        with patch(
-            "encoding_atlas.analysis.expressibility._sample_fidelities",
-            return_value=mock_fidelities,
-        ):
-            with patch(
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility._sample_fidelities",
+                return_value=mock_fidelities,
+            ),
+            patch(
                 "encoding_atlas.analysis.expressibility._estimate_convergence",
                 return_value=0.01,
-            ):
-                with patch("numpy.histogram") as mock_hist:
-                    # Return all-zero histogram (degenerate case)
-                    mock_hist.return_value = (
-                        np.zeros(20, dtype=np.float64),
-                        np.linspace(0.0, 1.0, 21),
-                    )
-                    with caplog.at_level(logging.WARNING):
-                        result = compute_expressibility(
-                            simple_encoding_2q,
-                            n_samples=50,
-                            n_bins=20,
-                            seed=42,
-                            return_distributions=True,
-                        )
+            ),
+            patch("numpy.histogram") as mock_hist,
+        ):
+            # Return all-zero histogram (degenerate case)
+            mock_hist.return_value = (
+                np.zeros(20, dtype=np.float64),
+                np.linspace(0.0, 1.0, 21),
+            )
+            with caplog.at_level(logging.WARNING):
+                result = compute_expressibility(
+                    simple_encoding_2q,
+                    n_samples=50,
+                    n_bins=20,
+                    seed=42,
+                    return_distributions=True,
+                )
 
         # Should use uniform distribution fallback
         expected_uniform = np.ones(20, dtype=np.float64) / 20
         np.testing.assert_allclose(
-            result["fidelity_distribution"], expected_uniform, atol=1e-10,
+            result["fidelity_distribution"],
+            expected_uniform,
+            atol=1e-10,
         )
 
-    def test_degenerate_distribution_emits_warning(
-        self, simple_encoding_2q, caplog
-    ):
+    def test_degenerate_distribution_emits_warning(self, simple_encoding_2q, caplog):
         """Test that degenerate distribution triggers a warning log."""
         mock_fidelities = np.random.default_rng(99).uniform(0, 1, 50)
 
-        with patch(
-            "encoding_atlas.analysis.expressibility._sample_fidelities",
-            return_value=mock_fidelities,
-        ):
-            with patch(
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility._sample_fidelities",
+                return_value=mock_fidelities,
+            ),
+            patch(
                 "encoding_atlas.analysis.expressibility._estimate_convergence",
                 return_value=0.01,
-            ):
-                with patch("numpy.histogram") as mock_hist:
-                    mock_hist.return_value = (
-                        np.zeros(20, dtype=np.float64),
-                        np.linspace(0.0, 1.0, 21),
-                    )
-                    with caplog.at_level(logging.WARNING):
-                        compute_expressibility(
-                            simple_encoding_2q,
-                            n_samples=50,
-                            n_bins=20,
-                            seed=42,
-                        )
+            ),
+            patch("numpy.histogram") as mock_hist,
+        ):
+            mock_hist.return_value = (
+                np.zeros(20, dtype=np.float64),
+                np.linspace(0.0, 1.0, 21),
+            )
+            with caplog.at_level(logging.WARNING):
+                compute_expressibility(
+                    simple_encoding_2q,
+                    n_samples=50,
+                    n_bins=20,
+                    seed=42,
+                )
 
         degenerate_warnings = [
-            r for r in caplog.records
+            r
+            for r in caplog.records
             if r.levelname == "WARNING" and "degenerate" in r.message.lower()
         ]
         assert len(degenerate_warnings) >= 1
@@ -2753,25 +2672,27 @@ class TestDegenerateFidelityDistribution:
         """Test that degenerate distribution produces a valid expressibility score."""
         mock_fidelities = np.random.default_rng(99).uniform(0, 1, 50)
 
-        with patch(
-            "encoding_atlas.analysis.expressibility._sample_fidelities",
-            return_value=mock_fidelities,
-        ):
-            with patch(
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility._sample_fidelities",
+                return_value=mock_fidelities,
+            ),
+            patch(
                 "encoding_atlas.analysis.expressibility._estimate_convergence",
                 return_value=0.01,
-            ):
-                with patch("numpy.histogram") as mock_hist:
-                    mock_hist.return_value = (
-                        np.zeros(20, dtype=np.float64),
-                        np.linspace(0.0, 1.0, 21),
-                    )
-                    result = compute_expressibility(
-                        simple_encoding_2q,
-                        n_samples=50,
-                        n_bins=20,
-                        seed=42,
-                    )
+            ),
+            patch("numpy.histogram") as mock_hist,
+        ):
+            mock_hist.return_value = (
+                np.zeros(20, dtype=np.float64),
+                np.linspace(0.0, 1.0, 21),
+            )
+            result = compute_expressibility(
+                simple_encoding_2q,
+                n_samples=50,
+                n_bins=20,
+                seed=42,
+            )
 
         assert isinstance(result, float)
         assert 0.0 <= result <= 1.0
@@ -2790,86 +2711,88 @@ class TestKLDivergenceNumericalEdgeCases:
     (lines 721-726).
     """
 
-    def test_nan_in_kl_raises_numerical_instability_error(
-        self, simple_encoding_2q
-    ):
+    def test_nan_in_kl_raises_numerical_instability_error(self, simple_encoding_2q):
         """Test that NaN in KL divergence raises NumericalInstabilityError."""
         mock_fidelities = np.random.default_rng(99).uniform(0, 1, 50)
 
-        with patch(
-            "encoding_atlas.analysis.expressibility._sample_fidelities",
-            return_value=mock_fidelities,
-        ):
-            with patch(
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility._sample_fidelities",
+                return_value=mock_fidelities,
+            ),
+            patch(
                 "encoding_atlas.analysis.expressibility.rel_entr",
-            ) as mock_rel:
-                kl_vals = np.zeros(20)
-                kl_vals[5] = np.nan
-                mock_rel.return_value = kl_vals
+            ) as mock_rel,
+        ):
+            kl_vals = np.zeros(20)
+            kl_vals[5] = np.nan
+            mock_rel.return_value = kl_vals
 
-                with pytest.raises(NumericalInstabilityError) as exc_info:
-                    compute_expressibility(
-                        simple_encoding_2q,
-                        n_samples=50,
-                        n_bins=20,
-                        seed=42,
-                    )
+            with pytest.raises(NumericalInstabilityError) as exc_info:
+                compute_expressibility(
+                    simple_encoding_2q,
+                    n_samples=50,
+                    n_bins=20,
+                    seed=42,
+                )
 
-                assert exc_info.value.details["has_nan"] is True
+            assert exc_info.value.details["has_nan"] is True
 
-    def test_inf_in_kl_raises_numerical_instability_error(
-        self, simple_encoding_2q
-    ):
+    def test_inf_in_kl_raises_numerical_instability_error(self, simple_encoding_2q):
         """Test that Inf in KL divergence raises NumericalInstabilityError."""
         mock_fidelities = np.random.default_rng(99).uniform(0, 1, 50)
 
-        with patch(
-            "encoding_atlas.analysis.expressibility._sample_fidelities",
-            return_value=mock_fidelities,
-        ):
-            with patch(
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility._sample_fidelities",
+                return_value=mock_fidelities,
+            ),
+            patch(
                 "encoding_atlas.analysis.expressibility.rel_entr",
-            ) as mock_rel:
-                kl_vals = np.zeros(20)
-                kl_vals[3] = np.inf
-                mock_rel.return_value = kl_vals
+            ) as mock_rel,
+        ):
+            kl_vals = np.zeros(20)
+            kl_vals[3] = np.inf
+            mock_rel.return_value = kl_vals
 
-                with pytest.raises(NumericalInstabilityError) as exc_info:
-                    compute_expressibility(
-                        simple_encoding_2q,
-                        n_samples=50,
-                        n_bins=20,
-                        seed=42,
-                    )
+            with pytest.raises(NumericalInstabilityError) as exc_info:
+                compute_expressibility(
+                    simple_encoding_2q,
+                    n_samples=50,
+                    n_bins=20,
+                    seed=42,
+                )
 
-                assert exc_info.value.details["has_inf"] is True
+            assert exc_info.value.details["has_inf"] is True
 
     def test_mixed_nan_and_inf_in_kl_raises_error(self, simple_encoding_2q):
         """Test that mixed NaN and Inf in KL divergence raises error."""
         mock_fidelities = np.random.default_rng(99).uniform(0, 1, 50)
 
-        with patch(
-            "encoding_atlas.analysis.expressibility._sample_fidelities",
-            return_value=mock_fidelities,
-        ):
-            with patch(
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility._sample_fidelities",
+                return_value=mock_fidelities,
+            ),
+            patch(
                 "encoding_atlas.analysis.expressibility.rel_entr",
-            ) as mock_rel:
-                kl_vals = np.zeros(20)
-                kl_vals[2] = np.nan
-                kl_vals[7] = np.inf
-                mock_rel.return_value = kl_vals
+            ) as mock_rel,
+        ):
+            kl_vals = np.zeros(20)
+            kl_vals[2] = np.nan
+            kl_vals[7] = np.inf
+            mock_rel.return_value = kl_vals
 
-                with pytest.raises(NumericalInstabilityError) as exc_info:
-                    compute_expressibility(
-                        simple_encoding_2q,
-                        n_samples=50,
-                        n_bins=20,
-                        seed=42,
-                    )
+            with pytest.raises(NumericalInstabilityError) as exc_info:
+                compute_expressibility(
+                    simple_encoding_2q,
+                    n_samples=50,
+                    n_bins=20,
+                    seed=42,
+                )
 
-                assert exc_info.value.details["has_nan"] is True
-                assert exc_info.value.details["has_inf"] is True
+            assert exc_info.value.details["has_nan"] is True
+            assert exc_info.value.details["has_inf"] is True
 
     def test_small_negative_kl_clamped_without_warning(
         self, simple_encoding_2q, caplog
@@ -2883,34 +2806,35 @@ class TestKLDivergenceNumericalEdgeCases:
         # KL sum = -5e-11, within epsilon = 1e-10 of zero
         kl_vals = np.full(20, -5e-11 / 20)
 
-        with patch(
-            "encoding_atlas.analysis.expressibility._sample_fidelities",
-            return_value=mock_fidelities,
-        ):
-            with patch(
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility._sample_fidelities",
+                return_value=mock_fidelities,
+            ),
+            patch(
                 "encoding_atlas.analysis.expressibility.rel_entr",
                 return_value=kl_vals,
-            ):
-                with caplog.at_level(logging.WARNING):
-                    result = compute_expressibility(
-                        simple_encoding_2q,
-                        n_samples=50,
-                        n_bins=20,
-                        seed=42,
-                        return_distributions=True,
-                    )
+            ),
+            caplog.at_level(logging.WARNING),
+        ):
+            result = compute_expressibility(
+                simple_encoding_2q,
+                n_samples=50,
+                n_bins=20,
+                seed=42,
+                return_distributions=True,
+            )
 
         assert result["kl_divergence"] == 0.0
 
         negative_warnings = [
-            r for r in caplog.records
+            r
+            for r in caplog.records
             if r.levelname == "WARNING" and "negative" in r.message.lower()
         ]
         assert len(negative_warnings) == 0
 
-    def test_large_negative_kl_clamped_with_warning(
-        self, simple_encoding_2q, caplog
-    ):
+    def test_large_negative_kl_clamped_with_warning(self, simple_encoding_2q, caplog):
         """Test that KL divergence significantly below 0 is clamped with warning.
 
         When KL < -_NUMERICAL_EPSILON, it is clamped to 0 and a warning is logged
@@ -2920,27 +2844,30 @@ class TestKLDivergenceNumericalEdgeCases:
         # KL sum = -0.02, well below -epsilon
         kl_vals = np.full(20, -0.001)
 
-        with patch(
-            "encoding_atlas.analysis.expressibility._sample_fidelities",
-            return_value=mock_fidelities,
-        ):
-            with patch(
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility._sample_fidelities",
+                return_value=mock_fidelities,
+            ),
+            patch(
                 "encoding_atlas.analysis.expressibility.rel_entr",
                 return_value=kl_vals,
-            ):
-                with caplog.at_level(logging.WARNING):
-                    result = compute_expressibility(
-                        simple_encoding_2q,
-                        n_samples=50,
-                        n_bins=20,
-                        seed=42,
-                        return_distributions=True,
-                    )
+            ),
+            caplog.at_level(logging.WARNING),
+        ):
+            result = compute_expressibility(
+                simple_encoding_2q,
+                n_samples=50,
+                n_bins=20,
+                seed=42,
+                return_distributions=True,
+            )
 
         assert result["kl_divergence"] == 0.0
 
         negative_warnings = [
-            r for r in caplog.records
+            r
+            for r in caplog.records
             if r.levelname == "WARNING" and "negative" in r.message.lower()
         ]
         assert len(negative_warnings) >= 1
@@ -2961,35 +2888,37 @@ class TestSimulationErrorPropagation:
 
     def test_simulation_error_propagates_directly(self, simple_encoding_2q):
         """Test that SimulationError from _sample_fidelities propagates unchanged."""
-        with patch(
-            "encoding_atlas.analysis.expressibility._sample_fidelities",
-            side_effect=SimulationError(
-                "PennyLane device error", backend="pennylane"
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility._sample_fidelities",
+                side_effect=SimulationError(
+                    "PennyLane device error", backend="pennylane"
+                ),
             ),
+            pytest.raises(SimulationError, match="PennyLane device error"),
         ):
-            with pytest.raises(SimulationError, match="PennyLane device error"):
-                compute_expressibility(
-                    simple_encoding_2q,
-                    n_samples=50,
-                    n_bins=10,
-                    seed=42,
-                )
+            compute_expressibility(
+                simple_encoding_2q,
+                n_samples=50,
+                n_bins=10,
+                seed=42,
+            )
 
-    def test_non_simulation_error_wrapped_in_analysis_error(
-        self, simple_encoding_2q
-    ):
+    def test_non_simulation_error_wrapped_in_analysis_error(self, simple_encoding_2q):
         """Test that non-SimulationError exceptions are wrapped in AnalysisError."""
-        with patch(
-            "encoding_atlas.analysis.expressibility._sample_fidelities",
-            side_effect=RuntimeError("Memory allocation failed"),
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility._sample_fidelities",
+                side_effect=RuntimeError("Memory allocation failed"),
+            ),
+            pytest.raises(AnalysisError, match="Failed to sample fidelities"),
         ):
-            with pytest.raises(AnalysisError, match="Failed to sample fidelities"):
-                compute_expressibility(
-                    simple_encoding_2q,
-                    n_samples=50,
-                    n_bins=10,
-                    seed=42,
-                )
+            compute_expressibility(
+                simple_encoding_2q,
+                n_samples=50,
+                n_bins=10,
+                seed=42,
+            )
 
     def test_wrapped_analysis_error_contains_details(self, simple_encoding_2q):
         """Test that wrapped AnalysisError contains error type and message."""
@@ -3097,7 +3026,8 @@ class TestVerboseLoggingDetailed:
 
         info_msgs = [r.message for r in caplog.records if r.levelname == "INFO"]
         expr_info = [
-            m for m in info_msgs
+            m
+            for m in info_msgs
             if "Computing expressibility" in m or "Expressibility:" in m
         ]
         assert len(expr_info) == 0
@@ -3159,7 +3089,8 @@ class TestHaarDistributionAdvanced:
         np.testing.assert_allclose(P_haar, expected_uniform, atol=1e-10)
 
         haar_warnings = [
-            r for r in caplog.records
+            r
+            for r in caplog.records
             if r.levelname == "WARNING" and "near zero" in r.message.lower()
         ]
         assert len(haar_warnings) >= 1
@@ -3173,12 +3104,10 @@ class TestHaarDistributionAdvanced:
         fidelities = np.array([0.0, 0.5, 1.0])
         for n_qubits in [2, 3, 4, 5]:
             P_haar = compute_haar_distribution(n_qubits, fidelities)
-            assert np.all(np.isfinite(P_haar)), (
-                f"Non-finite values for n_qubits={n_qubits}"
-            )
-            assert np.all(P_haar >= 0), (
-                f"Negative values for n_qubits={n_qubits}"
-            )
+            assert np.all(
+                np.isfinite(P_haar)
+            ), f"Non-finite values for n_qubits={n_qubits}"
+            assert np.all(P_haar >= 0), f"Negative values for n_qubits={n_qubits}"
 
     def test_empty_input_consistent_across_qubit_counts(self):
         """Test that empty input returns identical empty arrays for all n_qubits."""
@@ -3202,15 +3131,13 @@ class TestHaarDistributionAdvanced:
 
         for n_qubits in [8, 10, 12, 15, 20]:
             P_haar = compute_haar_distribution(n_qubits, fidelities)
-            assert np.all(np.isfinite(P_haar)), (
-                f"Non-finite values for n_qubits={n_qubits}"
-            )
-            assert np.isclose(P_haar.sum(), 1.0, atol=1e-6), (
-                f"Sum not ~1 for n_qubits={n_qubits}: {P_haar.sum()}"
-            )
-            assert np.all(P_haar >= 0), (
-                f"Negative values for n_qubits={n_qubits}"
-            )
+            assert np.all(
+                np.isfinite(P_haar)
+            ), f"Non-finite values for n_qubits={n_qubits}"
+            assert np.isclose(
+                P_haar.sum(), 1.0, atol=1e-6
+            ), f"Sum not ~1 for n_qubits={n_qubits}: {P_haar.sum()}"
+            assert np.all(P_haar >= 0), f"Negative values for n_qubits={n_qubits}"
 
 
 # =============================================================================
@@ -3250,9 +3177,7 @@ class TestInputValidationExtended:
                 n_bins=9,
             )
 
-    def test_n_bins_exactly_10_accepted(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_n_bins_exactly_10_accepted(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that n_bins=10 (exact minimum) is accepted."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -3297,9 +3222,7 @@ class TestInputValidationExtended:
         assert result["n_bins"] == _MIN_SAMPLES_ERROR
 
     @pytest.mark.filterwarnings("error::UserWarning")
-    def test_no_qubit_warning_at_threshold(
-        self, skip_if_no_pennylane
-    ):
+    def test_no_qubit_warning_at_threshold(self, skip_if_no_pennylane):
         """Test that no qubit warning at exactly _QUBIT_WARNING_THRESHOLD.
 
         The warning should only be emitted for n_qubits > threshold (strictly
@@ -3330,9 +3253,7 @@ class TestInputValidationExtended:
         assert isinstance(result, dict)
         assert 0.0 <= result["expressibility"] <= 1.0
 
-    def test_n_samples_one_below_error_threshold_rejected(
-        self, simple_encoding_2q
-    ):
+    def test_n_samples_one_below_error_threshold_rejected(self, simple_encoding_2q):
         """Test that n_samples one below _MIN_SAMPLES_ERROR is rejected."""
         with pytest.raises(InsufficientSamplesError):
             compute_expressibility(
@@ -3349,9 +3270,7 @@ class TestInputValidationExtended:
                 backend="tensorflow",
             )
 
-    def test_fidelity_distribution_invalid_input_range_equal(
-        self, simple_encoding_2q
-    ):
+    def test_fidelity_distribution_invalid_input_range_equal(self, simple_encoding_2q):
         """Test that compute_fidelity_distribution rejects equal input_range."""
         with pytest.raises(ValueError, match="input_range"):
             compute_fidelity_distribution(
@@ -3360,9 +3279,7 @@ class TestInputValidationExtended:
                 input_range=(1.0, 1.0),
             )
 
-    def test_fidelity_distribution_negative_n_samples(
-        self, simple_encoding_2q
-    ):
+    def test_fidelity_distribution_negative_n_samples(self, simple_encoding_2q):
         """Test that compute_fidelity_distribution rejects negative n_samples."""
         with pytest.raises(ValueError, match="n_samples must be a positive"):
             compute_fidelity_distribution(
@@ -3396,21 +3313,23 @@ class TestExpressibilityFormulaVerification:
         mock_fidelities = np.random.default_rng(99).uniform(0, 1, 50)
         kl_vals = np.zeros(20)  # Sum = 0
 
-        with patch(
-            "encoding_atlas.analysis.expressibility._sample_fidelities",
-            return_value=mock_fidelities,
-        ):
-            with patch(
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility._sample_fidelities",
+                return_value=mock_fidelities,
+            ),
+            patch(
                 "encoding_atlas.analysis.expressibility.rel_entr",
                 return_value=kl_vals,
-            ):
-                result = compute_expressibility(
-                    simple_encoding_2q,
-                    n_samples=50,
-                    n_bins=20,
-                    seed=42,
-                    return_distributions=True,
-                )
+            ),
+        ):
+            result = compute_expressibility(
+                simple_encoding_2q,
+                n_samples=50,
+                n_bins=20,
+                seed=42,
+                return_distributions=True,
+            )
 
         assert result["kl_divergence"] == 0.0
         assert result["expressibility"] == 1.0
@@ -3421,21 +3340,23 @@ class TestExpressibilityFormulaVerification:
         # KL sum = _MAX_KL_DIVERGENCE (10.0)
         kl_vals = np.full(20, _MAX_KL_DIVERGENCE / 20)
 
-        with patch(
-            "encoding_atlas.analysis.expressibility._sample_fidelities",
-            return_value=mock_fidelities,
-        ):
-            with patch(
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility._sample_fidelities",
+                return_value=mock_fidelities,
+            ),
+            patch(
                 "encoding_atlas.analysis.expressibility.rel_entr",
                 return_value=kl_vals,
-            ):
-                result = compute_expressibility(
-                    simple_encoding_2q,
-                    n_samples=50,
-                    n_bins=20,
-                    seed=42,
-                    return_distributions=True,
-                )
+            ),
+        ):
+            result = compute_expressibility(
+                simple_encoding_2q,
+                n_samples=50,
+                n_bins=20,
+                seed=42,
+                return_distributions=True,
+            )
 
         assert np.isclose(result["kl_divergence"], _MAX_KL_DIVERGENCE, rtol=1e-10)
         assert result["expressibility"] == 0.0
@@ -3446,48 +3367,50 @@ class TestExpressibilityFormulaVerification:
         half_max = _MAX_KL_DIVERGENCE / 2.0
         kl_vals = np.full(20, half_max / 20)
 
-        with patch(
-            "encoding_atlas.analysis.expressibility._sample_fidelities",
-            return_value=mock_fidelities,
-        ):
-            with patch(
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility._sample_fidelities",
+                return_value=mock_fidelities,
+            ),
+            patch(
                 "encoding_atlas.analysis.expressibility.rel_entr",
                 return_value=kl_vals,
-            ):
-                result = compute_expressibility(
-                    simple_encoding_2q,
-                    n_samples=50,
-                    n_bins=20,
-                    seed=42,
-                    return_distributions=True,
-                )
+            ),
+        ):
+            result = compute_expressibility(
+                simple_encoding_2q,
+                n_samples=50,
+                n_bins=20,
+                seed=42,
+                return_distributions=True,
+            )
 
         assert np.isclose(result["kl_divergence"], half_max, rtol=1e-10)
         assert np.isclose(result["expressibility"], 0.5, atol=1e-10)
 
-    def test_kl_exceeding_max_clamped_to_zero_expressibility(
-        self, simple_encoding_2q
-    ):
+    def test_kl_exceeding_max_clamped_to_zero_expressibility(self, simple_encoding_2q):
         """Test that KL > _MAX_KL_DIVERGENCE still gives expressibility = 0."""
         mock_fidelities = np.random.default_rng(99).uniform(0, 1, 50)
         # KL sum = 2 * MAX
         kl_vals = np.full(20, 2.0 * _MAX_KL_DIVERGENCE / 20)
 
-        with patch(
-            "encoding_atlas.analysis.expressibility._sample_fidelities",
-            return_value=mock_fidelities,
-        ):
-            with patch(
+        with (
+            patch(
+                "encoding_atlas.analysis.expressibility._sample_fidelities",
+                return_value=mock_fidelities,
+            ),
+            patch(
                 "encoding_atlas.analysis.expressibility.rel_entr",
                 return_value=kl_vals,
-            ):
-                result = compute_expressibility(
-                    simple_encoding_2q,
-                    n_samples=50,
-                    n_bins=20,
-                    seed=42,
-                    return_distributions=True,
-                )
+            ),
+        ):
+            result = compute_expressibility(
+                simple_encoding_2q,
+                n_samples=50,
+                n_bins=20,
+                seed=42,
+                return_distributions=True,
+            )
 
         assert result["kl_divergence"] > _MAX_KL_DIVERGENCE
         assert result["expressibility"] == 0.0
@@ -3505,9 +3428,7 @@ class TestDistributionPropertiesAdvanced:
     returned by compute_expressibility with return_distributions=True.
     """
 
-    def test_bin_edges_uniformly_spaced(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_bin_edges_uniformly_spaced(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that histogram bin edges are uniformly spaced in [0, 1]."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -3518,9 +3439,9 @@ class TestDistributionPropertiesAdvanced:
         )
         edges = result["bin_edges"]
         spacings = np.diff(edges)
-        assert np.allclose(spacings, spacings[0], atol=1e-15), (
-            "Bin edges are not uniformly spaced"
-        )
+        assert np.allclose(
+            spacings, spacings[0], atol=1e-15
+        ), "Bin edges are not uniformly spaced"
 
     def test_fidelity_distribution_float64_precision(
         self, simple_encoding_2q, skip_if_no_pennylane
@@ -3599,9 +3520,7 @@ class TestDistributionPropertiesAdvanced:
         )
         assert result["convergence_estimate"] == float("inf")
 
-    def test_no_nan_in_result_fields(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_no_nan_in_result_fields(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that no result field contains NaN values."""
         result = compute_expressibility(
             simple_encoding_2q,
@@ -3680,9 +3599,7 @@ class TestFidelityDistributionEdgeCases:
         )
         assert fidelities.dtype == np.float64
 
-    def test_custom_input_range(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_custom_input_range(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test compute_fidelity_distribution with custom input range."""
         fidelities = compute_fidelity_distribution(
             simple_encoding_2q,
@@ -3694,9 +3611,7 @@ class TestFidelityDistributionEdgeCases:
         assert np.all(fidelities >= 0.0)
         assert np.all(fidelities <= 1.0)
 
-    def test_minimum_valid_samples(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_minimum_valid_samples(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test compute_fidelity_distribution with minimum valid n_samples."""
         fidelities = compute_fidelity_distribution(
             simple_encoding_2q,
@@ -3715,9 +3630,7 @@ class TestFidelityDistributionEdgeCases:
 class TestExpressibilityResultCompleteness:
     """Test that ExpressibilityResult dict is complete and well-formed."""
 
-    def test_no_extra_keys_in_result(
-        self, simple_encoding_2q, skip_if_no_pennylane
-    ):
+    def test_no_extra_keys_in_result(self, simple_encoding_2q, skip_if_no_pennylane):
         """Test that the result dict contains exactly the documented keys."""
         result = compute_expressibility(
             simple_encoding_2q,

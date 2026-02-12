@@ -18,11 +18,10 @@ import numpy as np
 import pytest
 
 from encoding_atlas import (
-    AngleEncoding,
     AmplitudeEncoding,
+    AngleEncoding,
     IQPEncoding,
 )
-
 
 # =============================================================================
 # FIXTURES
@@ -70,7 +69,9 @@ def tensor_product(*states) -> np.ndarray:
     return result
 
 
-def states_equivalent(state1: np.ndarray, state2: np.ndarray, atol: float = 1e-10) -> bool:
+def states_equivalent(
+    state1: np.ndarray, state2: np.ndarray, atol: float = 1e-10
+) -> bool:
     """Check if two states are equivalent up to global phase."""
     # Find first non-zero element to determine phase
     for i in range(len(state1)):
@@ -254,8 +255,12 @@ class TestAngleEncodingRZTomography:
             prob_0 = np.abs(actual[0]) ** 2
             prob_1 = np.abs(actual[1]) ** 2
 
-            assert np.isclose(prob_0, 1.0, atol=1e-10), f"P(0) = {prob_0} for angle {angle}"
-            assert np.isclose(prob_1, 0.0, atol=1e-10), f"P(1) = {prob_1} for angle {angle}"
+            assert np.isclose(
+                prob_0, 1.0, atol=1e-10
+            ), f"P(0) = {prob_0} for angle {angle}"
+            assert np.isclose(
+                prob_1, 0.0, atol=1e-10
+            ), f"P(1) = {prob_1} for angle {angle}"
 
 
 # =============================================================================
@@ -385,11 +390,11 @@ class TestSpecialAngles:
     @pytest.mark.parametrize(
         "angle,expected_prob_0",
         [
-            (0, 1.0),              # |0⟩
-            (np.pi / 2, 0.5),      # Equal superposition
-            (np.pi, 0.0),          # |1⟩
+            (0, 1.0),  # |0⟩
+            (np.pi / 2, 0.5),  # Equal superposition
+            (np.pi, 0.0),  # |1⟩
             (3 * np.pi / 2, 0.5),  # Equal superposition (opposite phase)
-            (2 * np.pi, 1.0),      # Back to |0⟩
+            (2 * np.pi, 1.0),  # Back to |0⟩
         ],
     )
     def test_ry_special_angles(
@@ -404,9 +409,9 @@ class TestSpecialAngles:
 
         prob_0 = np.abs(actual[0]) ** 2
 
-        assert np.isclose(prob_0, expected_prob_0, atol=1e-10), (
-            f"P(0) = {prob_0}, expected {expected_prob_0} for angle {angle}"
-        )
+        assert np.isclose(
+            prob_0, expected_prob_0, atol=1e-10
+        ), f"P(0) = {prob_0}, expected {expected_prob_0} for angle {angle}"
 
     def test_hadamard_angle(self, qiskit_statevector) -> None:
         """Test RY(π/2) produces Hadamard-like state."""
@@ -454,10 +459,10 @@ class TestMultiQubitStateStructure:
             circuit = enc.get_circuit(x, backend="qiskit")
             actual = qiskit_statevector(circuit).data
 
-            expected_dim = 2 ** n
-            assert len(actual) == expected_dim, (
-                f"State dimension {len(actual)} != 2^{n} = {expected_dim}"
-            )
+            expected_dim = 2**n
+            assert (
+                len(actual) == expected_dim
+            ), f"State dimension {len(actual)} != 2^{n} = {expected_dim}"
 
     def test_all_amplitudes_in_valid_range(self, qiskit_statevector) -> None:
         """Verify all amplitudes have magnitude ≤ 1."""
@@ -469,6 +474,6 @@ class TestMultiQubitStateStructure:
             actual = qiskit_statevector(circuit).data
 
             magnitudes = np.abs(actual)
-            assert np.all(magnitudes <= 1.0 + 1e-10), (
-                f"Amplitude magnitude > 1: max = {np.max(magnitudes)}"
-            )
+            assert np.all(
+                magnitudes <= 1.0 + 1e-10
+            ), f"Amplitude magnitude > 1: max = {np.max(magnitudes)}"

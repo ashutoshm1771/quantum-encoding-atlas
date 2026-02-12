@@ -1,7 +1,5 @@
 # SO(2) Equivariant Feature Map
 
-**Author:** Ashutosh Mishra
-
 A quantum data encoding with **provable rotation equivariance** -- the quantum
 state transforms predictably under 2D rotations of the input, guaranteeing
 that the encoding respects the continuous symmetry of the SO(2) group.

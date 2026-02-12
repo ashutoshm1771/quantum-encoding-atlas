@@ -42,6 +42,12 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
+from encoding_atlas.analysis.entanglement import (
+    compute_entanglement_capability,
+    compute_meyer_wallach,
+    compute_meyer_wallach_with_breakdown,
+    compute_scott_measure,
+)
 from encoding_atlas.core.exceptions import (
     AnalysisError,
     InsufficientSamplesError,
@@ -49,13 +55,6 @@ from encoding_atlas.core.exceptions import (
     SimulationError,
     ValidationError,
 )
-from encoding_atlas.analysis.entanglement import (
-    compute_entanglement_capability,
-    compute_meyer_wallach,
-    compute_meyer_wallach_with_breakdown,
-    compute_scott_measure,
-)
-
 
 # =============================================================================
 # Test: compute_meyer_wallach - Known Values
@@ -270,9 +269,9 @@ class TestScottMeasure:
             state = random_statevector_generator(n_qubits)
             for k in range(1, n_qubits):  # 1 <= k <= n_qubits - 1
                 scott = compute_scott_measure(state, n_qubits, k=k)
-                assert 0.0 <= scott <= 1.0, (
-                    f"Scott(n={n_qubits}, k={k}) = {scott} outside [0, 1]"
-                )
+                assert (
+                    0.0 <= scott <= 1.0
+                ), f"Scott(n={n_qubits}, k={k}) = {scott} outside [0, 1]"
 
 
 # =============================================================================
@@ -719,7 +718,9 @@ class TestEdgeCases:
         )
         assert isinstance(result, float)
 
-    def test_input_range_full_rotation(self, entangling_encoding_4q, pennylane_available):
+    def test_input_range_full_rotation(
+        self, entangling_encoding_4q, pennylane_available
+    ):
         """Test with default full rotation range [0, 2π]."""
         if not pennylane_available:
             pytest.skip("PennyLane not available")
@@ -804,9 +805,7 @@ class TestSpecialStates:
             (np.pi / 4, 1.0),
             (np.pi / 2, 0.0),
         ]:
-            state = np.array(
-                [np.cos(theta), 0, 0, np.sin(theta)], dtype=complex
-            )
+            state = np.array([np.cos(theta), 0, 0, np.sin(theta)], dtype=complex)
             if np.linalg.norm(state) > 1e-10:
                 state = state / np.linalg.norm(state)
                 mw = compute_meyer_wallach(state, n_qubits=2)
@@ -1005,7 +1004,9 @@ class TestInputRangeValidation:
                 input_range=(0.0,),  # type: ignore
             )
 
-    def test_input_range_list_accepted(self, entangling_encoding_4q, pennylane_available):
+    def test_input_range_list_accepted(
+        self, entangling_encoding_4q, pennylane_available
+    ):
         """Test that list input_range is accepted."""
         if not pennylane_available:
             pytest.skip("PennyLane not available")
@@ -1018,7 +1019,9 @@ class TestInputRangeValidation:
         )
         assert 0.0 <= result <= 1.0
 
-    def test_input_range_tuple_accepted(self, entangling_encoding_4q, pennylane_available):
+    def test_input_range_tuple_accepted(
+        self, entangling_encoding_4q, pennylane_available
+    ):
         """Test that tuple input_range is accepted."""
         if not pennylane_available:
             pytest.skip("PennyLane not available")
@@ -1066,7 +1069,9 @@ class TestVerboseLogging:
 
     def test_verbose_meyer_wallach(self, entangling_encoding_4q, caplog):
         """Test that verbose=True logs progress with Meyer-Wallach measure."""
-        with caplog.at_level(logging.DEBUG, logger="encoding_atlas.analysis.entanglement"):
+        with caplog.at_level(
+            logging.DEBUG, logger="encoding_atlas.analysis.entanglement"
+        ):
             result = compute_entanglement_capability(
                 entangling_encoding_4q,
                 n_samples=20,
@@ -1079,7 +1084,9 @@ class TestVerboseLogging:
 
     def test_verbose_scott(self, entangling_encoding_4q, caplog):
         """Test that verbose=True logs the Scott measure description."""
-        with caplog.at_level(logging.DEBUG, logger="encoding_atlas.analysis.entanglement"):
+        with caplog.at_level(
+            logging.DEBUG, logger="encoding_atlas.analysis.entanglement"
+        ):
             result = compute_entanglement_capability(
                 entangling_encoding_4q,
                 n_samples=20,
@@ -1092,7 +1099,9 @@ class TestVerboseLogging:
 
     def test_verbose_progress_logging(self, entangling_encoding_4q, caplog):
         """Test that verbose progress logging fires at 10% intervals."""
-        with caplog.at_level(logging.DEBUG, logger="encoding_atlas.analysis.entanglement"):
+        with caplog.at_level(
+            logging.DEBUG, logger="encoding_atlas.analysis.entanglement"
+        ):
             compute_entanglement_capability(
                 entangling_encoding_4q,
                 n_samples=100,
@@ -1111,19 +1120,23 @@ class TestVerboseLogging:
 class TestSimulationErrorPropagation:
     """Tests for error handling during sampling in compute_entanglement_capability."""
 
-    def test_simulation_error_reraised(self, entangling_encoding_4q, pennylane_available):
+    def test_simulation_error_reraised(
+        self, entangling_encoding_4q, pennylane_available
+    ):
         """Test that SimulationError from simulation is re-raised directly."""
         if not pennylane_available:
             pytest.skip("PennyLane not available")
 
-        with patch(
-            "encoding_atlas.analysis.entanglement.simulate_encoding_statevector",
-            side_effect=SimulationError("Backend crashed", backend="pennylane"),
+        with (
+            patch(
+                "encoding_atlas.analysis.entanglement.simulate_encoding_statevector",
+                side_effect=SimulationError("Backend crashed", backend="pennylane"),
+            ),
+            pytest.raises(SimulationError, match="Backend crashed"),
         ):
-            with pytest.raises(SimulationError, match="Backend crashed"):
-                compute_entanglement_capability(
-                    entangling_encoding_4q, n_samples=10, seed=42
-                )
+            compute_entanglement_capability(
+                entangling_encoding_4q, n_samples=10, seed=42
+            )
 
     def test_generic_exception_wrapped_in_simulation_error(
         self, entangling_encoding_4q, pennylane_available
@@ -1132,14 +1145,16 @@ class TestSimulationErrorPropagation:
         if not pennylane_available:
             pytest.skip("PennyLane not available")
 
-        with patch(
-            "encoding_atlas.analysis.entanglement.simulate_encoding_statevector",
-            side_effect=RuntimeError("unexpected failure"),
+        with (
+            patch(
+                "encoding_atlas.analysis.entanglement.simulate_encoding_statevector",
+                side_effect=RuntimeError("unexpected failure"),
+            ),
+            pytest.raises(SimulationError, match="Entanglement computation failed"),
         ):
-            with pytest.raises(SimulationError, match="Entanglement computation failed"):
-                compute_entanglement_capability(
-                    entangling_encoding_4q, n_samples=10, seed=42
-                )
+            compute_entanglement_capability(
+                entangling_encoding_4q, n_samples=10, seed=42
+            )
 
 
 # =============================================================================

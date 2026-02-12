@@ -36,25 +36,25 @@ Exceptions
 """
 
 from encoding_atlas.core.base import BaseEncoding
-from encoding_atlas.core.properties import EncodingProperties, ResourceSummary
-from encoding_atlas.core.registry import get_encoding, list_encodings, register_encoding
 from encoding_atlas.core.exceptions import (
-    EncodingError,
-    ValidationError,
     BackendError,
+    EncodingError,
     RegistryError,
+    ValidationError,
 )
-from encoding_atlas.core.types import BackendType, CircuitType, FloatArray
+from encoding_atlas.core.properties import EncodingProperties, ResourceSummary
 from encoding_atlas.core.protocols import (
-    ResourceAnalyzable,
     DataDependentResourceAnalyzable,
-    EntanglementQueryable,
     DataTransformable,
-    is_resource_analyzable,
+    EntanglementQueryable,
+    ResourceAnalyzable,
     is_data_dependent_resource_analyzable,
-    is_entanglement_queryable,
     is_data_transformable,
+    is_entanglement_queryable,
+    is_resource_analyzable,
 )
+from encoding_atlas.core.registry import get_encoding, list_encodings, register_encoding
+from encoding_atlas.core.types import BackendType, CircuitType, FloatArray
 
 __all__ = [
     # Core classes

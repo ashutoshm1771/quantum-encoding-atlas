@@ -1,7 +1,5 @@
 # Angle Encoding
 
-**Author:** Ashutosh Mishra
-
 A fundamental quantum data encoding that maps classical features directly
 to rotation angles of single-qubit gates, producing **product states**.
 

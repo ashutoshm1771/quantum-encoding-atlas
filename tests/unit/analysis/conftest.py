@@ -27,7 +27,7 @@ import pytest
 from numpy.typing import NDArray
 
 if TYPE_CHECKING:
-    from encoding_atlas.core.base import BaseEncoding
+    pass
 
 
 # =============================================================================
@@ -40,6 +40,7 @@ def pennylane_available() -> bool:
     """Check if PennyLane is available for testing."""
     try:
         import pennylane as qml
+
         # Quick check that it actually works
         dev = qml.device("default.qubit", wires=1)
         return True
@@ -53,6 +54,7 @@ def qiskit_available() -> bool:
     try:
         from qiskit import QuantumCircuit
         from qiskit.quantum_info import Statevector
+
         # Quick check that it actually works
         qc = QuantumCircuit(1)
         Statevector(qc)
@@ -66,6 +68,7 @@ def cirq_available() -> bool:
     """Check if Cirq is available for testing."""
     try:
         import cirq
+
         # Quick check that it actually works
         qubit = cirq.LineQubit(0)
         circuit = cirq.Circuit(cirq.H(qubit))
@@ -209,6 +212,7 @@ def pure_density_matrix_1q() -> NDArray[np.complexfloating]:
 def sample_encoding_2q():
     """Sample AngleEncoding with 2 qubits/features."""
     from encoding_atlas import AngleEncoding
+
     return AngleEncoding(n_features=2)
 
 
@@ -216,6 +220,7 @@ def sample_encoding_2q():
 def sample_encoding_4q():
     """Sample AngleEncoding with 4 qubits/features."""
     from encoding_atlas import AngleEncoding
+
     return AngleEncoding(n_features=4)
 
 
@@ -223,24 +228,30 @@ def sample_encoding_4q():
 def entangling_encoding_4q():
     """Sample IQPEncoding with 4 qubits (entangling)."""
     from encoding_atlas import IQPEncoding
+
     return IQPEncoding(n_features=4, reps=1)
 
 
 @pytest.fixture
 def sample_encoding_factory():
     """Factory fixture for creating encodings with specific parameters."""
+
     def _create_encoding(encoding_type: str, n_features: int, **kwargs):
         if encoding_type == "angle":
             from encoding_atlas import AngleEncoding
+
             return AngleEncoding(n_features=n_features, **kwargs)
         elif encoding_type == "iqp":
             from encoding_atlas import IQPEncoding
+
             return IQPEncoding(n_features=n_features, **kwargs)
         elif encoding_type == "amplitude":
             from encoding_atlas import AmplitudeEncoding
+
             return AmplitudeEncoding(n_features=n_features, **kwargs)
         else:
             raise ValueError(f"Unknown encoding type: {encoding_type}")
+
     return _create_encoding
 
 
@@ -264,21 +275,27 @@ def sample_features_4d() -> NDArray[np.floating]:
 @pytest.fixture
 def sample_features_batch_2d() -> NDArray[np.floating]:
     """Batch of 2D feature vectors."""
-    return np.array([
-        [0.1, 0.2],
-        [0.5, 1.0],
-        [1.5, 2.0],
-    ], dtype=np.float64)
+    return np.array(
+        [
+            [0.1, 0.2],
+            [0.5, 1.0],
+            [1.5, 2.0],
+        ],
+        dtype=np.float64,
+    )
 
 
 @pytest.fixture
 def sample_features_batch_4d() -> NDArray[np.floating]:
     """Batch of 4D feature vectors."""
-    return np.array([
-        [0.1, 0.2, 0.3, 0.4],
-        [0.5, 0.6, 0.7, 0.8],
-        [1.0, 1.2, 1.4, 1.6],
-    ], dtype=np.float64)
+    return np.array(
+        [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.5, 0.6, 0.7, 0.8],
+            [1.0, 1.2, 1.4, 1.6],
+        ],
+        dtype=np.float64,
+    )
 
 
 # =============================================================================
@@ -295,16 +312,21 @@ def seeded_rng() -> np.random.Generator:
 @pytest.fixture
 def random_features_generator(seeded_rng: np.random.Generator):
     """Generator for random feature vectors."""
+
     def _generate(n_features: int, n_samples: int = 1) -> NDArray[np.floating]:
         if n_samples == 1:
             return seeded_rng.uniform(0, 2 * np.pi, size=n_features).astype(np.float64)
-        return seeded_rng.uniform(0, 2 * np.pi, size=(n_samples, n_features)).astype(np.float64)
+        return seeded_rng.uniform(0, 2 * np.pi, size=(n_samples, n_features)).astype(
+            np.float64
+        )
+
     return _generate
 
 
 @pytest.fixture
 def random_statevector_generator(seeded_rng: np.random.Generator):
     """Generator for random normalized statevectors."""
+
     def _generate(n_qubits: int) -> NDArray[np.complexfloating]:
         dim = 2**n_qubits
         # Random complex amplitudes
@@ -314,6 +336,7 @@ def random_statevector_generator(seeded_rng: np.random.Generator):
         # Normalize
         state = state / np.linalg.norm(state)
         return state.astype(np.complex128)
+
     return _generate
 
 

@@ -23,16 +23,13 @@ import numpy as np
 import pytest
 
 from encoding_atlas import (
-    AngleEncoding,
     AmplitudeEncoding,
-    IQPEncoding,
-    ZZFeatureMap,
-    PauliFeatureMap,
-    DataReuploading,
-    HardwareEfficientEncoding,
+    AngleEncoding,
     HigherOrderAngleEncoding,
+    IQPEncoding,
+    PauliFeatureMap,
+    ZZFeatureMap,
 )
-
 
 # =============================================================================
 # FIXTURES
@@ -162,9 +159,7 @@ class TestParametrizedGradientFlow:
             (HigherOrderAngleEncoding, {"n_features": 4, "order": 2}),
         ],
     )
-    def test_encoding_gradient_exists(
-        self, pennylane, encoding_class, kwargs
-    ) -> None:
+    def test_encoding_gradient_exists(self, pennylane, encoding_class, kwargs) -> None:
         """Parametrized test for gradient existence across encodings."""
         qml = pennylane
         enc = encoding_class(**kwargs)
@@ -235,9 +230,9 @@ class TestGradientShapeAndValues:
             grad_fn = qml.grad(circuit, argnum=0)
             grad = grad_fn(x)
 
-            assert grad.shape == (n_features,), (
-                f"Gradient shape {grad.shape} doesn't match input ({n_features},)"
-            )
+            assert grad.shape == (
+                n_features,
+            ), f"Gradient shape {grad.shape} doesn't match input ({n_features},)"
 
     @GRADIENT_XFAIL
     def test_zero_input_nonzero_gradient(self, pennylane) -> None:

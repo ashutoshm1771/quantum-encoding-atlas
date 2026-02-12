@@ -253,7 +253,7 @@ _logger = logging.getLogger(__name__)
 # Public API
 # =============================================================================
 
-__all__ = ['HamiltonianEncoding', 'GateCountBreakdown']
+__all__ = ["HamiltonianEncoding", "GateCountBreakdown"]
 
 # =============================================================================
 # Module-level constants for numerical precision
@@ -292,9 +292,9 @@ _CRITICAL_POINT_TOLERANCE: float = 0.1
 #
 # Version format: (major, minor, patch) or (major, minor) for flexibility
 _BACKEND_MIN_VERSIONS: dict[str, tuple[int, ...]] = {
-    "pennylane": (0, 32),      # PennyLane 0.32+ for stable gate API
-    "qiskit": (1, 0),          # Qiskit 1.0+ for new API (post-terra deprecation)
-    "cirq": (1, 0),            # Cirq 1.0+ for stable API
+    "pennylane": (0, 32),  # PennyLane 0.32+ for stable gate API
+    "qiskit": (1, 0),  # Qiskit 1.0+ for new API (post-terra deprecation)
+    "cirq": (1, 0),  # Cirq 1.0+ for stable API
 }
 
 # Whether to warn about untested versions (vs. raising an error)
@@ -384,6 +384,7 @@ def _check_backend_version(backend: str, module: Any) -> None:
 
     if installed_padded < min_padded:
         import warnings
+
         min_version_str = ".".join(map(str, min_version))
         warnings.warn(
             f"BACKEND VERSION WARNING: {backend} version {version_str} is older than "
@@ -392,7 +393,7 @@ def _check_backend_version(backend: str, module: Any) -> None:
             f"  Older versions may have API differences that cause errors.\n"
             f"  Recommended: pip install --upgrade {backend}",
             UserWarning,
-            stacklevel=4
+            stacklevel=4,
         )
 
 
@@ -717,31 +718,29 @@ class HamiltonianEncoding(BaseEncoding):
     """
 
     # Valid Hamiltonian types
-    _VALID_HAMILTONIAN_TYPES: frozenset[str] = frozenset({
-        "iqp", "xy", "heisenberg", "pauli_z"
-    })
+    _VALID_HAMILTONIAN_TYPES: frozenset[str] = frozenset(
+        {"iqp", "xy", "heisenberg", "pauli_z"}
+    )
 
     # Valid entanglement patterns
-    _VALID_ENTANGLEMENT: frozenset[str] = frozenset({
-        "full", "linear", "circular"
-    })
+    _VALID_ENTANGLEMENT: frozenset[str] = frozenset({"full", "linear", "circular"})
 
     # Memory-efficient slot-based attribute storage.
     # Only instance attributes specific to this class are listed here.
     # Attributes from BaseEncoding are handled by its own __slots__.
     __slots__ = (
-        'hamiltonian_type',
-        'evolution_time',
-        'reps',
-        'entanglement',
-        'insert_barriers',
-        'max_pairs',
-        'include_single_qubit_terms',
-        '_entanglement_pairs',
-        '_pairs_truncated',
-        '_time_step',
-        '_cached_depth',
-        '_critical_point_warning_issued',
+        "hamiltonian_type",
+        "evolution_time",
+        "reps",
+        "entanglement",
+        "insert_barriers",
+        "max_pairs",
+        "include_single_qubit_terms",
+        "_entanglement_pairs",
+        "_pairs_truncated",
+        "_time_step",
+        "_cached_depth",
+        "_critical_point_warning_issued",
     )
 
     def __init__(
@@ -818,20 +817,14 @@ class HamiltonianEncoding(BaseEncoding):
             )
         evolution_time = float(evolution_time)
         if not np.isfinite(evolution_time):
-            raise ValueError(
-                f"evolution_time must be finite, got {evolution_time}"
-            )
+            raise ValueError(f"evolution_time must be finite, got {evolution_time}")
 
         # Validate reps
         if not isinstance(reps, (int, np.integer)):
-            raise TypeError(
-                f"reps must be an integer, got {type(reps).__name__}"
-            )
+            raise TypeError(f"reps must be an integer, got {type(reps).__name__}")
         reps = int(reps)
         if reps < 1:
-            raise ValueError(
-                f"reps must be at least 1, got {reps}"
-            )
+            raise ValueError(f"reps must be at least 1, got {reps}")
 
         # Validate entanglement
         if not isinstance(entanglement, str):
@@ -859,9 +852,7 @@ class HamiltonianEncoding(BaseEncoding):
                 )
             max_pairs = int(max_pairs)
             if max_pairs < 0:
-                raise ValueError(
-                    f"max_pairs must be non-negative, got {max_pairs}"
-                )
+                raise ValueError(f"max_pairs must be non-negative, got {max_pairs}")
 
         # Validate include_single_qubit_terms
         if not isinstance(include_single_qubit_terms, bool):
@@ -903,13 +894,14 @@ class HamiltonianEncoding(BaseEncoding):
             self._entanglement_pairs: list[tuple[int, int]] = all_pairs[:max_pairs]
             self._pairs_truncated: bool = True
             import warnings
+
             warnings.warn(
                 f"Limiting entanglement to {max_pairs} pairs (full pattern has "
                 f"{len(all_pairs)} pairs). This reduces circuit depth but may "
                 f"affect encoding expressiveness. Pairs are selected in order, "
                 f"prioritizing lower-indexed qubits.",
                 UserWarning,
-                stacklevel=2
+                stacklevel=2,
             )
         else:
             self._entanglement_pairs = all_pairs
@@ -926,9 +918,14 @@ class HamiltonianEncoding(BaseEncoding):
         self._critical_point_warning_issued: bool = False
 
         # Performance warning for large systems
-        if entanglement_lower == "full" and n_features > 20 and not self._pairs_truncated:
+        if (
+            entanglement_lower == "full"
+            and n_features > 20
+            and not self._pairs_truncated
+        ):
             total_possible_pairs = n_features * (n_features - 1) // 2
             import warnings
+
             warnings.warn(
                 f"SCALABILITY WARNING: Full entanglement with {n_features} qubits creates "
                 f"{total_possible_pairs} qubit pairs (O(n²) scaling).\n"
@@ -944,17 +941,18 @@ class HamiltonianEncoding(BaseEncoding):
                 f"  Example: HamiltonianEncoding(n_features={n_features}, entanglement='linear')\n"
                 f"           HamiltonianEncoding(n_features={n_features}, max_pairs=100)",
                 UserWarning,
-                stacklevel=2
+                stacklevel=2,
             )
 
         # Numerical precision warning
         if abs(evolution_time) > 100 and reps < 10:
             import warnings
+
             warnings.warn(
                 f"Large evolution_time ({evolution_time}) with few Trotter steps ({reps}) "
                 f"may result in poor Trotterization accuracy. Consider increasing reps.",
                 UserWarning,
-                stacklevel=2
+                stacklevel=2,
             )
 
     @property
@@ -1005,7 +1003,7 @@ class HamiltonianEncoding(BaseEncoding):
         _compute_parallel_layers : Computes parallelization groups for pairs.
         """
         # Use cached value if available
-        if hasattr(self, '_cached_depth') and self._cached_depth is not None:
+        if hasattr(self, "_cached_depth") and self._cached_depth is not None:
             return self._cached_depth
 
         # Compute and cache the exact depth
@@ -1073,7 +1071,10 @@ class HamiltonianEncoding(BaseEncoding):
             if self.hamiltonian_type in ["iqp", "pauli_z"]:
                 # Only single-qubit RZ gates (1 layer per rep, all parallel)
                 total_depth += self.reps * 1
-            elif self.hamiltonian_type in ["xy", "heisenberg"] and self.include_single_qubit_terms:
+            elif (
+                self.hamiltonian_type in ["xy", "heisenberg"]
+                and self.include_single_qubit_terms
+            ):
                 # Single-qubit RZ gates when include_single_qubit_terms is enabled
                 total_depth += self.reps * 1
             return total_depth
@@ -1191,11 +1192,12 @@ class HamiltonianEncoding(BaseEncoding):
             # Unknown entanglement type: use conservative sequential estimate
             # This should not happen due to validation, but provides safety
             import warnings
+
             warnings.warn(
                 f"Unknown entanglement pattern '{self.entanglement}', "
                 f"using sequential depth estimate.",
                 RuntimeWarning,
-                stacklevel=3
+                stacklevel=3,
             )
             return n_pairs
 
@@ -1363,21 +1365,23 @@ class HamiltonianEncoding(BaseEncoding):
 
             # Check for values near the critical point π
             # Only warn once per instance to avoid log spam
-            if not self._critical_point_warning_issued:
-                if (abs(xi - np.pi) < _CRITICAL_POINT_TOLERANCE or
-                        abs(xj - np.pi) < _CRITICAL_POINT_TOLERANCE):
-                    import warnings
-                    warnings.warn(
-                        f"Feature value(s) detected near π (critical point). "
-                        f"Values: x[{idx_i}]={xi:.4f}, x[{idx_j}]={xj:.4f}. "
-                        f"Two-qubit interactions will be minimal for features "
-                        f"near π (~3.14159). Consider scaling features to [0, 1] "
-                        f"or [-1, 1] for stronger two-qubit correlations. "
-                        f"See class docstring 'Input Scaling' section for details.",
-                        UserWarning,
-                        stacklevel=4
-                    )
-                    self._critical_point_warning_issued = True
+            if not self._critical_point_warning_issued and (
+                abs(xi - np.pi) < _CRITICAL_POINT_TOLERANCE
+                or abs(xj - np.pi) < _CRITICAL_POINT_TOLERANCE
+            ):
+                import warnings
+
+                warnings.warn(
+                    f"Feature value(s) detected near π (critical point). "
+                    f"Values: x[{idx_i}]={xi:.4f}, x[{idx_j}]={xj:.4f}. "
+                    f"Two-qubit interactions will be minimal for features "
+                    f"near π (~3.14159). Consider scaling features to [0, 1] "
+                    f"or [-1, 1] for stronger two-qubit correlations. "
+                    f"See class docstring 'Input Scaling' section for details.",
+                    UserWarning,
+                    stacklevel=4,
+                )
+                self._critical_point_warning_issued = True
 
             # Compute the two-qubit angle using quantum kernel formula
             return self._time_step * (np.pi - xi) * (np.pi - xj)
@@ -1574,8 +1578,7 @@ class HamiltonianEncoding(BaseEncoding):
             # The batch was already validated above, so we can safely skip
             # per-sample validation for better performance
             circuits = [
-                self._get_circuit_from_validated(x, backend)
-                for x in X_validated
+                self._get_circuit_from_validated(x, backend) for x in X_validated
             ]
 
             _logger.debug(
@@ -1642,7 +1645,8 @@ class HamiltonianEncoding(BaseEncoding):
 
         _logger.debug(
             "Generating circuit from validated input: backend=%r, shape=%s",
-            backend, x.shape
+            backend,
+            x.shape,
         )
 
         # Dispatch to backend-specific implementation
@@ -1780,9 +1784,7 @@ class HamiltonianEncoding(BaseEncoding):
 
         # Precompute all rotation angles
         single_angles = [self._compute_rotation_angle(x, i) for i in range(n_qubits)]
-        two_qubit_angles = [
-            self._compute_rotation_angle(x, i, j) for i, j in pairs
-        ]
+        two_qubit_angles = [self._compute_rotation_angle(x, i, j) for i, j in pairs]
 
         def circuit() -> None:
             """Apply the Hamiltonian encoding via time evolution."""
@@ -2180,7 +2182,9 @@ class HamiltonianEncoding(BaseEncoding):
         if self.max_pairs is not None:
             parts.append(f"max_pairs={self.max_pairs}")
         if not self.include_single_qubit_terms:
-            parts.append(f"include_single_qubit_terms={self.include_single_qubit_terms}")
+            parts.append(
+                f"include_single_qubit_terms={self.include_single_qubit_terms}"
+            )
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
     def __eq__(self, other: object) -> bool:
@@ -2306,16 +2310,18 @@ class HamiltonianEncoding(BaseEncoding):
         --------
         __eq__ : Equality comparison.
         """
-        return hash((
-            self.n_features,
-            self.hamiltonian_type,
-            self.evolution_time,
-            self.reps,
-            self.entanglement,
-            self.insert_barriers,
-            self.max_pairs,
-            self.include_single_qubit_terms,
-        ))
+        return hash(
+            (
+                self.n_features,
+                self.hamiltonian_type,
+                self.evolution_time,
+                self.reps,
+                self.entanglement,
+                self.insert_barriers,
+                self.max_pairs,
+                self.include_single_qubit_terms,
+            )
+        )
 
     def count_gates(
         self,
@@ -2562,8 +2568,11 @@ class HamiltonianEncoding(BaseEncoding):
 
         _logger.debug(
             "Gate breakdown: H=%d, RZ=%d, S=%d, CNOT=%d, total=%d",
-            hadamard_count, rz_count, s_gate_count, cnot_count,
-            total_single_qubit + total_two_qubit
+            hadamard_count,
+            rz_count,
+            s_gate_count,
+            cnot_count,
+            total_single_qubit + total_two_qubit,
         )
 
         return GateCountBreakdown(
@@ -2700,7 +2709,7 @@ class HamiltonianEncoding(BaseEncoding):
             "hamiltonian_type=%s, entanglement=%s, pairs=%d",
             self.n_qubits,
             self.depth,
-            gate_counts['total'],
+            gate_counts["total"],
             self.hamiltonian_type,
             self.entanglement,
             len(pairs),
@@ -2787,7 +2796,7 @@ class HamiltonianEncoding(BaseEncoding):
             ),
         )
 
-    def __deepcopy__(self, memo: dict[int, Any]) -> "HamiltonianEncoding":
+    def __deepcopy__(self, memo: dict[int, Any]) -> HamiltonianEncoding:
         """Create a deep copy of this encoding.
 
         Parameters
@@ -2825,6 +2834,7 @@ class HamiltonianEncoding(BaseEncoding):
 # =============================================================================
 # Helper functions for two-qubit interactions
 # =============================================================================
+
 
 def _apply_zz_interaction_pennylane(
     qml: Any,

@@ -41,7 +41,6 @@ from encoding_atlas.analysis.resources import (
     get_gate_breakdown,
     get_resource_summary,
 )
-from encoding_atlas.core.base import BaseEncoding
 from encoding_atlas.core.exceptions import AnalysisError, ValidationError
 
 # =============================================================================
@@ -53,6 +52,7 @@ from encoding_atlas.core.exceptions import AnalysisError, ValidationError
 def angle_encoding_2q():
     """Create AngleEncoding with 2 features."""
     from encoding_atlas import AngleEncoding
+
     return AngleEncoding(n_features=2)
 
 
@@ -60,6 +60,7 @@ def angle_encoding_2q():
 def angle_encoding_4q():
     """Create AngleEncoding with 4 features."""
     from encoding_atlas import AngleEncoding
+
     return AngleEncoding(n_features=4)
 
 
@@ -67,6 +68,7 @@ def angle_encoding_4q():
 def iqp_encoding_4q():
     """Create IQPEncoding with 4 features."""
     from encoding_atlas import IQPEncoding
+
     return IQPEncoding(n_features=4, reps=2, entanglement="full")
 
 
@@ -74,6 +76,7 @@ def iqp_encoding_4q():
 def iqp_encoding_linear():
     """Create IQPEncoding with linear entanglement."""
     from encoding_atlas import IQPEncoding
+
     return IQPEncoding(n_features=4, reps=1, entanglement="linear")
 
 
@@ -81,6 +84,7 @@ def iqp_encoding_linear():
 def basis_encoding_4q():
     """Create BasisEncoding with 4 features (data-dependent)."""
     from encoding_atlas import BasisEncoding
+
     return BasisEncoding(n_features=4)
 
 
@@ -106,6 +110,7 @@ def sample_all_zeros() -> NDArray[np.floating[Any]]:
 def multiple_encodings():
     """List of various encodings for comparison."""
     from encoding_atlas import AngleEncoding, IQPEncoding
+
     return [
         AngleEncoding(n_features=4),
         IQPEncoding(n_features=4, reps=1),
@@ -169,11 +174,19 @@ class TestCountResources:
         assert "encoding_name" in result
 
         # Verify totals add up
-        single_qubit_sum = sum([
-            result["rx"], result["ry"], result["rz"],
-            result["h"], result["x"], result["y"],
-            result["z"], result["s"], result["t"],
-        ])
+        single_qubit_sum = sum(
+            [
+                result["rx"],
+                result["ry"],
+                result["rz"],
+                result["h"],
+                result["x"],
+                result["y"],
+                result["z"],
+                result["s"],
+                result["t"],
+            ]
+        )
         assert single_qubit_sum == result["total_single_qubit"]
 
     def test_data_dependent_encoding(self, basis_encoding_4q, sample_binary_input):
@@ -238,7 +251,10 @@ class TestCountResources:
         with pytest.raises(ValidationError) as exc_info:
             count_resources(basis_encoding_4q, x=inf_input)
 
-        assert "infinite" in str(exc_info.value).lower() or "inf" in str(exc_info.value).lower()
+        assert (
+            "infinite" in str(exc_info.value).lower()
+            or "inf" in str(exc_info.value).lower()
+        )
 
     def test_2d_input_single_sample(self, basis_encoding_4q):
         """Test that 2D input with single sample is accepted."""
@@ -320,8 +336,21 @@ class TestGetGateBreakdown:
         result = get_gate_breakdown(iqp_encoding_4q)
 
         # Check all gate types are present
-        gate_types = ["rx", "ry", "rz", "h", "x", "y", "z", "s", "t",
-                      "cnot", "cx", "cz", "swap"]
+        gate_types = [
+            "rx",
+            "ry",
+            "rz",
+            "h",
+            "x",
+            "y",
+            "z",
+            "s",
+            "t",
+            "cnot",
+            "cx",
+            "cz",
+            "swap",
+        ]
         for gate in gate_types:
             assert gate in result
 
@@ -330,9 +359,7 @@ class TestGetGateBreakdown:
         assert "total_two_qubit" in result
         assert "total" in result
 
-    def test_breakdown_for_data_dependent(
-        self, basis_encoding_4q, sample_binary_input
-    ):
+    def test_breakdown_for_data_dependent(self, basis_encoding_4q, sample_binary_input):
         """Test breakdown for data-dependent encoding."""
         result = get_gate_breakdown(basis_encoding_4q, x=sample_binary_input)
 
@@ -344,11 +371,19 @@ class TestGetGateBreakdown:
         """Test that breakdown totals match sum of individual gates."""
         result = get_gate_breakdown(iqp_encoding_4q)
 
-        single_qubit_sum = sum([
-            result["rx"], result["ry"], result["rz"],
-            result["h"], result["x"], result["y"],
-            result["z"], result["s"], result["t"],
-        ])
+        single_qubit_sum = sum(
+            [
+                result["rx"],
+                result["ry"],
+                result["rz"],
+                result["h"],
+                result["x"],
+                result["y"],
+                result["z"],
+                result["s"],
+                result["t"],
+            ]
+        )
 
         two_qubit_sum = result["cnot"] + result["cz"] + result["swap"]
 
@@ -476,7 +511,9 @@ class TestEstimateExecutionTime:
     def test_without_measurement(self, iqp_encoding_4q):
         """Test estimation without measurement time."""
         result_with = estimate_execution_time(iqp_encoding_4q, include_measurement=True)
-        result_without = estimate_execution_time(iqp_encoding_4q, include_measurement=False)
+        result_without = estimate_execution_time(
+            iqp_encoding_4q, include_measurement=False
+        )
 
         assert result_without["measurement_time_us"] == 0.0
         assert result_with["serial_time_us"] > result_without["serial_time_us"]
@@ -505,9 +542,7 @@ class TestEstimateExecutionTime:
     def test_returns_parallelization_factor(self, iqp_encoding_4q):
         """Test that parallelization factor is returned."""
         factor = 0.7
-        result = estimate_execution_time(
-            iqp_encoding_4q, parallelization_factor=factor
-        )
+        result = estimate_execution_time(iqp_encoding_4q, parallelization_factor=factor)
 
         assert result["parallelization_factor"] == factor
 
@@ -552,7 +587,9 @@ class TestEstimateExecutionTimeMathematicalCorrectness:
 
         # Critical path = depth * max(single_qubit, two_qubit) + measurement
         # For IQP (has 2Q gates): max(0.02, 0.2) = 0.2
-        expected_critical_path = summary["depth"] * two_qubit_gate_time_us + measurement_time_us
+        expected_critical_path = (
+            summary["depth"] * two_qubit_gate_time_us + measurement_time_us
+        )
 
         # Estimated time must be >= critical path (physical constraint)
         assert result["estimated_time_us"] >= expected_critical_path - 1e-10, (
@@ -582,7 +619,9 @@ class TestEstimateExecutionTimeMathematicalCorrectness:
 
         # Critical path = depth * max(single_qubit, two_qubit) + meas_time
         # For IQP (has 2Q gates): max(1.0, 100.0) = 100.0
-        expected_critical_path = summary["depth"] * max(single_qubit_time, two_qubit_time) + meas_time
+        expected_critical_path = (
+            summary["depth"] * max(single_qubit_time, two_qubit_time) + meas_time
+        )
 
         assert result["estimated_time_us"] >= expected_critical_path - 1e-10, (
             f"With custom times: estimated {result['estimated_time_us']:.2f} μs "
@@ -664,13 +703,19 @@ class TestEstimateExecutionTimeMathematicalCorrectness:
 
         # With factor=0: estimated = gate_time * (1 - 0) + meas = serial_time
         # But may still be bounded by critical path
-        expected_no_parallel = result["single_qubit_time_us"] + result["two_qubit_time_us"] + result["measurement_time_us"]
+        expected_no_parallel = (
+            result["single_qubit_time_us"]
+            + result["two_qubit_time_us"]
+            + result["measurement_time_us"]
+        )
 
         # The estimated time should be at least the unbounded calculation
         # (could be higher if critical path bound kicks in, but for factor=0
         # the unbounded calc IS the serial time, so it should match)
-        assert abs(result["estimated_time_us"] - result["serial_time_us"]) < 1e-10 or \
-               result["estimated_time_us"] >= expected_no_parallel - 1e-10
+        assert (
+            abs(result["estimated_time_us"] - result["serial_time_us"]) < 1e-10
+            or result["estimated_time_us"] >= expected_no_parallel - 1e-10
+        )
 
     def test_single_qubit_only_encoding_critical_path(self):
         """Test critical path for encodings with only single-qubit gates.
@@ -803,7 +848,9 @@ class TestEstimateExecutionTimeMathematicalCorrectness:
         # Estimated time is bounded by max(formula_result, critical_path)
         # The key invariant is: estimated_time >= critical_path
         gate_time = result["single_qubit_time_us"] + result["two_qubit_time_us"]
-        formula_result = gate_time * 0.5 + result["measurement_time_us"]  # default factor=0.5
+        formula_result = (
+            gate_time * 0.5 + result["measurement_time_us"]
+        )  # default factor=0.5
         expected_estimated = max(formula_result, critical_path)
 
         assert abs(result["estimated_time_us"] - expected_estimated) < 1e-10
@@ -998,7 +1045,10 @@ class TestIntegration:
         # Verify resource data matches time estimate components
         # (single_qubit_gates + two_qubit_gates should drive the time)
         assert resources["gate_count"] > 0
-        assert resources["gate_count"] == resources["single_qubit_gates"] + resources["two_qubit_gates"]
+        assert (
+            resources["gate_count"]
+            == resources["single_qubit_gates"] + resources["two_qubit_gates"]
+        )
 
     def test_summary_matches_count(self, angle_encoding_4q):
         """Test that get_resource_summary matches count_resources."""
@@ -1025,83 +1075,98 @@ class TestAllEncodingTypes:
     @pytest.fixture
     def amplitude_encoding(self):
         from encoding_atlas import AmplitudeEncoding
+
         return AmplitudeEncoding(n_features=4)
 
     @pytest.fixture
     def zz_feature_map(self):
         from encoding_atlas import ZZFeatureMap
+
         return ZZFeatureMap(n_features=4, reps=2, entanglement="full")
 
     @pytest.fixture
     def pauli_feature_map(self):
         from encoding_atlas import PauliFeatureMap
+
         return PauliFeatureMap(n_features=4, reps=1, entanglement="full")
 
     @pytest.fixture
     def hardware_efficient(self):
         from encoding_atlas import HardwareEfficientEncoding
+
         return HardwareEfficientEncoding(n_features=4, reps=2, entanglement="linear")
 
     @pytest.fixture
     def data_reuploading(self):
         from encoding_atlas import DataReuploading
+
         return DataReuploading(n_features=4, n_layers=2)
 
     @pytest.fixture
     def higher_order_angle(self):
         from encoding_atlas import HigherOrderAngleEncoding
+
         return HigherOrderAngleEncoding(n_features=4, order=2)
 
     @pytest.fixture
     def qaoa_encoding(self):
         from encoding_atlas import QAOAEncoding
+
         return QAOAEncoding(n_features=4, reps=2, entanglement="linear")
 
     @pytest.fixture
     def hamiltonian_encoding(self):
         from encoding_atlas import HamiltonianEncoding
+
         return HamiltonianEncoding(n_features=4, reps=2, entanglement="full")
 
     @pytest.fixture
     def symmetry_inspired(self):
         from encoding_atlas import SymmetryInspiredFeatureMap
+
         return SymmetryInspiredFeatureMap(n_features=4, reps=2)
 
     @pytest.fixture
     def trainable_encoding(self):
         from encoding_atlas import TrainableEncoding
+
         return TrainableEncoding(n_features=4, n_layers=2, entanglement="linear")
 
     @pytest.fixture
     def so2_equivariant(self):
         from encoding_atlas import SO2EquivariantFeatureMap
+
         return SO2EquivariantFeatureMap(n_features=2, max_angular_momentum=1)
 
     @pytest.fixture
     def cyclic_equivariant(self):
         from encoding_atlas import CyclicEquivariantFeatureMap
+
         return CyclicEquivariantFeatureMap(n_features=4, reps=2)
 
     @pytest.fixture
     def swap_equivariant(self):
         from encoding_atlas import SwapEquivariantFeatureMap
+
         return SwapEquivariantFeatureMap(n_features=4, reps=2)
 
-    @pytest.fixture(params=[
-        "amplitude_encoding",
-        "zz_feature_map",
-        "pauli_feature_map",
-        "hardware_efficient",
-        "data_reuploading",
-        "higher_order_angle",
-        "qaoa_encoding",
-        "hamiltonian_encoding",
-        "symmetry_inspired",
-        "trainable_encoding",
-        "so2_equivariant",
-        "cyclic_equivariant",
-        "swap_equivariant",
-    ])
+    @pytest.fixture(
+        params=[
+            "amplitude_encoding",
+            "zz_feature_map",
+            "pauli_feature_map",
+            "hardware_efficient",
+            "data_reuploading",
+            "higher_order_angle",
+            "qaoa_encoding",
+            "hamiltonian_encoding",
+            "symmetry_inspired",
+            "trainable_encoding",
+            "so2_equivariant",
+            "cyclic_equivariant",
+            "swap_equivariant",
+        ]
+    )
     def any_encoding(self, request):
         """Parametrize over all non-trivial encoding types."""
         return request.getfixturevalue(request.param)
@@ -1111,10 +1176,20 @@ class TestAllEncodingTypes:
         result = count_resources(any_encoding)
 
         required_keys = {
-            "n_qubits", "depth", "gate_count", "single_qubit_gates",
-            "two_qubit_gates", "parameter_count", "cnot_count", "cz_count",
-            "t_gate_count", "hadamard_count", "rotation_gates",
-            "two_qubit_ratio", "gates_per_qubit", "encoding_name",
+            "n_qubits",
+            "depth",
+            "gate_count",
+            "single_qubit_gates",
+            "two_qubit_gates",
+            "parameter_count",
+            "cnot_count",
+            "cz_count",
+            "t_gate_count",
+            "hadamard_count",
+            "rotation_gates",
+            "two_qubit_ratio",
+            "gates_per_qubit",
+            "encoding_name",
             "is_data_dependent",
         }
         assert required_keys.issubset(result.keys()), (
@@ -1127,9 +1202,22 @@ class TestAllEncodingTypes:
         result = count_resources(any_encoding, detailed=True)
 
         required_keys = {
-            "rx", "ry", "rz", "h", "x", "y", "z", "s", "t",
-            "cnot", "cx", "cz", "swap",
-            "total_single_qubit", "total_two_qubit", "total",
+            "rx",
+            "ry",
+            "rz",
+            "h",
+            "x",
+            "y",
+            "z",
+            "s",
+            "t",
+            "cnot",
+            "cx",
+            "cz",
+            "swap",
+            "total_single_qubit",
+            "total_two_qubit",
+            "total",
             "encoding_name",
         }
         assert required_keys.issubset(result.keys()), (
@@ -1153,7 +1241,9 @@ class TestAllEncodingTypes:
         """total must equal total_single_qubit + total_two_qubit."""
         result = count_resources(any_encoding, detailed=True)
 
-        assert result["total"] == result["total_single_qubit"] + result["total_two_qubit"], (
+        assert (
+            result["total"] == result["total_single_qubit"] + result["total_two_qubit"]
+        ), (
             f"{any_encoding.__class__.__name__}: "
             f"total={result['total']} != "
             f"1Q({result['total_single_qubit']}) + 2Q({result['total_two_qubit']})"
@@ -1168,11 +1258,19 @@ class TestAllEncodingTypes:
         """
         result = count_resources(any_encoding, detailed=True)
 
-        single_qubit_sum = sum([
-            result["rx"], result["ry"], result["rz"],
-            result["h"], result["x"], result["y"],
-            result["z"], result["s"], result["t"],
-        ])
+        single_qubit_sum = sum(
+            [
+                result["rx"],
+                result["ry"],
+                result["rz"],
+                result["h"],
+                result["x"],
+                result["y"],
+                result["z"],
+                result["s"],
+                result["t"],
+            ]
+        )
 
         # Use cnot (not cx) to avoid double-counting the alias
         two_qubit_sum = result["cnot"] + result["cz"] + result["swap"]
@@ -1207,8 +1305,7 @@ class TestAllEncodingTypes:
         for key, value in result.items():
             if isinstance(value, int):
                 assert value >= 0, (
-                    f"{any_encoding.__class__.__name__}: "
-                    f"{key}={value} is negative"
+                    f"{any_encoding.__class__.__name__}: " f"{key}={value} is negative"
                 )
 
     def test_n_qubits_positive(self, any_encoding):
@@ -1263,28 +1360,38 @@ class TestAllEncodingTypes:
         result = compare_resources([any_encoding])
         assert len(result["gate_count"]) == 1
 
-    @pytest.mark.parametrize("enc_cls,enc_kwargs", [
-        ("AngleEncoding", dict(n_features=4)),
-        ("IQPEncoding", dict(n_features=4, reps=2, entanglement="full")),
-        ("HardwareEfficientEncoding", dict(n_features=4, reps=2)),
-        ("HigherOrderAngleEncoding", dict(n_features=4, order=2)),
-        ("HamiltonianEncoding", dict(n_features=4, reps=1)),
-    ])
-    def test_detailed_totals_exact_for_well_mapped_encodings(
-        self, enc_cls, enc_kwargs
-    ):
+    @pytest.mark.parametrize(
+        "enc_cls,enc_kwargs",
+        [
+            ("AngleEncoding", dict(n_features=4)),
+            ("IQPEncoding", dict(n_features=4, reps=2, entanglement="full")),
+            ("HardwareEfficientEncoding", dict(n_features=4, reps=2)),
+            ("HigherOrderAngleEncoding", dict(n_features=4, order=2)),
+            ("HamiltonianEncoding", dict(n_features=4, reps=1)),
+        ],
+    )
+    def test_detailed_totals_exact_for_well_mapped_encodings(self, enc_cls, enc_kwargs):
         """For encodings with standard gate names, individual gates must sum
         exactly to the totals (no unmapped gates)."""
         import encoding_atlas
+
         cls = getattr(encoding_atlas, enc_cls)
         enc = cls(**enc_kwargs)
         result = count_resources(enc, detailed=True)
 
-        single_qubit_sum = sum([
-            result["rx"], result["ry"], result["rz"],
-            result["h"], result["x"], result["y"],
-            result["z"], result["s"], result["t"],
-        ])
+        single_qubit_sum = sum(
+            [
+                result["rx"],
+                result["ry"],
+                result["rz"],
+                result["h"],
+                result["x"],
+                result["y"],
+                result["z"],
+                result["s"],
+                result["t"],
+            ]
+        )
         two_qubit_sum = result["cnot"] + result["cz"] + result["swap"]
 
         assert single_qubit_sum == result["total_single_qubit"], (
@@ -1308,6 +1415,7 @@ class TestEstimateExecutionTimeValidation:
     @pytest.fixture
     def encoding(self):
         from encoding_atlas import IQPEncoding
+
         return IQPEncoding(n_features=4, reps=1)
 
     def test_negative_parallelization_factor(self, encoding):
@@ -1378,6 +1486,7 @@ class TestCompareResourcesMetricValidation:
     @pytest.fixture
     def encodings(self):
         from encoding_atlas import AngleEncoding
+
         return [AngleEncoding(n_features=4)]
 
     def test_unknown_metric_raises_value_error(self, encodings):
@@ -1400,10 +1509,19 @@ class TestCompareResourcesMetricValidation:
     def test_all_valid_metrics_accepted(self, encodings):
         """Every valid metric name must be accepted."""
         valid_metrics = [
-            "n_qubits", "depth", "gate_count", "single_qubit_gates",
-            "two_qubit_gates", "parameter_count", "cnot_count", "cz_count",
-            "t_gate_count", "hadamard_count", "rotation_gates",
-            "two_qubit_ratio", "gates_per_qubit",
+            "n_qubits",
+            "depth",
+            "gate_count",
+            "single_qubit_gates",
+            "two_qubit_gates",
+            "parameter_count",
+            "cnot_count",
+            "cz_count",
+            "t_gate_count",
+            "hadamard_count",
+            "rotation_gates",
+            "two_qubit_ratio",
+            "gates_per_qubit",
         ]
         result = compare_resources(encodings, metrics=valid_metrics)
         for metric in valid_metrics:
@@ -1419,6 +1537,7 @@ class TestCompareResourcesMetricValidation:
     def test_data_dependent_encoding_in_comparison(self):
         """compare_resources handles data-dependent encodings via worst-case."""
         from encoding_atlas import AngleEncoding, BasisEncoding
+
         encodings = [
             AngleEncoding(n_features=4),
             BasisEncoding(n_features=4),
@@ -1440,16 +1559,19 @@ class TestCompareResourcesMetricValidation:
 class TestCrossFunctionConsistency:
     """Tests verifying that different functions agree on values."""
 
-    @pytest.fixture(params=[
-        ("AngleEncoding", dict(n_features=4)),
-        ("IQPEncoding", dict(n_features=4, reps=2, entanglement="full")),
-        ("IQPEncoding", dict(n_features=4, reps=1, entanglement="linear")),
-        ("ZZFeatureMap", dict(n_features=4, reps=1)),
-        ("HardwareEfficientEncoding", dict(n_features=4, reps=2)),
-        ("AmplitudeEncoding", dict(n_features=4)),
-    ])
+    @pytest.fixture(
+        params=[
+            ("AngleEncoding", dict(n_features=4)),
+            ("IQPEncoding", dict(n_features=4, reps=2, entanglement="full")),
+            ("IQPEncoding", dict(n_features=4, reps=1, entanglement="linear")),
+            ("ZZFeatureMap", dict(n_features=4, reps=1)),
+            ("HardwareEfficientEncoding", dict(n_features=4, reps=2)),
+            ("AmplitudeEncoding", dict(n_features=4)),
+        ]
+    )
     def encoding(self, request):
         import encoding_atlas
+
         cls_name, kwargs = request.param
         cls = getattr(encoding_atlas, cls_name)
         return cls(**kwargs)
@@ -1511,6 +1633,7 @@ class TestBasisEncodingExtended:
     @pytest.fixture
     def basis_enc(self):
         from encoding_atlas import BasisEncoding
+
         return BasisEncoding(n_features=4)
 
     def test_all_zeros_gate_count_is_zero(self, basis_enc):
@@ -1627,6 +1750,7 @@ class TestGetResourceSummaryExtended:
     @pytest.fixture
     def iqp_enc(self):
         from encoding_atlas import IQPEncoding
+
         return IQPEncoding(n_features=4, reps=1, entanglement="full")
 
     def test_all_15_keys_present(self, iqp_enc):
@@ -1634,10 +1758,20 @@ class TestGetResourceSummaryExtended:
         result = get_resource_summary(iqp_enc)
 
         expected_keys = {
-            "n_qubits", "depth", "gate_count", "single_qubit_gates",
-            "two_qubit_gates", "parameter_count", "cnot_count", "cz_count",
-            "t_gate_count", "hadamard_count", "rotation_gates",
-            "two_qubit_ratio", "gates_per_qubit", "encoding_name",
+            "n_qubits",
+            "depth",
+            "gate_count",
+            "single_qubit_gates",
+            "two_qubit_gates",
+            "parameter_count",
+            "cnot_count",
+            "cz_count",
+            "t_gate_count",
+            "hadamard_count",
+            "rotation_gates",
+            "two_qubit_ratio",
+            "gates_per_qubit",
+            "encoding_name",
             "is_data_dependent",
         }
         assert expected_keys == set(result.keys())
@@ -1685,9 +1819,17 @@ class TestGetResourceSummaryExtended:
         result = get_resource_summary(iqp_enc)
 
         int_fields = [
-            "n_qubits", "depth", "gate_count", "single_qubit_gates",
-            "two_qubit_gates", "parameter_count", "cnot_count", "cz_count",
-            "t_gate_count", "hadamard_count", "rotation_gates",
+            "n_qubits",
+            "depth",
+            "gate_count",
+            "single_qubit_gates",
+            "two_qubit_gates",
+            "parameter_count",
+            "cnot_count",
+            "cz_count",
+            "t_gate_count",
+            "hadamard_count",
+            "rotation_gates",
         ]
         for field in int_fields:
             assert isinstance(result[field], int), f"{field} should be int"
@@ -1709,6 +1851,7 @@ class TestCnotCxAlias:
     def test_cnot_equals_cx_for_iqp(self):
         """cnot and cx must have the same value for IQPEncoding."""
         from encoding_atlas import IQPEncoding
+
         enc = IQPEncoding(n_features=4, reps=2)
         result = count_resources(enc, detailed=True)
         assert result["cnot"] == result["cx"]
@@ -1716,6 +1859,7 @@ class TestCnotCxAlias:
     def test_cnot_equals_cx_for_angle(self):
         """cnot and cx must both be 0 for AngleEncoding (no 2Q gates)."""
         from encoding_atlas import AngleEncoding
+
         enc = AngleEncoding(n_features=4)
         result = count_resources(enc, detailed=True)
         assert result["cnot"] == 0
@@ -1725,6 +1869,7 @@ class TestCnotCxAlias:
     def test_cnot_equals_cx_for_hardware_efficient(self):
         """cnot and cx must match for HardwareEfficientEncoding."""
         from encoding_atlas import HardwareEfficientEncoding
+
         enc = HardwareEfficientEncoding(n_features=4, reps=2)
         result = count_resources(enc, detailed=True)
         assert result["cnot"] == result["cx"]
@@ -1732,6 +1877,7 @@ class TestCnotCxAlias:
     def test_total_two_qubit_uses_cnot_not_both(self):
         """total_two_qubit should not double-count cnot and cx."""
         from encoding_atlas import IQPEncoding
+
         enc = IQPEncoding(n_features=4, reps=1)
         result = count_resources(enc, detailed=True)
 
@@ -1789,6 +1935,7 @@ class TestPrivateHelpersExtended:
     def test_validate_encoding_valid(self):
         """Valid encoding should pass without error."""
         from encoding_atlas import AngleEncoding
+
         enc = AngleEncoding(n_features=4)
         _validate_encoding(enc)  # Should not raise
 
@@ -1856,36 +2003,53 @@ class TestPropertiesFallbackPath:
     @pytest.fixture
     def encoding(self):
         from encoding_atlas import AngleEncoding
+
         return AngleEncoding(n_features=4)
 
     def test_fallback_summary_returns_correct_structure(self, encoding):
         """Fallback path should return all required summary keys."""
-        with patch(
-            "encoding_atlas.analysis.resources.is_resource_analyzable",
-            return_value=False,
-        ), patch(
-            "encoding_atlas.analysis.resources.is_data_dependent_resource_analyzable",
-            return_value=False,
+        with (
+            patch(
+                "encoding_atlas.analysis.resources.is_resource_analyzable",
+                return_value=False,
+            ),
+            patch(
+                "encoding_atlas.analysis.resources.is_data_dependent_resource_analyzable",
+                return_value=False,
+            ),
         ):
             result = count_resources(encoding, detailed=False)
 
         required_keys = {
-            "n_qubits", "depth", "gate_count", "single_qubit_gates",
-            "two_qubit_gates", "parameter_count", "cnot_count", "cz_count",
-            "t_gate_count", "hadamard_count", "rotation_gates",
-            "two_qubit_ratio", "gates_per_qubit", "encoding_name",
+            "n_qubits",
+            "depth",
+            "gate_count",
+            "single_qubit_gates",
+            "two_qubit_gates",
+            "parameter_count",
+            "cnot_count",
+            "cz_count",
+            "t_gate_count",
+            "hadamard_count",
+            "rotation_gates",
+            "two_qubit_ratio",
+            "gates_per_qubit",
+            "encoding_name",
             "is_data_dependent",
         }
         assert required_keys.issubset(result.keys())
 
     def test_fallback_summary_matches_properties(self, encoding):
         """Fallback path should use encoding.properties values."""
-        with patch(
-            "encoding_atlas.analysis.resources.is_resource_analyzable",
-            return_value=False,
-        ), patch(
-            "encoding_atlas.analysis.resources.is_data_dependent_resource_analyzable",
-            return_value=False,
+        with (
+            patch(
+                "encoding_atlas.analysis.resources.is_resource_analyzable",
+                return_value=False,
+            ),
+            patch(
+                "encoding_atlas.analysis.resources.is_data_dependent_resource_analyzable",
+                return_value=False,
+            ),
         ):
             result = count_resources(encoding, detailed=False)
 
@@ -1896,40 +2060,67 @@ class TestPropertiesFallbackPath:
 
     def test_fallback_detailed_returns_correct_structure(self, encoding):
         """Fallback detailed path should return all required detailed keys."""
-        with patch(
-            "encoding_atlas.analysis.resources.is_resource_analyzable",
-            return_value=False,
-        ), patch(
-            "encoding_atlas.analysis.resources.is_data_dependent_resource_analyzable",
-            return_value=False,
+        with (
+            patch(
+                "encoding_atlas.analysis.resources.is_resource_analyzable",
+                return_value=False,
+            ),
+            patch(
+                "encoding_atlas.analysis.resources.is_data_dependent_resource_analyzable",
+                return_value=False,
+            ),
         ):
             result = count_resources(encoding, detailed=True)
 
         required_keys = {
-            "rx", "ry", "rz", "h", "x", "y", "z", "s", "t",
-            "cnot", "cx", "cz", "swap",
-            "total_single_qubit", "total_two_qubit", "total",
+            "rx",
+            "ry",
+            "rz",
+            "h",
+            "x",
+            "y",
+            "z",
+            "s",
+            "t",
+            "cnot",
+            "cx",
+            "cz",
+            "swap",
+            "total_single_qubit",
+            "total_two_qubit",
+            "total",
             "encoding_name",
         }
         assert required_keys.issubset(result.keys())
 
     def test_fallback_detailed_totals_consistent(self, encoding):
         """Fallback detailed totals must be consistent."""
-        with patch(
-            "encoding_atlas.analysis.resources.is_resource_analyzable",
-            return_value=False,
-        ), patch(
-            "encoding_atlas.analysis.resources.is_data_dependent_resource_analyzable",
-            return_value=False,
+        with (
+            patch(
+                "encoding_atlas.analysis.resources.is_resource_analyzable",
+                return_value=False,
+            ),
+            patch(
+                "encoding_atlas.analysis.resources.is_data_dependent_resource_analyzable",
+                return_value=False,
+            ),
         ):
             result = count_resources(encoding, detailed=True)
 
         # total must equal sum of all individual gates (using cnot, not cx)
-        single_sum = sum([
-            result["rx"], result["ry"], result["rz"],
-            result["h"], result["x"], result["y"],
-            result["z"], result["s"], result["t"],
-        ])
+        single_sum = sum(
+            [
+                result["rx"],
+                result["ry"],
+                result["rz"],
+                result["h"],
+                result["x"],
+                result["y"],
+                result["z"],
+                result["s"],
+                result["t"],
+            ]
+        )
         two_sum = result["cnot"] + result["cz"] + result["swap"]
 
         assert single_sum == result["total_single_qubit"]
@@ -1938,12 +2129,15 @@ class TestPropertiesFallbackPath:
 
     def test_fallback_detailed_attributes_all_1q_to_ry(self, encoding):
         """Fallback assumes all single-qubit gates are RY."""
-        with patch(
-            "encoding_atlas.analysis.resources.is_resource_analyzable",
-            return_value=False,
-        ), patch(
-            "encoding_atlas.analysis.resources.is_data_dependent_resource_analyzable",
-            return_value=False,
+        with (
+            patch(
+                "encoding_atlas.analysis.resources.is_resource_analyzable",
+                return_value=False,
+            ),
+            patch(
+                "encoding_atlas.analysis.resources.is_data_dependent_resource_analyzable",
+                return_value=False,
+            ),
         ):
             result = count_resources(encoding, detailed=True)
 
@@ -1955,14 +2149,18 @@ class TestPropertiesFallbackPath:
     def test_fallback_detailed_attributes_all_2q_to_cnot(self, encoding):
         """Fallback assumes all two-qubit gates are CNOT."""
         from encoding_atlas import IQPEncoding
+
         enc = IQPEncoding(n_features=4, reps=1)
 
-        with patch(
-            "encoding_atlas.analysis.resources.is_resource_analyzable",
-            return_value=False,
-        ), patch(
-            "encoding_atlas.analysis.resources.is_data_dependent_resource_analyzable",
-            return_value=False,
+        with (
+            patch(
+                "encoding_atlas.analysis.resources.is_resource_analyzable",
+                return_value=False,
+            ),
+            patch(
+                "encoding_atlas.analysis.resources.is_data_dependent_resource_analyzable",
+                return_value=False,
+            ),
         ):
             result = count_resources(enc, detailed=True)
 
@@ -1984,6 +2182,7 @@ class TestEntanglingVsNonEntangling:
     def test_non_entangling_has_zero_two_qubit(self):
         """Non-entangling encodings should have zero two-qubit gates."""
         from encoding_atlas import AngleEncoding
+
         enc = AngleEncoding(n_features=4)
         result = count_resources(enc)
 
@@ -1993,6 +2192,7 @@ class TestEntanglingVsNonEntangling:
     def test_entangling_has_nonzero_two_qubit(self):
         """Entangling encodings should have non-zero two-qubit gates."""
         from encoding_atlas import IQPEncoding
+
         enc = IQPEncoding(n_features=4, reps=1)
         result = count_resources(enc)
 
@@ -2063,6 +2263,7 @@ class TestSpecificEncodingBreakdowns:
     def test_iqp_has_hadamard_and_cnot(self):
         """IQPEncoding must have Hadamard and CNOT gates."""
         from encoding_atlas import IQPEncoding
+
         enc = IQPEncoding(n_features=4, reps=1)
         result = count_resources(enc, detailed=True)
 
@@ -2073,6 +2274,7 @@ class TestSpecificEncodingBreakdowns:
     def test_iqp_detailed_h_count(self):
         """IQP Hadamard count should be n_features * reps."""
         from encoding_atlas import IQPEncoding
+
         enc = IQPEncoding(n_features=4, reps=2)
         result = count_resources(enc, detailed=True)
 
@@ -2081,6 +2283,7 @@ class TestSpecificEncodingBreakdowns:
     def test_amplitude_encoding_resources(self):
         """AmplitudeEncoding resource counting should work."""
         from encoding_atlas import AmplitudeEncoding
+
         enc = AmplitudeEncoding(n_features=4)
         result = count_resources(enc)
 
@@ -2112,6 +2315,7 @@ class TestEstimateExecutionTimeExtended:
     def test_all_zero_gate_times_produce_zero_serial(self):
         """All-zero gate times should give zero serial time."""
         from encoding_atlas import IQPEncoding
+
         enc = IQPEncoding(n_features=4, reps=1)
 
         result = estimate_execution_time(
@@ -2126,6 +2330,7 @@ class TestEstimateExecutionTimeExtended:
     def test_measurement_excluded_when_flag_false(self):
         """include_measurement=False should zero out measurement time."""
         from encoding_atlas import AngleEncoding
+
         enc = AngleEncoding(n_features=4)
 
         result = estimate_execution_time(enc, include_measurement=False)
@@ -2134,8 +2339,11 @@ class TestEstimateExecutionTimeExtended:
     def test_various_encodings_produce_positive_times(self):
         """All encoding types should produce positive timing estimates."""
         from encoding_atlas import (
-            AngleEncoding, IQPEncoding, ZZFeatureMap,
-            HardwareEfficientEncoding, DataReuploading,
+            AngleEncoding,
+            DataReuploading,
+            HardwareEfficientEncoding,
+            IQPEncoding,
+            ZZFeatureMap,
         )
 
         for enc in [
@@ -2146,13 +2354,14 @@ class TestEstimateExecutionTimeExtended:
             DataReuploading(n_features=4, n_layers=1),
         ]:
             result = estimate_execution_time(enc)
-            assert result["serial_time_us"] > 0, (
-                f"{enc.__class__.__name__} serial_time should be positive"
-            )
+            assert (
+                result["serial_time_us"] > 0
+            ), f"{enc.__class__.__name__} serial_time should be positive"
 
     def test_trapped_ion_gate_times(self):
         """Trapped ion gate times (slow 2Q) should produce longer times."""
         from encoding_atlas import IQPEncoding
+
         enc = IQPEncoding(n_features=4, reps=1)
 
         result_sc = estimate_execution_time(enc)  # superconducting defaults
@@ -2177,8 +2386,10 @@ class TestCompareResourcesExtended:
     def test_mixed_encoding_types(self):
         """compare_resources works with a diverse mix of encoding types."""
         from encoding_atlas import (
-            AngleEncoding, IQPEncoding, AmplitudeEncoding,
+            AmplitudeEncoding,
+            AngleEncoding,
             HardwareEfficientEncoding,
+            IQPEncoding,
         )
 
         encodings = [
@@ -2195,13 +2406,19 @@ class TestCompareResourcesExtended:
     def test_all_default_metrics_present(self):
         """Default metrics should include the standard 8 metrics."""
         from encoding_atlas import AngleEncoding
+
         enc = AngleEncoding(n_features=4)
 
         result = compare_resources([enc])
 
         default_metrics = [
-            "n_qubits", "depth", "gate_count", "single_qubit_gates",
-            "two_qubit_gates", "parameter_count", "two_qubit_ratio",
+            "n_qubits",
+            "depth",
+            "gate_count",
+            "single_qubit_gates",
+            "two_qubit_gates",
+            "parameter_count",
+            "two_qubit_ratio",
             "gates_per_qubit",
         ]
         for metric in default_metrics:
@@ -2215,6 +2432,7 @@ class TestCompareResourcesExtended:
         list, appending to the same list each time.
         """
         from encoding_atlas import AngleEncoding
+
         enc = AngleEncoding(n_features=4)
 
         result = compare_resources([enc], metrics=["gate_count", "gate_count"])
@@ -2225,6 +2443,7 @@ class TestCompareResourcesExtended:
     def test_include_names_true_adds_encoding_name(self):
         """include_names=True should add encoding_name key."""
         from encoding_atlas import AngleEncoding
+
         enc = AngleEncoding(n_features=4)
 
         result = compare_resources([enc], include_names=True)
@@ -2233,6 +2452,7 @@ class TestCompareResourcesExtended:
     def test_include_names_false_no_encoding_name(self):
         """include_names=False should not add encoding_name key."""
         from encoding_atlas import AngleEncoding
+
         enc = AngleEncoding(n_features=4)
 
         result = compare_resources([enc], include_names=False)
@@ -2262,22 +2482,37 @@ class TestDetailedBreakdownTypes:
     def test_all_gate_counts_are_int(self):
         """All gate count fields must be int."""
         from encoding_atlas import IQPEncoding
+
         enc = IQPEncoding(n_features=4, reps=1)
         result = count_resources(enc, detailed=True)
 
         int_fields = [
-            "rx", "ry", "rz", "h", "x", "y", "z", "s", "t",
-            "cnot", "cx", "cz", "swap",
-            "total_single_qubit", "total_two_qubit", "total",
+            "rx",
+            "ry",
+            "rz",
+            "h",
+            "x",
+            "y",
+            "z",
+            "s",
+            "t",
+            "cnot",
+            "cx",
+            "cz",
+            "swap",
+            "total_single_qubit",
+            "total_two_qubit",
+            "total",
         ]
         for field in int_fields:
-            assert isinstance(result[field], int), (
-                f"Field '{field}' should be int, got {type(result[field]).__name__}"
-            )
+            assert isinstance(
+                result[field], int
+            ), f"Field '{field}' should be int, got {type(result[field]).__name__}"
 
     def test_encoding_name_is_str(self):
         """encoding_name must be a str."""
         from encoding_atlas import IQPEncoding
+
         enc = IQPEncoding(n_features=4, reps=1)
         result = count_resources(enc, detailed=True)
 
@@ -2295,6 +2530,7 @@ class TestIdempotencyAndDeterminism:
     def test_count_resources_deterministic(self):
         """Multiple calls should return identical results."""
         from encoding_atlas import IQPEncoding
+
         enc = IQPEncoding(n_features=4, reps=2)
 
         results = [count_resources(enc) for _ in range(5)]
@@ -2304,6 +2540,7 @@ class TestIdempotencyAndDeterminism:
     def test_detailed_deterministic(self):
         """Multiple detailed calls should return identical results."""
         from encoding_atlas import IQPEncoding
+
         enc = IQPEncoding(n_features=4, reps=2)
 
         results = [count_resources(enc, detailed=True) for _ in range(5)]
@@ -2313,6 +2550,7 @@ class TestIdempotencyAndDeterminism:
     def test_basis_encoding_deterministic_with_same_input(self):
         """BasisEncoding with same input should return identical results."""
         from encoding_atlas import BasisEncoding
+
         enc = BasisEncoding(n_features=4)
         x = np.array([0.1, 0.9, 0.3, 0.8])
 
@@ -2435,9 +2673,7 @@ class TestValidateEncodingDefensiveBranches:
     against future encoding implementations or corrupted state.
     """
 
-    def _make_mock_encoding(
-        self, n_features=4, n_qubits=4, depth=1
-    ):
+    def _make_mock_encoding(self, n_features=4, n_qubits=4, depth=1):
         """Create a minimal mock that passes isinstance(enc, BaseEncoding).
 
         Uses a real AngleEncoding and patches its properties to return
@@ -2453,47 +2689,64 @@ class TestValidateEncodingDefensiveBranches:
         from encoding_atlas import AngleEncoding
 
         enc = AngleEncoding(n_features=4)
-        with patch.object(type(enc), "n_qubits", new_callable=PropertyMock, return_value=0):
-            with pytest.raises(AnalysisError, match="n_qubits=0"):
-                _validate_encoding(enc)
+        with (
+            patch.object(
+                type(enc), "n_qubits", new_callable=PropertyMock, return_value=0
+            ),
+            pytest.raises(AnalysisError, match="n_qubits=0"),
+        ):
+            _validate_encoding(enc)
 
     def test_n_features_less_than_one(self):
         """Encoding with n_features < 1 should raise AnalysisError."""
         from encoding_atlas import AngleEncoding
 
         enc = AngleEncoding(n_features=4)
-        with patch.object(type(enc), "n_features", new_callable=PropertyMock, return_value=0):
-            with pytest.raises(AnalysisError, match="n_features=0"):
-                _validate_encoding(enc)
+        with (
+            patch.object(
+                type(enc), "n_features", new_callable=PropertyMock, return_value=0
+            ),
+            pytest.raises(AnalysisError, match="n_features=0"),
+        ):
+            _validate_encoding(enc)
 
     def test_negative_depth(self):
         """Encoding with depth < 0 should raise AnalysisError."""
         from encoding_atlas import AngleEncoding
 
         enc = AngleEncoding(n_features=4)
-        with patch.object(type(enc), "depth", new_callable=PropertyMock, return_value=-1):
-            with pytest.raises(AnalysisError, match="depth=-1"):
-                _validate_encoding(enc)
+        with (
+            patch.object(
+                type(enc), "depth", new_callable=PropertyMock, return_value=-1
+            ),
+            pytest.raises(AnalysisError, match="depth=-1"),
+        ):
+            _validate_encoding(enc)
 
     def test_property_access_raises_exception(self):
         """Encoding whose properties raise should produce AnalysisError."""
         from encoding_atlas import AngleEncoding
 
         enc = AngleEncoding(n_features=4)
-        with patch.object(
-            type(enc), "n_qubits",
-            new_callable=PropertyMock,
-            side_effect=RuntimeError("corrupted state"),
+        with (
+            patch.object(
+                type(enc),
+                "n_qubits",
+                new_callable=PropertyMock,
+                side_effect=RuntimeError("corrupted state"),
+            ),
+            pytest.raises(AnalysisError, match="invalid properties"),
         ):
-            with pytest.raises(AnalysisError, match="invalid properties"):
-                _validate_encoding(enc)
+            _validate_encoding(enc)
 
     def test_error_details_include_encoding_name(self):
         """AnalysisError for n_qubits < 1 should include encoding name in details."""
         from encoding_atlas import AngleEncoding
 
         enc = AngleEncoding(n_features=4)
-        with patch.object(type(enc), "n_qubits", new_callable=PropertyMock, return_value=0):
+        with patch.object(
+            type(enc), "n_qubits", new_callable=PropertyMock, return_value=0
+        ):
             with pytest.raises(AnalysisError) as exc_info:
                 _validate_encoding(enc)
 
@@ -2505,7 +2758,9 @@ class TestValidateEncodingDefensiveBranches:
         from encoding_atlas import AngleEncoding
 
         enc = AngleEncoding(n_features=4)
-        with patch.object(type(enc), "n_features", new_callable=PropertyMock, return_value=-1):
+        with patch.object(
+            type(enc), "n_features", new_callable=PropertyMock, return_value=-1
+        ):
             with pytest.raises(AnalysisError) as exc_info:
                 _validate_encoding(enc)
 
@@ -2516,7 +2771,9 @@ class TestValidateEncodingDefensiveBranches:
         from encoding_atlas import AngleEncoding
 
         enc = AngleEncoding(n_features=4)
-        with patch.object(type(enc), "depth", new_callable=PropertyMock, return_value=-5):
+        with patch.object(
+            type(enc), "depth", new_callable=PropertyMock, return_value=-5
+        ):
             with pytest.raises(AnalysisError) as exc_info:
                 _validate_encoding(enc)
 
@@ -2527,13 +2784,16 @@ class TestValidateEncodingDefensiveBranches:
         from encoding_atlas import AngleEncoding
 
         enc = AngleEncoding(n_features=4)
-        with patch.object(
-            type(enc), "n_features",
-            new_callable=PropertyMock,
-            side_effect=AttributeError("missing attribute"),
+        with (
+            patch.object(
+                type(enc),
+                "n_features",
+                new_callable=PropertyMock,
+                side_effect=AttributeError("missing attribute"),
+            ),
+            pytest.raises(AnalysisError, match="missing attribute"),
         ):
-            with pytest.raises(AnalysisError, match="missing attribute"):
-                _validate_encoding(enc)
+            _validate_encoding(enc)
 
 
 # =============================================================================
@@ -2554,6 +2814,7 @@ class TestDataDependentFallbackPaths:
     @pytest.fixture
     def basis_enc(self):
         from encoding_atlas import BasisEncoding
+
         return BasisEncoding(n_features=4)
 
     def test_resource_summary_no_arg_fallback_failure_logs_warning(
@@ -2576,7 +2837,10 @@ class TestDataDependentFallbackPaths:
 
         with patch.object(BasisEncoding, "resource_summary", broken_resource_summary):
             import logging
-            with caplog.at_level(logging.WARNING, logger="encoding_atlas.analysis.resources"):
+
+            with caplog.at_level(
+                logging.WARNING, logger="encoding_atlas.analysis.resources"
+            ):
                 result = count_resources(basis_enc, x=x)
 
         assert "Failed to get resource_summary" in caplog.text
@@ -2596,7 +2860,10 @@ class TestDataDependentFallbackPaths:
 
         with patch.object(BasisEncoding, "actual_gate_count", broken_actual_gate_count):
             import logging
-            with caplog.at_level(logging.WARNING, logger="encoding_atlas.analysis.resources"):
+
+            with caplog.at_level(
+                logging.WARNING, logger="encoding_atlas.analysis.resources"
+            ):
                 result = count_resources(basis_enc, x=x)
 
         assert "Failed to get actual_gate_count" in caplog.text
@@ -2649,7 +2916,10 @@ class TestDataDependentFallbackPaths:
 
         with patch.object(BasisEncoding, "actual_gate_count", broken_actual_gate_count):
             import logging
-            with caplog.at_level(logging.WARNING, logger="encoding_atlas.analysis.resources"):
+
+            with caplog.at_level(
+                logging.WARNING, logger="encoding_atlas.analysis.resources"
+            ):
                 result = count_resources(basis_enc, x=x, detailed=True)
 
         assert result["total"] == basis_enc.properties.gate_count
@@ -2678,9 +2948,7 @@ class TestBugFixRegressions:
         from encoding_atlas import AngleEncoding
 
         enc = AngleEncoding(n_features=4)
-        result = compare_resources(
-            [enc], metrics=["encoding_name"], include_names=True
-        )
+        result = compare_resources([enc], metrics=["encoding_name"], include_names=True)
 
         # Should have exactly 1 entry per encoding, not 2
         assert len(result["encoding_name"]) == 1
@@ -2786,7 +3054,9 @@ class TestBugFixRegressions:
         )
 
         # Critical path should use max(5.0, 1.0) = 5.0 per layer
-        expected_critical_path = summary["depth"] * max(single_qubit_time, two_qubit_time)
+        expected_critical_path = summary["depth"] * max(
+            single_qubit_time, two_qubit_time
+        )
         assert result["estimated_time_us"] >= expected_critical_path - 1e-10
 
     def test_silent_exception_swallowing_now_logs_warning(self, caplog):
@@ -2808,7 +3078,10 @@ class TestBugFixRegressions:
 
         with patch.object(BasisEncoding, "resource_summary", broken_resource_summary):
             import logging
-            with caplog.at_level(logging.WARNING, logger="encoding_atlas.analysis.resources"):
+
+            with caplog.at_level(
+                logging.WARNING, logger="encoding_atlas.analysis.resources"
+            ):
                 count_resources(enc, x=x)
 
         assert "Failed to get resource_summary" in caplog.text

@@ -1,12 +1,12 @@
 """Backend adapters for quantum frameworks."""
 
-from encoding_atlas.backends.base import BaseBackend
 from encoding_atlas.backends._detection import (
+    get_available_backends,
+    is_cirq_available,
     is_pennylane_available,
     is_qiskit_available,
-    is_cirq_available,
-    get_available_backends,
 )
+from encoding_atlas.backends.base import BaseBackend
 
 __all__ = [
     "BaseBackend",

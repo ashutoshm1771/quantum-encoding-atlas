@@ -1,6 +1,5 @@
 """Integration tests for encoding workflows."""
 
-import pytest
 import numpy as np
 
 

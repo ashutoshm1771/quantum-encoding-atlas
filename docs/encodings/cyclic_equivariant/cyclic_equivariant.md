@@ -1,7 +1,5 @@
 # Cyclic Equivariant Feature Map
 
-**Author:** Ashutosh Mishra
-
 > A quantum data encoding with a mathematically provable guarantee: cyclically
 > shifting the input features is exactly equivalent to cyclically permuting the
 > qubits in the output quantum state.

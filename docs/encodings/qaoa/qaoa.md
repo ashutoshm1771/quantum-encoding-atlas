@@ -1,7 +1,5 @@
 # QAOA-Style Encoding
 
-**Author:** Ashutosh Mishra
-
 > A quantum data encoding that adapts the structure of the Quantum Approximate
 > Optimization Algorithm (QAOA) for classical data embedding -- alternating
 > data-dependent "cost" rotations with "mixer" operations and entanglement.

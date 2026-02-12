@@ -1,7 +1,5 @@
 # Trainable Encoding
 
-**Author:** Ashutosh Mishra
-
 > A parameterized quantum encoding that **interleaves data-dependent rotations
 > with learnable (trainable) parameters**, allowing the encoding itself to be
 > optimized for a specific downstream task via variational training.

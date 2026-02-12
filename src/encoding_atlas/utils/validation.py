@@ -2,7 +2,6 @@
 
 import numpy as np
 from numpy.typing import ArrayLike
-from typing import Literal
 
 from encoding_atlas.core.types import BackendType
 

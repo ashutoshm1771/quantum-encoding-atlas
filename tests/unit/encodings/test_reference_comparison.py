@@ -15,8 +15,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from encoding_atlas import ZZFeatureMap, PauliFeatureMap
-
+from encoding_atlas import PauliFeatureMap, ZZFeatureMap
 
 # =============================================================================
 # FIXTURES

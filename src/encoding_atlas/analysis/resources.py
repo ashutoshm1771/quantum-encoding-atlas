@@ -891,8 +891,7 @@ def estimate_execution_time(
         )
     if measurement_time_us < 0:
         raise ValidationError(
-            f"measurement_time_us must be non-negative, "
-            f"got {measurement_time_us}"
+            f"measurement_time_us must be non-negative, " f"got {measurement_time_us}"
         )
 
     summary = get_resource_summary(encoding)

@@ -154,7 +154,7 @@ from __future__ import annotations
 import logging
 import warnings
 from concurrent.futures import ThreadPoolExecutor
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import Any, TypedDict
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -193,7 +193,7 @@ _logger = logging.getLogger(__name__)
 # Public API
 # =============================================================================
 
-__all__ = ['AmplitudeEncoding']
+__all__ = ["AmplitudeEncoding"]
 
 # =============================================================================
 # Module-Level Constants
@@ -245,7 +245,7 @@ def _format_memory_size(size_bytes: float) -> str:
     >>> _format_memory_size(17179869184)
     '16.0 GB'
     """
-    units = [('TB', 1024**4), ('GB', 1024**3), ('MB', 1024**2), ('KB', 1024)]
+    units = [("TB", 1024**4), ("GB", 1024**3), ("MB", 1024**2), ("KB", 1024)]
     for unit_name, unit_size in units:
         if size_bytes >= unit_size:
             return f"{size_bytes / unit_size:.1f} {unit_name}"
@@ -532,7 +532,7 @@ class AmplitudeEncoding(BaseEncoding):
     # ==========================================================================
 
     # Memory-efficient slot-based attribute storage
-    __slots__ = ('normalize', '_n_qubits')
+    __slots__ = ("normalize", "_n_qubits")
 
     # ==========================================================================
     # Initialization
@@ -592,7 +592,10 @@ class AmplitudeEncoding(BaseEncoding):
         _logger.debug(
             "AmplitudeEncoding initialized: n_features=%d, n_qubits=%d, "
             "normalize=%s, state_dim=%d",
-            n_features, self._n_qubits, normalize, 2 ** self._n_qubits
+            n_features,
+            self._n_qubits,
+            normalize,
+            2**self._n_qubits,
         )
 
     # ==========================================================================
@@ -639,7 +642,7 @@ class AmplitudeEncoding(BaseEncoding):
         This depth is an upper bound for general state preparation. Some
         backends may optimize for specific cases (e.g., sparse amplitudes).
         """
-        return 2 ** self._n_qubits
+        return 2**self._n_qubits
 
     # ==========================================================================
     # Circuit Generation
@@ -707,7 +710,8 @@ class AmplitudeEncoding(BaseEncoding):
         """
         _logger.debug(
             "get_circuit called: backend=%r, input_shape=%s",
-            backend, getattr(x, 'shape', f'len={len(x)}' if hasattr(x, '__len__') else 'scalar')
+            backend,
+            getattr(x, "shape", f"len={len(x)}" if hasattr(x, "__len__") else "scalar"),
         )
 
         # Validate and preprocess input
@@ -716,13 +720,15 @@ class AmplitudeEncoding(BaseEncoding):
             x_validated = x_validated[0]
 
         # Pad to power of 2 (state dimension must be 2^n_qubits)
-        target_size = 2 ** self._n_qubits
+        target_size = 2**self._n_qubits
         original_len = len(x_validated)
         if len(x_validated) < target_size:
             x_validated = np.pad(x_validated, (0, target_size - len(x_validated)))
             _logger.debug(
                 "Input padded: original_len=%d, padded_len=%d, padding_zeros=%d",
-                original_len, target_size, target_size - original_len
+                original_len,
+                target_size,
+                target_size - original_len,
             )
 
         # Compute the L2 norm for normalization and validation
@@ -745,8 +751,7 @@ class AmplitudeEncoding(BaseEncoding):
         if self.normalize:
             x_validated = x_validated / norm
             _logger.debug(
-                "Input normalized: original_norm=%.10f, normalized_norm=1.0",
-                norm
+                "Input normalized: original_norm=%.10f, normalized_norm=1.0", norm
             )
         else:
             # When normalize=False, user claims data is pre-normalized.
@@ -771,7 +776,9 @@ class AmplitudeEncoding(BaseEncoding):
         # Dispatch to backend-specific implementation
         _logger.debug(
             "Dispatching to backend: %r, state_vector_len=%d, n_qubits=%d",
-            backend, len(x_validated), self._n_qubits
+            backend,
+            len(x_validated),
+            self._n_qubits,
         )
 
         if backend == "pennylane":
@@ -941,8 +948,7 @@ class AmplitudeEncoding(BaseEncoding):
             # The batch was already validated above, so we can safely skip
             # per-sample validation for better performance.
             circuits = [
-                self._get_circuit_from_validated(x, backend)
-                for x in X_validated
+                self._get_circuit_from_validated(x, backend) for x in X_validated
             ]
 
             _logger.debug(
@@ -952,7 +958,8 @@ class AmplitudeEncoding(BaseEncoding):
 
         _logger.info(
             "Batch circuit generation complete: n_circuits=%d, backend=%r",
-            len(circuits), backend
+            len(circuits),
+            backend,
         )
         return circuits
 
@@ -979,7 +986,7 @@ class AmplitudeEncoding(BaseEncoding):
             Circuit in the specified backend's format.
         """
         # Pad to power of 2 (state dimension must be 2^n_qubits)
-        target_size = 2 ** self._n_qubits
+        target_size = 2**self._n_qubits
         if len(x) < target_size:
             x = np.pad(x, (0, target_size - len(x)))
 
@@ -1252,7 +1259,7 @@ class AmplitudeEncoding(BaseEncoding):
         # suppressed by default settings.
         if self.n_qubits >= _CIRQ_MEMORY_WARNING_THRESHOLD_QUBITS:
             # Calculate memory usage: 2^n × 2^n × 16 bytes = 4^n × 16 bytes
-            state_dim = 2 ** self.n_qubits
+            state_dim = 2**self.n_qubits
             matrix_elements = state_dim * state_dim
             memory_bytes = matrix_elements * 16  # complex128 = 16 bytes
             memory_str = _format_memory_size(memory_bytes)
@@ -1267,7 +1274,7 @@ class AmplitudeEncoding(BaseEncoding):
                 f"  - Reduce n_features to decrease the number of qubits required\n"
                 f"  - Ensure sufficient system memory is available before proceeding",
                 UserWarning,
-                stacklevel=3  # Points to user's get_circuit() call
+                stacklevel=3,  # Points to user's get_circuit() call
             )
 
         # Create qubits
@@ -1406,7 +1413,7 @@ class AmplitudeEncoding(BaseEncoding):
         """
         n = self.n_features
         n_qubits = self._n_qubits
-        state_dim = 2 ** n_qubits
+        state_dim = 2**n_qubits
 
         # Theoretical gate counts (estimates for general state preparation)
         # Based on Möttönen et al. decomposition: O(2^n) gates
@@ -1592,7 +1599,7 @@ class AmplitudeEncoding(BaseEncoding):
             x_validated = x_validated[0]
 
         # Pad to power of 2 (state dimension must be 2^n_qubits)
-        target_size = 2 ** self._n_qubits
+        target_size = 2**self._n_qubits
         if len(x_validated) < target_size:
             x_validated = np.pad(x_validated, (0, target_size - len(x_validated)))
 
@@ -1615,7 +1622,9 @@ class AmplitudeEncoding(BaseEncoding):
 
         _logger.debug(
             "transform_input: original_norm=%.10f, normalized=%s, output_len=%d",
-            norm, self.normalize, len(x_validated)
+            norm,
+            self.normalize,
+            len(x_validated),
         )
 
         return x_validated
@@ -1706,7 +1715,7 @@ class AmplitudeEncoding(BaseEncoding):
         .. [1] Möttönen, M., et al. (2004). "Transformation of quantum states using
                uniformly controlled rotations." Quantum Information & Computation.
         """
-        state_dim = 2 ** self._n_qubits
+        state_dim = 2**self._n_qubits
 
         # Theoretical estimates based on Möttönen et al. decomposition
         # General state preparation requires O(2^n) gates
@@ -1758,7 +1767,7 @@ class AmplitudeEncoding(BaseEncoding):
         Gate counts are estimates based on theoretical state preparation
         complexity. Actual counts may vary by backend and optimization level.
         """
-        n = 2 ** self._n_qubits  # State dimension
+        n = 2**self._n_qubits  # State dimension
 
         return EncodingProperties(
             n_qubits=self._n_qubits,
@@ -1799,6 +1808,7 @@ class AmplitudeEncoding(BaseEncoding):
 # =============================================================================
 # Helper Classes
 # =============================================================================
+
 
 class _AmplitudePreparationGate:
     """Custom Cirq gate for amplitude encoding state preparation.
@@ -1847,7 +1857,7 @@ class _AmplitudePreparationGate:
     """
 
     # Memory-efficient slot-based attribute storage
-    __slots__ = ('_state_vector', '_num_qubits', '_unitary_matrix')
+    __slots__ = ("_state_vector", "_num_qubits", "_unitary_matrix")
 
     def __init__(self, state_vector: np.ndarray) -> None:
         """Initialize the amplitude preparation gate.
@@ -2116,7 +2126,7 @@ def _get_or_create_cirq_gate_class() -> type:
         after first creation for performance.
         """
 
-        __slots__ = ('_unitary', '_n_qubits')
+        __slots__ = ("_unitary", "_n_qubits")
 
         def __init__(self, unitary: np.ndarray, n_qubits: int) -> None:
             """Initialize the amplitude encoding gate."""
@@ -2131,17 +2141,14 @@ def _get_or_create_cirq_gate_class() -> type:
             """Return the unitary matrix for this gate."""
             return self._unitary
 
-        def _circuit_diagram_info_(
-            self, args: Any
-        ) -> "cirq.CircuitDiagramInfo":
+        def _circuit_diagram_info_(self, args: Any) -> cirq.CircuitDiagramInfo:
             """Return circuit diagram symbols for visualization.
 
             Returns 'AmpEnc' for the first qubit and '#' for continuation
             qubits, following Cirq's multi-qubit gate convention.
             """
             wire_symbols = tuple(
-                "AmpEnc" if i == 0 else "#"
-                for i in range(self._n_qubits)
+                "AmpEnc" if i == 0 else "#" for i in range(self._n_qubits)
             )
             return cirq.CircuitDiagramInfo(wire_symbols=wire_symbols)
 

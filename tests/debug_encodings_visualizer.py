@@ -11,28 +11,31 @@ Usage:
     python tests/debug_encodings_visualizer.py --verbose
 """
 
-import sys
-import io
 import argparse
-import numpy as np
-from typing import Optional, List, Dict, Any
+import io
+import sys
 from dataclasses import dataclass
+from typing import Any, Optional
+
+import numpy as np
 
 # Add the src directory to the path
-sys.path.insert(0, 'src')
+sys.path.insert(0, "src")
 
 # ============================================================================
 # HELPER CLASSES AND UTILITIES
 # ============================================================================
 
+
 @dataclass
 class TestScenario:
     """Defines a test scenario for an encoding."""
+
     name: str
     n_features: int
     input_data: np.ndarray
     description: str
-    extra_config: Dict[str, Any] = None
+    extra_config: dict[str, Any] = None
 
     def __post_init__(self):
         if self.extra_config is None:
@@ -67,14 +70,19 @@ def print_properties(props, indent: int = 2) -> None:
     print(f"{prefix}  • is_entangling: {props.is_entangling}")
     print(f"{prefix}  • simulability: {props.simulability}")
     if props.notes:
-        print(f"{prefix}  • notes: {props.notes[:100]}..." if len(props.notes) > 100 else f"{prefix}  • notes: {props.notes}")
+        print(
+            f"{prefix}  • notes: {props.notes[:100]}..."
+            if len(props.notes) > 100
+            else f"{prefix}  • notes: {props.notes}"
+        )
 
 
 # ============================================================================
 # TEST SCENARIOS
 # ============================================================================
 
-def get_test_scenarios() -> Dict[str, List[TestScenario]]:
+
+def get_test_scenarios() -> dict[str, list[TestScenario]]:
     """Create test scenarios for different situations."""
 
     scenarios = {
@@ -84,101 +92,100 @@ def get_test_scenarios() -> Dict[str, List[TestScenario]]:
                 name="2_features_uniform",
                 n_features=2,
                 input_data=np.array([0.5, 0.5]),
-                description="2 features with uniform values (0.5, 0.5)"
+                description="2 features with uniform values (0.5, 0.5)",
             ),
             TestScenario(
                 name="2_features_extreme",
                 n_features=2,
                 input_data=np.array([0.0, 1.0]),
-                description="2 features with extreme values (0, 1)"
+                description="2 features with extreme values (0, 1)",
             ),
             TestScenario(
                 name="3_features_random",
                 n_features=3,
                 input_data=np.array([0.2, 0.7, 0.4]),
-                description="3 features with varied values"
+                description="3 features with varied values",
             ),
         ],
-
         # Medium scenarios
         "medium": [
             TestScenario(
                 name="4_features_linear",
                 n_features=4,
                 input_data=np.array([0.25, 0.5, 0.75, 1.0]),
-                description="4 features with linear progression"
+                description="4 features with linear progression",
             ),
             TestScenario(
                 name="4_features_symmetric",
                 n_features=4,
                 input_data=np.array([0.1, 0.9, 0.9, 0.1]),
-                description="4 features with symmetric pattern"
+                description="4 features with symmetric pattern",
             ),
             TestScenario(
                 name="6_features_sinusoidal",
                 n_features=6,
                 input_data=np.sin(np.linspace(0, np.pi, 6)),
-                description="6 features following sinusoidal pattern"
+                description="6 features following sinusoidal pattern",
             ),
         ],
-
         # Large scenarios (for amplitude encoding)
         "large": [
             TestScenario(
                 name="8_features_random",
                 n_features=8,
                 input_data=np.random.RandomState(42).rand(8),
-                description="8 features with random values (seed=42)"
+                description="8 features with random values (seed=42)",
             ),
             TestScenario(
                 name="8_features_normalized",
                 n_features=8,
-                input_data=np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]) / np.linalg.norm([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]),
-                description="8 features pre-normalized (unit vector)"
+                input_data=np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8])
+                / np.linalg.norm([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]),
+                description="8 features pre-normalized (unit vector)",
             ),
         ],
-
         # Edge cases
         "edge_cases": [
             TestScenario(
                 name="all_zeros",
                 n_features=4,
                 input_data=np.array([0.0, 0.0, 0.0, 0.0]),
-                description="All zero inputs"
+                description="All zero inputs",
             ),
             TestScenario(
                 name="all_ones",
                 n_features=4,
                 input_data=np.array([1.0, 1.0, 1.0, 1.0]),
-                description="All one inputs"
+                description="All one inputs",
             ),
             TestScenario(
                 name="near_zero",
                 n_features=4,
                 input_data=np.array([1e-6, 1e-5, 1e-4, 1e-3]),
-                description="Very small values"
+                description="Very small values",
             ),
             TestScenario(
                 name="binary_pattern",
                 n_features=4,
                 input_data=np.array([0.0, 1.0, 0.0, 1.0]),
-                description="Binary alternating pattern (for basis encoding)"
+                description="Binary alternating pattern (for basis encoding)",
             ),
         ],
-
         # Special scenarios for specific encodings
         "special": [
             TestScenario(
                 name="pi_scaled",
                 n_features=4,
-                input_data=np.array([0.0, np.pi/4, np.pi/2, np.pi]) / np.pi,  # Normalized to [0,1]
-                description="Pi-scaled values (useful for angle encodings)"
+                input_data=np.array([0.0, np.pi / 4, np.pi / 2, np.pi])
+                / np.pi,  # Normalized to [0,1]
+                description="Pi-scaled values (useful for angle encodings)",
             ),
             TestScenario(
                 name="quantum_kernel_optimal",
                 n_features=4,
-                input_data=np.array([np.pi/2, np.pi/3, np.pi/4, np.pi/6]) / np.pi,
-                description="Values optimized for quantum kernel methods"
+                input_data=np.array([np.pi / 2, np.pi / 3, np.pi / 4, np.pi / 6])
+                / np.pi,
+                description="Values optimized for quantum kernel methods",
             ),
         ],
     }
@@ -190,7 +197,8 @@ def get_test_scenarios() -> Dict[str, List[TestScenario]]:
 # ENCODING-SPECIFIC CONFIGURATIONS
 # ============================================================================
 
-def get_encoding_configs() -> Dict[str, List[Dict[str, Any]]]:
+
+def get_encoding_configs() -> dict[str, list[dict[str, Any]]]:
     """Get different configurations to test for each encoding type."""
 
     return {
@@ -200,63 +208,52 @@ def get_encoding_configs() -> Dict[str, List[Dict[str, Any]]]:
             {"rotation": "Z"},
             {"rotation": "Y", "reps": 2},
         ],
-
         "amplitude": [
             {"normalize": True},
             {"normalize": False},
         ],
-
         "basis": [
             {},  # Default config
         ],
-
         "iqp": [
             {"reps": 1, "entanglement": "linear"},
             {"reps": 1, "entanglement": "circular"},
             {"reps": 2, "entanglement": "full"},
         ],
-
         "zz_feature_map": [
             {"reps": 1, "entanglement": "linear"},
             {"reps": 2, "entanglement": "circular"},
             {"reps": 1, "entanglement": "full"},
         ],
-
         "pauli_feature_map": [
             {"paulis": ["Z"], "reps": 1},
             {"paulis": ["Z", "ZZ"], "reps": 1, "entanglement": "linear"},
             {"paulis": ["Y", "YY"], "reps": 1, "entanglement": "circular"},
         ],
-
         "data_reuploading": [
             {"n_layers": 1},
             {"n_layers": 2},
             {"n_layers": 3},
         ],
-
         "hardware_efficient": [
             {"reps": 1, "entanglement": "linear"},
             {"reps": 2, "entanglement": "circular"},
         ],
-
         "higher_order_angle": [
             {"order": 1},
             {"order": 2, "combination": "product"},
             {"order": 2, "combination": "sum"},
         ],
-
         "qaoa_encoding": [
             {"reps": 1, "data_rotation": "X", "mixer_rotation": "Y"},
             {"reps": 2, "feature_map": "quadratic"},
         ],
-
         "hamiltonian": [
             {"hamiltonian_type": "iqp", "evolution_time": 1.0, "reps": 1},
             {"hamiltonian_type": "xy", "evolution_time": 0.5, "reps": 1},
             {"hamiltonian_type": "heisenberg", "evolution_time": 1.0, "reps": 1},
             {"hamiltonian_type": "pauli_z", "evolution_time": 1.0, "reps": 1},
         ],
-
         "symmetry_inspired_feature_map": [
             {"symmetry": "cyclic", "reps": 1},
             {"symmetry": "reflection", "reps": 1},
@@ -269,66 +266,70 @@ def get_encoding_configs() -> Dict[str, List[Dict[str, Any]]]:
 # CIRCUIT VISUALIZATION
 # ============================================================================
 
-def visualize_circuit(circuit, backend: str, encoding_name: str, max_width: int = 100) -> str:
+
+def visualize_circuit(
+    circuit, backend: str, encoding_name: str, max_width: int = 100
+) -> str:
     """Visualize a circuit based on the backend."""
 
     output_lines = []
 
     if backend == "pennylane":
         # PennyLane returns a callable/QNode
-        output_lines.append(f"  📝 PennyLane Circuit (callable QNode)")
+        output_lines.append("  📝 PennyLane Circuit (callable QNode)")
         output_lines.append(f"     Type: {type(circuit)}")
-        if hasattr(circuit, 'tape') and circuit.tape is not None:
+        if hasattr(circuit, "tape") and circuit.tape is not None:
             output_lines.append(f"     Operations: {len(circuit.tape.operations)}")
-        output_lines.append(f"     Note: Call this function to execute the circuit")
+        output_lines.append("     Note: Call this function to execute the circuit")
 
     elif backend == "qiskit":
         # Qiskit returns a QuantumCircuit
-        output_lines.append(f"  📝 Qiskit QuantumCircuit:")
+        output_lines.append("  📝 Qiskit QuantumCircuit:")
         output_lines.append(f"     • Qubits: {circuit.num_qubits}")
         output_lines.append(f"     • Depth: {circuit.depth()}")
         output_lines.append(f"     • Gate counts: {dict(circuit.count_ops())}")
 
         # Draw the circuit
         try:
-            circuit_str = circuit.draw(output='text', fold=max_width)
-            output_lines.append(f"\n     Circuit diagram:")
-            for line in str(circuit_str).split('\n'):
+            circuit_str = circuit.draw(output="text", fold=max_width)
+            output_lines.append("\n     Circuit diagram:")
+            for line in str(circuit_str).split("\n"):
                 output_lines.append(f"     {line}")
         except Exception as e:
             output_lines.append(f"     (Could not draw circuit: {e})")
 
     elif backend == "cirq":
         # Cirq returns a Circuit
-        output_lines.append(f"  📝 Cirq Circuit:")
+        output_lines.append("  📝 Cirq Circuit:")
         output_lines.append(f"     • Qubits: {len(circuit.all_qubits())}")
         output_lines.append(f"     • Moments: {len(circuit)}")
 
         # Draw the circuit
         try:
             circuit_str = str(circuit)
-            output_lines.append(f"\n     Circuit diagram:")
-            for line in circuit_str.split('\n')[:20]:  # Limit lines
+            output_lines.append("\n     Circuit diagram:")
+            for line in circuit_str.split("\n")[:20]:  # Limit lines
                 output_lines.append(f"     {line}")
-            if circuit_str.count('\n') > 20:
-                output_lines.append(f"     ... (truncated)")
+            if circuit_str.count("\n") > 20:
+                output_lines.append("     ... (truncated)")
         except Exception as e:
             output_lines.append(f"     (Could not draw circuit: {e})")
 
-    return '\n'.join(output_lines)
+    return "\n".join(output_lines)
 
 
 # ============================================================================
 # MAIN TEST FUNCTION
 # ============================================================================
 
+
 def test_encoding(
     encoding_name: str,
     scenario: TestScenario,
-    config: Dict[str, Any],
-    backends: List[str],
-    verbose: bool = False
-) -> Dict[str, Any]:
+    config: dict[str, Any],
+    backends: list[str],
+    verbose: bool = False,
+) -> dict[str, Any]:
     """Test a single encoding with a specific scenario and configuration."""
 
     from encoding_atlas import get_encoding
@@ -345,7 +346,7 @@ def test_encoding(
     }
 
     print(f"\n  ⚙️  Config: {config}")
-    print(f"  📥 INPUT:")
+    print("  📥 INPUT:")
     print(f"     • n_features: {scenario.n_features}")
     print(f"     • data: {format_array(scenario.input_data)}")
     print(f"     • description: {scenario.description}")
@@ -361,8 +362,10 @@ def test_encoding(
         if verbose:
             print_properties(props)
         else:
-            print(f"\n  📊 Properties: qubits={props.n_qubits}, depth={props.depth}, "
-                  f"gates={props.gate_count}, entangling={props.is_entangling}")
+            print(
+                f"\n  📊 Properties: qubits={props.n_qubits}, depth={props.depth}, "
+                f"gates={props.gate_count}, entangling={props.is_entangling}"
+            )
 
         # Test each backend
         for backend in backends:
@@ -390,8 +393,12 @@ def test_encoding(
                         counts = job.result().get_counts()
 
                         # Sort by count and show top results
-                        sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)[:5]
-                        print(f"\n     🎯 Simulation Results (top 5 of {len(counts)} outcomes):")
+                        sorted_counts = sorted(
+                            counts.items(), key=lambda x: x[1], reverse=True
+                        )[:5]
+                        print(
+                            f"\n     🎯 Simulation Results (top 5 of {len(counts)} outcomes):"
+                        )
                         for state, count in sorted_counts:
                             prob = count / 1024
                             bar = "█" * int(prob * 20)
@@ -412,6 +419,7 @@ def test_encoding(
         print(f"  ❌ Unexpected Error: {type(e).__name__}: {e}")
         results["error"] = str(e)
         import traceback
+
         if verbose:
             traceback.print_exc()
 
@@ -419,12 +427,12 @@ def test_encoding(
 
 
 def run_all_tests(
-    encodings: Optional[List[str]] = None,
-    backends: Optional[List[str]] = None,
-    scenario_groups: Optional[List[str]] = None,
+    encodings: Optional[list[str]] = None,
+    backends: Optional[list[str]] = None,
+    scenario_groups: Optional[list[str]] = None,
     verbose: bool = False,
     quick: bool = False,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Run tests for all encodings with all scenarios."""
 
     from encoding_atlas import list_encodings
@@ -448,9 +456,13 @@ def run_all_tests(
     # Get scenarios
     all_scenarios = get_test_scenarios()
     if scenario_groups:
-        scenarios_to_test = {k: v for k, v in all_scenarios.items() if k in scenario_groups}
+        scenarios_to_test = {
+            k: v for k, v in all_scenarios.items() if k in scenario_groups
+        }
     elif quick:
-        scenarios_to_test = {"small": all_scenarios["small"][:1]}  # Just one small scenario
+        scenarios_to_test = {
+            "small": all_scenarios["small"][:1]
+        }  # Just one small scenario
     else:
         scenarios_to_test = all_scenarios
 
@@ -458,7 +470,9 @@ def run_all_tests(
     all_configs = get_encoding_configs()
 
     print(create_divider("QUANTUM ENCODING VISUALIZER"))
-    print(f"Testing {len(test_encodings)} encodings with {sum(len(v) for v in scenarios_to_test.values())} scenarios")
+    print(
+        f"Testing {len(test_encodings)} encodings with {sum(len(v) for v in scenarios_to_test.values())} scenarios"
+    )
     print(f"Backends: {backends}")
     print(f"Mode: {'Verbose' if verbose else 'Normal'}")
 
@@ -487,7 +501,9 @@ def run_all_tests(
                     # Some configs need even features
                     valid_scenarios.append(scenario)
                 else:
-                    if scenario.n_features >= 2:  # Most encodings need at least 2 features
+                    if (
+                        scenario.n_features >= 2
+                    ):  # Most encodings need at least 2 features
                         valid_scenarios.append(scenario)
 
             if not valid_scenarios:
@@ -499,7 +515,10 @@ def run_all_tests(
 
                 for config in configs:
                     # Skip invalid configs for rotation symmetry (requires even n_features)
-                    if encoding_name in ("symmetry_inspired_feature_map", "symmetry_inspired"):
+                    if encoding_name in (
+                        "symmetry_inspired_feature_map",
+                        "symmetry_inspired",
+                    ):
                         # rotation is the default, so skip if symmetry is rotation OR not specified
                         symmetry = config.get("symmetry", "rotation")
                         if symmetry == "rotation" and scenario.n_features % 2 != 0:
@@ -525,7 +544,9 @@ def run_all_tests(
         print("\nFailed tests:")
         for r in all_results:
             if not r["success"]:
-                print(f"  • {r['encoding']} / {r['scenario']} / {r['config']}: {r['error']}")
+                print(
+                    f"  • {r['encoding']} / {r['scenario']} / {r['config']}: {r['error']}"
+                )
 
     return all_results
 
@@ -534,10 +555,11 @@ def run_all_tests(
 # INTERACTIVE MODE
 # ============================================================================
 
+
 def interactive_mode():
     """Run an interactive session for exploring encodings."""
 
-    from encoding_atlas import get_encoding, list_encodings
+    from encoding_atlas import list_encodings
 
     print(create_divider("INTERACTIVE ENCODING EXPLORER"))
     print("Commands:")
@@ -605,11 +627,16 @@ def interactive_mode():
 # MAIN ENTRY POINT
 # ============================================================================
 
+
 def main():
     # Fix Windows console encoding for Unicode (only when run directly)
-    if sys.platform == 'win32':
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    if sys.platform == "win32":
+        sys.stdout = io.TextIOWrapper(
+            sys.stdout.buffer, encoding="utf-8", errors="replace"
+        )
+        sys.stderr = io.TextIOWrapper(
+            sys.stderr.buffer, encoding="utf-8", errors="replace"
+        )
 
     parser = argparse.ArgumentParser(
         description="Visualize and test quantum encodings",
@@ -622,49 +649,48 @@ Examples:
   python debug_encodings_visualizer.py --verbose          # Show detailed output
   python debug_encodings_visualizer.py --quick            # Quick test (minimal scenarios)
   python debug_encodings_visualizer.py --interactive      # Interactive mode
-        """
+        """,
     )
 
     parser.add_argument(
-        "--encoding", "-e",
-        type=str,
-        nargs="+",
-        help="Specific encoding(s) to test"
+        "--encoding", "-e", type=str, nargs="+", help="Specific encoding(s) to test"
     )
 
     parser.add_argument(
-        "--backend", "-b",
+        "--backend",
+        "-b",
         type=str,
         nargs="+",
         choices=["pennylane", "qiskit", "cirq"],
         default=["qiskit"],
-        help="Backend(s) to test (default: qiskit)"
+        help="Backend(s) to test (default: qiskit)",
     )
 
     parser.add_argument(
-        "--scenarios", "-s",
+        "--scenarios",
+        "-s",
         type=str,
         nargs="+",
         choices=["small", "medium", "large", "edge_cases", "special"],
-        help="Scenario groups to test (default: all)"
+        help="Scenario groups to test (default: all)",
     )
 
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
-        help="Show detailed output including properties and simulation results"
+        help="Show detailed output including properties and simulation results",
     )
 
     parser.add_argument(
-        "--quick", "-q",
+        "--quick",
+        "-q",
         action="store_true",
-        help="Quick mode: test only first scenario and config for each encoding"
+        help="Quick mode: test only first scenario and config for each encoding",
     )
 
     parser.add_argument(
-        "--interactive", "-i",
-        action="store_true",
-        help="Run in interactive mode"
+        "--interactive", "-i", action="store_true", help="Run in interactive mode"
     )
 
     args = parser.parse_args()

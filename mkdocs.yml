@@ -1,49 +1,78 @@
 site_name: Quantum Encoding Atlas
 site_url: https://ashutoshm1771.github.io/quantum-encoding-atlas/
-site_description: A comprehensive library for quantum data encodings in machine learning
+site_description: >-
+  A comprehensive Python library for quantum data encodings in machine learning.
+  16 encoding methods with a unified API across PennyLane, Qiskit, and Cirq.
 site_author: Ashutosh Mishra
 repo_url: https://github.com/ashutoshm1771/quantum-encoding-atlas
-repo_name: quantum-encoding-atlas
+repo_name: ashutoshm1771/quantum-encoding-atlas
 edit_uri: edit/main/docs/
 
-copyright: Copyright &copy; 2026 Ashutosh Mishra
+copyright: Copyright &copy; 2026 Quantum Encoding Atlas Contributors
 
 theme:
   name: material
+  custom_dir: overrides
+  language: en
+  icon:
+    repo: fontawesome/brands/github
+    admonition:
+      note: material/pencil-circle
+      abstract: material/clipboard-text
+      info: material/information
+      tip: material/fire
+      success: material/check-circle
+      question: material/help-circle
+      warning: material/alert
+      failure: material/close-circle
+      danger: material/lightning-bolt
+      bug: material/bug
+      example: material/test-tube
+      quote: material/format-quote-close
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
-      accent: indigo
+      primary: custom
+      accent: custom
       toggle:
-        icon: material/brightness-7
+        icon: material/weather-night
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: custom
+      accent: custom
       toggle:
-        icon: material/brightness-4
+        icon: material/weather-sunny
         name: Switch to light mode
   font:
-    text: Roboto
-    code: Roboto Mono
+    text: Inter
+    code: JetBrains Mono
   features:
+    - announce.dismiss
+    - content.code.annotate
+    - content.code.copy
+    - content.code.select
+    - content.tabs.link
+    - content.tooltips
+    - navigation.footer
+    - navigation.indexes
     - navigation.instant
-    - navigation.tracking
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.path
+    - navigation.sections
     - navigation.tabs
     - navigation.tabs.sticky
-    - navigation.sections
-    - navigation.expand
-    - navigation.indexes
     - navigation.top
-    - search.suggest
+    - navigation.tracking
     - search.highlight
-    - content.code.copy
-    - content.code.annotate
+    - search.share
+    - search.suggest
+    - toc.follow
 
 plugins:
-  - search
+  - search:
+      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - mkdocstrings:
       default_handler: python
       handlers:
@@ -59,38 +88,69 @@ plugins:
             docstring_section_style: spacy
             merge_init_into_class: true
             show_signature_annotations: true
+            signature_crossrefs: true
+            separate_signature: true
+  - tags
+  - mkdocs-jupyter:
+      execute: false
+      include_source: true
+      allow_errors: true
+      ignore_h1_titles: true
 
 markdown_extensions:
+  - abbr
   - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      permalink_title: Anchor link to this section
+      toc_depth: 3
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
   - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.highlight:
-      anchor_linenums: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
   - pymdownx.tabbed:
       alternate_style: true
-  - tables
-  - attr_list
-  - md_in_html
-  - toc:
-      permalink: true
-  - pymdownx.arithmatex:
-      generic: true
+      combine_header_slug: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra_css:
+  - stylesheets/extra.css
 
 extra_javascript:
   - javascripts/mathjax.js
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 nav:
   - Home: index.md
-  - Installation: installation.md
-  - Quick Start: quickstart.md
+  - Getting Started:
+    - Installation: installation.md
+    - Quick Start: quickstart.md
   - Concepts:
     - concepts/index.md
     - What is Encoding?: concepts/what-is-encoding.md
@@ -98,14 +158,22 @@ nav:
     - Quantum Advantage: concepts/quantum-advantage.md
   - Encodings:
     - encodings/index.md
-    - Amplitude: encodings/amplitude.md
-    - Angle: encodings/angle.md
-    - IQP: encodings/iqp.md
-    - ZZ Feature Map: encodings/zz-feature-map.md
-    - Basis: encodings/basis.md
-    - Data Re-uploading: encodings/data-reuploading.md
-    - Hardware Efficient: encodings/hardware-efficient.md
-    - Pauli Feature Map: encodings/pauli-feature-map.md
+    - Amplitude: encodings/amplitude/amplitude_encoding.md
+    - Angle: encodings/angle/angle_encoding.md
+    - Basis: encodings/basis/basis_encoding.md
+    - IQP: encodings/iqp/iqp_encoding.md
+    - ZZ Feature Map: encodings/zz_feature_map/zz_feature_map.md
+    - Pauli Feature Map: encodings/pauli_feature_map/pauli_feature_map.md
+    - Data Re-uploading: encodings/data_reuploading/data_reuploading.md
+    - Hardware Efficient: encodings/hardware_efficient/hardware_efficient.md
+    - Higher-Order Angle: encodings/higher_order_angle/higher_order_angle_encoding.md
+    - QAOA-Inspired: encodings/qaoa/qaoa.md
+    - Hamiltonian: encodings/hamiltonian/hamiltonian_encoding.md
+    - Trainable: encodings/trainable/trainable_encoding.md
+    - Symmetry-Inspired: encodings/symmetry_inspired/symmetry_inspired_feature_map.md
+    - SO(2) Equivariant: encodings/so2_equivariant/so2_equivariant_feature_map.md
+    - Cyclic Equivariant: encodings/cyclic_equivariant/cyclic_equivariant.md
+    - Swap Equivariant: encodings/swap_equivariant/swap_equivariant_feature_map.md
   - Tutorials:
     - tutorials/index.md
     - Getting Started: tutorials/getting-started.md
@@ -113,11 +181,32 @@ nav:
     - Custom Encodings: tutorials/custom-encoding.md
     - Benchmarking: tutorials/benchmarking.md
     - Hardware Considerations: tutorials/hardware-considerations.md
-  - API Reference: api/
+  - Notebooks:
+    - notebooks/index.md
+    - Amplitude: notebooks/amplitude_encoding.ipynb
+    - Angle: notebooks/angle_encoding.ipynb
+    - Basis: notebooks/basis_encoding.ipynb
+    - IQP: notebooks/iqp_encoding.ipynb
+    - ZZ Feature Map: notebooks/zz_feature_map.ipynb
+    - Pauli Feature Map: notebooks/pauli_feature_map.ipynb
+    - Data Re-uploading: notebooks/data_reuploading.ipynb
+    - Hardware Efficient: notebooks/hardware_efficient_encoding.ipynb
+    - Higher-Order Angle: notebooks/higher_order_angle_encoding.ipynb
+    - QAOA-Inspired: notebooks/qaoa_encoding.ipynb
+    - Hamiltonian: notebooks/hamiltonian_encoding.ipynb
+    - Trainable: notebooks/trainable_encoding.ipynb
+    - Symmetry-Inspired: notebooks/symmetry_inspired_feature_map.ipynb
+    - SO(2) Equivariant: notebooks/so2_equivariant_feature_map.ipynb
+    - Cyclic Equivariant: notebooks/cyclic_equivariant_feature_map.ipynb
+    - Swap Equivariant: notebooks/swap_equivariant_encoding.ipynb
+  - API Reference:
+    - api/index.md
   - Decision Guide:
     - guide/index.md
     - Which Encoding?: guide/which-encoding.md
     - Decision Flowchart: guide/decision-flowchart.md
+    - Recommendation Architecture: guide/recommendation-architecture.md
+    - Interactive Notebook: notebooks/guide_recommendation_system.ipynb
     - FAQ: guide/faq.md
   - Contributing:
     - contributing/index.md
@@ -127,10 +216,22 @@ nav:
     - Release Process: contributing/release-process.md
 
 extra:
+  generator: false
+  status:
+    new: Recently added
+    deprecated: Deprecated
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/ashutoshm1771/quantum-encoding-atlas
+      name: Quantum Encoding Atlas on GitHub
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/encoding-atlas/
+      name: Quantum Encoding Atlas on PyPI
   version:
     provider: mike
+  tags:
+    Entangling: entangling
+    Simulable: simulable
+    Variational: variational
+    Equivariant: equivariant
+    Hardware-Friendly: hardware-friendly

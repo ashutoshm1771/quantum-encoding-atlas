@@ -16,7 +16,7 @@ from __future__ import annotations
 import gc
 import sys
 import weakref
-from typing import TYPE_CHECKING, Any, Callable, List, Type
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pytest
@@ -121,7 +121,7 @@ def force_gc() -> None:
 
 
 # All encodings for parametrized tests
-ENCODINGS_WITH_PARAMS: List[tuple] = [
+ENCODINGS_WITH_PARAMS: list[tuple] = [
     (AngleEncoding, {"n_features": 4}),
     (AmplitudeEncoding, {"n_features": 4}),
     (BasisEncoding, {"n_features": 4}),
@@ -155,7 +155,7 @@ class TestMemoryConsumption:
 
     @pytest.mark.parametrize("encoding_cls,params", ENCODINGS_WITH_PARAMS)
     def test_encoding_instance_size_reasonable(
-        self, encoding_cls: Type["BaseEncoding"], params: dict
+        self, encoding_cls: type[BaseEncoding], params: dict
     ) -> None:
         """Test that encoding instances have reasonable memory footprint.
 
@@ -230,7 +230,7 @@ class TestMemoryLeaks:
     @pytest.mark.parametrize("encoding_cls,params", ENCODINGS_WITH_PARAMS)
     def test_no_leak_repeated_circuit_generation(
         self,
-        encoding_cls: Type["BaseEncoding"],
+        encoding_cls: type[BaseEncoding],
         params: dict,
         sample_data_4d: np.ndarray,
     ) -> None:
@@ -270,13 +270,13 @@ class TestMemoryLeaks:
 
     @pytest.mark.parametrize("encoding_cls,params", ENCODINGS_WITH_PARAMS[:3])
     def test_encoding_instances_garbage_collected(
-        self, encoding_cls: Type["BaseEncoding"], params: dict
+        self, encoding_cls: type[BaseEncoding], params: dict
     ) -> None:
         """Test that encoding instances are properly garbage collected.
 
         Create encodings, delete them, and verify they're collected.
         """
-        weak_refs: List[weakref.ref] = []
+        weak_refs: list[weakref.ref] = []
         supports_weakref = True
 
         # Create and immediately delete encodings
@@ -531,9 +531,9 @@ class TestMemoryStress:
         final = get_process_memory_mb()
         growth = final - baseline
 
-        assert growth < 100, (
-            f"Memory grew by {growth:.1f}MB with mixed encodings, expected < 100MB"
-        )
+        assert (
+            growth < 100
+        ), f"Memory grew by {growth:.1f}MB with mixed encodings, expected < 100MB"
 
     def test_property_access_doesnt_leak(self) -> None:
         """Test that repeated property access doesn't cause memory growth."""

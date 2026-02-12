@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import statistics
 import time
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Type
+from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
 import pytest
@@ -61,7 +61,7 @@ class Timer:
         self.elapsed: float = 0.0
         self._start: float = 0.0
 
-    def __enter__(self) -> "Timer":
+    def __enter__(self) -> Timer:
         self._start = time.perf_counter()
         return self
 
@@ -73,7 +73,7 @@ def benchmark_function(
     func: Callable[[], Any],
     n_iterations: int = 100,
     warmup: int = 10,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Benchmark a function over multiple iterations.
 
     Parameters
@@ -87,7 +87,7 @@ def benchmark_function(
 
     Returns
     -------
-    Dict[str, float]
+    dict[str, float]
         Statistics: mean, std, min, max, median (all in seconds).
     """
     # Warmup
@@ -95,7 +95,7 @@ def benchmark_function(
         func()
 
     # Timed runs
-    times: List[float] = []
+    times: list[float] = []
     for _ in range(n_iterations):
         with Timer() as t:
             func()
@@ -112,7 +112,7 @@ def benchmark_function(
     }
 
 
-def compute_relative_iqr(times: List[float]) -> float:
+def compute_relative_iqr(times: list[float]) -> float:
     """Compute the relative interquartile range (IQR / median).
 
     Uses IQR instead of standard deviation to measure timing consistency
@@ -122,7 +122,7 @@ def compute_relative_iqr(times: List[float]) -> float:
 
     Parameters
     ----------
-    times : List[float]
+    times : list[float]
         List of measured execution times in seconds.
 
     Returns
@@ -147,7 +147,7 @@ def compute_relative_iqr(times: List[float]) -> float:
 
 
 # Encodings with their constructor parameters for n_features=4
-ENCODINGS_4D: List[Tuple[Type["BaseEncoding"], Dict[str, Any]]] = [
+ENCODINGS_4D: list[tuple[type[BaseEncoding], dict[str, Any]]] = [
     (AngleEncoding, {"n_features": 4}),
     (AmplitudeEncoding, {"n_features": 4}),
     (BasisEncoding, {"n_features": 4}),
@@ -164,7 +164,7 @@ ENCODINGS_4D: List[Tuple[Type["BaseEncoding"], Dict[str, Any]]] = [
 
 
 # Scalable encodings (those that accept varying n_features easily)
-SCALABLE_ENCODINGS: List[Type["BaseEncoding"]] = [
+SCALABLE_ENCODINGS: list[type[BaseEncoding]] = [
     AngleEncoding,
     AmplitudeEncoding,
     IQPEncoding,
@@ -227,8 +227,8 @@ class TestCircuitGenerationBenchmarks:
     @pytest.mark.parametrize("encoding_cls,params", ENCODINGS_4D)
     def test_circuit_generation_time_acceptable(
         self,
-        encoding_cls: Type["BaseEncoding"],
-        params: Dict[str, Any],
+        encoding_cls: type[BaseEncoding],
+        params: dict[str, Any],
         sample_data_4d: np.ndarray,
     ) -> None:
         """Test that circuit generation completes within acceptable time.
@@ -281,9 +281,7 @@ class TestCircuitGenerationBenchmarks:
             f"mean={stats['mean']*1000:.1f}ms, expected < 100ms"
         )
 
-    def test_circuit_generation_consistent(
-        self, sample_data_4d: np.ndarray
-    ) -> None:
+    def test_circuit_generation_consistent(self, sample_data_4d: np.ndarray) -> None:
         """Test that circuit generation time is consistent.
 
         Measures consistency using batched timings with IQR-based
@@ -300,7 +298,7 @@ class TestCircuitGenerationBenchmarks:
             enc.get_circuit(sample_data_4d, backend="pennylane")
 
         # Measure batched timings to amortize per-call OS jitter
-        times: List[float] = []
+        times: list[float] = []
         for _ in range(50):
             with Timer() as t:
                 for _ in range(batch_size):
@@ -379,14 +377,14 @@ class TestScalingBehavior:
     )
     def test_entangling_encoding_quadratic_scaling(
         self,
-        encoding_cls: Type["BaseEncoding"],
+        encoding_cls: type[BaseEncoding],
         random_data_factory: Callable[[int], np.ndarray],
     ) -> None:
         """Test that entangling encodings scale reasonably.
 
         These typically have O(n^2) gate count due to pairwise interactions.
         """
-        times: Dict[int, float] = {}
+        times: dict[int, float] = {}
 
         for n_features in [4, 8, 16]:
             enc = encoding_cls(n_features=n_features)
@@ -449,8 +447,8 @@ class TestBackendComparison:
     @pytest.mark.parametrize("encoding_cls,params", ENCODINGS_4D[:6])
     def test_all_backends_complete_in_time(
         self,
-        encoding_cls: Type["BaseEncoding"],
-        params: Dict[str, Any],
+        encoding_cls: type[BaseEncoding],
+        params: dict[str, Any],
         sample_data_4d: np.ndarray,
     ) -> None:
         """Test that all backends complete within reasonable time."""
@@ -479,15 +477,13 @@ class TestBackendComparison:
                 f"{avg_time_ms:.1f}ms per circuit"
             )
 
-    def test_backend_performance_comparison(
-        self, sample_data_4d: np.ndarray
-    ) -> None:
+    def test_backend_performance_comparison(self, sample_data_4d: np.ndarray) -> None:
         """Compare relative performance of different backends.
 
         This is informational - doesn't assert but logs results.
         """
         enc = AngleEncoding(n_features=4)
-        results: Dict[str, float] = {}
+        results: dict[str, float] = {}
 
         for backend in self.BACKENDS:
             try:
@@ -526,7 +522,7 @@ class TestPropertyPerformance:
 
     @pytest.mark.parametrize("encoding_cls,params", ENCODINGS_4D)
     def test_property_computation_fast(
-        self, encoding_cls: Type["BaseEncoding"], params: Dict[str, Any]
+        self, encoding_cls: type[BaseEncoding], params: dict[str, Any]
     ) -> None:
         """Test that property computation is fast (typically cached)."""
         enc = encoding_cls(**params)
@@ -547,7 +543,7 @@ class TestPropertyPerformance:
 
     @pytest.mark.parametrize("encoding_cls,params", ENCODINGS_4D)
     def test_depth_computation_fast(
-        self, encoding_cls: Type["BaseEncoding"], params: Dict[str, Any]
+        self, encoding_cls: type[BaseEncoding], params: dict[str, Any]
     ) -> None:
         """Test that depth computation is fast."""
         enc = encoding_cls(**params)
@@ -630,7 +626,7 @@ class TestBatchThroughput:
         [AngleEncoding, IQPEncoding, ZZFeatureMap],
     )
     def test_encoding_batch_throughput_comparison(
-        self, encoding_cls: Type["BaseEncoding"]
+        self, encoding_cls: type[BaseEncoding]
     ) -> None:
         """Compare batch throughput across encoding types."""
         enc = encoding_cls(n_features=4)
@@ -658,7 +654,7 @@ class TestInstantiationPerformance:
 
     @pytest.mark.parametrize("encoding_cls,params", ENCODINGS_4D)
     def test_instantiation_fast(
-        self, encoding_cls: Type["BaseEncoding"], params: Dict[str, Any]
+        self, encoding_cls: type[BaseEncoding], params: dict[str, Any]
     ) -> None:
         """Test that encoding instantiation is fast."""
         stats = benchmark_function(
@@ -685,7 +681,7 @@ class TestInstantiationPerformance:
         for _ in range(20):
             _ = HardwareEfficientEncoding(n_features=4, reps=2)
 
-        times: List[float] = []
+        times: list[float] = []
 
         for _ in range(100):
             with Timer() as t:
@@ -723,9 +719,9 @@ class TestPerformanceRegression:
         )
 
         # Baseline: should complete in < 20ms (generous for CI variance)
-        assert stats["mean"] < 0.02, (
-            f"AngleEncoding regression: {stats['mean']*1000:.1f}ms > 20ms baseline"
-        )
+        assert (
+            stats["mean"] < 0.02
+        ), f"AngleEncoding regression: {stats['mean']*1000:.1f}ms > 20ms baseline"
 
     def test_iqp_encoding_baseline(self, sample_data_4d: np.ndarray) -> None:
         """Baseline test for IQPEncoding performance."""
@@ -738,13 +734,11 @@ class TestPerformanceRegression:
         )
 
         # Baseline: should complete in < 50ms
-        assert stats["mean"] < 0.05, (
-            f"IQPEncoding regression: {stats['mean']*1000:.1f}ms > 50ms baseline"
-        )
+        assert (
+            stats["mean"] < 0.05
+        ), f"IQPEncoding regression: {stats['mean']*1000:.1f}ms > 50ms baseline"
 
-    def test_hardware_efficient_baseline(
-        self, sample_data_4d: np.ndarray
-    ) -> None:
+    def test_hardware_efficient_baseline(self, sample_data_4d: np.ndarray) -> None:
         """Baseline test for HardwareEfficientEncoding performance."""
         enc = HardwareEfficientEncoding(n_features=4, reps=2)
 

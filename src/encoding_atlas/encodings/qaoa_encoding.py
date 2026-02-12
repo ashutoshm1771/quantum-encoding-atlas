@@ -69,7 +69,7 @@ _logger = logging.getLogger(__name__)
 # Public API
 # =============================================================================
 
-__all__ = ['QAOAEncoding', 'GateCountBreakdown']
+__all__ = ["QAOAEncoding", "GateCountBreakdown"]
 
 # =============================================================================
 # Module-Level Constants
@@ -110,6 +110,7 @@ _DEFAULT_REPS: int = 2
 # =============================================================================
 # Type Definitions
 # =============================================================================
+
 
 class GateCountBreakdown(TypedDict):
     """Type definition for gate count breakdown dictionary.
@@ -329,33 +330,31 @@ class QAOAEncoding(BaseEncoding):
     # This is consistent with BaseEncoding and reduces memory by ~30%.
     # Important for hyperparameter searches creating many instances.
     __slots__ = (
-        'reps',
-        'data_rotation',
-        'mixer_rotation',
-        'entanglement',
-        'entangling_gate',
-        'gamma',
-        'beta',
-        'include_initial_h',
-        'feature_map',
-        '_entanglement_pairs',
+        "reps",
+        "data_rotation",
+        "mixer_rotation",
+        "entanglement",
+        "entangling_gate",
+        "gamma",
+        "beta",
+        "include_initial_h",
+        "feature_map",
+        "_entanglement_pairs",
     )
 
     # Valid rotation axes
     _VALID_ROTATIONS: frozenset[str] = frozenset({"X", "Y", "Z"})
 
     # Valid entanglement patterns
-    _VALID_ENTANGLEMENT: frozenset[str] = frozenset({
-        "linear", "full", "circular", "none"
-    })
+    _VALID_ENTANGLEMENT: frozenset[str] = frozenset(
+        {"linear", "full", "circular", "none"}
+    )
 
     # Valid entangling gates
     _VALID_ENTANGLING_GATES: frozenset[str] = frozenset({"cx", "cz", "rzz"})
 
     # Valid feature maps
-    _VALID_FEATURE_MAPS: frozenset[str] = frozenset({
-        "linear", "quadratic"
-    })
+    _VALID_FEATURE_MAPS: frozenset[str] = frozenset({"linear", "quadratic"})
 
     def __init__(
         self,
@@ -413,15 +412,11 @@ class QAOAEncoding(BaseEncoding):
             )
         n_features = int(n_features)
         if n_features < 1:
-            raise ValueError(
-                f"n_features must be at least 1, got {n_features}"
-            )
+            raise ValueError(f"n_features must be at least 1, got {n_features}")
 
         # Validate reps
         if not isinstance(reps, (int, np.integer)):
-            raise TypeError(
-                f"reps must be an integer, got {type(reps).__name__}"
-            )
+            raise TypeError(f"reps must be an integer, got {type(reps).__name__}")
         reps = int(reps)
         if reps < 1:
             raise ValueError(f"reps must be at least 1, got {reps}")
@@ -429,6 +424,7 @@ class QAOAEncoding(BaseEncoding):
         # Warn about potential barren plateaus with deep circuits
         if reps > 10:
             import warnings
+
             warnings.warn(
                 f"reps={reps} creates a deep circuit that may suffer from barren "
                 f"plateaus, making training difficult. Consider reps <= 10 for "
@@ -489,18 +485,14 @@ class QAOAEncoding(BaseEncoding):
 
         # Validate gamma
         if not isinstance(gamma, (int, float, np.integer, np.floating)):
-            raise TypeError(
-                f"gamma must be a number, got {type(gamma).__name__}"
-            )
+            raise TypeError(f"gamma must be a number, got {type(gamma).__name__}")
         gamma = float(gamma)
         if not np.isfinite(gamma):
             raise ValueError(f"gamma must be finite, got {gamma}")
 
         # Validate beta
         if not isinstance(beta, (int, float, np.integer, np.floating)):
-            raise TypeError(
-                f"beta must be a number, got {type(beta).__name__}"
-            )
+            raise TypeError(f"beta must be a number, got {type(beta).__name__}")
         beta = float(beta)
         if not np.isfinite(beta):
             raise ValueError(f"beta must be finite, got {beta}")
@@ -1118,8 +1110,7 @@ class QAOAEncoding(BaseEncoding):
         else:
             # Sequential processing - use optimized path
             circuits = [
-                self._get_circuit_from_validated(x, backend)
-                for x in X_validated
+                self._get_circuit_from_validated(x, backend) for x in X_validated
             ]
             _logger.debug(
                 "Sequential batch processing completed: generated %d circuits",
@@ -1457,9 +1448,8 @@ class QAOAEncoding(BaseEncoding):
         entangling_gates_per_rep = n_pairs
 
         # Total counts
-        single_qubit_gates = (
-            h_gates +
-            self.reps * (data_rotation_gates_per_rep + mixer_rotation_gates_per_rep)
+        single_qubit_gates = h_gates + self.reps * (
+            data_rotation_gates_per_rep + mixer_rotation_gates_per_rep
         )
         two_qubit_gates = self.reps * entangling_gates_per_rep
         total_gates = single_qubit_gates + two_qubit_gates
@@ -1517,7 +1507,9 @@ class QAOAEncoding(BaseEncoding):
         # Based on barren plateau scaling with system size
         qubit_penalty = 0.01 * max(0, n - 6)
 
-        trainability = base_trainability - depth_penalty - entanglement_penalty - qubit_penalty
+        trainability = (
+            base_trainability - depth_penalty - entanglement_penalty - qubit_penalty
+        )
         trainability = float(np.clip(trainability, 0.05, 0.95))
 
         # Build notes
@@ -2000,12 +1992,11 @@ class QAOAEncoding(BaseEncoding):
         if x_validated.ndim == 2:
             x_validated = x_validated[0]
 
-        return np.array([
-            self._apply_feature_map(x_validated, i)
-            for i in range(self.n_qubits)
-        ])
+        return np.array(
+            [self._apply_feature_map(x_validated, i) for i in range(self.n_qubits)]
+        )
 
-    def copy(self, **kwargs: Any) -> "QAOAEncoding":
+    def copy(self, **kwargs: Any) -> QAOAEncoding:
         """Create a copy of this encoding with optional parameter overrides.
 
         This method enables creating variations of an encoding without
@@ -2041,16 +2032,16 @@ class QAOAEncoding(BaseEncoding):
         """
         # Start with current parameters
         params: dict[str, Any] = {
-            'n_features': self.n_features,
-            'reps': self.reps,
-            'data_rotation': self.data_rotation,
-            'mixer_rotation': self.mixer_rotation,
-            'entanglement': self.entanglement,
-            'entangling_gate': self.entangling_gate,
-            'gamma': self.gamma,
-            'beta': self.beta,
-            'include_initial_h': self.include_initial_h,
-            'feature_map': self.feature_map,
+            "n_features": self.n_features,
+            "reps": self.reps,
+            "data_rotation": self.data_rotation,
+            "mixer_rotation": self.mixer_rotation,
+            "entanglement": self.entanglement,
+            "entangling_gate": self.entangling_gate,
+            "gamma": self.gamma,
+            "beta": self.beta,
+            "include_initial_h": self.include_initial_h,
+            "feature_map": self.feature_map,
         }
         # Override with provided kwargs
         params.update(kwargs)
@@ -2087,21 +2078,21 @@ class QAOAEncoding(BaseEncoding):
         from_dict : Reconstruct encoding from dictionary.
         """
         return {
-            'class': 'QAOAEncoding',
-            'n_features': self.n_features,
-            'reps': self.reps,
-            'data_rotation': self.data_rotation,
-            'mixer_rotation': self.mixer_rotation,
-            'entanglement': self.entanglement,
-            'entangling_gate': self.entangling_gate,
-            'gamma': self.gamma,
-            'beta': self.beta,
-            'include_initial_h': self.include_initial_h,
-            'feature_map': self.feature_map,
+            "class": "QAOAEncoding",
+            "n_features": self.n_features,
+            "reps": self.reps,
+            "data_rotation": self.data_rotation,
+            "mixer_rotation": self.mixer_rotation,
+            "entanglement": self.entanglement,
+            "entangling_gate": self.entangling_gate,
+            "gamma": self.gamma,
+            "beta": self.beta,
+            "include_initial_h": self.include_initial_h,
+            "feature_map": self.feature_map,
         }
 
     @classmethod
-    def from_dict(cls, config: dict[str, Any]) -> "QAOAEncoding":
+    def from_dict(cls, config: dict[str, Any]) -> QAOAEncoding:
         """Reconstruct encoding from a dictionary.
 
         Parameters
@@ -2144,9 +2135,9 @@ class QAOAEncoding(BaseEncoding):
         to_dict : Serialize encoding to dictionary.
         """
         config = config.copy()  # Don't modify original
-        class_name = config.pop('class', 'QAOAEncoding')
+        class_name = config.pop("class", "QAOAEncoding")
 
-        if class_name != 'QAOAEncoding':
+        if class_name != "QAOAEncoding":
             raise ValueError(
                 f"Config specifies class '{class_name}', expected 'QAOAEncoding'. "
                 f"Use the appropriate class's from_dict method."
@@ -2189,16 +2180,18 @@ class QAOAEncoding(BaseEncoding):
 
     def __hash__(self) -> int:
         """Return hash of the encoding."""
-        return hash((
-            self.__class__.__name__,
-            self.n_features,
-            self.reps,
-            self.data_rotation,
-            self.mixer_rotation,
-            self.entanglement,
-            self.entangling_gate,
-            self.gamma,
-            self.beta,
-            self.include_initial_h,
-            self.feature_map,
-        ))
+        return hash(
+            (
+                self.__class__.__name__,
+                self.n_features,
+                self.reps,
+                self.data_rotation,
+                self.mixer_rotation,
+                self.entanglement,
+                self.entangling_gate,
+                self.gamma,
+                self.beta,
+                self.include_initial_h,
+                self.feature_map,
+            )
+        )

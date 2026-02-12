@@ -1235,9 +1235,11 @@ def _check_clifford_property(encoding: BaseEncoding) -> bool:
     encoding_name = encoding.__class__.__name__.lower()
 
     # Known Clifford-only encoding types by name
-    clifford_encoding_names = frozenset({
-        "basisencoding",  # Only X gates (Clifford)
-    })
+    clifford_encoding_names = frozenset(
+        {
+            "basisencoding",  # Only X gates (Clifford)
+        }
+    )
 
     # Check if this is a known Clifford-only encoding
     if encoding_name in clifford_encoding_names:
@@ -1245,9 +1247,7 @@ def _check_clifford_property(encoding: BaseEncoding) -> bool:
 
     # If encoding has a gate_set attribute, analyze it directly
     if hasattr(encoding, "gate_set") or hasattr(encoding, "gates"):
-        gate_set_attr = getattr(
-            encoding, "gate_set", getattr(encoding, "gates", None)
-        )
+        gate_set_attr = getattr(encoding, "gate_set", getattr(encoding, "gates", None))
         if gate_set_attr is not None:
             gates = _normalize_gate_set(gate_set_attr)
             if gates:
@@ -1321,9 +1321,7 @@ def _check_non_clifford_gates(encoding: BaseEncoding) -> dict[str, Any]:
 
     # Check gate set if available
     if hasattr(encoding, "gate_set") or hasattr(encoding, "gates"):
-        gate_set_attr = getattr(
-            encoding, "gate_set", getattr(encoding, "gates", None)
-        )
+        gate_set_attr = getattr(encoding, "gate_set", getattr(encoding, "gates", None))
         if gate_set_attr is not None:
             gates = _normalize_gate_set(gate_set_attr)
             non_clifford_found = gates & _NON_CLIFFORD_GATES
@@ -1414,31 +1412,30 @@ def _check_matchgate_property(encoding: BaseEncoding) -> bool:
 
     # Check if encoding has matchgate-related attributes
     if hasattr(encoding, "gate_set") or hasattr(encoding, "gates"):
-        gate_set_attr = getattr(
-            encoding, "gate_set", getattr(encoding, "gates", None)
-        )
+        gate_set_attr = getattr(encoding, "gate_set", getattr(encoding, "gates", None))
         if gate_set_attr is not None:
             gates = _normalize_gate_set(gate_set_attr)
 
             # Check if all gates are matchgates
-            if gates and gates.issubset(_MATCHGATE_GATES):
-                # Also verify topology
-                if _has_linear_topology:
-                    _logger.debug(
-                        "Encoding %s uses matchgate set with linear topology",
-                        encoding.__class__.__name__,
-                    )
-                    return True
+            # Also verify topology
+            if gates and gates.issubset(_MATCHGATE_GATES) and _has_linear_topology:
+                _logger.debug(
+                    "Encoding %s uses matchgate set with linear topology",
+                    encoding.__class__.__name__,
+                )
+                return True
 
     # Check for fermionic/particle-preserving keywords in encoding name
     fermionic_keywords = {"fermionic", "fermion", "givens", "particle", "matchgate"}
-    if any(keyword in encoding_name for keyword in fermionic_keywords):
-        if _has_linear_topology:
-            _logger.debug(
-                "Encoding %s appears to be fermionic/matchgate-based",
-                encoding.__class__.__name__,
-            )
-            return True
+    if (
+        any(keyword in encoding_name for keyword in fermionic_keywords)
+        and _has_linear_topology
+    ):
+        _logger.debug(
+            "Encoding %s appears to be fermionic/matchgate-based",
+            encoding.__class__.__name__,
+        )
+        return True
 
     # Non-entangling encodings are trivially simulable (but not matchgate-specific)
     # Return False here as they're handled by product state simulability
@@ -1519,7 +1516,9 @@ def _get_entanglement_pattern(encoding: BaseEncoding) -> str:
                     if hasattr(p, "__iter__") and not isinstance(p, str):
                         pair_list = list(p)
                         if len(pair_list) >= 2:
-                            normalized_pairs.append((int(pair_list[0]), int(pair_list[1])))
+                            normalized_pairs.append(
+                                (int(pair_list[0]), int(pair_list[1]))
+                            )
                 except (TypeError, ValueError, IndexError):
                     continue
 
@@ -1533,9 +1532,7 @@ def _get_entanglement_pattern(encoding: BaseEncoding) -> str:
                 max_pairs = n_qubits * (n_qubits - 1) // 2
 
                 # Check for linear (nearest-neighbor) pattern
-                is_linear = all(
-                    abs(p[0] - p[1]) == 1 for p in normalized_pairs
-                )
+                is_linear = all(abs(p[0] - p[1]) == 1 for p in normalized_pairs)
 
                 # Linear pattern: n-1 nearest-neighbor edges
                 if is_linear and n_pairs == n_qubits - 1:

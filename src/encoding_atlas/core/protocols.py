@@ -155,8 +155,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
-    from numpy.typing import ArrayLike, NDArray
     import numpy as np
+    from numpy.typing import ArrayLike, NDArray
 
 # =============================================================================
 # Public API
@@ -424,7 +424,7 @@ class DataDependentResourceAnalyzable(Protocol):
     ResourceAnalyzable : For encodings with data-independent resources.
     """
 
-    def resource_summary(self, x: "ArrayLike") -> dict[str, Any]:
+    def resource_summary(self, x: ArrayLike) -> dict[str, Any]:
         """Get resource summary for specific input data.
 
         Parameters
@@ -460,7 +460,7 @@ class DataDependentResourceAnalyzable(Protocol):
         """
         ...
 
-    def actual_gate_count(self, x: "ArrayLike") -> int:
+    def actual_gate_count(self, x: ArrayLike) -> int:
         """Get actual gate count for specific input data.
 
         Parameters
@@ -702,7 +702,7 @@ class DataTransformable(Protocol):
     AmplitudeEncoding : Normalization behavior documentation.
     """
 
-    def transform_input(self, x: "ArrayLike") -> "NDArray[np.floating[Any]]":
+    def transform_input(self, x: ArrayLike) -> NDArray[np.floating[Any]]:
         """Transform input data according to encoding requirements.
 
         Applies the encoding's preprocessing logic to input data. This

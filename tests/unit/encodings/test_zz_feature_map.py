@@ -101,11 +101,13 @@ def batch_data_4d() -> NDArray[np.floating]:
     - [0.5, 0.6, 0.7, 0.8] (typical values)
     - [0.9, 1.0, 1.1, 1.2] (typical values)
     """
-    return np.array([
-        [0.1, 0.2, 0.3, 0.4],
-        [0.5, 0.6, 0.7, 0.8],
-        [0.9, 1.0, 1.1, 1.2],
-    ])
+    return np.array(
+        [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.5, 0.6, 0.7, 0.8],
+            [0.9, 1.0, 1.1, 1.2],
+        ]
+    )
 
 
 @pytest.fixture
@@ -736,12 +738,14 @@ class TestNumericalStability:
         """
         enc = ZZFeatureMap(n_features=4, reps=2)
         eps = 1e-14
-        x = np.array([
-            np.pi - eps,
-            np.pi + eps,
-            np.pi / 2,
-            np.pi * 2,
-        ])
+        x = np.array(
+            [
+                np.pi - eps,
+                np.pi + eps,
+                np.pi / 2,
+                np.pi * 2,
+            ]
+        )
 
         circuit_fn = enc.get_circuit(x, backend="pennylane")
         dev = qml.device("default.qubit", wires=enc.n_qubits)
@@ -820,7 +824,7 @@ class TestNumericalStability:
             np.array([1e-15, 1e-14, 1e-13, 1e-12]),
             np.array([1e8, 1e9, 1e10, 1e11]),
             np.array([-1e5, 1e5, -1e-5, 1e-5]),
-            np.array([np.pi, np.pi/2, np.pi/4, np.pi/8]),
+            np.array([np.pi, np.pi / 2, np.pi / 4, np.pi / 8]),
         ]
 
         simulator = AerSimulator(method="statevector")
@@ -847,7 +851,7 @@ class TestNumericalStability:
             np.array([1e-15, 1e-14, 1e-13, 1e-12]),
             np.array([1e8, 1e9, 1e10, 1e11]),
             np.array([-1e5, 1e5, -1e-5, 1e-5]),
-            np.array([np.pi, np.pi/2, np.pi/4, np.pi/8]),
+            np.array([np.pi, np.pi / 2, np.pi / 4, np.pi / 8]),
         ]
 
         simulator = cirq.Simulator()
@@ -1128,7 +1132,7 @@ class TestConcurrentAccess:
         def generate_circuits(thread_id: int) -> list[Any]:
             circuits = []
             try:
-                for i in range(num_circuits_per_thread):
+                for _i in range(num_circuits_per_thread):
                     x = np.random.randn(4)
                     circuit = enc.get_circuit(x, backend="pennylane")
                     circuits.append(circuit)
@@ -1137,7 +1141,9 @@ class TestConcurrentAccess:
             return circuits
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [executor.submit(generate_circuits, i) for i in range(num_threads)]
+            futures = [
+                executor.submit(generate_circuits, i) for i in range(num_threads)
+            ]
             results = [f.result() for f in as_completed(futures)]
 
         # No errors should have occurred
@@ -1352,8 +1358,13 @@ class TestZZFeatureMapGateCountBreakdown:
 
         # Should have all expected keys
         expected_keys = {
-            'hadamard', 'phase_single', 'phase_zz', 'cnot',
-            'total_single_qubit', 'total_two_qubit', 'total'
+            "hadamard",
+            "phase_single",
+            "phase_zz",
+            "cnot",
+            "total_single_qubit",
+            "total_two_qubit",
+            "total",
         }
         assert set(breakdown.keys()) == expected_keys
 
@@ -1367,7 +1378,7 @@ class TestZZFeatureMapGateCountBreakdown:
             breakdown = enc.gate_count_breakdown()
 
             expected = n * reps
-            assert breakdown['hadamard'] == expected
+            assert breakdown["hadamard"] == expected
 
     def test_phase_single_count(self) -> None:
         """Test single-qubit phase gate count: n * reps."""
@@ -1376,7 +1387,7 @@ class TestZZFeatureMapGateCountBreakdown:
             breakdown = enc.gate_count_breakdown()
 
             expected = n * reps
-            assert breakdown['phase_single'] == expected
+            assert breakdown["phase_single"] == expected
 
     def test_cnot_count_full_entanglement(self) -> None:
         """Test CNOT count with full entanglement: 2 * n_pairs * reps."""
@@ -1386,7 +1397,7 @@ class TestZZFeatureMapGateCountBreakdown:
 
             n_pairs = n * (n - 1) // 2
             expected = 2 * n_pairs * reps
-            assert breakdown['cnot'] == expected
+            assert breakdown["cnot"] == expected
 
     def test_cnot_count_linear_entanglement(self) -> None:
         """Test CNOT count with linear entanglement: 2 * (n-1) * reps."""
@@ -1396,7 +1407,7 @@ class TestZZFeatureMapGateCountBreakdown:
 
             n_pairs = n - 1
             expected = 2 * n_pairs * reps
-            assert breakdown['cnot'] == expected
+            assert breakdown["cnot"] == expected
 
     def test_phase_zz_count(self) -> None:
         """Test ZZ phase gate count: n_pairs * reps."""
@@ -1405,30 +1416,32 @@ class TestZZFeatureMapGateCountBreakdown:
 
         n_pairs = 6  # 4 * 3 / 2
         expected = n_pairs * 2  # n_pairs * reps
-        assert breakdown['phase_zz'] == expected
+        assert breakdown["phase_zz"] == expected
 
     def test_total_single_qubit_gates(self) -> None:
         """Test total single-qubit gates sum."""
         enc = ZZFeatureMap(n_features=4, reps=2, entanglement="full")
         breakdown = enc.gate_count_breakdown()
 
-        expected = breakdown['hadamard'] + breakdown['phase_single'] + breakdown['phase_zz']
-        assert breakdown['total_single_qubit'] == expected
+        expected = (
+            breakdown["hadamard"] + breakdown["phase_single"] + breakdown["phase_zz"]
+        )
+        assert breakdown["total_single_qubit"] == expected
 
     def test_total_two_qubit_gates(self) -> None:
         """Test total two-qubit gates equals CNOT count."""
         enc = ZZFeatureMap(n_features=4, reps=2, entanglement="full")
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['total_two_qubit'] == breakdown['cnot']
+        assert breakdown["total_two_qubit"] == breakdown["cnot"]
 
     def test_total_gate_count(self) -> None:
         """Test total gate count is sum of all gates."""
         enc = ZZFeatureMap(n_features=4, reps=2, entanglement="full")
         breakdown = enc.gate_count_breakdown()
 
-        expected = breakdown['total_single_qubit'] + breakdown['total_two_qubit']
-        assert breakdown['total'] == expected
+        expected = breakdown["total_single_qubit"] + breakdown["total_two_qubit"]
+        assert breakdown["total"] == expected
 
     def test_specific_example_4_qubits_2_reps_full(self) -> None:
         """Test specific known values for n=4, reps=2, full entanglement.
@@ -1446,13 +1459,13 @@ class TestZZFeatureMapGateCountBreakdown:
         enc = ZZFeatureMap(n_features=4, reps=2, entanglement="full")
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['hadamard'] == 8
-        assert breakdown['phase_single'] == 8
-        assert breakdown['phase_zz'] == 12
-        assert breakdown['cnot'] == 24
-        assert breakdown['total_single_qubit'] == 28
-        assert breakdown['total_two_qubit'] == 24
-        assert breakdown['total'] == 52
+        assert breakdown["hadamard"] == 8
+        assert breakdown["phase_single"] == 8
+        assert breakdown["phase_zz"] == 12
+        assert breakdown["cnot"] == 24
+        assert breakdown["total_single_qubit"] == 28
+        assert breakdown["total_two_qubit"] == 24
+        assert breakdown["total"] == 52
 
     def test_specific_example_4_qubits_2_reps_linear(self) -> None:
         """Test specific known values for n=4, reps=2, linear entanglement.
@@ -1470,13 +1483,13 @@ class TestZZFeatureMapGateCountBreakdown:
         enc = ZZFeatureMap(n_features=4, reps=2, entanglement="linear")
         breakdown = enc.gate_count_breakdown()
 
-        assert breakdown['hadamard'] == 8
-        assert breakdown['phase_single'] == 8
-        assert breakdown['phase_zz'] == 6
-        assert breakdown['cnot'] == 12
-        assert breakdown['total_single_qubit'] == 22
-        assert breakdown['total_two_qubit'] == 12
-        assert breakdown['total'] == 34
+        assert breakdown["hadamard"] == 8
+        assert breakdown["phase_single"] == 8
+        assert breakdown["phase_zz"] == 6
+        assert breakdown["cnot"] == 12
+        assert breakdown["total_single_qubit"] == 22
+        assert breakdown["total_two_qubit"] == 12
+        assert breakdown["total"] == 34
 
     def test_breakdown_matches_properties(self) -> None:
         """Test that breakdown matches properties gate counts."""
@@ -1484,9 +1497,9 @@ class TestZZFeatureMapGateCountBreakdown:
         breakdown = enc.gate_count_breakdown()
         props = enc.properties
 
-        assert breakdown['total'] == props.gate_count
-        assert breakdown['total_single_qubit'] == props.single_qubit_gates
-        assert breakdown['total_two_qubit'] == props.two_qubit_gates
+        assert breakdown["total"] == props.gate_count
+        assert breakdown["total_single_qubit"] == props.single_qubit_gates
+        assert breakdown["total_two_qubit"] == props.two_qubit_gates
 
     def test_different_entanglement_topologies(self) -> None:
         """Test breakdown for all entanglement topologies."""
@@ -1502,15 +1515,19 @@ class TestZZFeatureMapGateCountBreakdown:
         bd_circular = enc_circular.gate_count_breakdown()
 
         # Full has most gates (most pairs)
-        assert bd_full['total'] > bd_linear['total']
-        assert bd_full['total'] > bd_circular['total']
+        assert bd_full["total"] > bd_linear["total"]
+        assert bd_full["total"] > bd_circular["total"]
 
         # Circular has one more pair than linear for n > 2
-        assert bd_circular['cnot'] > bd_linear['cnot']
+        assert bd_circular["cnot"] > bd_linear["cnot"]
 
         # Hadamard and phase_single should be same for all topologies
-        assert bd_full['hadamard'] == bd_linear['hadamard'] == bd_circular['hadamard']
-        assert bd_full['phase_single'] == bd_linear['phase_single'] == bd_circular['phase_single']
+        assert bd_full["hadamard"] == bd_linear["hadamard"] == bd_circular["hadamard"]
+        assert (
+            bd_full["phase_single"]
+            == bd_linear["phase_single"]
+            == bd_circular["phase_single"]
+        )
 
 
 # =============================================================================
@@ -1578,13 +1595,15 @@ class TestZZFeatureMapParallelBatchProcessing:
         enc = ZZFeatureMap(n_features=4, reps=1)
 
         # Create distinct samples that would produce different circuits
-        X = np.array([
-            [0.0, 0.0, 0.0, 0.0],
-            [1.0, 1.0, 1.0, 1.0],
-            [2.0, 2.0, 2.0, 2.0],
-            [3.0, 3.0, 3.0, 3.0],
-            [4.0, 4.0, 4.0, 4.0],
-        ])
+        X = np.array(
+            [
+                [0.0, 0.0, 0.0, 0.0],
+                [1.0, 1.0, 1.0, 1.0],
+                [2.0, 2.0, 2.0, 2.0],
+                [3.0, 3.0, 3.0, 3.0],
+                [4.0, 4.0, 4.0, 4.0],
+            ]
+        )
 
         circuits_parallel = enc.get_circuits(X, backend="pennylane", parallel=True)
         circuits_sequential = enc.get_circuits(X, backend="pennylane", parallel=False)
@@ -1593,6 +1612,7 @@ class TestZZFeatureMapParallelBatchProcessing:
         dev = qml.device("default.qubit", wires=4)
 
         for i in range(len(X)):
+
             @qml.qnode(dev)
             def run_parallel():
                 circuits_parallel[i]()
@@ -1664,7 +1684,7 @@ class TestZZFeatureMapModuleConfiguration:
         """Test valid entanglements constant contains all valid options."""
         from encoding_atlas.encodings.zz_feature_map import _VALID_ENTANGLEMENTS
 
-        assert _VALID_ENTANGLEMENTS == frozenset({"full", "linear", "circular"})
+        assert frozenset({"full", "linear", "circular"}) == _VALID_ENTANGLEMENTS
 
         # All valid options should work
         for ent in _VALID_ENTANGLEMENTS:
@@ -1783,7 +1803,9 @@ class TestZZFeatureMapFullEntanglementWarning:
 
     def test_threshold_constant_exists(self) -> None:
         """Test that the threshold constant exists."""
-        from encoding_atlas.encodings.zz_feature_map import _FULL_ENTANGLEMENT_WARNING_THRESHOLD
+        from encoding_atlas.encodings.zz_feature_map import (
+            _FULL_ENTANGLEMENT_WARNING_THRESHOLD,
+        )
 
         assert isinstance(_FULL_ENTANGLEMENT_WARNING_THRESHOLD, int)
         assert _FULL_ENTANGLEMENT_WARNING_THRESHOLD == 10
@@ -1798,7 +1820,8 @@ class TestZZFeatureMapFullEntanglementWarning:
 
         # Filter for UserWarnings about full entanglement
         entanglement_warnings = [
-            x for x in w
+            x
+            for x in w
             if issubclass(x.category, UserWarning)
             and "Full entanglement" in str(x.message)
         ]
@@ -1814,7 +1837,8 @@ class TestZZFeatureMapFullEntanglementWarning:
 
         # Filter for UserWarnings about full entanglement
         entanglement_warnings = [
-            x for x in w
+            x
+            for x in w
             if issubclass(x.category, UserWarning)
             and "Full entanglement" in str(x.message)
         ]
@@ -1835,7 +1859,8 @@ class TestZZFeatureMapFullEntanglementWarning:
             _ = ZZFeatureMap(n_features=20, entanglement="linear")
 
         entanglement_warnings = [
-            x for x in w
+            x
+            for x in w
             if issubclass(x.category, UserWarning)
             and "Full entanglement" in str(x.message)
         ]
@@ -1850,7 +1875,8 @@ class TestZZFeatureMapFullEntanglementWarning:
             _ = ZZFeatureMap(n_features=20, entanglement="circular")
 
         entanglement_warnings = [
-            x for x in w
+            x
+            for x in w
             if issubclass(x.category, UserWarning)
             and "Full entanglement" in str(x.message)
         ]
@@ -1865,7 +1891,8 @@ class TestZZFeatureMapFullEntanglementWarning:
             _ = ZZFeatureMap(n_features=15, reps=2, entanglement="full")
 
         entanglement_warnings = [
-            x for x in w
+            x
+            for x in w
             if issubclass(x.category, UserWarning)
             and "Full entanglement" in str(x.message)
         ]
@@ -1886,7 +1913,8 @@ class TestZZFeatureMapFullEntanglementWarning:
             _ = ZZFeatureMap(n_features=15, entanglement="full")
 
         entanglement_warnings = [
-            x for x in w
+            x
+            for x in w
             if issubclass(x.category, UserWarning)
             and "Full entanglement" in str(x.message)
         ]
@@ -1896,14 +1924,18 @@ class TestZZFeatureMapFullEntanglementWarning:
         warning_filename = entanglement_warnings[0].filename
         assert "test_zz_feature_map" in warning_filename
 
-    def test_logger_warning_also_emitted(self, caplog: pytest.LogCaptureFixture) -> None:
+    def test_logger_warning_also_emitted(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """Test that _logger.warning is also called alongside warnings.warn."""
         import logging
         import warnings
 
         with warnings.catch_warnings():
             warnings.simplefilter("always")
-            with caplog.at_level(logging.WARNING, logger="encoding_atlas.encodings.zz_feature_map"):
+            with caplog.at_level(
+                logging.WARNING, logger="encoding_atlas.encodings.zz_feature_map"
+            ):
                 _ = ZZFeatureMap(n_features=12, entanglement="full")
 
         # Check that WARNING was logged (in addition to UserWarning)
@@ -1926,16 +1958,22 @@ class TestZZFeatureMapGateCountBreakdownTypedDict:
         from encoding_atlas.encodings.zz_feature_map import GateCountBreakdown
 
         # Verify it's a TypedDict by checking __annotations__
-        assert hasattr(GateCountBreakdown, '__annotations__')
+        assert hasattr(GateCountBreakdown, "__annotations__")
         expected_keys = {
-            'hadamard', 'phase_single', 'phase_zz', 'cnot',
-            'total_single_qubit', 'total_two_qubit', 'total'
+            "hadamard",
+            "phase_single",
+            "phase_zz",
+            "cnot",
+            "total_single_qubit",
+            "total_two_qubit",
+            "total",
         }
         assert set(GateCountBreakdown.__annotations__.keys()) == expected_keys
 
     def test_all_annotations_are_int(self) -> None:
         """Test that all TypedDict fields are annotated as int."""
         from typing import get_type_hints
+
         from encoding_atlas.encodings.zz_feature_map import GateCountBreakdown
 
         # Use get_type_hints to resolve forward references
@@ -2025,12 +2063,12 @@ class TestSlowSimulation:
         # Both states must be normalized
         norm1 = np.sum(np.abs(state1) ** 2)
         norm2 = np.sum(np.abs(state2) ** 2)
-        assert np.isclose(norm1, 1.0, atol=1e-10), (
-            f"{name1} is not normalized: |norm|^2 = {norm1}"
-        )
-        assert np.isclose(norm2, 1.0, atol=1e-10), (
-            f"{name2} is not normalized: |norm|^2 = {norm2}"
-        )
+        assert np.isclose(
+            norm1, 1.0, atol=1e-10
+        ), f"{name1} is not normalized: |norm|^2 = {norm1}"
+        assert np.isclose(
+            norm2, 1.0, atol=1e-10
+        ), f"{name2} is not normalized: |norm|^2 = {norm2}"
 
         # Compare sorted probability distributions
         probs1 = sorted(np.abs(state1) ** 2)
@@ -2040,9 +2078,7 @@ class TestSlowSimulation:
             probs1,
             probs2,
             atol=atol,
-            err_msg=(
-                f"Probability distributions differ between {name1} and {name2}"
-            ),
+            err_msg=(f"Probability distributions differ between {name1} and {name2}"),
         )
 
     @pytest.mark.skipif(
@@ -2087,7 +2123,7 @@ class TestSlowSimulation:
         cirq_state = self._get_cirq_state(enc, x)
 
         # All states should have correct dimension: 2^n_qubits = 16
-        expected_dim = 2 ** enc.n_qubits
+        expected_dim = 2**enc.n_qubits
         assert len(pl_state) == expected_dim
         assert len(qk_state) == expected_dim
         assert len(cirq_state) == expected_dim
@@ -2117,14 +2153,10 @@ class TestSlowSimulation:
         cirq_state = self._get_cirq_state(enc, x)
 
         self._assert_states_equivalent(
-            pl_state, qk_state,
-            f"PennyLane (reps={reps})",
-            f"Qiskit (reps={reps})"
+            pl_state, qk_state, f"PennyLane (reps={reps})", f"Qiskit (reps={reps})"
         )
         self._assert_states_equivalent(
-            pl_state, cirq_state,
-            f"PennyLane (reps={reps})",
-            f"Cirq (reps={reps})"
+            pl_state, cirq_state, f"PennyLane (reps={reps})", f"Cirq (reps={reps})"
         )
 
     @pytest.mark.skipif(
@@ -2133,9 +2165,7 @@ class TestSlowSimulation:
     )
     @pytest.mark.cross_backend
     @pytest.mark.parametrize("entanglement", ["full", "linear", "circular"])
-    def test_cross_backend_with_different_entanglement(
-        self, entanglement: str
-    ) -> None:
+    def test_cross_backend_with_different_entanglement(self, entanglement: str) -> None:
         """Test cross-backend equivalence with different entanglement patterns.
 
         ZZFeatureMap supports full, linear, and circular entanglement.
@@ -2153,14 +2183,16 @@ class TestSlowSimulation:
         cirq_state = self._get_cirq_state(enc, x)
 
         self._assert_states_equivalent(
-            pl_state, qk_state,
+            pl_state,
+            qk_state,
             f"PennyLane (entanglement={entanglement})",
-            f"Qiskit (entanglement={entanglement})"
+            f"Qiskit (entanglement={entanglement})",
         )
         self._assert_states_equivalent(
-            pl_state, cirq_state,
+            pl_state,
+            cirq_state,
             f"PennyLane (entanglement={entanglement})",
-            f"Cirq (entanglement={entanglement})"
+            f"Cirq (entanglement={entanglement})",
         )
 
     @pytest.mark.skipif(
@@ -2289,21 +2321,27 @@ class TestSlowSimulation:
         pl_state1 = self._get_pennylane_state(enc, x)
         pl_state2 = self._get_pennylane_state(enc, x)
         np.testing.assert_allclose(
-            pl_state1, pl_state2, atol=1e-14,
+            pl_state1,
+            pl_state2,
+            atol=1e-14,
             err_msg="PennyLane states differ between runs",
         )
 
         qk_state1 = self._get_qiskit_state(enc, x)
         qk_state2 = self._get_qiskit_state(enc, x)
         np.testing.assert_allclose(
-            qk_state1, qk_state2, atol=1e-14,
+            qk_state1,
+            qk_state2,
+            atol=1e-14,
             err_msg="Qiskit states differ between runs",
         )
 
         cirq_state1 = self._get_cirq_state(enc, x)
         cirq_state2 = self._get_cirq_state(enc, x)
         np.testing.assert_allclose(
-            cirq_state1, cirq_state2, atol=1e-14,
+            cirq_state1,
+            cirq_state2,
+            atol=1e-14,
             err_msg="Cirq states differ between runs",
         )
 
@@ -2327,27 +2365,27 @@ class TestSlowSimulation:
         pl_state2 = self._get_pennylane_state(enc, x2)
         probs1 = sorted(np.abs(pl_state1) ** 2)
         probs2 = sorted(np.abs(pl_state2) ** 2)
-        assert not np.allclose(probs1, probs2, atol=1e-3), (
-            "PennyLane: Different inputs produced identical states"
-        )
+        assert not np.allclose(
+            probs1, probs2, atol=1e-3
+        ), "PennyLane: Different inputs produced identical states"
 
         # Qiskit states should differ
         qk_state1 = self._get_qiskit_state(enc, x1)
         qk_state2 = self._get_qiskit_state(enc, x2)
         probs1 = sorted(np.abs(qk_state1) ** 2)
         probs2 = sorted(np.abs(qk_state2) ** 2)
-        assert not np.allclose(probs1, probs2, atol=1e-3), (
-            "Qiskit: Different inputs produced identical states"
-        )
+        assert not np.allclose(
+            probs1, probs2, atol=1e-3
+        ), "Qiskit: Different inputs produced identical states"
 
         # Cirq states should differ
         cirq_state1 = self._get_cirq_state(enc, x1)
         cirq_state2 = self._get_cirq_state(enc, x2)
         probs1 = sorted(np.abs(cirq_state1) ** 2)
         probs2 = sorted(np.abs(cirq_state2) ** 2)
-        assert not np.allclose(probs1, probs2, atol=1e-3), (
-            "Cirq: Different inputs produced identical states"
-        )
+        assert not np.allclose(
+            probs1, probs2, atol=1e-3
+        ), "Cirq: Different inputs produced identical states"
 
     @pytest.mark.skipif(
         not (HAS_PENNYLANE and HAS_QISKIT and HAS_CIRQ),
@@ -2381,14 +2419,16 @@ class TestSlowSimulation:
 
             config_str = f"reps={config['reps']}, ent={config['entanglement']}"
             self._assert_states_equivalent(
-                pl_state, qk_state,
+                pl_state,
+                qk_state,
                 f"PennyLane ({config_str})",
-                f"Qiskit ({config_str})"
+                f"Qiskit ({config_str})",
             )
             self._assert_states_equivalent(
-                pl_state, cirq_state,
+                pl_state,
+                cirq_state,
                 f"PennyLane ({config_str})",
-                f"Cirq ({config_str})"
+                f"Cirq ({config_str})",
             )
 
     @pytest.mark.skipif(

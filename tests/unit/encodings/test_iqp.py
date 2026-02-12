@@ -103,11 +103,13 @@ def batch_data_4d() -> NDArray[np.floating]:
     - [0.5, 0.6, 0.7, 0.8] (different values)
     - [0.0, 0.0, 0.0, 0.0] (edge case: zeros)
     """
-    return np.array([
-        [0.1, 0.2, 0.3, 0.4],
-        [0.5, 0.6, 0.7, 0.8],
-        [0.0, 0.0, 0.0, 0.0],
-    ])
+    return np.array(
+        [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.5, 0.6, 0.7, 0.8],
+            [0.0, 0.0, 0.0, 0.0],
+        ]
+    )
 
 
 @pytest.fixture
@@ -515,9 +517,7 @@ class TestInputValidation:
         with pytest.raises(ValueError, match="infinite"):
             default_encoding.get_circuit(x)
 
-    def test_negative_inf_input_rejected(
-        self, default_encoding: IQPEncoding
-    ) -> None:
+    def test_negative_inf_input_rejected(self, default_encoding: IQPEncoding) -> None:
         """Test that negative infinite values are rejected."""
         x = np.array([0.1, -np.inf, 0.3, 0.4])
         with pytest.raises(ValueError, match="infinite"):
@@ -529,9 +529,7 @@ class TestInputValidation:
         circuit = default_encoding.get_circuit(x)
         assert circuit is not None
 
-    def test_tuple_input_converted(
-        self, default_encoding: IQPEncoding
-    ) -> None:
+    def test_tuple_input_converted(self, default_encoding: IQPEncoding) -> None:
         """Test that tuple input is converted to numpy array."""
         x = (0.1, 0.2, 0.3, 0.4)
         circuit = default_encoding.get_circuit(x)
@@ -718,9 +716,7 @@ class TestQiskitBackend:
         """
         circuit = default_encoding.get_circuit(sample_data_4d, backend="qiskit")
 
-        h_count = sum(
-            1 for inst in circuit.data if inst.operation.name == "h"
-        )
+        h_count = sum(1 for inst in circuit.data if inst.operation.name == "h")
         expected = default_encoding.n_qubits * default_encoding.reps
         assert h_count == expected
 
@@ -732,9 +728,7 @@ class TestQiskitBackend:
         """Test that CNOT gates are present for ZZ interactions."""
         circuit = default_encoding.get_circuit(sample_data_4d, backend="qiskit")
 
-        cx_count = sum(
-            1 for inst in circuit.data if inst.operation.name == "cx"
-        )
+        cx_count = sum(1 for inst in circuit.data if inst.operation.name == "cx")
         # Each ZZ interaction uses 2 CNOTs, full entanglement has 6 pairs, 2 reps
         assert cx_count > 0
 
@@ -746,9 +740,7 @@ class TestQiskitBackend:
         """Test that RZ gates are present."""
         circuit = default_encoding.get_circuit(sample_data_4d, backend="qiskit")
 
-        rz_count = sum(
-            1 for inst in circuit.data if inst.operation.name == "rz"
-        )
+        rz_count = sum(1 for inst in circuit.data if inst.operation.name == "rz")
         # Should have RZ gates for single-qubit rotations and ZZ interactions
         assert rz_count > 0
 
@@ -1256,15 +1248,11 @@ class TestEqualityAndHashing:
 class TestRepr:
     """Tests for string representation (__repr__)."""
 
-    def test_repr_contains_class_name(
-        self, default_encoding: IQPEncoding
-    ) -> None:
+    def test_repr_contains_class_name(self, default_encoding: IQPEncoding) -> None:
         """Test that repr contains class name."""
         assert "IQPEncoding" in repr(default_encoding)
 
-    def test_repr_contains_n_features(
-        self, default_encoding: IQPEncoding
-    ) -> None:
+    def test_repr_contains_n_features(self, default_encoding: IQPEncoding) -> None:
         """Test that repr contains n_features."""
         assert "n_features=4" in repr(default_encoding)
 
@@ -1397,7 +1385,7 @@ class TestConcurrentAccess:
         def generate_circuits(thread_id: int) -> list[Any]:
             circuits = []
             try:
-                for i in range(num_circuits_per_thread):
+                for _i in range(num_circuits_per_thread):
                     x = np.random.randn(4)
                     circuit = enc.get_circuit(x, backend="pennylane")
                     circuits.append(circuit)
@@ -1406,7 +1394,9 @@ class TestConcurrentAccess:
             return circuits
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [executor.submit(generate_circuits, i) for i in range(num_threads)]
+            futures = [
+                executor.submit(generate_circuits, i) for i in range(num_threads)
+            ]
             results = [f.result() for f in as_completed(futures)]
 
         # No errors should have occurred
@@ -1429,10 +1419,7 @@ class TestConcurrentAccess:
             except Exception as e:
                 errors.append(e)
 
-        threads = [
-            threading.Thread(target=access_properties)
-            for _ in range(n_threads)
-        ]
+        threads = [threading.Thread(target=access_properties) for _ in range(n_threads)]
         for t in threads:
             t.start()
         for t in threads:
@@ -1479,13 +1466,15 @@ class TestIQPSpecific:
     def test_parallel_preserves_order(self) -> None:
         """Test that parallel processing preserves input order."""
         enc = IQPEncoding(n_features=2, reps=1)
-        X = np.array([
-            [0.0, 0.0],
-            [1.0, 0.0],
-            [0.0, 1.0],
-            [1.0, 1.0],
-            [0.5, 0.5],
-        ])
+        X = np.array(
+            [
+                [0.0, 0.0],
+                [1.0, 0.0],
+                [0.0, 1.0],
+                [1.0, 1.0],
+                [0.5, 0.5],
+            ]
+        )
 
         dev = qml.device("default.qubit", wires=2)
 
@@ -1494,6 +1483,7 @@ class TestIQPSpecific:
             def qnode():
                 circuit_fn()
                 return qml.state()
+
             return qnode()
 
         sequential = enc.get_circuits(X, backend="pennylane", parallel=False)
@@ -1613,9 +1603,17 @@ class TestIQPSpecific:
         summary = enc.resource_summary()
 
         expected_keys = [
-            "n_qubits", "n_features", "depth", "reps", "entanglement",
-            "entanglement_pairs", "n_entanglement_pairs", "gate_counts",
-            "is_entangling", "simulability", "trainability_estimate",
+            "n_qubits",
+            "n_features",
+            "depth",
+            "reps",
+            "entanglement",
+            "entanglement_pairs",
+            "n_entanglement_pairs",
+            "gate_counts",
+            "is_entangling",
+            "simulability",
+            "trainability_estimate",
             "hardware_requirements",
         ]
         for key in expected_keys:
@@ -1699,7 +1697,8 @@ class TestIQPSpecific:
 
             # Filter for UserWarnings about entanglement
             entanglement_warnings = [
-                x for x in w
+                x
+                for x in w
                 if issubclass(x.category, UserWarning)
                 and "entanglement" in str(x.message).lower()
             ]
@@ -1714,7 +1713,8 @@ class TestIQPSpecific:
             IQPEncoding(n_features=20, entanglement="linear")
 
             entanglement_warnings = [
-                x for x in w
+                x
+                for x in w
                 if issubclass(x.category, UserWarning)
                 and "Full entanglement" in str(x.message)
             ]
@@ -1864,7 +1864,7 @@ class TestSlowSimulation:
         assert np.isclose(np.sum(np.abs(cirq_state) ** 2), 1.0, atol=1e-10)
 
         # All states should have the same dimension
-        assert len(pl_state) == len(qk_state) == len(cirq_state) == 2 ** enc.n_qubits
+        assert len(pl_state) == len(qk_state) == len(cirq_state) == 2**enc.n_qubits
 
         # Probability distributions should have the same set of values
         # (accounting for different qubit ordering conventions)
@@ -1913,23 +1913,26 @@ class TestSlowSimulation:
 
         state = full_circuit()
 
-        assert len(state) == 2 ** 10
+        assert len(state) == 2**10
         assert np.isclose(np.sum(np.abs(state) ** 2), 1.0, atol=1e-10)
 
     @pytest.mark.skipif(not HAS_PENNYLANE, reason="PennyLane not installed")
     def test_batch_simulation_consistency(self) -> None:
         """Test that batch generation produces consistent results."""
         enc = IQPEncoding(n_features=4)
-        batch = np.array([
-            [0.1, 0.2, 0.3, 0.4],
-            [0.5, 0.6, 0.7, 0.8],
-        ])
+        batch = np.array(
+            [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.5, 0.6, 0.7, 0.8],
+            ]
+        )
 
         circuits = enc.get_circuits(batch, backend="pennylane")
         dev = qml.device("default.qubit", wires=enc.n_qubits)
 
         states = []
         for circuit_fn in circuits:
+
             @qml.qnode(dev)
             def full_circuit():
                 circuit_fn()
@@ -2121,7 +2124,7 @@ class TestStress:
         enc = IQPEncoding(n_features=4, reps=3, entanglement="full")
 
         circuits = []
-        for i in range(50):
+        for _i in range(50):
             x = np.random.randn(4)
             circuit = enc.get_circuit(x, backend="pennylane")
             circuits.append(circuit)
@@ -2130,13 +2133,16 @@ class TestStress:
         assert all(callable(c) for c in circuits)
 
     @pytest.mark.timeout(5)
-    @pytest.mark.parametrize("n_features,reps,entanglement", [
-        (10, 50, "linear"),
-        (10, 50, "circular"),
-        (5, 100, "full"),
-        (20, 10, "linear"),
-        (8, 25, "full"),
-    ])
+    @pytest.mark.parametrize(
+        "n_features,reps,entanglement",
+        [
+            (10, 50, "linear"),
+            (10, 50, "circular"),
+            (5, 100, "full"),
+            (20, 10, "linear"),
+            (8, 25, "full"),
+        ],
+    )
     def test_various_stress_configurations(
         self,
         n_features: int,

@@ -1,7 +1,5 @@
 # Pauli Feature Map
 
-**Author:** Ashutosh Mishra
-
 A highly configurable quantum encoding that uses **arbitrary Pauli rotation
 gates** to map classical data into quantum states — generalizing ZZFeatureMap
 and enabling custom problem-specific encoding structures.

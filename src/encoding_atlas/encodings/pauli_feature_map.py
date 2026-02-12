@@ -131,7 +131,6 @@ References
 
 from __future__ import annotations
 
-import itertools
 import logging
 import warnings
 from concurrent.futures import ThreadPoolExecutor
@@ -177,7 +176,7 @@ _logger = logging.getLogger(__name__)
 # Public API
 # =============================================================================
 
-__all__ = ['PauliFeatureMap']
+__all__ = ["PauliFeatureMap"]
 
 # =============================================================================
 # Module-Level Constants
@@ -246,6 +245,7 @@ _INPUT_RANGE_DEBUG_THRESHOLD: float = 4.0 * np.pi
 # =============================================================================
 # Type Definitions
 # =============================================================================
+
 
 class GateCountBreakdown(TypedDict):
     """Type definition for gate count breakdown dictionary.
@@ -455,9 +455,9 @@ class PauliFeatureMap(BaseEncoding):
 
     # Valid Pauli terms
     _VALID_SINGLE_PAULIS: frozenset[str] = frozenset({"X", "Y", "Z"})
-    _VALID_TWO_PAULIS: frozenset[str] = frozenset({
-        "XX", "YY", "ZZ", "XY", "XZ", "YZ", "YX", "ZX", "ZY"
-    })
+    _VALID_TWO_PAULIS: frozenset[str] = frozenset(
+        {"XX", "YY", "ZZ", "XY", "XZ", "YZ", "YX", "ZX", "ZY"}
+    )
     _VALID_PAULIS: frozenset[str] = _VALID_SINGLE_PAULIS | _VALID_TWO_PAULIS
 
     # Valid entanglement patterns
@@ -466,8 +466,14 @@ class PauliFeatureMap(BaseEncoding):
     # Memory-efficient slot-based attribute storage.
     # Only instance attributes specific to this class are listed here.
     # Attributes from BaseEncoding are handled by its own __slots__.
-    __slots__ = ('reps', 'paulis', 'entanglement', '_entanglement_pairs',
-                 '_single_paulis', '_two_paulis')
+    __slots__ = (
+        "reps",
+        "paulis",
+        "entanglement",
+        "_entanglement_pairs",
+        "_single_paulis",
+        "_two_paulis",
+    )
 
     def __init__(
         self,
@@ -514,9 +520,7 @@ class PauliFeatureMap(BaseEncoding):
                 f"(boolean values are not accepted)"
             )
         if not isinstance(reps, int) or reps < 1:
-            raise ValueError(
-                f"reps must be a positive integer, got {reps!r}"
-            )
+            raise ValueError(f"reps must be a positive integer, got {reps!r}")
 
         # =====================================================================
         # ENTANGLEMENT VALIDATION
@@ -575,7 +579,9 @@ class PauliFeatureMap(BaseEncoding):
         self.entanglement: Literal["full", "linear", "circular"] = entanglement
 
         # Precompute entanglement pairs for efficiency
-        self._entanglement_pairs: list[tuple[int, int]] = self._compute_entanglement_pairs()
+        self._entanglement_pairs: list[tuple[int, int]] = (
+            self._compute_entanglement_pairs()
+        )
 
         # Categorize paulis for circuit construction
         self._single_paulis: list[str] = [p for p in paulis if len(p) == 1]
@@ -585,7 +591,11 @@ class PauliFeatureMap(BaseEncoding):
         _logger.debug(
             "PauliFeatureMap initialized: n_features=%d, reps=%d, "
             "paulis=%r, entanglement=%r, n_pairs=%d",
-            n_features, reps, paulis, entanglement, len(self._entanglement_pairs)
+            n_features,
+            reps,
+            paulis,
+            entanglement,
+            len(self._entanglement_pairs),
         )
 
         # =====================================================================
@@ -613,7 +623,9 @@ class PauliFeatureMap(BaseEncoding):
             _logger.warning(
                 "Large feature count with full entanglement: %d features, "
                 "%d two-qubit Paulis, %d CNOT gates total",
-                n_features, n_two_paulis, cnot_count
+                n_features,
+                n_two_paulis,
+                cnot_count,
             )
 
     @property
@@ -815,16 +827,23 @@ class PauliFeatureMap(BaseEncoding):
                 gates_per_pair += 4
             basis_change_gates += self.reps * n_pairs * gates_per_pair
 
-        single_qubit = (h_gates + rx_gates + ry_gates + rz_gates +
-                       rz_two_qubit + basis_change_gates)
+        single_qubit = (
+            h_gates + rx_gates + ry_gates + rz_gates + rz_two_qubit + basis_change_gates
+        )
         two_qubit = cnot_gates
         total = single_qubit + two_qubit
 
         _logger.debug(
             "Gate breakdown: H=%d, RX=%d, RY=%d, RZ=%d, RZ_2q=%d, "
             "CNOT=%d, basis_change=%d, total=%d",
-            h_gates, rx_gates, ry_gates, rz_gates, rz_two_qubit,
-            cnot_gates, basis_change_gates, total
+            h_gates,
+            rx_gates,
+            ry_gates,
+            rz_gates,
+            rz_two_qubit,
+            cnot_gates,
+            basis_change_gates,
+            total,
         )
 
         return GateCountBreakdown(
@@ -973,7 +992,7 @@ class PauliFeatureMap(BaseEncoding):
             "entanglement=%s, pairs=%d, paulis=%r",
             self.n_qubits,
             self.depth,
-            gate_counts['total'],
+            gate_counts["total"],
             self.entanglement,
             len(pairs),
             self.paulis,
@@ -1060,7 +1079,8 @@ class PauliFeatureMap(BaseEncoding):
         """
         _logger.debug(
             "Generating circuit: backend=%r, input_shape=%s",
-            backend, getattr(x, 'shape', f'len={len(x)}')
+            backend,
+            getattr(x, "shape", f"len={len(x)}"),
         )
 
         # Validate and preprocess input
@@ -1071,7 +1091,10 @@ class PauliFeatureMap(BaseEncoding):
         # Debug log if values are far outside the optimal [0, 2π] range.
         if _logger.isEnabledFor(logging.DEBUG):
             x_min, x_max = float(x_validated.min()), float(x_validated.max())
-            if abs(x_min) > _INPUT_RANGE_DEBUG_THRESHOLD or abs(x_max) > _INPUT_RANGE_DEBUG_THRESHOLD:
+            if (
+                abs(x_min) > _INPUT_RANGE_DEBUG_THRESHOLD
+                or abs(x_max) > _INPUT_RANGE_DEBUG_THRESHOLD
+            ):
                 _logger.debug(
                     "Input values [%.3g, %.3g] are outside optimal range [0, 2π]. "
                     "Consider normalizing features to [0, 2π] or [-π, π].",
@@ -1223,8 +1246,7 @@ class PauliFeatureMap(BaseEncoding):
             # The batch was already validated above, so we can safely skip
             # per-sample validation for better performance
             circuits = [
-                self._get_circuit_from_validated(x, backend)
-                for x in X_validated
+                self._get_circuit_from_validated(x, backend) for x in X_validated
             ]
 
             _logger.debug(
@@ -1329,8 +1351,7 @@ class PauliFeatureMap(BaseEncoding):
             for p in single_paulis
         }
         two_angles: dict[str, list[float]] = {
-            p: [self._feature_map_two(x, i, j) for i, j in pairs]
-            for p in two_paulis
+            p: [self._feature_map_two(x, i, j) for i, j in pairs] for p in two_paulis
         }
 
         # Gate mapping for single-qubit Paulis
@@ -1434,7 +1455,9 @@ class PauliFeatureMap(BaseEncoding):
 
         for _ in range(self.reps):
             # Hadamard layer
-            moments.append(cirq.Moment([cirq.H(qubits[i]) for i in range(self.n_qubits)]))
+            moments.append(
+                cirq.Moment([cirq.H(qubits[i]) for i in range(self.n_qubits)])
+            )
 
             # Single-qubit Pauli rotations
             for pauli in self._single_paulis:
@@ -1482,7 +1505,9 @@ class PauliFeatureMap(BaseEncoding):
         # Circuits with only Z rotations and no entanglement are simulable
         # Circuits with entanglement and non-Clifford gates are not simulable
         if not is_entangling:
-            simulability: Literal["simulable", "conditionally_simulable", "not_simulable"] = "simulable"
+            simulability: Literal[
+                "simulable", "conditionally_simulable", "not_simulable"
+            ] = "simulable"
         else:
             # Non-Clifford entangling circuits are not efficiently simulable
             simulability = "not_simulable"
@@ -1493,9 +1518,9 @@ class PauliFeatureMap(BaseEncoding):
         return EncodingProperties(
             n_qubits=n,
             depth=self.depth,
-            gate_count=breakdown['total'],
-            single_qubit_gates=breakdown['total_single_qubit'],
-            two_qubit_gates=breakdown['total_two_qubit'],
+            gate_count=breakdown["total"],
+            single_qubit_gates=breakdown["total_single_qubit"],
+            two_qubit_gates=breakdown["total_two_qubit"],
             parameter_count=0,  # No trainable parameters, only data-dependent
             is_entangling=is_entangling,
             simulability=simulability,
@@ -1522,6 +1547,7 @@ class PauliFeatureMap(BaseEncoding):
 # =============================================================================
 # Helper functions for two-qubit Pauli rotations
 # =============================================================================
+
 
 def _apply_two_qubit_pauli_pennylane(
     qml: Any,

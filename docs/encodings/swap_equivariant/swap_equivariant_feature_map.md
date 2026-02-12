@@ -1,7 +1,5 @@
 # Swap (S_2) Equivariant Feature Map
 
-**Author:** Ashutosh Mishra
-
 A quantum data encoding with **provable pair-swap equivariance** -- swapping
 two features within any pair in the input is exactly equivalent to applying a
 SWAP gate on the corresponding qubit pair, guaranteeing the encoding respects

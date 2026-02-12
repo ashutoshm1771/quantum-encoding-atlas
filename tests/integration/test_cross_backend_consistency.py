@@ -157,7 +157,9 @@ class TestCrossBackendStatevectorConsistency:
         probs_pl = np.abs(sv_pennylane) ** 2
         probs_qk = np.abs(sv_qiskit) ** 2
         np.testing.assert_allclose(
-            probs_pl, probs_qk, atol=1e-6,
+            probs_pl,
+            probs_qk,
+            atol=1e-6,
             err_msg="Per-index probability mismatch between PennyLane and Qiskit",
         )
 
@@ -191,10 +193,10 @@ class TestCrossBackendStatevectorConsistency:
         (ZZPowGate).  A previous bug applied a spurious 2x factor in the
         Qiskit and Cirq backends; this test guards against regressions.
         """
+        from encoding_atlas.analysis._utils import simulate_encoding_statevector
         from encoding_atlas.encodings.equivariant_feature_map import (
             CyclicEquivariantFeatureMap,
         )
-        from encoding_atlas.analysis._utils import simulate_encoding_statevector
 
         enc = CyclicEquivariantFeatureMap(n_features=4, reps=1)
         x = sample_input_4q
@@ -223,10 +225,10 @@ class TestCrossBackendStatevectorConsistency:
         Verifies that the RZZ convention fix holds for all coupling strengths,
         not just the default value.
         """
+        from encoding_atlas.analysis._utils import simulate_encoding_statevector
         from encoding_atlas.encodings.equivariant_feature_map import (
             CyclicEquivariantFeatureMap,
         )
-        from encoding_atlas.analysis._utils import simulate_encoding_statevector
 
         enc = CyclicEquivariantFeatureMap(
             n_features=4, reps=1, coupling_strength=coupling_strength
@@ -327,8 +329,8 @@ class TestCrossBackendObservableConsistency:
         """Test ⟨Z₀⟩ (local Z on first qubit) consistency."""
         from encoding_atlas import AngleEncoding
         from encoding_atlas.analysis._utils import (
-            simulate_encoding_statevector,
             _compute_local_z_expectation,
+            simulate_encoding_statevector,
         )
 
         enc = AngleEncoding(n_features=2, rotation="Y")
@@ -345,9 +347,9 @@ class TestCrossBackendObservableConsistency:
 
         assert np.isclose(z0_pl, -1.0, atol=0.01), f"PennyLane ⟨Z₀⟩ = {z0_pl}"
         assert np.isclose(z0_qk, -1.0, atol=0.01), f"Qiskit ⟨Z₀⟩ = {z0_qk}"
-        assert np.isclose(z0_pl, z0_qk, atol=0.001), (
-            f"⟨Z₀⟩ mismatch: PennyLane={z0_pl}, Qiskit={z0_qk}"
-        )
+        assert np.isclose(
+            z0_pl, z0_qk, atol=0.001
+        ), f"⟨Z₀⟩ mismatch: PennyLane={z0_pl}, Qiskit={z0_qk}"
 
     def test_global_z_expectation_consistency(self):
         """Test ⟨Z⊗Z⟩ (global Z) consistency."""
@@ -371,9 +373,9 @@ class TestCrossBackendObservableConsistency:
         zz_pl = compute_global_z(sv_pl)
         zz_qk = compute_global_z(sv_qk)
 
-        assert np.isclose(zz_pl, zz_qk, atol=0.001), (
-            f"⟨Z⊗Z⟩ mismatch: PennyLane={zz_pl}, Qiskit={zz_qk}"
-        )
+        assert np.isclose(
+            zz_pl, zz_qk, atol=0.001
+        ), f"⟨Z⊗Z⟩ mismatch: PennyLane={zz_pl}, Qiskit={zz_qk}"
 
 
 @requires_both_backends
@@ -407,7 +409,9 @@ class TestCrossBackendDataReuploadingConsistency:
         probs_pl = np.abs(sv_pennylane) ** 2
         probs_qk = np.abs(sv_qiskit) ** 2
         np.testing.assert_allclose(
-            probs_pl, probs_qk, atol=1e-6,
+            probs_pl,
+            probs_qk,
+            atol=1e-6,
             err_msg="Per-index probability mismatch between PennyLane and Qiskit",
         )
 
@@ -424,9 +428,9 @@ class TestCrossBackendDataReuploadingConsistency:
 
         fidelity = np.abs(np.vdot(sv_pennylane, sv_qiskit)) ** 2
 
-        assert fidelity > 0.9999, (
-            f"Single-layer DataReuploading fidelity is {fidelity:.6f}."
-        )
+        assert (
+            fidelity > 0.9999
+        ), f"Single-layer DataReuploading fidelity is {fidelity:.6f}."
 
     def test_data_reuploading_cyclic_mapping_consistency(self):
         """Test cyclic feature mapping (n_features > n_qubits) consistency.
@@ -471,9 +475,9 @@ class TestCrossBackendDataReuploadingConsistency:
 
         fidelity = np.abs(np.vdot(sv_pennylane, sv_qiskit)) ** 2
 
-        assert fidelity > 0.9999, (
-            f"DataReuploading (L={n_layers}) fidelity is {fidelity:.6f}."
-        )
+        assert (
+            fidelity > 0.9999
+        ), f"DataReuploading (L={n_layers}) fidelity is {fidelity:.6f}."
 
 
 @requires_both_backends

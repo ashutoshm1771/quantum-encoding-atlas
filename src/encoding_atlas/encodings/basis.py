@@ -153,7 +153,7 @@ logger = logging.getLogger(__name__)
 # Public API
 # =============================================================================
 
-__all__ = ['BasisEncoding']
+__all__ = ["BasisEncoding"]
 
 # =============================================================================
 # Module-Level Constants
@@ -473,7 +473,7 @@ class BasisEncoding(BaseEncoding):
     # BasisEncoding has no additional instance attributes beyond BaseEncoding,
     # but we declare empty __slots__ to maintain the optimization pattern
     # and prevent accidental __dict__ creation.
-    __slots__ = ('threshold',)
+    __slots__ = ("threshold",)
 
     # =========================================================================
     # Initialization
@@ -855,8 +855,7 @@ class BasisEncoding(BaseEncoding):
             # The batch was already validated above, so we can safely skip
             # per-sample validation for better performance.
             circuits = [
-                self._get_circuit_from_validated(x, backend)
-                for x in X_validated
+                self._get_circuit_from_validated(x, backend) for x in X_validated
             ]
 
             logger.debug(
@@ -1444,7 +1443,9 @@ class BasisEncoding(BaseEncoding):
             # Gate counts
             "actual_gate_count": ones_count,
             "max_gate_count": self.n_features,
-            "gate_efficiency": ones_count / self.n_features if self.n_features > 0 else 0.0,
+            "gate_efficiency": (
+                ones_count / self.n_features if self.n_features > 0 else 0.0
+            ),
             # Binarization details
             "binarized_input": x_binary.tolist(),
             "threshold": self.threshold,
@@ -1594,16 +1595,9 @@ class BasisEncoding(BaseEncoding):
         # Collect all X gates into a single moment (parallel execution).
         # Cirq uses big-endian ordering (qubit 0 = MSB), same as PennyLane,
         # so feature[i] maps directly to qubit[i] — no reversal needed.
-        x_gates = [
-            cirq.X(qubits[i])
-            for i, val in enumerate(x)
-            if val == 1
-        ]
+        x_gates = [cirq.X(qubits[i]) for i, val in enumerate(x) if val == 1]
 
-        if x_gates:
-            circuit = cirq.Circuit(cirq.Moment(x_gates))
-        else:
-            circuit = cirq.Circuit()
+        circuit = cirq.Circuit(cirq.Moment(x_gates)) if x_gates else cirq.Circuit()
 
         return circuit
 

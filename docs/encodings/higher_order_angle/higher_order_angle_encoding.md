@@ -1,7 +1,5 @@
 # Higher-Order Angle Encoding
 
-**Author:** Ashutosh Mishra
-
 A generalization of standard angle encoding that captures **non-linear feature
 interactions** by using polynomial combinations of features as rotation angles,
 while still producing **product states** (no entanglement).

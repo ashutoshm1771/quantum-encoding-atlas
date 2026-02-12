@@ -1,7 +1,5 @@
 # Data Re-uploading Encoding
 
-**Author:** Ashutosh Mishra
-
 A universal quantum encoding that achieves **arbitrary function approximation**
 by repeatedly encoding classical data throughout the circuit, interleaved with
 entangling layers — the quantum analogue of depth in classical neural networks.
@@ -981,7 +979,7 @@ Encode `x = [0.5, 1.2]` on 2 qubits with 2 layers:
 1. Pérez-Salinas, A., et al. (2020). "Data re-uploading for a universal
    quantum classifier." Quantum, 4, 226.
 
-2. Schuld, M., Sweke, R., & Meyer, J. K. (2021). "Effect of data encoding
+2. Schuld, M., Sweke, R., & Meyer, J. J. (2021). "Effect of data encoding
    on the expressive power of variational quantum machine learning models."
    Physical Review A, 103(3), 032430.
 

@@ -5,6 +5,7 @@ def is_pennylane_available() -> bool:
     """Check if PennyLane is installed."""
     try:
         import pennylane
+
         return True
     except ImportError:
         return False
@@ -14,6 +15,7 @@ def is_qiskit_available() -> bool:
     """Check if Qiskit is installed."""
     try:
         import qiskit
+
         return True
     except ImportError:
         return False
@@ -23,6 +25,7 @@ def is_cirq_available() -> bool:
     """Check if Cirq is installed."""
     try:
         import cirq
+
         return True
     except ImportError:
         return False

@@ -24,9 +24,7 @@ class BaseBackend(ABC):
         ...
 
     @abstractmethod
-    def add_rotation(
-        self, circuit: Any, qubit: int, axis: str, angle: float
-    ) -> Any:
+    def add_rotation(self, circuit: Any, qubit: int, axis: str, angle: float) -> Any:
         """Add a rotation gate."""
         ...
 

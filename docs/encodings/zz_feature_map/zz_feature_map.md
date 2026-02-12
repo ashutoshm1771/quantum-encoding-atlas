@@ -1,7 +1,5 @@
 # ZZ Feature Map
 
-**Author:** Ashutosh Mishra
-
 A second-order Pauli-Z feature map that encodes classical data into
 **entangled quantum states** using pairwise ZZ interactions with the
 Qiskit **(pi - x)** phase convention.
