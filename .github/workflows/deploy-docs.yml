@@ -1,0 +1,63 @@
+# .github/workflows/deploy-docs.yml
+#
+# Builds MkDocs documentation and deploys to GitHub Pages.
+# Triggers on push to master when documentation-related files change.
+#
+# Prerequisites:
+#   1. Enable GitHub Pages in repo settings
+#   2. Set source to "Deploy from a branch" > gh-pages > / (root)
+
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "src/**/*.py"
+      - ".github/workflows/deploy-docs.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-docs
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    name: Build & Deploy Docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ".[docs]"
+
+      - name: Build documentation
+        run: mkdocs build --strict
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          force_orphan: false
+          user_name: "Ashutosh Mishra"
+          user_email: "ashutoshm1771@gmail.com"
+          commit_message: "docs: deploy from ${{ github.sha }}"
