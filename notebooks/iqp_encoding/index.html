@@ -4449,8 +4449,8 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="iqpencoding-complete-feature-demonstration">IQPEncoding: Complete Feature Demonstration<a class="anchor-link" href="#iqpencoding-complete-feature-demonstration">¶</a></h1><p><strong>Library:</strong> <a href="https://pypi.org/project/encoding-atlas/0.1.0/">encoding-atlas</a>
-<strong>Version:</strong> 0.1.0
+<h1 id="iqpencoding-complete-feature-demonstration">IQPEncoding: Complete Feature Demonstration<a class="anchor-link" href="#iqpencoding-complete-feature-demonstration">¶</a></h1><p><strong>Library:</strong> <a href="https://pypi.org/project/encoding-atlas/0.2.0/">encoding-atlas</a>
+<strong>Version:</strong> 0.2.0
 <strong>Author:</strong> Ashutosh Mishra</p>
 <hr/>
 <p>This notebook provides an exhaustive, hands-on demonstration of <strong>IQPEncoding</strong> from the Quantum Encoding Atlas library. IQPEncoding implements Instantaneous Quantum Polynomial (IQP) circuits for quantum machine learning, creating highly entangled quantum states with provable classical hardness guarantees.</p>
@@ -4726,7 +4726,7 @@ print(f"NumPy version: {np.__version__}")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>encoding-atlas version: 0.1.0
+<pre>encoding-atlas version: 0.2.0
 NumPy version: 2.2.6
 </pre>
 </div>
@@ -10421,8 +10421,8 @@ print(f"  Dict lookup enc_b (equals enc_a): {encoding_dict[enc_b]}")</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>=== Hashing ===
-  hash(enc_a): 3383432502324637676
-  hash(enc_b): 3383432502324637676
+  hash(enc_a): -2638277387621053901
+  hash(enc_b): -2638277387621053901
   Hashes equal (same params): True
 
   Set of 4 encodings (with 1 duplicate): 3 unique
@@ -10787,13 +10787,6 @@ _ = enc_debug.get_circuit(np.array([0.1, 0.2, 0.3]), backend="qiskit")</div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Debug logging enabled. Creating encoding and generating circuit...
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
 <pre>encoding_atlas.encodings.iqp - DEBUG - IQPEncoding initialized: n_features=3, reps=2, entanglement='full'
 encoding_atlas.encodings.iqp - DEBUG - Generating circuit: backend='qiskit', input_shape=(3,)
@@ -10804,7 +10797,8 @@ encoding_atlas.encodings.iqp - DEBUG - Circuit generated successfully for backen
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>
+<pre>Debug logging enabled. Creating encoding and generating circuit...
+
 </pre>
 </div>
 </div>
@@ -10857,6 +10851,14 @@ logger.setLevel(logging.WARNING)</div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Batch generation logging...
+
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
 <pre>encoding_atlas.encodings.iqp - DEBUG - Batch circuit generation: n_samples=5, backend='qiskit', parallel=False, max_workers=None
 encoding_atlas.encodings.iqp - DEBUG - Generating circuit from validated input: backend='qiskit', shape=(3,)
@@ -10865,14 +10867,6 @@ encoding_atlas.encodings.iqp - DEBUG - Generating circuit from validated input: 
 encoding_atlas.encodings.iqp - DEBUG - Generating circuit from validated input: backend='qiskit', shape=(3,)
 encoding_atlas.encodings.iqp - DEBUG - Generating circuit from validated input: backend='qiskit', shape=(3,)
 encoding_atlas.encodings.iqp - DEBUG - Sequential batch generation completed: 5 circuits
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Batch generation logging...
-
 </pre>
 </div>
 </div>
@@ -10973,13 +10967,6 @@ with warnings.catch_warnings(record=True) as w:
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>=== Full entanglement warning (n_features &gt; 12) ===
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
 <pre>Large feature count with full entanglement: 13 features, 312 CNOT gates total
 </pre>
@@ -10988,7 +10975,8 @@ with warnings.catch_warnings(record=True) as w:
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>  Warning issued: UserWarning
+<pre>=== Full entanglement warning (n_features &gt; 12) ===
+  Warning issued: UserWarning
   Message: Full entanglement with 13 features creates 78 ZZ interaction pairs per layer (312 total CNOT gates for 2 reps). This may exceed practical limits for NISQ devices. Consider using entanglement='linear' or 'circular' for better hardware compatibility.
 
   n_features=12: warnings issued = 0
@@ -11078,9 +11066,9 @@ print(f"  Alternatives: {rec.alternatives}")</div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>=== Encoding Recommendation ===
   Recommended: iqp
-  Confidence:  0.75
-  Explanation: IQP encoding is expressive for small feature sets with sufficient data
-  Alternatives: ['zz_feature_map', 'data_reuploading']
+  Confidence:  0.74
+  Explanation: IQP encoding creates highly entangled states with provable classical simulation hardness, well-suited for kernel methods
+  Alternatives: ['data_reuploading', 'zz_feature_map', 'pauli_feature_map']
 </pre>
 </div>
 </div>
@@ -11141,10 +11129,10 @@ for priority in ["accuracy", "trainability", "speed", "noise_resilience"]:
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>=== Recommendations by priority ===
-  accuracy            : iqp (confidence: 0.75)
-  trainability        : iqp (confidence: 0.75)
-  speed               : angle (confidence: 0.80)
-  noise_resilience    : hardware_efficient (confidence: 0.70)
+  accuracy            : iqp (confidence: 0.74)
+  trainability        : data_reuploading (confidence: 0.56)
+  speed               : angle (confidence: 0.60)
+  noise_resilience    : hardware_efficient (confidence: 0.60)
 </pre>
 </div>
 </div>

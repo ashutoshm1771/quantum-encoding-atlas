@@ -4449,8 +4449,8 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="zzfeaturemap-complete-feature-demonstration">ZZFeatureMap: Complete Feature Demonstration<a class="anchor-link" href="#zzfeaturemap-complete-feature-demonstration">¶</a></h1><p><strong>Library:</strong> <a href="https://pypi.org/project/encoding-atlas/0.1.0/">encoding-atlas</a><br/>
-<strong>Version:</strong> 0.1.0<br/>
+<h1 id="zzfeaturemap-complete-feature-demonstration">ZZFeatureMap: Complete Feature Demonstration<a class="anchor-link" href="#zzfeaturemap-complete-feature-demonstration">¶</a></h1><p><strong>Library:</strong> <a href="https://pypi.org/project/encoding-atlas/0.2.0/">encoding-atlas</a><br/>
+<strong>Version:</strong> 0.2.0<br/>
 <strong>Author:</strong> Ashutosh Mishra</p>
 <hr/>
 <p>This notebook provides an exhaustive, hands-on demonstration of <strong>ZZFeatureMap</strong> from the Quantum Encoding Atlas library. ZZFeatureMap is a second-order Pauli-Z expansion feature map widely used in quantum kernel methods and Quantum Support Vector Machines (QSVM), following the Qiskit convention for ZZ interactions.</p>
@@ -4716,7 +4716,7 @@ print(f"NumPy version: {np.__version__}")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>encoding-atlas version: 0.1.0
+<pre>encoding-atlas version: 0.2.0
 NumPy version: 2.2.6
 </pre>
 </div>
@@ -5498,8 +5498,8 @@ print(f"id(props_2) = {id(props_2)}")</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Same object returned: True
-id(props_1) = 3187739285808
-id(props_2) = 3187739285808
+id(props_1) = 2184815454880
+id(props_2) = 2184815454880
 </pre>
 </div>
 </div>
@@ -6812,8 +6812,8 @@ print(f"Speedup:    {t_seq / t_par:.2f}x")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Sequential: 0.0457s
-Parallel:   0.0532s
+<pre>Sequential: 0.0635s
+Parallel:   0.0742s
 Speedup:    0.86x
 </pre>
 </div>
@@ -8587,7 +8587,7 @@ for topology in ['full', 'linear', 'circular']:
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>C:\Users\ashut\AppData\Local\Temp\ipykernel_51060\3129257047.py:6: UserWarning: n_samples=50 is low. For reliable entanglement capability estimates, use at least 100 samples.
+<pre>C:\Users\ashut\AppData\Local\Temp\ipykernel_39196\3129257047.py:6: UserWarning: n_samples=50 is low. For reliable entanglement capability estimates, use at least 100 samples.
   ent = compute_entanglement_capability(enc_t, n_samples=50, seed=42)
 </pre>
 </div>
@@ -10007,8 +10007,8 @@ print(f"  Dict lookup enc_b (== enc_a): {enc_dict[enc_b]!r}")</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>=== Hashing ===
-  hash(enc_a): -1816039171373260581
-  hash(enc_b): -1816039171373260581
+  hash(enc_a): -8930804591261932944
+  hash(enc_b): -8930804591261932944
   hash(enc_a) == hash(enc_b): True
   Set of 4 encodings (2 duplicates): 3 unique
   Dict lookup enc_b (== enc_a): 'full-2'
@@ -10373,6 +10373,8 @@ logger.setLevel(logging.WARNING)</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
 <pre>encoding_atlas.encodings.zz_feature_map - DEBUG - Entanglement pairs computed: topology='linear', n_qubits=3, n_pairs=2
+encoding_atlas.encodings.zz_feature_map - DEBUG - ZZFeatureMap initialized: n_features=3, n_qubits=3, reps=1, entanglement='linear'
+encoding_atlas.encodings.zz_feature_map - DEBUG - get_circuit called: backend='pennylane', input_shape=(3,)
 </pre>
 </div>
 </div>
@@ -10381,24 +10383,16 @@ logger.setLevel(logging.WARNING)</div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Creating ZZFeatureMap with debug logging enabled...
 
+
+Generating circuit...
+
 </pre>
 </div>
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>encoding_atlas.encodings.zz_feature_map - DEBUG - ZZFeatureMap initialized: n_features=3, n_qubits=3, reps=1, entanglement='linear'
-encoding_atlas.encodings.zz_feature_map - DEBUG - get_circuit called: backend='pennylane', input_shape=(3,)
-encoding_atlas.encodings.zz_feature_map - DEBUG - PennyLane circuit generated: n_qubits=3
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>
-Generating circuit...
-
+<pre>encoding_atlas.encodings.zz_feature_map - DEBUG - PennyLane circuit generated: n_qubits=3
 </pre>
 </div>
 </div>
@@ -10543,17 +10537,17 @@ logger.setLevel(logging.WARNING)</div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Batch generation logging...
-
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>DEBUG - Batch processing started: n_samples=5, backend='pennylane', parallel=True, max_workers=None
+DEBUG - Parallel batch processing completed: generated 5 circuits using ThreadPoolExecutor
 </pre>
 </div>
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>DEBUG - Batch processing started: n_samples=5, backend='pennylane', parallel=True, max_workers=None
-DEBUG - Parallel batch processing completed: generated 5 circuits using ThreadPoolExecutor
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Batch generation logging...
+
 </pre>
 </div>
 </div>
@@ -10835,9 +10829,9 @@ print(f"  Confidence: {rec.confidence:.2f}")</div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>=== Recommendation (accuracy priority) ===
   Encoding: iqp
-  Explanation: IQP encoding is expressive for small feature sets with sufficient data
-  Alternatives: ['zz_feature_map', 'data_reuploading']
-  Confidence: 0.75
+  Explanation: IQP encoding creates highly entangled states with provable classical simulation hardness, well-suited for kernel methods
+  Alternatives: ['data_reuploading', 'zz_feature_map', 'pauli_feature_map']
+  Confidence: 0.74
 </pre>
 </div>
 </div>
@@ -10903,9 +10897,9 @@ for priority in ['accuracy', 'trainability', 'speed', 'noise_resilience']:
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>=== Recommendations by priority ===
   accuracy        : recommended='iqp', ZZ mentioned=Yes
-  trainability    : recommended='iqp', ZZ mentioned=Yes
-  speed           : recommended='angle', ZZ mentioned=No
-  noise_resilience: recommended='hardware_efficient', ZZ mentioned=No
+  trainability    : recommended='data_reuploading', ZZ mentioned=Yes
+  speed           : recommended='angle', ZZ mentioned=Yes
+  noise_resilience: recommended='hardware_efficient', ZZ mentioned=Yes
 </pre>
 </div>
 </div>

@@ -4782,7 +4782,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="higherorderangleencoding-complete-feature-demonstration">HigherOrderAngleEncoding: Complete Feature Demonstration<a class="anchor-link" href="#higherorderangleencoding-complete-feature-demonstration">¶</a></h1><hr/>
-<h2 id="overview">Overview<a class="anchor-link" href="#overview">¶</a></h2><p>This notebook is the <strong>definitive guide</strong> to <code>HigherOrderAngleEncoding</code> from the <a href="https://pypi.org/project/encoding-atlas/0.1.0/"><code>encoding-atlas</code></a> library. It demonstrates every constructor parameter, property, method, backend, edge case, and integration point.</p>
+<h2 id="overview">Overview<a class="anchor-link" href="#overview">¶</a></h2><p>This notebook is the <strong>definitive guide</strong> to <code>HigherOrderAngleEncoding</code> from the <a href="https://pypi.org/project/encoding-atlas/0.2.0/"><code>encoding-atlas</code></a> library. It demonstrates every constructor parameter, property, method, backend, edge case, and integration point.</p>
 <p><strong>What is Higher-Order Angle Encoding?</strong></p>
 <p>Standard angle encoding maps each feature $x_i$ to a rotation $R_Y(x_i)$ on qubit $i$. Higher-Order Angle Encoding generalises this by computing <strong>polynomial interaction terms</strong> — products like $x_i \cdot x_j$ (second-order) or $x_i \cdot x_j \cdot x_k$ (third-order) — and distributing them across qubits.</p>
 <p>The rotation angle for each qubit is the <strong>sum of all terms assigned to it</strong> (scaled by a configurable factor):</p>
@@ -4890,10 +4890,10 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Install the library (uncomment if not already installed)</span>
-<span class="c1"># !pip install encoding-atlas==0.1.0</span>
+<span class="c1"># !pip install encoding-atlas==0.2.0</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1"># Install the library (uncomment if not already installed)
-# !pip install encoding-atlas==0.1.0</div>
+# !pip install encoding-atlas==0.2.0</div>
 </div>
 </div>
 </div>
@@ -5076,7 +5076,7 @@ print("encoding-atlas version:", encoding_atlas.__version__)</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>encoding-atlas version: 0.1.0
+<pre>encoding-atlas version: 0.2.0
 </pre>
 </div>
 </div>
@@ -8130,7 +8130,7 @@ assert bd["total_two_qubit"] == 0</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>C:\Users\ashut\AppData\Local\Temp\ipykernel_63432\399513000.py:2: UserWarning: High term count (162 terms) may impact performance. With order=4 and n_features=8, the term count grows combinatorially. Consider using a lower order for better performance, or ensure this complexity is intentional.
+<pre>C:\Users\ashut\AppData\Local\Temp\ipykernel_49516\399513000.py:2: UserWarning: High term count (162 terms) may impact performance. With order=4 and n_features=8, the term count grows combinatorially. Consider using a lower order for better performance, or ensure this complexity is intentional.
   enc_big = HigherOrderAngleEncoding(n_features=8, order=4)
 High term count: 162 terms with order=4, n_features=8
 </pre>
@@ -8913,9 +8913,9 @@ print(f"Confidence: {rec.confidence}")</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Recommended: iqp
-Explanation: IQP encoding is expressive for small feature sets with sufficient data
-Alternatives: ['zz_feature_map', 'data_reuploading']
-Confidence: 0.75
+Explanation: IQP encoding creates highly entangled states with provable classical simulation hardness, well-suited for kernel methods
+Alternatives: ['data_reuploading', 'zz_feature_map', 'pauli_feature_map']
+Confidence: 0.74
 </pre>
 </div>
 </div>
@@ -11371,7 +11371,7 @@ All backends consistent: False
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <hr/>
-<p><em>Generated for <a href="https://pypi.org/project/encoding-atlas/0.1.0/">encoding-atlas</a> v0.1.0</em></p>
+<p><em>Generated for <a href="https://pypi.org/project/encoding-atlas/0.2.0/">encoding-atlas</a> v0.2.0</em></p>
 </div>
 </div>
 </div>

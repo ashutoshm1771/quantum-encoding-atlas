@@ -4361,9 +4361,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="angleencoding-complete-feature-demonstration">AngleEncoding: Complete Feature Demonstration<a class="anchor-link" href="#angleencoding-complete-feature-demonstration">¶</a></h1><p><strong>Library:</strong> <a href="https://pypi.org/project/encoding-atlas/0.1.0/">encoding-atlas</a><br/>
-<strong>Version:</strong> 0.1.0<br/>
-<strong>Author:</strong> Ashutosh Mishra</p>
+<h1 id="angleencoding-complete-feature-demonstration">AngleEncoding: Complete Feature Demonstration<a class="anchor-link" href="#angleencoding-complete-feature-demonstration">¶</a></h1><p><strong>Library:</strong> <a href="https://pypi.org/project/encoding-atlas">encoding-atlas</a></p>
 <hr/>
 <p>This notebook provides an exhaustive, hands-on demonstration of <strong>AngleEncoding</strong> from the Quantum Encoding Atlas library. AngleEncoding is a fundamental quantum data encoding technique that maps classical features directly to rotation angles of single-qubit quantum gates.</p>
 <h3 id="what-this-notebook-covers">What This Notebook Covers<a class="anchor-link" href="#what-this-notebook-covers">¶</a></h3><table>
@@ -4527,13 +4525,13 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-1">
@@ -4547,7 +4545,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Install the library (uncomment if not already installed)</span>
-<span class="c1"># !pip install encoding-atlas</span>
+<span class="c1">#!pip install encoding-atlas</span>
 
 <span class="c1"># For full multi-backend support, also install:</span>
 <span class="c1"># pip install encoding-atlas[qiskit]   # Qiskit backend</span>
@@ -4555,10 +4553,10 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="c1"># pip install encoding-atlas[viz]      # Matplotlib visualizations</span>
 
 <span class="c1"># Or install everything at once:</span>
-<span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="n">encoding</span><span class="o">-</span><span class="n">atlas</span><span class="p">[</span><span class="n">qiskit</span><span class="p">,</span><span class="n">cirq</span><span class="p">,</span><span class="n">viz</span><span class="p">]</span>
+<span class="c1">#!pip install encoding-atlas[qiskit,cirq,viz]</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1"># Install the library (uncomment if not already installed)
-# !pip install encoding-atlas
+#!pip install encoding-atlas
 
 # For full multi-backend support, also install:
 # pip install encoding-atlas[qiskit]   # Qiskit backend
@@ -4566,82 +4564,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 # pip install encoding-atlas[viz]      # Matplotlib visualizations
 
 # Or install everything at once:
-!pip install encoding-atlas[qiskit,cirq,viz]</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Requirement already satisfied: encoding-atlas[cirq,qiskit,viz] in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (0.1.0)
-Requirement already satisfied: numpy&lt;3.0.0,&gt;=1.21.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from encoding-atlas[cirq,qiskit,viz]) (1.26.4)
-Requirement already satisfied: scipy&gt;=1.7.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from encoding-atlas[cirq,qiskit,viz]) (1.15.3)
-Requirement already satisfied: pennylane&gt;=0.33.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from encoding-atlas[cirq,qiskit,viz]) (0.42.3)
-Requirement already satisfied: scikit-learn&gt;=1.0.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from encoding-atlas[cirq,qiskit,viz]) (1.7.2)
-Requirement already satisfied: cirq-core&gt;=1.0.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from encoding-atlas[cirq,qiskit,viz]) (1.5.0)
-Requirement already satisfied: qiskit&gt;=1.0.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from encoding-atlas[cirq,qiskit,viz]) (2.3.0)
-Requirement already satisfied: qiskit-aer&gt;=0.13.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from encoding-atlas[cirq,qiskit,viz]) (0.17.2)
-Requirement already satisfied: attrs&gt;=21.3.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (25.4.0)
-Requirement already satisfied: duet&gt;=0.2.8 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (0.2.9)
-Requirement already satisfied: matplotlib~=3.7 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (3.10.8)
-Requirement already satisfied: networkx~=3.1 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (3.4.2)
-Requirement already satisfied: pandas~=2.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (2.3.2)
-Requirement already satisfied: sortedcontainers~=2.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (2.4.0)
-Requirement already satisfied: sympy in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (1.14.0)
-Requirement already satisfied: typing_extensions&gt;=4.2 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (4.15.0)
-Requirement already satisfied: tqdm&gt;=4.12 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (4.67.1)
-Requirement already satisfied: contourpy&gt;=1.0.1 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from matplotlib~=3.7-&gt;cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (1.0.6)
-Requirement already satisfied: cycler&gt;=0.10 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from matplotlib~=3.7-&gt;cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (0.11.0)
-Requirement already satisfied: fonttools&gt;=4.22.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from matplotlib~=3.7-&gt;cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (4.38.0)
-Requirement already satisfied: kiwisolver&gt;=1.3.1 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from matplotlib~=3.7-&gt;cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (1.4.4)
-Requirement already satisfied: packaging&gt;=20.0 in c:\users\ashut\appdata\roaming\python\python310\site-packages (from matplotlib~=3.7-&gt;cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (25.0)
-Requirement already satisfied: pillow&gt;=8 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from matplotlib~=3.7-&gt;cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (9.3.0)
-Requirement already satisfied: pyparsing&gt;=3 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from matplotlib~=3.7-&gt;cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (3.0.9)
-Requirement already satisfied: python-dateutil&gt;=2.7 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from matplotlib~=3.7-&gt;cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (2.8.2)
-Requirement already satisfied: pytz&gt;=2020.1 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from pandas~=2.0-&gt;cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (2025.2)
-Requirement already satisfied: tzdata&gt;=2022.7 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from pandas~=2.0-&gt;cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (2025.2)
-Requirement already satisfied: rustworkx&gt;=0.14.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (0.17.1)
-Requirement already satisfied: autograd in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (1.8.0)
-Requirement already satisfied: appdirs in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (1.4.4)
-Requirement already satisfied: autoray&lt;0.8,&gt;=0.6.11 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (0.7.2)
-Requirement already satisfied: cachetools in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (6.2.4)
-Requirement already satisfied: pennylane-lightning&gt;=0.42 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (0.42.0)
-Requirement already satisfied: requests in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (2.32.5)
-Requirement already satisfied: tomlkit in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (0.14.0)
-Requirement already satisfied: diastatic-malt in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (2.15.2)
-Requirement already satisfied: scipy-openblas32&gt;=0.3.26 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from pennylane-lightning&gt;=0.42-&gt;pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (0.3.31.22.0)
-Requirement already satisfied: six&gt;=1.5 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from python-dateutil&gt;=2.7-&gt;matplotlib~=3.7-&gt;cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (1.16.0)
-Requirement already satisfied: dill&gt;=0.3 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from qiskit&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (0.3.8)
-Requirement already satisfied: stevedore&gt;=3.0.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from qiskit&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (5.6.0)
-Requirement already satisfied: psutil&gt;=5 in c:\users\ashut\appdata\roaming\python\python310\site-packages (from qiskit-aer&gt;=0.13.0-&gt;encoding-atlas[cirq,qiskit,viz]) (7.1.3)
-Requirement already satisfied: joblib&gt;=1.2.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from scikit-learn&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (1.5.3)
-Requirement already satisfied: threadpoolctl&gt;=3.1.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from scikit-learn&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (3.6.0)
-Requirement already satisfied: colorama in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from tqdm&gt;=4.12-&gt;cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (0.4.6)
-Requirement already satisfied: astunparse in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from diastatic-malt-&gt;pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (1.6.3)
-Requirement already satisfied: gast in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from diastatic-malt-&gt;pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (0.7.0)
-Requirement already satisfied: termcolor in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from diastatic-malt-&gt;pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (3.3.0)
-Requirement already satisfied: wheel&lt;1.0,&gt;=0.23.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from astunparse-&gt;diastatic-malt-&gt;pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (0.46.2)
-Requirement already satisfied: charset_normalizer&lt;4,&gt;=2 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from requests-&gt;pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (3.4.4)
-Requirement already satisfied: idna&lt;4,&gt;=2.5 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from requests-&gt;pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (3.11)
-Requirement already satisfied: urllib3&lt;3,&gt;=1.21.1 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from requests-&gt;pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (2.3.0)
-Requirement already satisfied: certifi&gt;=2017.4.17 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from requests-&gt;pennylane&gt;=0.33.0-&gt;encoding-atlas[cirq,qiskit,viz]) (2025.11.12)
-Requirement already satisfied: mpmath&lt;1.4,&gt;=1.1.0 in c:\users\ashut\appdata\local\programs\python\python310\lib\site-packages (from sympy-&gt;cirq-core&gt;=1.0.0-&gt;encoding-atlas[cirq,qiskit,viz]) (1.3.0)
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>WARNING: encoding-atlas 0.1.0 does not provide the extra 'viz'
-
-[notice] A new release of pip is available: 25.3 -&gt; 26.0.1
-[notice] To update, run: python.exe -m pip install --upgrade pip
-</pre>
+#!pip install encoding-atlas[qiskit,cirq,viz]</div>
 </div>
 </div>
 </div>
@@ -4653,7 +4576,7 @@ Requirement already satisfied: mpmath&lt;1.4,&gt;=1.1.0 in c:\users\ashut\appdat
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-2">
@@ -4688,8 +4611,8 @@ print(f"NumPy version: {np.__version__}")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>encoding-atlas version: 0.1.0
-NumPy version: 1.26.4
+<pre>encoding-atlas version: 0.2.0
+NumPy version: 2.2.6
 </pre>
 </div>
 </div>
@@ -4702,7 +4625,7 @@ NumPy version: 1.26.4
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-3">
@@ -4835,7 +4758,7 @@ for backend, version in backends_available.items():
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
@@ -4931,7 +4854,7 @@ Single:   AngleEncoding(n_features=1, rotation='Y', reps=1)
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-5">
@@ -5007,7 +4930,7 @@ for bad_n in [2.5, "4", None]:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
@@ -5069,7 +4992,7 @@ for bad_rot in ["x", "y", "z", "A", "RX", "XY", 1, None]:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
@@ -5148,7 +5071,7 @@ print("\n  (bool values are explicitly rejected to prevent accidental misuse)")<
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-8">
@@ -5223,7 +5146,7 @@ print("\n  Assertions passed: n_qubits == n_features, depth == reps")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
@@ -5305,7 +5228,7 @@ After modifying the returned dict:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
@@ -5387,7 +5310,7 @@ print(f"  notes                : {props.notes!r}")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
@@ -5449,7 +5372,7 @@ properties.to_dict() keys: ['n_qubits', 'depth', 'gate_count', 'single_qubit_gat
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-12">
@@ -5522,7 +5445,7 @@ All property invariants verified.
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-13">
@@ -5579,7 +5502,7 @@ Callable: True
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [15]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-14">
@@ -5664,7 +5587,7 @@ Norm: 1.0000000000  (should be 1.0)
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [15]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [16]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-15">
@@ -5724,7 +5647,7 @@ print(qml.draw(draw_circuit)(x))</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [16]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [17]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-16">
@@ -5802,7 +5725,7 @@ print(qml.draw(draw_2reps)(x))</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [17]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [18]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-17">
@@ -5873,7 +5796,7 @@ q_3: ─┤ Ry(2) ├─
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [18]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [19]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-18">
@@ -5933,7 +5856,7 @@ q_3: ─┤ Ry(2) ├──┤ Ry(2) ├─
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [19]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [20]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-19">
@@ -6021,7 +5944,7 @@ q_2: ┤ Rz(1.5) ├
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [20]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [21]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-20">
@@ -6088,7 +6011,7 @@ Moments: 1
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [21]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [22]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-21">
@@ -6146,7 +6069,7 @@ print(cirq_2reps)</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [22]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [23]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-22">
@@ -6225,7 +6148,7 @@ for i, amp in enumerate(state_cirq[:8]):
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [23]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [24]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-23">
@@ -6315,7 +6238,7 @@ RZ(1.0472)|0&gt;:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [24]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [25]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-24">
@@ -6397,7 +6320,7 @@ print("  It only adds a global phase. For actual state mixing, use RX or RY.")</
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [25]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [26]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-25">
@@ -6492,7 +6415,7 @@ Input: x = pi/6 = 0.5236 rad
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [26]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [27]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-26">
@@ -6565,7 +6488,7 @@ reps depth gate_count single_q two_q params
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [27]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [28]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-27">
@@ -6620,7 +6543,7 @@ Each circuit is callable: True
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [28]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [29]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-28">
@@ -6679,7 +6602,7 @@ Parallel (max_workers=12): 10 Qiskit circuits
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [29]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [30]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-29">
@@ -6725,7 +6648,7 @@ print(f"1D input -&gt; {len(circuits_1d)} circuit(s)")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [30]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [31]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-30">
@@ -6814,7 +6737,7 @@ print("\n  Order is preserved even with parallel=True (ThreadPoolExecutor.map)."
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [31]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [32]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-31">
@@ -6899,7 +6822,7 @@ except ValueError as e:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [32]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [33]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-32">
@@ -6980,7 +6903,7 @@ except ValueError as e:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [33]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [34]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-33">
@@ -7061,7 +6984,7 @@ except TypeError as e:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [34]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [35]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-34">
@@ -7114,7 +7037,7 @@ except ValueError as e:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [35]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [36]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-35">
@@ -7201,7 +7124,7 @@ print(f"  Integer input: OK ({type(c5).__name__})")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [36]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [37]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-36">
@@ -7277,7 +7200,7 @@ print(f"  Circuit is unaffected (defensive copy was made during validation).")</
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [37]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [38]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-37">
@@ -7357,7 +7280,7 @@ for axis in ["X", "Y", "Z"]:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [38]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [39]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-38">
@@ -7437,7 +7360,7 @@ for key, value in summary.items():
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [39]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [40]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-39">
@@ -7506,7 +7429,7 @@ for key, value in res.items():
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [40]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [41]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-40">
@@ -7577,7 +7500,7 @@ for key, values in comparison.items():
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [41]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [42]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-41">
@@ -7659,7 +7582,7 @@ for key, value in exec_time.items():
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [42]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [43]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-42">
@@ -7736,7 +7659,7 @@ print(f"  details keys       : {list(sim_result['details'].keys())}")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [43]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [44]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-43">
@@ -7810,7 +7733,7 @@ Is matchgate circuit: False
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [44]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [45]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-44">
@@ -7865,7 +7788,7 @@ print(f"  (0 = not expressive, 1 = maximally expressive / Haar-random)")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [45]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [46]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-45">
@@ -7942,7 +7865,7 @@ print(f"  n_bins              : {expr_detailed['n_bins']}")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [46]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [47]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-46">
@@ -8004,7 +7927,7 @@ print("  phases without changing measurement probabilities from |0&gt;.")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [47]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [48]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-47">
@@ -8070,7 +7993,7 @@ for reps in [1, 2, 3, 5]:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [48]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [49]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-48">
@@ -8131,7 +8054,7 @@ print(f"  (expected: 0.0 for product states)")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [49]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [50]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-49">
@@ -8199,7 +8122,7 @@ print(f"  all samples zero       : {np.allclose(ent_detailed['entanglement_sampl
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [50]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [51]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-50">
@@ -8266,7 +8189,7 @@ print(f"  (Machine precision zero, confirming product state)")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [51]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [52]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-51">
@@ -8321,7 +8244,7 @@ print(f"  (0 = untrainable / barren plateau, 1 = fully trainable)")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [52]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [53]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-52">
@@ -8395,7 +8318,7 @@ print(f"  per_parameter_variance: {train_detailed['per_parameter_variance']}")</
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [53]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [54]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-53">
@@ -8446,7 +8369,7 @@ for obs in ["computational", "pauli_z", "global_z"]:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [54]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [55]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-54">
@@ -8512,7 +8435,7 @@ Barren plateau risk: 'low'
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [55]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [56]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-55">
@@ -8569,7 +8492,7 @@ enc = AngleEncoding(n_features=3, rotation="Y", reps=1)</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [56]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [57]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-56">
@@ -8645,7 +8568,7 @@ for i, amp in enumerate(state):
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [57]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [58]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-57">
@@ -8714,7 +8637,7 @@ for i, (x_i, s) in enumerate(zip(X_batch, states)):
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [58]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [59]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-58">
@@ -8776,7 +8699,7 @@ print(f"  Different inputs: F = {f_diff:.6f}")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [59]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [60]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-59">
@@ -8833,8 +8756,8 @@ print("  Linear entropy and von Neumann entropy are both 0.")</div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>=== Partial trace (single qubit) ===
   Qubit 0: purity = 1.000000, linear_entropy = 0.000000, von_neumann = 0.000000
-  Qubit 1: purity = 1.000000, linear_entropy = 0.000000, von_neumann = 0.000000
-  Qubit 2: purity = 1.000000, linear_entropy = 0.000000, von_neumann = 0.000000
+  Qubit 1: purity = 1.000000, linear_entropy = 0.000000, von_neumann = -0.000000
+  Qubit 2: purity = 1.000000, linear_entropy = 0.000000, von_neumann = -0.000000
 
   For product states, each qubit is in a pure state (purity = 1.0).
   Linear entropy and von Neumann entropy are both 0.
@@ -8850,7 +8773,7 @@ print("  Linear entropy and von Neumann entropy are both 0.")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [60]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [61]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-60">
@@ -8900,7 +8823,7 @@ print(f"  Purity = {compute_purity(rho_01):.6f}  (should be 1.0 for product stat
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [61]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [62]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-61">
@@ -8958,7 +8881,7 @@ print(f"  Validated statevector shape: {validated.shape}, dtype: {validated.dtyp
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [62]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [63]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-62">
@@ -9030,7 +8953,7 @@ print(f"  Values:\n{params2}")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [63]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [64]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-63">
@@ -9097,7 +9020,7 @@ print(f"  Same seed -&gt; same values: {np.allclose(vals1, vals2)}")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [64]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [65]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-64">
@@ -9193,7 +9116,7 @@ print(f"  is_data_transformable(enc)                 : {is_data_transformable(en
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [65]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [66]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-65">
@@ -9302,7 +9225,7 @@ for key, value in result.items():
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [66]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [67]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-66">
@@ -9353,7 +9276,7 @@ All names: ['amplitude', 'angle', 'angle_ry', 'basis', 'covariant', 'covariant_f
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [67]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [68]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-67">
@@ -9416,7 +9339,7 @@ Equality: enc_via_name == enc_direct: True
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [68]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [69]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-68">
@@ -9480,7 +9403,7 @@ except RegistryError as e:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [69]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [70]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-69">
@@ -9549,7 +9472,7 @@ print(f"  Non-encoding:     enc_a == 42:    {enc_a == 42}")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [70]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [71]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-70">
@@ -9599,8 +9522,8 @@ print(f"  Dict lookup enc_b (equals enc_a): {encoding_dict[enc_b]}")</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>=== Hashing ===
-  hash(enc_a): 199604001077363284
-  hash(enc_b): 199604001077363284
+  hash(enc_a): -1067098902415455840
+  hash(enc_b): -1067098902415455840
   Hashes equal (same params): True
 
   Set of 4 encodings (with 1 duplicate): 3 unique
@@ -9617,7 +9540,7 @@ print(f"  Dict lookup enc_b (equals enc_a): {encoding_dict[enc_b]}")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [71]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [72]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-71">
@@ -9721,7 +9644,7 @@ print(f"  Circuit works after unpickling: {qc.num_qubits} qubits")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [72]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [73]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-72">
@@ -9831,7 +9754,7 @@ print(f"  No errors: {len(errors) == 0}")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [73]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [74]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-73">
@@ -9909,7 +9832,7 @@ print(f"All threads got same properties object: {all(p is props_results[0] for p
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [74]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [75]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-74">
@@ -9965,8 +9888,6 @@ _ = enc_debug.get_circuit(np.array([0.1, 0.2, 0.3]), backend="qiskit")</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
 <pre>encoding_atlas.encodings.angle - DEBUG - AngleEncoding initialized: n_features=3, rotation='X', reps=2
-encoding_atlas.encodings.angle - DEBUG - Generating circuit: backend='qiskit', input_shape=(3,)
-encoding_atlas.encodings.angle - DEBUG - Circuit generated successfully for backend='qiskit'
 </pre>
 </div>
 </div>
@@ -9975,6 +9896,14 @@ encoding_atlas.encodings.angle - DEBUG - Circuit generated successfully for back
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Debug logging enabled. Creating encoding and generating circuit...
 
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>encoding_atlas.encodings.angle - DEBUG - Generating circuit: backend='qiskit', input_shape=(3,)
+encoding_atlas.encodings.angle - DEBUG - Circuit generated successfully for backend='qiskit'
 </pre>
 </div>
 </div>
@@ -9987,7 +9916,7 @@ encoding_atlas.encodings.angle - DEBUG - Circuit generated successfully for back
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [75]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [76]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-75">
@@ -10017,18 +9946,18 @@ _ = enc_debug.get_circuit(np.array([50.0, 100.0, -200.0]), backend="qiskit")</di
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Generating circuit with large input values...
-
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>encoding_atlas.encodings.angle - DEBUG - Generating circuit: backend='qiskit', input_shape=(3,)
+encoding_atlas.encodings.angle - DEBUG - Input values [-200, 100] are outside typical range [-2π, 2π]. Rotation gates are periodic with period 2π (RX, RY) or 4π (full Bloch). Consider scaling features to [0, 2π] or [-π, π] for optimal encoding.
+encoding_atlas.encodings.angle - DEBUG - Circuit generated successfully for backend='qiskit'
 </pre>
 </div>
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>encoding_atlas.encodings.angle - DEBUG - Generating circuit: backend='qiskit', input_shape=(3,)
-encoding_atlas.encodings.angle - DEBUG - Input values [-200, 100] are outside typical range [-2π, 2π]. Rotation gates are periodic with period 2π (RX, RY) or 4π (full Bloch). Consider scaling features to [0, 2π] or [-π, π] for optimal encoding.
-encoding_atlas.encodings.angle - DEBUG - Circuit generated successfully for backend='qiskit'
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Generating circuit with large input values...
+
 </pre>
 </div>
 </div>
@@ -10041,7 +9970,7 @@ encoding_atlas.encodings.angle - DEBUG - Circuit generated successfully for back
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [76]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [77]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-76">
@@ -10116,7 +10045,7 @@ encoding_atlas.encodings.angle - DEBUG - Sequential batch generation completed: 
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [77]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [78]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-77">
@@ -10176,10 +10105,10 @@ print(f"  Alternatives: {rec.alternatives}")</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>=== Encoding Recommendation ===
-  Recommended: iqp
-  Confidence:  0.75
-  Explanation: IQP encoding is expressive for small feature sets with sufficient data
-  Alternatives: ['zz_feature_map', 'data_reuploading']
+  Recommended: data_reuploading
+  Confidence:  0.56
+  Explanation: Data re-uploading achieves universal approximation capability through repeated data encoding with entanglement layers
+  Alternatives: ['iqp', 'zz_feature_map', 'pauli_feature_map']
 </pre>
 </div>
 </div>
@@ -10192,7 +10121,7 @@ print(f"  Alternatives: {rec.alternatives}")</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [78]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [79]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-78">
@@ -10240,10 +10169,10 @@ for priority in ["accuracy", "trainability", "speed", "noise_resilience"]:
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>=== Recommendations by priority ===
-  accuracy            : iqp (confidence: 0.75)
-  trainability        : iqp (confidence: 0.75)
-  speed               : angle (confidence: 0.80)
-  noise_resilience    : hardware_efficient (confidence: 0.70)
+  accuracy            : iqp (confidence: 0.74)
+  trainability        : data_reuploading (confidence: 0.56)
+  speed               : angle (confidence: 0.60)
+  noise_resilience    : hardware_efficient (confidence: 0.60)
 </pre>
 </div>
 </div>
@@ -10268,7 +10197,7 @@ for priority in ["accuracy", "trainability", "speed", "noise_resilience"]:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [79]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [80]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-79">
@@ -10395,7 +10324,7 @@ print(comparison_text)</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [80]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [81]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-80">
@@ -10512,7 +10441,7 @@ AngleEncoding                                    8              1              8
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [81]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [82]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-81">
@@ -10598,7 +10527,7 @@ Native gates needed: ['RY']
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [82]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [83]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-82">
@@ -10676,7 +10605,7 @@ Generated 150 circuits
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [83]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [84]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-83">
@@ -10765,7 +10694,7 @@ Symmetric: True
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [84]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [85]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-84">

@@ -5451,7 +5451,7 @@ print(f"encoding-atlas version: {encoding_atlas.__version__}")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>encoding-atlas version: 0.1.0
+<pre>encoding-atlas version: 0.2.0
 </pre>
 </div>
 </div>
@@ -6618,13 +6618,7 @@ Circuit width: 3
 Gate count: 19
 
 Circuit diagram:
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>     ┌───┐┌─────────┐┌───────┐       ░ ┌─────────┐┌───────┐      
+     ┌───┐┌─────────┐┌───────┐       ░ ┌─────────┐┌───────┐      
 q_0: ┤ H ├┤ Rz(0.5) ├┤ Rx(1) ├─■─────░─┤ Rz(0.5) ├┤ Rx(1) ├─■────
      ├───┤└┬───────┬┘├───────┤ │     ░ └┬───────┬┘├───────┤ │    
 q_1: ┤ H ├─┤ Rz(1) ├─┤ Rx(1) ├─■──■──░──┤ Rz(1) ├─┤ Rx(1) ├─■──■─
@@ -6980,9 +6974,9 @@ except ImportError:
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Sequential: 200 circuits in 0.049s
-Parallel:   200 circuits in 0.064s
-Speedup: 0.77x
+<pre>Sequential: 200 circuits in 0.104s
+Parallel:   200 circuits in 0.139s
+Speedup: 0.74x
 </pre>
 </div>
 </div>
@@ -9146,7 +9140,7 @@ print(f"Entanglement bound: {bound}")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Entanglement bound: 1.5275663980192242
+<pre>Entanglement bound: 1.5671247705854983
 </pre>
 </div>
 </div>
@@ -9226,34 +9220,10 @@ for ent in ["none", "linear", "circular", "full"]:
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Entanglement  Expressibility   Mean Fidelity
 ---------------------------------------------
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>none                0.980053        0.142557
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>linear              0.980053        0.142557
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>circular            0.980053        0.142557
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>full                0.980053        0.142557
+none                0.980053        0.142557
+linear              0.980053        0.142557
+circular            0.980053        0.142557
+full                0.980053        0.142557
 </pre>
 </div>
 </div>
@@ -9390,34 +9360,10 @@ for ent in ["none", "linear", "circular", "full"]:
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Entanglement   Capability
 ----------------------------
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>none             0.000000
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>linear           0.640633
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>circular         0.689538
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>full             0.689538
+none             0.000000
+linear           0.640633
+circular         0.689538
+full             0.689538
 </pre>
 </div>
 </div>
@@ -9569,27 +9515,9 @@ for name, kwargs in configs:
 <pre>Config                               Trainability  Grad Variance    BP Risk
 ---------------------------------------------------------------------------
 reps=1, linear                           0.127423     0.01091513        low
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>reps=2, linear                           0.060935     0.00429002        low
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>reps=2, full                             0.061542     0.00434249        low
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>reps=5, full                             0.119617     0.01004547        low
+reps=2, linear                           0.060935     0.00429002        low
+reps=2, full                             0.061542     0.00434249        low
+reps=5, full                             0.119617     0.01004547        low
 </pre>
 </div>
 </div>
@@ -9699,7 +9627,7 @@ print(f"Fidelity (diff states): {f_diff:.6f}")</div>
 Batch: 5 states of dim 8
 
 Fidelity (same state): 1.000000
-Fidelity (diff states): 0.086585
+Fidelity (diff states): 0.079034
 </pre>
 </div>
 </div>
@@ -11392,13 +11320,7 @@ logger.setLevel(logging.WARNING)</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
 <pre>encoding_atlas.encodings.qaoa_encoding - DEBUG - QAOAEncoding initialized: n_features=3, n_qubits=3, reps=1, data_rotation=Z, mixer_rotation=X, entanglement=linear, entangling_gate=cz, gamma=1.0000, beta=1.0000, include_initial_h=True, feature_map=linear, n_entanglement_pairs=2
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>encoding_atlas.encodings.qaoa_encoding - DEBUG - Generating circuit for backend=pennylane, input_shape=(3,), input_range=[0.5000, 1.5000]
+encoding_atlas.encodings.qaoa_encoding - DEBUG - Generating circuit for backend=pennylane, input_shape=(3,), input_range=[0.5000, 1.5000]
 </pre>
 </div>
 </div>
@@ -11862,15 +11784,15 @@ for scenario in scenarios:
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Scenario {'n_features': 4, 'n_samples': 500, 'priority': 'accuracy'}:
   Recommended: iqp
-  Reason: IQP encoding is expressive for small feature sets with sufficient data
+  Reason: IQP encoding creates highly entangled states with provable classical simulation hardness, well-suited for kernel methods
 
 Scenario {'n_features': 4, 'n_samples': 500, 'priority': 'speed'}:
   Recommended: angle
-  Reason: Angle encoding is fastest with O(1) depth
+  Reason: Angle encoding provides O(1) depth with simple rotations, ideal for speed
 
 Scenario {'n_features': 8, 'n_samples': 1000, 'priority': 'accuracy'}:
   Recommended: zz_feature_map
-  Reason: ZZ Feature Map is a good default for medium-sized problems
+  Reason: ZZ Feature Map provides standard pairwise feature interactions via (pi-x_i)(pi-x_j) phase encoding for kernel methods
 
 </pre>
 </div>
@@ -11940,13 +11862,7 @@ for name in list_datasets():
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Available datasets: ['iris', 'moons', 'circles', 'linear', 'xor']
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>
+
 iris:
   X: shape=(100, 2), dtype=float64, range=[2.000, 7.000]
   y: shape=(100,), classes=[np.int64(0), np.int64(1)]
@@ -12290,27 +12206,9 @@ print(f"  {config}")</div>
 ==================================================
 
 Simulability: False (Circular entanglement structure may allow tensor network simulation if entanglement entropy is bounded)
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Expressibility: 0.975072
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Entanglement (MW): 0.662323
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Trainability: 0.022267
+Expressibility: 0.975072
+Entanglement (MW): 0.662323
+Trainability: 0.022267
 
 Step 8: Configuration saved
   {'class': 'QAOAEncoding', 'n_features': 4, 'reps': 2, 'data_rotation': 'Z', 'mixer_rotation': 'X', 'entanglement': 'circular', 'entangling_gate': 'cz', 'gamma': 1.0, 'beta': 0.7853981633974483, 'include_initial_h': True, 'feature_map': 'linear'}
@@ -12443,7 +12341,7 @@ Step 8: Configuration saved
 </tr>
 </tbody>
 </table>
-<p>For more information, see the <a href="https://q-encoding-atlas.web.app/documentation">documentation</a>.</p>
+<p>For more information, see the <a href="https://ashutoshm1771.github.io/quantum-encoding-atlas">documentation</a>.</p>
 </div>
 </div>
 </div>

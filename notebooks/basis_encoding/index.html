@@ -4285,8 +4285,8 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="basisencoding-complete-feature-demonstration">BasisEncoding: Complete Feature Demonstration<a class="anchor-link" href="#basisencoding-complete-feature-demonstration">¶</a></h1><p><strong>Library:</strong> <a href="https://pypi.org/project/encoding-atlas/0.1.0/">encoding-atlas</a>
-<strong>Version:</strong> 0.1.0
+<h1 id="basisencoding-complete-feature-demonstration">BasisEncoding: Complete Feature Demonstration<a class="anchor-link" href="#basisencoding-complete-feature-demonstration">¶</a></h1><p><strong>Library:</strong> <a href="https://pypi.org/project/encoding-atlas/0.2.0/">encoding-atlas</a>
+<strong>Version:</strong> 0.2.0
 <strong>Author:</strong> Ashutosh Mishra</p>
 <hr/>
 <p>This notebook provides an exhaustive, hands-on demonstration of <strong>BasisEncoding</strong> from the Quantum Encoding Atlas library. BasisEncoding is the simplest quantum data encoding — it maps binary (discrete) classical data directly to computational basis states.</p>
@@ -4457,7 +4457,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="c1"># !pip install pennylane qiskit qiskit-aer cirq-core</span>
 <span class="c1"># import sys</span>
 <span class="c1"># !{sys.executable} -m pip uninstall -y encoding-atlas</span>
-<span class="c1"># !{sys.executable} -m pip install --no-cache-dir --index-url https://pypi.org/simple encoding-atlas==0.1.0</span>
+<span class="c1"># !{sys.executable} -m pip install --no-cache-dir --index-url https://pypi.org/simple encoding-atlas==0.2.0</span>
 
 
 <span class="c1"># For full multi-backend support:</span>
@@ -4470,7 +4470,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 # !pip install pennylane qiskit qiskit-aer cirq-core
 # import sys
 # !{sys.executable} -m pip uninstall -y encoding-atlas
-# !{sys.executable} -m pip install --no-cache-dir --index-url https://pypi.org/simple encoding-atlas==0.1.0
+# !{sys.executable} -m pip install --no-cache-dir --index-url https://pypi.org/simple encoding-atlas==0.2.0
 
 
 # For full multi-backend support:
@@ -4524,7 +4524,7 @@ print(f"NumPy version: {np.__version__}")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>encoding-atlas version: 0.1.0
+<pre>encoding-atlas version: 0.2.0
 NumPy version: 2.2.6
 </pre>
 </div>
@@ -6566,9 +6566,9 @@ print(f"\nSingle sample input: {len(circuits_single)} circuit(s)")</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Batch size: 500 samples
-Sequential: 0.0488s
-Parallel:   0.0696s
-Speedup:    0.70x
+Sequential: 0.0595s
+Parallel:   0.0874s
+Speedup:    0.68x
 
 Single sample input: 1 circuit(s)
 </pre>
@@ -8410,13 +8410,13 @@ print(f"\n  Dict lookup: {encoding_scores[BasisEncoding(n_features=4)]}")</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>=== Hashing ===
-  hash(enc_a): -5286829956643246085
-  hash(enc_b): -5286829956643246085
+  hash(enc_a): 3969202338683794463
+  hash(enc_b): 3969202338683794463
   hash(enc_a) == hash(enc_b): True
 
   Set of encodings: 2 unique (from 3 added)
-    BasisEncoding(n_features=4)
     BasisEncoding(n_features=8)
+    BasisEncoding(n_features=4)
 
   Dict lookup: 0.95
 </pre>
@@ -8583,7 +8583,13 @@ print(f"  |1&gt;: {state_1}")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>=== Single Feature (n_features=1) ===
+<pre>=== Single Feature (n_features=1) ===</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>
   n_qubits: 1
   depth: 1
   |0&gt;: [1.+0.j 0.+0.j]
@@ -9551,7 +9557,7 @@ print(f"BasisEncoding demonstration using encoding-atlas v{encoding_atlas.__vers
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Notebook complete!
-BasisEncoding demonstration using encoding-atlas v0.1.0
+BasisEncoding demonstration using encoding-atlas v0.2.0
 </pre>
 </div>
 </div>
