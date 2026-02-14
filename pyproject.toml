@@ -190,6 +190,7 @@ module = [
     "cirq.*",
     "scipy.*",
     "sklearn.*",
+    "matplotlib.*",
 ]
 ignore_missing_imports = true
 
