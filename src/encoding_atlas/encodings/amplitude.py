@@ -783,15 +783,15 @@ class AmplitudeEncoding(BaseEncoding):
 
         if backend == "pennylane":
             circuit = self._to_pennylane(x_validated)
-            _logger.info("PennyLane circuit generated: n_qubits=%d", self._n_qubits)
+            _logger.debug("PennyLane circuit generated: n_qubits=%d", self._n_qubits)
             return circuit
         elif backend == "qiskit":
             circuit = self._to_qiskit(x_validated)
-            _logger.info("Qiskit circuit generated: n_qubits=%d", self._n_qubits)
+            _logger.debug("Qiskit circuit generated: n_qubits=%d", self._n_qubits)
             return circuit
         elif backend == "cirq":
             circuit = self._to_cirq(x_validated)
-            _logger.info("Cirq circuit generated: n_qubits=%d", self._n_qubits)
+            _logger.debug("Cirq circuit generated: n_qubits=%d", self._n_qubits)
             return circuit
         else:
             raise ValueError(

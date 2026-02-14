@@ -1,0 +1,17 @@
+# .github/CODEOWNERS
+#
+# Each line defines a pattern and the GitHub users/teams who own those files.
+# Owners are automatically added as reviewers on PRs that modify matching files.
+
+# Default: Ashutosh Mishra owns everything
+* @ashutoshm1771
+
+# Core package
+src/encoding_atlas/core/ @ashutoshm1771
+
+# CI/CD configuration
+.github/ @ashutoshm1771
+
+# Documentation
+docs/ @ashutoshm1771
+mkdocs.yml @ashutoshm1771

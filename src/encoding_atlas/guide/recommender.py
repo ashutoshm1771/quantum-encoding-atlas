@@ -345,7 +345,19 @@ def _compute_score(
         score += _W_LOGARITHMIC_BONUS
 
     # Default-for-feature-range bonus (accuracy priority only).
-    if priority == "accuracy":
+    # Only applied when no specialised parameter (trainable, symmetry,
+    # problem_structure, feature_interactions) is active.  When the user
+    # expresses a specific intent, the corresponding hard-precondition or
+    # structure bonus already dominates; the accuracy default would otherwise
+    # erode the margin between the specialised winner and the generic
+    # feature-count-based default (e.g. IQP for ≤4 features).
+    _has_specialised_intent = (
+        trainable
+        or symmetry is not None
+        or problem_structure is not None
+        or feature_interactions is not None
+    )
+    if priority == "accuracy" and not _has_specialised_intent:
         size = "small" if n_features <= 4 else "medium" if n_features <= 8 else "large"
         if name == _ACCURACY_DEFAULT_BY_FEATURE_RANGE.get(size):
             score += _W_ACCURACY_DEFAULT_BONUS
@@ -448,9 +460,11 @@ def _validate_recommend_inputs(
     n_features: int,
     n_samples: int,
     task: str,
+    hardware: str,
     priority: str,
     data_type: str,
     symmetry: str | None,
+    trainable: bool,
     problem_structure: str | None,
     feature_interactions: str | None,
 ) -> None:
@@ -459,6 +473,10 @@ def _validate_recommend_inputs(
         raise ValueError(f"n_features must be a positive integer, got {n_features!r}")
     if not isinstance(n_samples, int) or n_samples < 1:
         raise ValueError(f"n_samples must be a positive integer, got {n_samples!r}")
+    if not isinstance(hardware, str) or not hardware:
+        raise ValueError(f"hardware must be a non-empty string, got {hardware!r}")
+    if not isinstance(trainable, bool):
+        raise ValueError(f"trainable must be a bool, got {type(trainable).__name__}")
     if task not in VALID_TASKS:
         raise ValueError(f"task must be one of {sorted(VALID_TASKS)}, got {task!r}")
     if priority not in VALID_PRIORITIES:
@@ -568,9 +586,11 @@ def recommend_encoding(
         n_features=n_features,
         n_samples=n_samples,
         task=task,
+        hardware=hardware,
         priority=priority,
         data_type=data_type,
         symmetry=symmetry,
+        trainable=trainable,
         problem_structure=problem_structure,
         feature_interactions=feature_interactions,
     )
@@ -601,6 +621,21 @@ def recommend_encoding(
             confidence=_score_to_confidence(0.0),
         )
 
+    # Check whether the user's symmetry constraint survived the hard filter.
+    # If no candidate natively supports the requested symmetry, we append a
+    # note to the explanation so the user understands the fallback.
+    _symmetry_note = ""
+    if symmetry is not None:
+        symmetry_survived = any(
+            r["requires_symmetry"] == symmetry for r in candidates.values()
+        )
+        if not symmetry_survived:
+            _symmetry_note = (
+                f" Note: no encoding with {symmetry!r} symmetry support "
+                f"is compatible with n_features={n_features}; "
+                f"falling back to general recommendation."
+            )
+
     # Phase B — score candidates
     scores: dict[str, float] = {}
     for name, rules in candidates.items():
@@ -619,18 +654,21 @@ def recommend_encoding(
             feature_interactions=feature_interactions,
         )
 
-    # Rank and select
-    ranked = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+    # Rank and select — descending score, alphabetical name for ties.
+    ranked = sorted(scores.items(), key=lambda item: (-item[1], item[0]))
     best_name, best_score = ranked[0]
     alternatives = [name for name, _ in ranked[1:4]]
 
     confidence = _score_to_confidence(best_score)
 
-    explanation = _generate_explanation(
-        best_name,
-        candidates[best_name],
-        priority=priority,
-        n_features=n_features,
+    explanation = (
+        _generate_explanation(
+            best_name,
+            candidates[best_name],
+            priority=priority,
+            n_features=n_features,
+        )
+        + _symmetry_note
     )
 
     return Recommendation(

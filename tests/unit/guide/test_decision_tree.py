@@ -227,6 +227,10 @@ class TestDecisionTreeInputValidation:
         with pytest.raises(ValueError, match="n_features"):
             decision_tree.decide(n_features=-1)
 
+    def test_invalid_trainable_type(self, decision_tree: EncodingDecisionTree) -> None:
+        with pytest.raises(ValueError, match="trainable"):
+            decision_tree.decide(trainable="yes")  # type: ignore[arg-type]
+
     def test_none_symmetry_is_valid(self, decision_tree: EncodingDecisionTree) -> None:
         """symmetry=None should NOT raise."""
         result = decision_tree.decide(symmetry=None)
