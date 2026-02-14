@@ -165,6 +165,7 @@ class EncodingDecisionTree:
             data_type=data_type,
             n_features=n_features,
             symmetry=symmetry,
+            trainable=trainable,
             priority=priority,
             problem_structure=problem_structure,
             feature_interactions=feature_interactions,
@@ -227,6 +228,7 @@ class EncodingDecisionTree:
         data_type: str,
         n_features: int,
         symmetry: str | None,
+        trainable: bool,
         priority: str,
         problem_structure: str | None,
         feature_interactions: str | None,
@@ -235,6 +237,10 @@ class EncodingDecisionTree:
         if not isinstance(n_features, int) or n_features < 1:
             raise ValueError(
                 f"n_features must be a positive integer, got {n_features!r}"
+            )
+        if not isinstance(trainable, bool):
+            raise ValueError(
+                f"trainable must be a bool, got {type(trainable).__name__}"
             )
         if data_type not in VALID_DATA_TYPES:
             raise ValueError(

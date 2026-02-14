@@ -86,7 +86,7 @@ docs = [
 
 [project.urls]
 Homepage = "https://github.com/ashutoshm1771/quantum-encoding-atlas"
-Documentation = "https://q-encoding-atlas.web.app/documentation"
+Documentation = "https://ashutoshm1771.github.io/quantum-encoding-atlas/"
 Repository = "https://github.com/ashutoshm1771/quantum-encoding-atlas.git"
 Issues = "https://github.com/ashutoshm1771/quantum-encoding-atlas/issues"
 Changelog = "https://github.com/ashutoshm1771/quantum-encoding-atlas/blob/master/CHANGELOG.md"

@@ -584,6 +584,128 @@ class TestInputValidation:
         with pytest.raises(ValueError, match="feature_interactions"):
             recommend_encoding(n_features=4, feature_interactions="quadratic")  # type: ignore[arg-type]
 
+    def test_invalid_trainable_type_string(self) -> None:
+        with pytest.raises(ValueError, match="trainable"):
+            recommend_encoding(n_features=4, trainable="yes")  # type: ignore[arg-type]
+
+    def test_invalid_trainable_type_int(self) -> None:
+        with pytest.raises(ValueError, match="trainable"):
+            recommend_encoding(n_features=4, trainable=1)  # type: ignore[arg-type]
+
+    def test_invalid_hardware_empty(self) -> None:
+        with pytest.raises(ValueError, match="hardware"):
+            recommend_encoding(n_features=4, hardware="")
+
+    def test_invalid_hardware_type(self) -> None:
+        with pytest.raises(ValueError, match="hardware"):
+            recommend_encoding(n_features=4, hardware=123)  # type: ignore[arg-type]
+
+
+# =========================================================================
+# Symmetry fallback warning
+# =========================================================================
+
+
+class TestSymmetryFallbackWarning:
+    """Verify that a note is added when the requested symmetry cannot
+    be satisfied due to feature count constraints."""
+
+    def test_rotation_wrong_features_has_warning(self) -> None:
+        """symmetry='rotation' with n_features=5 should include a note."""
+        rec = recommend_encoding(n_features=5, symmetry="rotation")
+        assert rec.encoding_name != "so2_equivariant"
+        assert "Note:" in rec.explanation
+        assert "rotation" in rec.explanation
+
+    def test_permutation_pairs_odd_features_has_warning(self) -> None:
+        """symmetry='permutation_pairs' with odd features should include a note."""
+        rec = recommend_encoding(n_features=3, symmetry="permutation_pairs")
+        assert rec.encoding_name != "swap_equivariant"
+        assert "Note:" in rec.explanation
+        assert "permutation_pairs" in rec.explanation
+
+    def test_no_warning_when_symmetry_satisfied(self) -> None:
+        """symmetry='rotation' with n_features=2 should have no note."""
+        rec = recommend_encoding(n_features=2, symmetry="rotation")
+        assert rec.encoding_name == "so2_equivariant"
+        assert "Note:" not in rec.explanation
+
+    def test_no_warning_without_symmetry(self) -> None:
+        """No symmetry requested -> no note."""
+        rec = recommend_encoding(n_features=4)
+        assert "Note:" not in rec.explanation
+
+
+# =========================================================================
+# Accuracy default bonus gating
+# =========================================================================
+
+
+class TestAccuracyDefaultBonusGating:
+    """Verify that the accuracy default bonus is suppressed when a
+    specialised parameter is active."""
+
+    def _default_kwargs(self, **overrides: object) -> dict:
+        base = dict(
+            n_features=4,
+            n_samples=500,
+            task="classification",
+            hardware="simulator",
+            priority="accuracy",
+            data_type="continuous",
+            symmetry=None,
+            trainable=False,
+            problem_structure=None,
+            feature_interactions=None,
+        )
+        base.update(overrides)
+        return base
+
+    def test_trainable_margin_over_iqp(self) -> None:
+        """With trainable=True, the trainable encoding should beat IQP
+        by a comfortable margin (not just 0.01)."""
+        trainable_score = _compute_score(
+            "trainable",
+            ENCODING_RULES["trainable"],
+            **self._default_kwargs(trainable=True),
+        )
+        iqp_score = _compute_score(
+            "iqp",
+            ENCODING_RULES["iqp"],
+            **self._default_kwargs(trainable=True),
+        )
+        assert trainable_score > iqp_score
+        assert trainable_score - iqp_score >= 0.10
+
+    def test_qaoa_margin_over_iqp(self) -> None:
+        """With problem_structure='combinatorial', QAOA should beat IQP
+        by a comfortable margin."""
+        qaoa_score = _compute_score(
+            "qaoa",
+            ENCODING_RULES["qaoa"],
+            **self._default_kwargs(problem_structure="combinatorial"),
+        )
+        iqp_score = _compute_score(
+            "iqp",
+            ENCODING_RULES["iqp"],
+            **self._default_kwargs(problem_structure="combinatorial"),
+        )
+        assert qaoa_score > iqp_score
+        assert qaoa_score - iqp_score >= 0.10
+
+    def test_bonus_still_applied_without_specialised_params(self) -> None:
+        """Without specialised params, the accuracy default bonus should
+        still fire for the default encoding."""
+        iqp_score = _compute_score(
+            "iqp",
+            ENCODING_RULES["iqp"],
+            **self._default_kwargs(),
+        )
+        # IQP should get the accuracy default bonus (+0.12) on top of
+        # priority matching (+0.20) and task matching (+0.04) and
+        # small feature bonus (+0.03)
+        assert iqp_score >= 0.35
+
 
 # =========================================================================
 # Edge cases

@@ -61,9 +61,8 @@ htmlcov/
 .hypothesis/
 *.tmp.*
 
-# Test notebooks (not for distribution)
-notebooks/test_encoding_atlas.ipynb
-notebooks/test/
+# Notebooks folder (redundant — canonical copies live in docs/notebooks/)
+notebooks/
 
 # Experiment results (reproducible outputs)
 experiments/results/
