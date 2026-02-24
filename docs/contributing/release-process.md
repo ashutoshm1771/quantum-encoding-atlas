@@ -80,7 +80,7 @@ The tag push triggers the `publish-pypi.yml` workflow, which automatically:
 ### 5. Verify
 
 - Check [PyPI](https://pypi.org/project/encoding-atlas/) for the new version
-- Check the [GitHub Releases](https://github.com/ashutoshm1771/quantum-encoding-atlas/releases) page
+- Check the [GitHub Releases](https://github.com/encoding-atlas/quantum-encoding-atlas/releases) page
 - Test installation: `pip install encoding-atlas==0.2.0`
 
 ---

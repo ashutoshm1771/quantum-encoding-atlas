@@ -15,7 +15,7 @@ This guide walks you through setting up a local development environment for the 
 ## Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/ashutoshm1771/quantum-encoding-atlas.git
+git clone https://github.com/encoding-atlas/quantum-encoding-atlas.git
 cd quantum-encoding-atlas
 ```
 

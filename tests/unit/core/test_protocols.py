@@ -13,6 +13,8 @@ Test Categories
 5. **Non-Conformance Tests**: Verify non-implementing encodings don't match
 """
 
+from __future__ import annotations
+
 from typing import Any
 
 import numpy as np

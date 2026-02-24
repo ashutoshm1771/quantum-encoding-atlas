@@ -24,7 +24,7 @@ Thank you for your interest in contributing to Quantum Encoding Atlas! This docu
 
 3. Add the upstream repository as a remote:
    ```bash
-   git remote add upstream https://github.com/ashutoshm1771/quantum-encoding-atlas.git
+   git remote add upstream https://github.com/encoding-atlas/quantum-encoding-atlas.git
    ```
 
 ## Development Setup

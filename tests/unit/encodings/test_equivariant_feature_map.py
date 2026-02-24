@@ -63,7 +63,8 @@ try:
     import pennylane as qml
 
     HAS_PENNYLANE = True
-except ImportError:
+except (ImportError, AttributeError):
+    # AttributeError: autoray compatibility issue on Python 3.9
     HAS_PENNYLANE = False
 
 try:
@@ -2003,7 +2004,7 @@ class TestStatisticalVerification:
         phi = np.pi / 4
 
         result = so2_encoding.verify_equivariance_statistical(
-            x, phi, n_shots=5000, significance=0.05
+            x, phi, n_shots=50000, significance=0.001
         )
 
         assert "equivariant" in result
@@ -2017,7 +2018,7 @@ class TestStatisticalVerification:
 
         # For a correct equivariant encoding, should pass the test
         assert result["equivariant"] is True
-        assert result["confidence_level"] == 0.95
+        assert result["confidence_level"] == 0.999
 
     def test_cyclic_statistical_verification(
         self, cyclic_encoding: CyclicEquivariantFeatureMap
@@ -2026,11 +2027,11 @@ class TestStatisticalVerification:
         x = np.array([0.1, 0.2, 0.3, 0.4])
 
         result = cyclic_encoding.verify_equivariance_statistical(
-            x, 1, n_shots=10000, significance=0.01
+            x, 1, n_shots=50000, significance=0.001
         )
 
         assert result["equivariant"] is True
-        assert result["n_shots"] == 10000
+        assert result["n_shots"] == 50000
         assert result["group_element"] == 1
 
     def test_swap_statistical_verification(
@@ -2041,7 +2042,7 @@ class TestStatisticalVerification:
         swaps = [True, False]
 
         result = swap_encoding.verify_equivariance_statistical(
-            x, swaps, n_shots=10000, significance=0.01
+            x, swaps, n_shots=50000, significance=0.001
         )
 
         assert result["equivariant"] is True

@@ -84,5 +84,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/ashutoshm1771/quantum-encoding-atlas/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/ashutoshm1771/quantum-encoding-atlas/releases/tag/v0.1.0
+[Unreleased]: https://github.com/encoding-atlas/quantum-encoding-atlas/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/encoding-atlas/quantum-encoding-atlas/releases/tag/v0.1.0

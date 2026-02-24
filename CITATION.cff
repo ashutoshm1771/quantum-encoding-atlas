@@ -6,7 +6,7 @@ authors:
   - family-names: "Mishra"
     given-names: "Ashutosh"
     email: "ashutoshm1771@gmail.com"
-repository-code: "https://github.com/ashutoshm1771/quantum-encoding-atlas"
+repository-code: "https://github.com/encoding-atlas/quantum-encoding-atlas"
 url: "https://q-encoding-atlas.web.app/documentation"
 license: MIT
 version: "0.1.0"

@@ -1,5 +1,7 @@
 """Benchmark execution framework."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -23,7 +25,7 @@ class EncodingBenchmark:
 
     def __init__(
         self,
-        encodings: list["BaseEncoding"],
+        encodings: list[BaseEncoding],
         datasets: list[str],
         n_runs: int = 10,
         seed: int | None = None,

@@ -1,5 +1,7 @@
 """Standard datasets for benchmarking."""
 
+from __future__ import annotations
+
 import numpy as np
 
 _DATASETS = ["iris", "moons", "circles", "linear", "xor"]

@@ -8,7 +8,7 @@ The Quantum Encoding Atlas is an open-source project and contributions are welco
 
 | Contribution | Guide |
 |:-------------|:------|
-| Report a bug or suggest a feature | [Open an issue](https://github.com/ashutoshm1771/quantum-encoding-atlas/issues) |
+| Report a bug or suggest a feature | [Open an issue](https://github.com/encoding-atlas/quantum-encoding-atlas/issues) |
 | Set up a development environment | [Development Setup](development-setup.md) |
 | Add a new quantum encoding | [Adding Encodings](adding-encodings.md) |
 | Understand the code conventions | [Code Style](code-style.md) |
@@ -46,4 +46,4 @@ This project follows the [Contributor Covenant](https://www.contributor-covenant
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the [MIT License](https://github.com/ashutoshm1771/quantum-encoding-atlas/blob/master/LICENSE).
+By contributing, you agree that your contributions will be licensed under the [MIT License](https://github.com/encoding-atlas/quantum-encoding-atlas/blob/master/LICENSE).

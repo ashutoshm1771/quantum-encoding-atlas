@@ -25,7 +25,7 @@ pip install encoding-atlas[all]
 ## Development Installation
 
 ```bash
-git clone https://github.com/ashutoshm1771/quantum-encoding-atlas.git
+git clone https://github.com/encoding-atlas/quantum-encoding-atlas.git
 cd quantum-encoding-atlas
 pip install -e ".[dev]"
 ```

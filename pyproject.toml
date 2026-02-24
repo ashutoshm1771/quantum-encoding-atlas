@@ -86,11 +86,11 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ashutoshm1771/quantum-encoding-atlas"
-Documentation = "https://ashutoshm1771.github.io/quantum-encoding-atlas/"
-Repository = "https://github.com/ashutoshm1771/quantum-encoding-atlas.git"
-Issues = "https://github.com/ashutoshm1771/quantum-encoding-atlas/issues"
-Changelog = "https://github.com/ashutoshm1771/quantum-encoding-atlas/blob/master/CHANGELOG.md"
+Homepage = "https://github.com/encoding-atlas/quantum-encoding-atlas"
+Documentation = "https://encoding-atlas.github.io/quantum-encoding-atlas/"
+Repository = "https://github.com/encoding-atlas/quantum-encoding-atlas.git"
+Issues = "https://github.com/encoding-atlas/quantum-encoding-atlas/issues"
+Changelog = "https://github.com/encoding-atlas/quantum-encoding-atlas/blob/master/CHANGELOG.md"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

@@ -54,7 +54,8 @@ try:
     import pennylane as qml
 
     HAS_PENNYLANE = True
-except ImportError:
+except (ImportError, AttributeError):
+    # AttributeError: autoray compatibility issue on Python 3.9
     HAS_PENNYLANE = False
 
 try:
