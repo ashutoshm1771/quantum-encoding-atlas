@@ -4,7 +4,7 @@
 
 **The comprehensive library for quantum data encodings in machine learning**
 
-[![PyPI version](https://badge.fury.io/py/encoding-atlas.svg)](https://pypi.org/project/encoding-atlas/)
+[![PyPI version](https://img.shields.io/pypi/v/encoding-atlas.svg)](https://pypi.org/project/encoding-atlas/)
 [![Python versions](https://img.shields.io/pypi/pyversions/encoding-atlas.svg)](https://pypi.org/project/encoding-atlas/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://img.shields.io/github/actions/workflow/status/encoding-atlas/quantum-encoding-atlas/ci.yml?branch=master&logo=github&label=CI)](https://github.com/encoding-atlas/quantum-encoding-atlas/actions/workflows/ci.yml)

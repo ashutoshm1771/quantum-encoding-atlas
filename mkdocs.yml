@@ -8,6 +8,9 @@ repo_url: https://github.com/encoding-atlas/quantum-encoding-atlas
 repo_name: encoding-atlas/quantum-encoding-atlas
 edit_uri: edit/main/docs/
 
+hooks:
+  - docs/hooks/version_hook.py
+
 copyright: Copyright &copy; 2026 Quantum Encoding Atlas Contributors
 
 theme:

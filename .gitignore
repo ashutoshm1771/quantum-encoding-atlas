@@ -71,6 +71,9 @@ experiments/plotting_journal.py
 # Verification folder (temporary)
 verification/
 
+# Paper (private drafts)
+paper/
+
 # OS
 .DS_Store
 Thumbs.db

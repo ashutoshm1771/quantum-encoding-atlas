@@ -672,21 +672,25 @@ class TestInstantiationPerformance:
     def test_repeated_instantiation_consistent(self) -> None:
         """Test that repeated instantiation has consistent performance.
 
-        Uses relative IQR (IQR / median) instead of coefficient of
-        variation to measure consistency. IQR is robust to outliers
-        caused by OS scheduling jitter and GC pauses that inevitably
-        affect wall-clock microbenchmarks on non-real-time systems.
+        Uses batched timings with relative IQR (IQR / median) to measure
+        consistency. Each measurement times a batch of instantiations
+        together, amortizing per-call OS scheduling jitter across the
+        batch. IQR is robust to residual outliers from GC pauses and
+        other non-deterministic system events.
         """
+        batch_size = 10
+
         # Warmup iterations to allow JIT compilation and caching to stabilize
-        for _ in range(20):
+        for _ in range(30):
             _ = HardwareEfficientEncoding(n_features=4, reps=2)
 
         times: list[float] = []
 
-        for _ in range(100):
+        for _ in range(50):
             with Timer() as t:
-                _ = HardwareEfficientEncoding(n_features=4, reps=2)
-            times.append(t.elapsed)
+                for _ in range(batch_size):
+                    _ = HardwareEfficientEncoding(n_features=4, reps=2)
+            times.append(t.elapsed / batch_size)
 
         relative_iqr = compute_relative_iqr(times)
         assert relative_iqr < 1.0, (
