@@ -3451,7 +3451,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <!-- End of mermaid configuration --><div class="jupyter-wrapper">
 <div class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5e18b4af">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3969c1cf">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -3478,7 +3478,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=99989576">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=589e6af9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -3505,7 +3505,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=f4883de9">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=53d5fc15">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -3534,7 +3534,7 @@ from pathlib import Path</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=15a49c97">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=d65d8afe">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -3552,60 +3552,46 @@ from pathlib import Path</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_read_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Read version from _version.py or the installed package."""</span>
-    <span class="c1"># Try 1: Read from source tree (editable install / local dev)</span>
-    <span class="n">version_file</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="s2">"src"</span> <span class="o">/</span> <span class="s2">"encoding_atlas"</span> <span class="o">/</span> <span class="s2">"_version.py"</span>
-    <span class="p">)</span>
-    <span class="k">if</span> <span class="n">version_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span>
-            <span class="sa">r</span><span class="s1">'__version__\s*=\s*version\s*=\s*["</span><span class="se">\'</span><span class="s1">]([^"</span><span class="se">\'</span><span class="s1">]+)["</span><span class="se">\'</span><span class="s1">]'</span><span class="p">,</span>
-            <span class="n">version_file</span><span class="o">.</span><span class="n">read_text</span><span class="p">(),</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_strip_dev_suffix</span><span class="p">(</span><span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Strip setuptools-scm dev/local suffixes to show the last release version.</span>
 
-    <span class="c1"># Try 2: Import from installed package (non-editable pip install in CI)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas._version</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
-
-        <span class="k">return</span> <span class="n">__version__</span>
-    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-        <span class="k">pass</span>
-
-    <span class="k">return</span> <span class="s2">"dev"</span>
+<span class="sd">    Examples: '0.3.1.dev1+gbd09888de' -&gt; '0.3.0', '0.3.0' -&gt; '0.3.0'</span>
+<span class="sd">    """</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(\d+\.\d+\.\d+)"</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># If this is a dev version (e.g. 0.3.1.dev1), the base patch was</span>
+        <span class="c1"># bumped by setuptools-scm; roll it back to the actual tagged release.</span>
+        <span class="k">if</span> <span class="s2">".dev"</span> <span class="ow">in</span> <span class="n">version</span><span class="p">:</span>
+            <span class="n">major</span><span class="p">,</span> <span class="n">minor</span><span class="p">,</span> <span class="n">patch</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+            <span class="n">patch</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">major</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">minor</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">patch</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">return</span> <span class="n">base</span>
+    <span class="k">return</span> <span class="n">version</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">def _read_version() -&gt; str:
-    """Read version from _version.py or the installed package."""
-    # Try 1: Read from source tree (editable install / local dev)
-    version_file = (
-        Path(__file__).resolve().parents[2] / "src" / "encoding_atlas" / "_version.py"
-    )
-    if version_file.exists():
-        match = re.search(
-            r'__version__\s*=\s*version\s*=\s*["\']([^"\']+)["\']',
-            version_file.read_text(),
-        )
-        if match:
-            return match.group(1)
+<div class="clipboard-copy-txt" id="cell-4">def _strip_dev_suffix(version: str) -&gt; str:
+    """Strip setuptools-scm dev/local suffixes to show the last release version.
 
-    # Try 2: Import from installed package (non-editable pip install in CI)
-    try:
-        from encoding_atlas._version import __version__
-
-        return __version__
-    except ImportError:
-        pass
-
-    return "dev"</div>
+    Examples: '0.3.1.dev1+gbd09888de' -&gt; '0.3.0', '0.3.0' -&gt; '0.3.0'
+    """
+    match = re.match(r"(\d+\.\d+\.\d+)", version)
+    if match:
+        base = match.group(1)
+        # If this is a dev version (e.g. 0.3.1.dev1), the base patch was
+        # bumped by setuptools-scm; roll it back to the actual tagged release.
+        if ".dev" in version:
+            major, minor, patch = base.split(".")
+            patch = str(max(int(patch) - 1, 0))
+            return f"{major}.{minor}.{patch}"
+        return base
+    return version</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=ecd5e22c">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a46bd20e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -3623,12 +3609,95 @@ from pathlib import Path</div>
 </div>
 </clipboard-copy>
 </div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_read_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Read version from _version.py or the installed package."""</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Try 1: Read from source tree (editable install / local dev)</span>
+    <span class="n">version_file</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="s2">"src"</span> <span class="o">/</span> <span class="s2">"encoding_atlas"</span> <span class="o">/</span> <span class="s2">"_version.py"</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">version_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span>
+            <span class="sa">r</span><span class="s1">'__version__\s*=\s*version\s*=\s*["</span><span class="se">\'</span><span class="s1">]([^"</span><span class="se">\'</span><span class="s1">]+)["</span><span class="se">\'</span><span class="s1">]'</span><span class="p">,</span>
+            <span class="n">version_file</span><span class="o">.</span><span class="n">read_text</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Try 2: Import from installed package (non-editable pip install in CI)</span>
+    <span class="k">if</span> <span class="n">raw</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas._version</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
+
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">__version__</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="n">raw</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"dev"</span>
+
+    <span class="k">return</span> <span class="n">_strip_dev_suffix</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-5">def _read_version() -&gt; str:
+    """Read version from _version.py or the installed package."""
+    raw = None
+
+    # Try 1: Read from source tree (editable install / local dev)
+    version_file = (
+        Path(__file__).resolve().parents[2] / "src" / "encoding_atlas" / "_version.py"
+    )
+    if version_file.exists():
+        match = re.search(
+            r'__version__\s*=\s*version\s*=\s*["\']([^"\']+)["\']',
+            version_file.read_text(),
+        )
+        if match:
+            raw = match.group(1)
+
+    # Try 2: Import from installed package (non-editable pip install in CI)
+    if raw is None:
+        try:
+            from encoding_atlas._version import __version__
+
+            raw = __version__
+        except ImportError:
+            pass
+
+    if raw is None:
+        return "dev"
+
+    return _strip_dev_suffix(raw)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c753ec66">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">on_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Inject package_version into extra config for Jinja2 templates."""</span>
     <span class="n">config</span><span class="p">[</span><span class="s2">"extra"</span><span class="p">][</span><span class="s2">"package_version"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_read_version</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">config</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">def on_config(config, **kwargs):
+<div class="clipboard-copy-txt" id="cell-6">def on_config(config, **kwargs):
     """Inject package_version into extra config for Jinja2 templates."""
     config["extra"]["package_version"] = _read_version()
     return config</div>
