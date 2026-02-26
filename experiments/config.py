@@ -70,6 +70,7 @@ VALID_STAGES = frozenset({
     "vqc",
     "kernel",
     "tradeoff",
+    "report",
 })
 
 VALID_BACKENDS = frozenset({"pennylane", "qiskit", "cirq"})
@@ -88,6 +89,7 @@ STAGE_OFFSETS: dict[str, int | float] = {
     "vqc": 6,             # Stage 6a → seed 6042
     "kernel": 7,          # Stage 6b → seed 7042
     "tradeoff": 8,        # Stage 7  → seed 8042
+    "report": 9,           # Stage 8  → seed 9042
 }
 
 # Quick-mode overrides reduce sample counts for fast validation.

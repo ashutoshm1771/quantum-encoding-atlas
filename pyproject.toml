@@ -91,6 +91,7 @@ Documentation = "https://encoding-atlas.github.io/quantum-encoding-atlas/"
 Repository = "https://github.com/encoding-atlas/quantum-encoding-atlas.git"
 Issues = "https://github.com/encoding-atlas/quantum-encoding-atlas/issues"
 Changelog = "https://github.com/encoding-atlas/quantum-encoding-atlas/blob/master/CHANGELOG.md"
+DOI = "https://doi.org/10.5281/zenodo.18780936"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
