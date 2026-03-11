@@ -103,3 +103,46 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: ${{ contains(github.ref, 'rc') || contains(github.ref, 'beta') || contains(github.ref, 'alpha') }}
+
+  # ── Job 4: Update Version Metadata ────────────────────────────
+  # After a release is published, update CITATION.cff and README.md
+  # on master so they always reflect the latest released version.
+  # Uses GITHUB_TOKEN which intentionally does not trigger other
+  # workflows, preventing infinite loops.
+  update-metadata:
+    name: Update Version Metadata
+    needs: github-release
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.ref, 'rc') && !contains(github.ref, 'beta') && !contains(github.ref, 'alpha') }}
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Extract version and date
+        id: meta
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          DATE="$(date -u +%Y-%m-%d)"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "date=${DATE}" >> "${GITHUB_OUTPUT}"
+
+      - name: Update CITATION.cff
+        run: |
+          sed -i 's/^version: ".*"/version: "${{ steps.meta.outputs.version }}"/' CITATION.cff
+          sed -i 's/^date-released: ".*"/date-released: "${{ steps.meta.outputs.date }}"/' CITATION.cff
+
+      - name: Update README.md bibtex version
+        run: |
+          sed -i 's/version={[^}]*}/version={${{ steps.meta.outputs.version }}}/' README.md
+
+      - name: Commit and push if changed
+        run: |
+          git diff --quiet && exit 0
+          git config user.name "Ashutosh Mishra"
+          git config user.email "ashutoshm1771@gmail.com"
+          git add CITATION.cff README.md
+          git commit -m "chore: update version metadata to ${{ steps.meta.outputs.version }}"
+          git push origin master

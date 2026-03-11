@@ -402,8 +402,8 @@ class ExperimentRunner:
         Exception
             Any exception from encoding instantiation or analysis.
         """
-        # Stage 7 uses a dummy encoding — skip instantiation.
-        if spec.name == "__tradeoff__":
+        # Stages 7-8 use dummy encodings — skip instantiation.
+        if spec.name in ("__tradeoff__", "__report__"):
             seed = self.config.task_seed(task_index)
             dispatch = _STAGE_HANDLERS.get(self.config.stage)
             if dispatch is None:
@@ -1558,6 +1558,37 @@ def _handle_tradeoff(
     )
 
 
+def _handle_report(
+    encoding: Any,
+    config: ExperimentConfig,
+    seed: int,
+) -> dict[str, Any]:
+    """Stage handler: Report generation (Stage 8).
+
+    This handler ignores the encoding argument (which is a dummy)
+    and compiles all prior stage results into publication-ready outputs.
+    """
+    from experiments.report import generate_report
+
+    ap = config.analysis_params
+    stage_dirs = ap.get("stage_dirs", {})
+    tradeoff_dir = ap.get("tradeoff_dir", "experiments/results/raw/stage7_tradeoff")
+    figure_dir = ap.get("figure_dir", "experiments/results/figures")
+    sensitivity_dir = ap.get("sensitivity_dir")
+    table_dir = ap.get("table_dir")
+    generate_tables = ap.get("generate_tables", True)
+
+    return generate_report(
+        stage_dirs=stage_dirs,
+        tradeoff_dir=tradeoff_dir,
+        output_dir=config.output_dir,
+        figure_dir=figure_dir,
+        sensitivity_dir=sensitivity_dir,
+        table_dir=table_dir,
+        generate_tables=generate_tables,
+    )
+
+
 # Handler registry — maps stage name to handler function.
 _STAGE_HANDLERS: dict[str, Any] = {
     "resources": _handle_resources,
@@ -1569,6 +1600,7 @@ _STAGE_HANDLERS: dict[str, Any] = {
     "vqc": _handle_vqc,
     "kernel": _handle_kernel,
     "tradeoff": _handle_tradeoff,
+    "report": _handle_report,
 }
 
 

@@ -1,0 +1,29 @@
+{
+  "stage": "report",
+  "seed": 42,
+  "backend": "pennylane",
+  "encodings": [
+    {
+      "name": "__report__",
+      "params": {}
+    }
+  ],
+  "analysis_params": {
+    "stage_dirs": {
+      "resources": "experiments/results/raw/stage1_resources",
+      "simulability": "experiments/results/raw/stage2_simulability",
+      "expressibility": "experiments/results/raw/stage3_expressibility",
+      "entanglement": "experiments/results/raw/stage4_entanglement",
+      "trainability": "experiments/results/raw/stage5_trainability",
+      "noise": "experiments/results/raw/stage5b_noise",
+      "vqc": "experiments/results/raw/stage6a_vqc",
+      "kernel": "experiments/results/raw/stage6b_kernel"
+    },
+    "tradeoff_dir": "experiments/results/raw/stage7_tradeoff",
+    "sensitivity_dir": "experiments/results/raw/stage6a5_sensitivity",
+    "figure_dir": "experiments/results/figures",
+    "table_dir": "experiments/results/tables",
+    "generate_tables": true
+  },
+  "output_dir": "experiments/results/report"
+}
