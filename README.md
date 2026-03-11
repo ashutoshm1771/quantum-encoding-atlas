@@ -123,7 +123,7 @@ If you use this library in your research, please cite:
   year={2026},
   doi={10.5281/zenodo.18780936},
   url={https://doi.org/10.5281/zenodo.18780936},
-  version={0.4.0}
+  version={1.0.0}
 }
 ```
 

@@ -10,8 +10,8 @@ authors:
 repository-code: "https://github.com/encoding-atlas/quantum-encoding-atlas"
 url: "https://encoding-atlas.github.io/quantum-encoding-atlas"
 license: MIT
-version: "0.4.0"
-date-released: "2026-02-26"
+version: "1.0.0"
+date-released: "2026-03-10"
 keywords:
   - quantum computing
   - quantum machine learning
