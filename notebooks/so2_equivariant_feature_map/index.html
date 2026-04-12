@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -6080,7 +6080,7 @@ for m1 in enc.angular_momenta:
     for m2 in enc.angular_momenta:
         overlap = np.abs(np.vdot(enc._basis_map[m1], enc._basis_map[m2]))
         expected = 1.0 if m1 == m2 else 0.0
-        print(f"  <m={m1:+d}|m={m2:+d}> = {overlap:.6f}  (expected {expected})")</m={m1:+d}|m={m2:+d}></div>
+        print(f"  &lt;m={m1:+d}|m={m2:+d}&gt; = {overlap:.6f}  (expected {expected})")</div>
 </div>
 </div>
 </div>
@@ -8057,8 +8057,8 @@ for i, amp in enumerate(right_side):
 
 # Step 4: Compare (up to global phase)
 overlap = np.abs(np.vdot(left_side, right_side))
-print(f"\nStep 4 - Overlap |<left|right>|: {overlap:.15f}")
-print(f"States match (up to global phase): {np.isclose(overlap, 1.0, atol=1e-10)}")</left|right></div>
+print(f"\nStep 4 - Overlap |&lt;left|right&gt;|: {overlap:.15f}")
+print(f"States match (up to global phase): {np.isclose(overlap, 1.0, atol=1e-10)}")</div>
 </div>
 </div>
 </div>
@@ -9450,9 +9450,9 @@ state2 = enc_0._encode_state(x2)
 
 # Same radius, different angle -&gt; same state (angle information is lost)
 overlap = np.abs(np.vdot(state1, state2))
-print(f"\n  |<psi(1,0)|psi(0,1)>| = {overlap:.6f}")
+print(f"\n  |&lt;psi(1,0)|psi(0,1)&gt;| = {overlap:.6f}")
 print(f"  Both points have r=1.0, but different theta")
-print(f"  With max_m=0, angle information is lost (overlap ≈ 1.0)")</psi(1,0)|psi(0,1)></div>
+print(f"  With max_m=0, angle information is lost (overlap ≈ 1.0)")</div>
 </div>
 </div>
 </div>
@@ -9526,7 +9526,7 @@ x2 = np.array([0.0, 1.0])     # theta = pi/2
 x3 = np.array([np.cos(0.1), np.sin(0.1)])  # theta = 0.1 (close to x1)
 
 print("State distinguishability vs angular momentum:")
-print(f"{'max_m':&lt;8} {'|<psi(0)|psi(pi 2)="">|':&lt;25} {'|<psi(0)|psi(0.1)>|':&lt;25}")
+print(f"{'max_m':&lt;8} {'|&lt;psi(0)|psi(pi/2)&gt;|':&lt;25} {'|&lt;psi(0)|psi(0.1)&gt;|':&lt;25}")
 print("-" * 60)
 
 for max_m in range(5):
@@ -9542,7 +9542,7 @@ for max_m in range(5):
     ov_13 = np.abs(np.vdot(s1, s3))
     print(f"{max_m:&lt;8} {ov_12:&lt;25.6f} {ov_13:&lt;25.6f}")
 
-print("\nHigher max_m -&gt; better angular discrimination")</psi(0)|psi(0.1)></psi(0)|psi(pi></div>
+print("\nHigher max_m -&gt; better angular discrimination")</div>
 </div>
 </div>
 </div>

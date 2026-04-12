@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -9424,24 +9424,25 @@ compute_fidelity : Compute fidelity between two statevectors.</p>
 
 
 <a href="#encoding_atlas.analysis.simulate_encoding_statevectors_batch" class="headerlink" title="Anchor link to this section">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">simulate_encoding_statevectors_batch</span><span class="p">(</span><span class="n">encoding</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;BaseEncoding&lt;/span&gt; (&lt;code&gt;encoding_atlas.core.base.BaseEncoding&lt;/code&gt;)" href="#encoding_atlas.core.base.BaseEncoding">BaseEncoding</a></span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]],</span> <span class="n">backend</span><span class="p">:</span> <span class="n"><span title="typing.Literal">Literal</span></span><span class="p">[</span><span class="s1">&#39;pennylane&#39;</span><span class="p">,</span> <span class="s1">&#39;qiskit&#39;</span><span class="p">,</span> <span class="s1">&#39;cirq&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;pennylane&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="encoding_atlas.analysis._utils.StatevectorType">StatevectorType</span></span><span class="p">]</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">simulate_encoding_statevectors_batch</span><span class="p">(</span><span class="n">encoding</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;BaseEncoding&lt;/span&gt; (&lt;code&gt;encoding_atlas.core.base.BaseEncoding&lt;/code&gt;)" href="#encoding_atlas.core.base.BaseEncoding">BaseEncoding</a></span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]],</span> <span class="n">backend</span><span class="p">:</span> <span class="n"><span title="typing.Literal">Literal</span></span><span class="p">[</span><span class="s1">&#39;pennylane&#39;</span><span class="p">,</span> <span class="s1">&#39;qiskit&#39;</span><span class="p">,</span> <span class="s1">&#39;cirq&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;pennylane&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.complexfloating">complexfloating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
 
         <p>Simulate encoding circuits for multiple input vectors.</p>
 <p>This is a convenience function that applies :func:<code>simulate_encoding_statevector</code>
-to each row of a 2D input array.</p>
+to each row of a 2D input array and returns a pre-allocated 2D array of
+statevectors.</p>
 <h5 id="encoding_atlas.analysis.simulate_encoding_statevectors_batch--parameters">Parameters<a class="headerlink" href="#encoding_atlas.analysis.simulate_encoding_statevectors_batch--parameters" title="Anchor link to this section">&para;</a></h5>
 <p>encoding : BaseEncoding
     The encoding instance to simulate.
 X : NDArray[np.floating]
     Input data array of shape <code>(n_samples, n_features)</code>.
-backend : {"pennylane", "qiskit"}, default="pennylane"
+backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
     The quantum simulation backend to use.</p>
 <h5 id="encoding_atlas.analysis.simulate_encoding_statevectors_batch--returns">Returns<a class="headerlink" href="#encoding_atlas.analysis.simulate_encoding_statevectors_batch--returns" title="Anchor link to this section">&para;</a></h5>
-<p>list[StatevectorType]
-    List of statevectors, one for each input sample.</p>
+<p>NDArray[np.complexfloating], shape <code>(n_samples, 2**n_qubits)</code>
+    2D array of statevectors, one row per input sample.</p>
 <h5 id="encoding_atlas.analysis.simulate_encoding_statevectors_batch--raises">Raises<a class="headerlink" href="#encoding_atlas.analysis.simulate_encoding_statevectors_batch--raises" title="Anchor link to this section">&para;</a></h5>
 <p>SimulationError
     If simulation fails for any input.

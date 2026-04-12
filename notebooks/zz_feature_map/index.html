@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -11338,7 +11338,7 @@ Labels: [0 1], counts: [10 10]
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Kernel matrix is symmetric (verified)"</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-88"># Step 4: Compute quantum kernel matrix
-# K(x, x') = |<psi(x)|psi(x')>|^2
+# K(x, x') = |&lt;psi(x)|psi(x')&gt;|^2
 
 n_samples = len(X_scaled)
 kernel_matrix = np.zeros((n_samples, n_samples))
@@ -11364,7 +11364,7 @@ print("\nKernel matrix diagonal is all 1.0 (verified)")
 
 # Verify: kernel is symmetric
 assert np.allclose(kernel_matrix, kernel_matrix.T)
-print("Kernel matrix is symmetric (verified)")</psi(x)|psi(x')></div>
+print("Kernel matrix is symmetric (verified)")</div>
 </div>
 </div>
 </div>
