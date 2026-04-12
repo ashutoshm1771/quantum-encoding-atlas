@@ -512,11 +512,12 @@ def simulate_encoding_statevectors_batch(
     encoding: BaseEncoding,
     X: NDArray[np.floating[Any]],
     backend: Literal["pennylane", "qiskit", "cirq"] = "pennylane",
-) -> list[StatevectorType]:
+) -> NDArray[np.complexfloating[Any, Any]]:
     """Simulate encoding circuits for multiple input vectors.
 
     This is a convenience function that applies :func:`simulate_encoding_statevector`
-    to each row of a 2D input array.
+    to each row of a 2D input array and returns a pre-allocated 2D array of
+    statevectors.
 
     Parameters
     ----------
@@ -524,13 +525,13 @@ def simulate_encoding_statevectors_batch(
         The encoding instance to simulate.
     X : NDArray[np.floating]
         Input data array of shape ``(n_samples, n_features)``.
-    backend : {"pennylane", "qiskit"}, default="pennylane"
+    backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
         The quantum simulation backend to use.
 
     Returns
     -------
-    list[StatevectorType]
-        List of statevectors, one for each input sample.
+    NDArray[np.complexfloating], shape ``(n_samples, 2**n_qubits)``
+        2D array of statevectors, one row per input sample.
 
     Raises
     ------
@@ -554,17 +555,20 @@ def simulate_encoding_statevectors_batch(
     if X_array.ndim != 2:
         raise ValidationError(f"Input X must be 2D array, got shape {X_array.shape}")
 
+    n_samples = X_array.shape[0]
+    dim = 2**encoding.n_qubits
+
     _logger.debug(
         "Batch simulating %d samples for encoding %s",
-        X_array.shape[0],
+        n_samples,
         encoding.__class__.__name__,
     )
 
-    statevectors = []
+    states = np.zeros((n_samples, dim), dtype=np.complex128)
     for i, x in enumerate(X_array):
         try:
             state = simulate_encoding_statevector(encoding, x, backend)
-            statevectors.append(state)
+            states[i] = np.asarray(state, dtype=np.complex128).ravel()
         except SimulationError as e:
             raise SimulationError(
                 f"Simulation failed for sample {i}: {e}",
@@ -572,7 +576,7 @@ def simulate_encoding_statevectors_batch(
                 details={"sample_index": i, "original_error": str(e)},
             ) from e
 
-    return statevectors
+    return states
 
 
 def _simulate_pennylane(
@@ -1467,6 +1471,53 @@ def compute_fidelity(
     fidelity = float(np.clip(fidelity, 0.0, 1.0))
 
     return fidelity
+
+
+def _compute_fidelities_batch(
+    states1: NDArray[np.complexfloating[Any, Any]],
+    states2: NDArray[np.complexfloating[Any, Any]],
+) -> NDArray[np.floating[Any]]:
+    """Compute fidelities between pairs of statevectors in batch.
+
+    Vectorized version of :func:`compute_fidelity` for arrays of states.
+    Computes F_i = |⟨ψ₁ⁱ|ψ₂ⁱ⟩|² for each pair (i).
+
+    Parameters
+    ----------
+    states1 : NDArray[np.complexfloating], shape ``(n, d)``
+        First set of statevectors.
+    states2 : NDArray[np.complexfloating], shape ``(n, d)``
+        Second set of statevectors.
+
+    Returns
+    -------
+    NDArray[np.floating], shape ``(n,)``
+        Fidelity values, each in [0, 1].
+
+    Raises
+    ------
+    ValueError
+        If shapes of ``states1`` and ``states2`` do not match.
+    ValidationError
+        If any state contains NaN or infinite values.
+    """
+    if states1.shape != states2.shape:
+        raise ValueError(
+            f"States must have same shape: got {states1.shape} and {states2.shape}"
+        )
+    if states1.ndim != 2:
+        raise ValueError(f"States must be 2D arrays, got ndim={states1.ndim}")
+
+    if np.any(np.isnan(states1)) or np.any(np.isinf(states1)):
+        raise ValidationError("states1 contains NaN or infinite values")
+    if np.any(np.isnan(states2)) or np.any(np.isinf(states2)):
+        raise ValidationError("states2 contains NaN or infinite values")
+
+    overlaps = np.sum(np.conj(states1) * states2, axis=1)
+    fidelities = np.abs(overlaps) ** 2
+    fidelities = np.clip(fidelities, 0.0, 1.0).astype(np.float64)
+
+    return fidelities
 
 
 def compute_purity(

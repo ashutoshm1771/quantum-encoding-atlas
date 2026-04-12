@@ -1040,11 +1040,9 @@ def _sample_fidelities(
 ) -> NDArray[np.floating[Any]]:
     """Sample fidelities between random input pairs.
 
-    This is the core sampling loop for expressibility computation.
-    For each of n_samples iterations:
-    1. Generate two random input vectors x1, x2
-    2. Simulate encoding to get states |ψ(x1)⟩, |ψ(x2)⟩
-    3. Compute fidelity F = |⟨ψ(x1)|ψ(x2)⟩|²
+    Generates random input pairs in batch, simulates encoding circuits,
+    and computes fidelities. RNG calls are vectorized into single batch
+    operations for reduced overhead.
 
     Parameters
     ----------
@@ -1073,24 +1071,20 @@ def _sample_fidelities(
     SimulationError
         If circuit simulation fails.
     """
-    # TODO: Vectorize this loop — batch rng.uniform calls and simulation
-    # calls to reduce per-sample overhead. This is the main performance
-    # bottleneck for large n_samples. See simulate_encoding_statevectors_batch
-    # in _utils.py for a possible starting point.
+    # Batch RNG generation — single call per input set
+    X1 = rng.uniform(input_range[0], input_range[1], size=(n_samples, n_features))
+    X2 = rng.uniform(input_range[0], input_range[1], size=(n_samples, n_features))
+
     fidelities = np.zeros(n_samples, dtype=np.float64)
 
     # Logging interval (log every 10% of progress)
     log_interval = max(1, n_samples // 10)
 
     for i in range(n_samples):
-        # Generate two random input vectors
-        x1 = rng.uniform(input_range[0], input_range[1], size=n_features)
-        x2 = rng.uniform(input_range[0], input_range[1], size=n_features)
-
         try:
             # Simulate encoding to get statevectors
-            state1 = simulate_encoding_statevector(encoding, x1, backend=backend)
-            state2 = simulate_encoding_statevector(encoding, x2, backend=backend)
+            state1 = simulate_encoding_statevector(encoding, X1[i], backend=backend)
+            state2 = simulate_encoding_statevector(encoding, X2[i], backend=backend)
 
             # Compute fidelity: F = |⟨ψ₁|ψ₂⟩|²
             fidelity = compute_fidelity(state1, state2)
