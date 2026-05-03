@@ -40,7 +40,6 @@ References
 from __future__ import annotations
 
 import logging
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Literal, TypedDict
 
 import numpy as np
@@ -920,222 +919,14 @@ class QAOAEncoding(BaseEncoding):
     ) -> CircuitType:
         """Generate quantum circuit for a single data sample.
 
+        Strict variant: a 2D input with more than one row raises
+        :class:`ValueError`. Use :meth:`get_circuits` for batches.
+
         Parameters
         ----------
         x : array-like
-            Input features of shape (n_features,).
+            Input features of shape (n_features,) or (1, n_features).
         backend : {'pennylane', 'qiskit', 'cirq'}, default='pennylane'
-            Target quantum computing framework.
-
-        Returns
-        -------
-        CircuitType
-            Circuit in the specified backend's format:
-            - PennyLane: callable function that applies gates
-            - Qiskit: QuantumCircuit object
-            - Cirq: Circuit object
-
-        Raises
-        ------
-        ValueError
-            If input shape doesn't match n_features or backend is unknown.
-
-        Examples
-        --------
-        >>> enc = QAOAEncoding(n_features=4, reps=2)
-        >>> x = np.array([0.1, 0.2, 0.3, 0.4])
-        >>> circuit = enc.get_circuit(x, backend='pennylane')
-        """
-        # Validate and preprocess input
-        x_validated = self._validate_input(x)
-        if x_validated.ndim == 2:
-            if x_validated.shape[0] != 1:
-                raise ValueError(
-                    f"get_circuit expects a single sample, got shape "
-                    f"{x_validated.shape}. Use get_circuits for batches."
-                )
-            x_validated = x_validated[0]
-
-        # Check for input values outside recommended range and warn user
-        # Rotation gates are periodic with period 2π, so large values wrap around.
-        # This can lead to unexpected behavior if users don't normalize their data.
-        self._check_input_range(x_validated)
-
-        _logger.debug(
-            "Generating circuit for backend=%s, input_shape=%s, "
-            "input_range=[%.4f, %.4f]",
-            backend,
-            x_validated.shape,
-            float(np.min(x_validated)),
-            float(np.max(x_validated)),
-        )
-
-        # Dispatch to backend-specific implementation
-        if backend == "pennylane":
-            return self._to_pennylane(x_validated)
-        elif backend == "qiskit":
-            return self._to_qiskit(x_validated)
-        elif backend == "cirq":
-            return self._to_cirq(x_validated)
-        else:
-            raise ValueError(
-                f"Unknown backend '{backend}'. "
-                f"Supported backends: 'pennylane', 'qiskit', 'cirq'"
-            )
-
-    def get_circuits(
-        self,
-        X: ArrayLike,
-        backend: BackendType = "pennylane",
-        *,
-        parallel: bool = False,
-        max_workers: int | None = None,
-    ) -> list[CircuitType]:
-        """Generate quantum circuits for multiple data samples.
-
-        Parameters
-        ----------
-        X : array-like
-            Input features of shape (n_samples, n_features) or (n_features,).
-            If 1D, treated as a single sample.
-        backend : {'pennylane', 'qiskit', 'cirq'}, default='pennylane'
-            Target quantum computing framework.
-        parallel : bool, default=False
-            If True, use parallel processing via ThreadPoolExecutor for
-            circuit generation. This can speed up processing for large
-            batches (>100 samples) but adds overhead for small batches.
-
-            Parallel processing is thread-safe because QAOAEncoding's circuit
-            generation is stateless (no instance mutation occurs).
-        max_workers : int or None, default=None
-            Maximum number of worker threads for parallel processing.
-            Only used when ``parallel=True``. If None, uses the default
-            from ThreadPoolExecutor (typically min(32, cpu_count + 4)).
-
-            For CPU-bound workloads, set to ``os.cpu_count()``.
-            For I/O-bound workloads, higher values may help.
-
-        Returns
-        -------
-        list[CircuitType]
-            List of circuits, one per sample. Order is preserved even
-            when using parallel processing.
-
-        Examples
-        --------
-        Sequential processing (default):
-
-        >>> enc = QAOAEncoding(n_features=4)
-        >>> X = np.random.randn(10, 4)
-        >>> circuits = enc.get_circuits(X, backend='qiskit')
-        >>> len(circuits)
-        10
-
-        Parallel processing for large batches:
-
-        >>> enc = QAOAEncoding(n_features=4)
-        >>> X_large = np.random.randn(1000, 4)
-        >>> circuits = enc.get_circuits(X_large, backend='qiskit', parallel=True)
-        >>> len(circuits)
-        1000
-
-        Custom worker count:
-
-        >>> import os
-        >>> circuits = enc.get_circuits(
-        ...     X_large, backend='cirq', parallel=True, max_workers=os.cpu_count()
-        ... )
-
-        Notes
-        -----
-        **When to use parallel processing:**
-
-        - Large batches (>100 samples): Parallel processing overhead is
-          amortized across many samples.
-        - Qiskit/Cirq backends: These create full circuit objects which
-          has more overhead than PennyLane's lightweight closures.
-
-        **When to use sequential processing:**
-
-        - Small batches (<100 samples): Overhead of thread pool management
-          may exceed the benefit.
-        - PennyLane backend: Circuit generation is extremely fast.
-        - Already in a parallel context: Avoid nested parallelism.
-
-        **Thread Safety:**
-
-        This method is thread-safe. The encoding object is not modified
-        during circuit generation, and each circuit is generated
-        independently. Input validation creates defensive copies to
-        prevent data races.
-
-        **Order Preservation:**
-
-        When ``parallel=True``, the returned list maintains the same order
-        as the input samples. This is achieved using ThreadPoolExecutor.map()
-        which preserves ordering.
-        """
-        X_validated = self._validate_input(X)
-        if X_validated.ndim == 1:
-            X_validated = X_validated.reshape(1, -1)
-
-        n_samples = X_validated.shape[0]
-
-        _logger.debug(
-            "Batch circuit generation: n_samples=%d, backend=%s, parallel=%s, "
-            "max_workers=%s",
-            n_samples,
-            backend,
-            parallel,
-            max_workers,
-        )
-
-        if parallel and n_samples > 1:
-            # Parallel processing using ThreadPoolExecutor
-            # ThreadPoolExecutor.map() preserves order of results
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                # Use _get_circuit_from_validated to skip redundant validation
-                def generate_single(x: NDArray[np.floating[Any]]) -> CircuitType:
-                    return self._get_circuit_from_validated(x, backend)
-
-                # Map preserves order: result[i] corresponds to X_validated[i]
-                circuits = list(executor.map(generate_single, X_validated))
-
-            _logger.debug(
-                "Parallel batch processing completed: generated %d circuits "
-                "with max_workers=%s",
-                len(circuits),
-                max_workers,
-            )
-        else:
-            # Sequential processing - use optimized path
-            circuits = [
-                self._get_circuit_from_validated(x, backend) for x in X_validated
-            ]
-            _logger.debug(
-                "Sequential batch processing completed: generated %d circuits",
-                len(circuits),
-            )
-
-        return circuits
-
-    def _get_circuit_from_validated(
-        self,
-        x: NDArray[np.floating[Any]],
-        backend: BackendType,
-    ) -> CircuitType:
-        """Generate circuit from pre-validated input (internal use only).
-
-        This method skips input validation, assuming the caller has already
-        validated the input. Used by get_circuits() to avoid double validation
-        when processing batches, improving performance for large datasets.
-
-        Parameters
-        ----------
-        x : NDArray
-            Pre-validated input features of shape (n_features,).
-            Must have already been validated by _validate_input().
-        backend : BackendType
             Target quantum computing framework.
 
         Returns
@@ -1146,33 +937,49 @@ class QAOAEncoding(BaseEncoding):
         Raises
         ------
         ValueError
-            If backend is not one of the supported options.
+            If input shape doesn't match n_features, contains multiple
+            samples, or backend is unknown.
 
-        Notes
-        -----
-        **Internal Method**: This method is not part of the public API.
-        External callers should use ``get_circuit()`` which includes
-        full input validation and input range checking.
-
-        **Thread Safety**: This method is thread-safe. It does not modify
-        any instance state and operates only on the provided input array.
-
-        **Performance**: By skipping validation and input range checking,
-        this method is faster than ``get_circuit()`` for batch processing
-        where the entire batch has already been validated once. The
-        performance gain is proportional to the batch size.
+        Examples
+        --------
+        >>> enc = QAOAEncoding(n_features=4, reps=2)
+        >>> x = np.array([0.1, 0.2, 0.3, 0.4])
+        >>> circuit = enc.get_circuit(x, backend='pennylane')
         """
-        # Handle 2D input (single sample as row)
+        x_validated = self._validate_input(x)
+        if x_validated.ndim == 2:
+            if x_validated.shape[0] != 1:
+                raise ValueError(
+                    f"get_circuit expects a single sample, got shape "
+                    f"{x_validated.shape}. Use get_circuits for batches."
+                )
+            x_validated = x_validated[0]
+        return self._get_circuit_from_validated(x_validated, backend)
+
+    def _get_circuit_from_validated(
+        self,
+        x: NDArray[np.floating[Any]],
+        backend: BackendType,
+    ) -> CircuitType:
+        """Generate circuit from pre-validated input.
+
+        Encoding-specific seam called by the public ``get_circuit`` and
+        the inherited ``get_circuits`` template method. Performs the QAOA
+        input-range check and dispatches to the backend implementation.
+
+        Accepts a 1D array (the normal case) or a 2D single-sample
+        ``(1, n_features)`` array for robustness when called directly.
+        """
+        # Defensive 2D-to-1D handling for direct callers; ``get_circuit``
+        # and the inherited ``get_circuits`` already pass 1D input.
         if x.ndim == 2:
             x = x[0]
 
-        _logger.debug(
-            "Generating circuit from validated input: backend=%s, shape=%s",
-            backend,
-            x.shape,
-        )
+        # Warn when input values fall outside the recommended range.
+        # Rotation gates are 2π-periodic so values wrap around silently;
+        # this can mask user data-scaling issues.
+        self._check_input_range(x)
 
-        # Dispatch to backend-specific implementation
         if backend == "pennylane":
             return self._to_pennylane(x)
         elif backend == "qiskit":

@@ -153,7 +153,6 @@ from __future__ import annotations
 
 import logging
 import warnings
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any, TypedDict
 
 import numpy as np
@@ -648,82 +647,39 @@ class AmplitudeEncoding(BaseEncoding):
     # Circuit Generation
     # ==========================================================================
 
-    def get_circuit(
+    def _get_circuit_from_validated(
         self,
-        x: ArrayLike,
-        backend: BackendType = "pennylane",
+        x: NDArray[np.floating[Any]],
+        backend: BackendType,
     ) -> CircuitType:
-        """Generate quantum circuit for a single data sample.
+        """Generate circuit from pre-validated input.
 
-        Creates a quantum circuit that encodes the input features as
-        amplitudes of a quantum state. The input is validated, padded
-        to the next power of 2 if necessary, and normalized (if enabled).
+        Encoding-specific seam called by the inherited ``get_circuit``/
+        ``get_circuits`` template methods. Pads to the next power of two,
+        validates norm, optionally normalizes, then dispatches to the
+        backend-specific implementation.
 
-        Parameters
-        ----------
-        x : array-like
-            Input features of shape (n_features,) or (1, n_features).
-            Values are encoded as quantum state amplitudes.
-        backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
-            Target quantum computing framework:
-
-            - "pennylane": Returns a callable function that applies gates
-            - "qiskit": Returns a Qiskit QuantumCircuit object
-            - "cirq": Returns a Cirq Circuit object
-
-        Returns
-        -------
-        CircuitType
-            Circuit in the specified backend's format.
+        Accepts a 1D array (the normal case) or a 2D single-sample
+        ``(1, n_features)`` array for robustness when called directly.
 
         Raises
         ------
         ValueError
-            If input shape doesn't match n_features.
+            If the input vector has zero (or near-zero) norm.
         ValueError
-            If input contains NaN or infinite values.
-        ValueError
-            If input vector has zero (or near-zero) norm. A valid quantum
-            state requires at least one non-zero amplitude to satisfy the
-            normalization constraint |ψ|² = 1.
-        ValueError
-            If backend is not one of the supported options.
-        ImportError
-            If the requested backend is not installed.
-
-        Examples
-        --------
-        >>> enc = AmplitudeEncoding(n_features=4)
-        >>> x = np.array([0.5, 0.5, 0.5, 0.5])
-        >>> circuit = enc.get_circuit(x, backend='pennylane')
-        >>> callable(circuit)
-        True
-
-        >>> qc = enc.get_circuit(x, backend='qiskit')
-        >>> qc.num_qubits
-        2
-
-        Notes
-        -----
-        The circuit prepares the state |ψ⟩ = Σᵢ xᵢ|i⟩ where x is the
-        (optionally normalized) input vector, padded to length 2^n_qubits.
+            If ``normalize=False`` and the input is not unit-norm
+            (within 1% tolerance).
         """
-        _logger.debug(
-            "get_circuit called: backend=%r, input_shape=%s",
-            backend,
-            getattr(x, "shape", f"len={len(x)}" if hasattr(x, "__len__") else "scalar"),
-        )
-
-        # Validate and preprocess input
-        x_validated = self._validate_input(x)
-        if x_validated.ndim == 2:
-            x_validated = x_validated[0]
+        # Defensive 2D-to-1D handling for direct callers; the template
+        # methods already pass 1D input.
+        if x.ndim == 2:
+            x = x[0]
 
         # Pad to power of 2 (state dimension must be 2^n_qubits)
         target_size = 2**self._n_qubits
-        original_len = len(x_validated)
-        if len(x_validated) < target_size:
-            x_validated = np.pad(x_validated, (0, target_size - len(x_validated)))
+        original_len = len(x)
+        if original_len < target_size:
+            x = np.pad(x, (0, target_size - original_len))
             _logger.debug(
                 "Input padded: original_len=%d, padded_len=%d, padding_zeros=%d",
                 original_len,
@@ -731,13 +687,12 @@ class AmplitudeEncoding(BaseEncoding):
                 target_size - original_len,
             )
 
-        # Compute the L2 norm for normalization and validation
-        norm = np.linalg.norm(x_validated)
+        # Compute the L2 norm for normalization and validation.
+        norm = np.linalg.norm(x)
 
-        # Validate: Zero-norm vectors cannot form valid quantum states.
-        # A quantum state |ψ⟩ must satisfy the normalization constraint ⟨ψ|ψ⟩ = 1,
-        # which is impossible for a zero vector. This check applies regardless of
-        # the normalize setting, since even pre-normalized data cannot be all zeros.
+        # Validate: zero-norm vectors cannot form valid quantum states.
+        # A quantum state |ψ⟩ must satisfy ⟨ψ|ψ⟩ = 1, which is impossible
+        # for a zero vector. Applies regardless of ``normalize``.
         if norm < _ZERO_NORM_THRESHOLD:
             raise ValueError(
                 "Input vector has zero (or near-zero) norm and cannot be encoded "
@@ -747,21 +702,16 @@ class AmplitudeEncoding(BaseEncoding):
                 "non-zero feature value."
             )
 
-        # Normalize to create valid quantum state (|ψ|² = 1)
+        # Normalize to create a valid quantum state, or verify caller did so.
         if self.normalize:
-            x_validated = x_validated / norm
+            x = x / norm
             _logger.debug(
                 "Input normalized: original_norm=%.10f, normalized_norm=1.0", norm
             )
         else:
             # When normalize=False, user claims data is pre-normalized.
-            # We validate that the norm is reasonably close to 1.0 to catch
-            # obvious errors (like forgetting to normalize), while allowing
-            # small numerical deviations that occur in practice.
-            #
-            # Tolerance: 1% deviation from unit norm (rtol=0.01).
-            # This catches errors like passing raw data [1, 2, 3, 4] (norm=5.48)
-            # while allowing legitimate numerical imprecision like norm=1.00005.
+            # 1% tolerance catches obvious errors (e.g., raw data) while
+            # allowing legitimate numerical imprecision (e.g., norm=1.00005).
             if not np.isclose(norm, 1.0, rtol=0.01, atol=1e-10):
                 raise ValueError(
                     f"normalize=False but input vector has L2 norm {norm:.6f}, "
@@ -773,245 +723,6 @@ class AmplitudeEncoding(BaseEncoding):
                     f"  2. Pre-normalize your data: x = x / np.linalg.norm(x)"
                 )
 
-        # Dispatch to backend-specific implementation
-        _logger.debug(
-            "Dispatching to backend: %r, state_vector_len=%d, n_qubits=%d",
-            backend,
-            len(x_validated),
-            self._n_qubits,
-        )
-
-        if backend == "pennylane":
-            circuit = self._to_pennylane(x_validated)
-            _logger.debug("PennyLane circuit generated: n_qubits=%d", self._n_qubits)
-            return circuit
-        elif backend == "qiskit":
-            circuit = self._to_qiskit(x_validated)
-            _logger.debug("Qiskit circuit generated: n_qubits=%d", self._n_qubits)
-            return circuit
-        elif backend == "cirq":
-            circuit = self._to_cirq(x_validated)
-            _logger.debug("Cirq circuit generated: n_qubits=%d", self._n_qubits)
-            return circuit
-        else:
-            raise ValueError(
-                f"Unknown backend {backend!r}. "
-                f"Supported backends: 'pennylane', 'qiskit', 'cirq'"
-            )
-
-    def get_circuits(
-        self,
-        X: ArrayLike,
-        backend: BackendType = "pennylane",
-        *,
-        parallel: bool = False,
-        max_workers: int | None = None,
-    ) -> list[CircuitType]:
-        """Generate quantum circuits for multiple data samples.
-
-        Parameters
-        ----------
-        X : array-like
-            Input features of shape (n_samples, n_features) or (n_features,).
-            If 1D, treated as a single sample.
-        backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
-            Target quantum computing framework.
-        parallel : bool, default=False
-            If True, use parallel processing via ThreadPoolExecutor for
-            circuit generation. This can significantly speed up processing
-            for large batches, especially with the Cirq backend which
-            constructs full unitary matrices.
-
-            Parallel processing is thread-safe because AmplitudeEncoding's
-            circuit generation is stateless (no instance mutation occurs).
-        max_workers : int or None, default=None
-            Maximum number of worker threads for parallel processing.
-            Only used when ``parallel=True``. If None, uses the default
-            from ThreadPoolExecutor (typically min(32, cpu_count + 4)).
-
-            For CPU-bound workloads (like Cirq's unitary construction),
-            set to ``os.cpu_count()``. For I/O-bound or memory-constrained
-            scenarios, lower values may be preferable.
-
-        Returns
-        -------
-        list[CircuitType]
-            List of circuits, one per sample. Order is preserved even
-            when using parallel processing.
-
-        Examples
-        --------
-        Sequential processing (default):
-
-        >>> enc = AmplitudeEncoding(n_features=4)
-        >>> X = np.random.randn(10, 4)
-        >>> circuits = enc.get_circuits(X, backend='pennylane')
-        >>> len(circuits)
-        10
-
-        Parallel processing for large batches:
-
-        >>> enc = AmplitudeEncoding(n_features=8)
-        >>> X_large = np.random.randn(1000, 8)
-        >>> circuits = enc.get_circuits(X_large, backend='cirq', parallel=True)
-        >>> len(circuits)
-        1000
-
-        Custom worker count:
-
-        >>> import os
-        >>> circuits = enc.get_circuits(
-        ...     X_large, backend='qiskit', parallel=True, max_workers=os.cpu_count()
-        ... )
-
-        Notes
-        -----
-        **When to use parallel processing:**
-
-        - Large batches (>100 samples): Parallel processing overhead is
-          amortized across many samples.
-        - Cirq backend: Unitary matrix construction is computationally
-          expensive and benefits significantly from parallelization.
-        - Qiskit backend: Circuit object creation has moderate overhead.
-
-        **When to use sequential processing:**
-
-        - Small batches (<100 samples): Overhead of thread pool management
-          may exceed the benefit.
-        - PennyLane backend: Circuit generation creates lightweight closures
-          and is already very fast.
-        - Memory-constrained environments: Parallel Cirq circuit generation
-          may consume significant memory (each worker builds a full unitary).
-        - Already in a parallel context: Avoid nested parallelism.
-
-        **Thread Safety:**
-
-        This method is thread-safe. The encoding object is not modified
-        during circuit generation, and each circuit is generated
-        independently. Input validation creates defensive copies to
-        prevent data races.
-
-        **Order Preservation:**
-
-        When ``parallel=True``, the returned list maintains the same order
-        as the input samples. This is achieved using ThreadPoolExecutor.map()
-        which preserves ordering.
-
-        **Memory Considerations for Cirq:**
-
-        When using ``parallel=True`` with the Cirq backend, each worker
-        thread constructs a full 2^n × 2^n unitary matrix. For n_qubits >= 10,
-        this can consume substantial memory per worker. Consider limiting
-        ``max_workers`` for large qubit counts to avoid memory exhaustion.
-
-        See Also
-        --------
-        get_circuit : Generate a single circuit (useful for individual samples).
-        resource_summary : Analyze resource requirements for this encoding.
-        """
-        X_validated = self._validate_input(X)
-        if X_validated.ndim == 1:
-            X_validated = X_validated.reshape(1, -1)
-
-        n_samples = X_validated.shape[0]
-
-        # Log batch processing start
-        _logger.debug(
-            "Batch processing started: n_samples=%d, backend=%r, parallel=%s, "
-            "max_workers=%s",
-            n_samples,
-            backend,
-            parallel,
-            max_workers,
-        )
-
-        if parallel and n_samples > 1:
-            # Parallel processing using ThreadPoolExecutor
-            # ThreadPoolExecutor.map() preserves order of results
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                # Create a helper function that captures the backend parameter
-                # Uses internal method to avoid re-validating each sample
-                def generate_single(x: NDArray[np.floating[Any]]) -> CircuitType:
-                    return self._get_circuit_from_validated(x, backend)
-
-                # Map preserves order: result[i] corresponds to X_validated[i]
-                circuits = list(executor.map(generate_single, X_validated))
-
-            _logger.debug(
-                "Parallel batch processing completed: generated %d circuits "
-                "using ThreadPoolExecutor",
-                len(circuits),
-            )
-        else:
-            # Sequential processing (default behavior)
-            # Use internal method to avoid re-validating each sample.
-            # The batch was already validated above, so we can safely skip
-            # per-sample validation for better performance.
-            circuits = [
-                self._get_circuit_from_validated(x, backend) for x in X_validated
-            ]
-
-            _logger.debug(
-                "Sequential batch processing completed: generated %d circuits",
-                len(circuits),
-            )
-
-        _logger.info(
-            "Batch circuit generation complete: n_circuits=%d, backend=%r",
-            len(circuits),
-            backend,
-        )
-        return circuits
-
-    def _get_circuit_from_validated(
-        self,
-        x: NDArray[np.floating[Any]],
-        backend: BackendType,
-    ) -> CircuitType:
-        """Generate circuit from pre-validated input (internal use only).
-
-        This method skips input validation, assuming the caller has already
-        validated the input. Used by get_circuits() to avoid double validation.
-
-        Parameters
-        ----------
-        x : NDArray
-            Pre-validated input features of shape (n_features,).
-        backend : BackendType
-            Target quantum computing framework.
-
-        Returns
-        -------
-        CircuitType
-            Circuit in the specified backend's format.
-        """
-        # Pad to power of 2 (state dimension must be 2^n_qubits)
-        target_size = 2**self._n_qubits
-        if len(x) < target_size:
-            x = np.pad(x, (0, target_size - len(x)))
-
-        # Compute the L2 norm for normalization and validation
-        norm = np.linalg.norm(x)
-
-        # Validate: Zero-norm vectors cannot form valid quantum states
-        if norm < _ZERO_NORM_THRESHOLD:
-            raise ValueError(
-                "Input vector has zero (or near-zero) norm and cannot be encoded "
-                "as a valid quantum state."
-            )
-
-        # Normalize to create valid quantum state (|ψ|² = 1)
-        if self.normalize:
-            x = x / norm
-        else:
-            # Validate pre-normalized data (1% tolerance for practical use)
-            if not np.isclose(norm, 1.0, rtol=0.01, atol=1e-10):
-                raise ValueError(
-                    f"normalize=False but input vector has L2 norm {norm:.6f}. "
-                    f"Input must be pre-normalized when normalization is disabled."
-                )
-
-        # Dispatch to backend-specific implementation
         if backend == "pennylane":
             return self._to_pennylane(x)
         elif backend == "qiskit":

@@ -289,11 +289,8 @@ class TestDynamicRegistration:
                     simulability="classically_simulable",
                 )
 
-            def get_circuit(self, x, backend="pennylane"):
+            def _get_circuit_from_validated(self, x, backend):
                 return None
-
-            def get_circuits(self, X, backend="pennylane"):
-                return [self.get_circuit(x, backend) for x in X]
 
         # Should be able to get the new encoding
         assert "test_encoding" in list_encodings()
@@ -328,11 +325,8 @@ class TestDynamicRegistration:
                     simulability="classically_simulable",
                 )
 
-            def get_circuit(self, x, backend="pennylane"):
+            def _get_circuit_from_validated(self, x, backend):
                 return None
-
-            def get_circuits(self, X, backend="pennylane"):
-                return [self.get_circuit(x, backend) for x in X]
 
         # Second registration should fail
         with pytest.raises(RegistryError, match="already registered"):
@@ -361,11 +355,8 @@ class TestDynamicRegistration:
                         simulability="classically_simulable",
                     )
 
-                def get_circuit(self, x, backend="pennylane"):
+                def _get_circuit_from_validated(self, x, backend):
                     return None
-
-                def get_circuits(self, X, backend="pennylane"):
-                    return [self.get_circuit(x, backend) for x in X]
 
     def test_registration_preserves_class(self, clean_registry) -> None:
         """Test that registration returns the original class."""
@@ -394,11 +385,8 @@ class TestDynamicRegistration:
                     simulability="classically_simulable",
                 )
 
-            def get_circuit(self, x, backend="pennylane"):
+            def _get_circuit_from_validated(self, x, backend):
                 return None
-
-            def get_circuits(self, X, backend="pennylane"):
-                return [self.get_circuit(x, backend) for x in X]
 
         registered_class = register_encoding("original_test")(OriginalClass)
         assert registered_class is OriginalClass
@@ -619,11 +607,8 @@ class TestRegistryStateManagement:
                     simulability="classically_simulable",
                 )
 
-            def get_circuit(self, x, backend="pennylane"):
+            def _get_circuit_from_validated(self, x, backend):
                 return None
-
-            def get_circuits(self, X, backend="pennylane"):
-                return [self.get_circuit(x, backend) for x in X]
 
         # Count should increase
         new_count = len(list_encodings())

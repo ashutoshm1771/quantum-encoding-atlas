@@ -280,7 +280,6 @@ from __future__ import annotations
 import logging
 import warnings
 from abc import abstractmethod
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Generic, Literal, TypedDict, TypeVar
 
 import numpy as np
@@ -1852,10 +1851,13 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
     ) -> CircuitType:
         """Generate quantum circuit for input data.
 
+        Strict variant: a 2D input with more than one row raises
+        :class:`ValueError`. Use :meth:`get_circuits` for batches.
+
         Parameters
         ----------
         x : array_like
-            2D input point [x, y].
+            2D input point [x, y] (shape (2,) or (1, 2)).
         backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
             Target quantum computing framework.
 
@@ -1867,11 +1869,8 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
         Raises
         ------
         ValueError
-            If backend is not supported.
-        NotImplementedError
-            If backend implementation is not yet available.
+            If input has multiple samples or backend is not supported.
         """
-        # Validate input
         x_array = self._validate_input(x)
         if x_array.ndim == 2:
             if x_array.shape[0] != 1:
@@ -1879,85 +1878,31 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
                     "get_circuit requires a single sample, use get_circuits for batches"
                 )
             x_array = x_array[0]
+        return self._get_circuit_from_validated(x_array, backend)
+
+    def _get_circuit_from_validated(
+        self,
+        x: NDArray[np.floating[Any]],
+        backend: BackendType,
+    ) -> CircuitType:
+        """Dispatch SO(2)-equivariant circuit construction.
+
+        Encoding-specific seam called by ``get_circuit`` and the inherited
+        ``get_circuits`` template method. Accepts a 1D array (the normal
+        case) or a 2D single-sample ``(1, 2)`` array for robustness when
+        called directly.
+        """
+        if x.ndim == 2:
+            x = x[0]
 
         if backend == "pennylane":
-            return self._to_pennylane(x_array)
+            return self._to_pennylane(x)
         elif backend == "qiskit":
-            return self._to_qiskit(x_array)
+            return self._to_qiskit(x)
         elif backend == "cirq":
-            return self._to_cirq(x_array)
+            return self._to_cirq(x)
         else:
             raise ValueError(f"Unknown backend: {backend}")
-
-    def get_circuits(
-        self,
-        X: ArrayLike,
-        backend: BackendType = "pennylane",
-        *,
-        parallel: bool = False,
-        max_workers: int | None = None,
-    ) -> list[CircuitType]:
-        """Generate quantum circuits for multiple data samples.
-
-        Parameters
-        ----------
-        X : array_like
-            Input data of shape (n_samples, 2).
-        backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
-            Target quantum computing framework.
-        parallel : bool, default=False
-            If True, use parallel processing via ThreadPoolExecutor for
-            circuit generation. This can speed up processing for large
-            batches (>100 samples) but adds overhead for small batches.
-            Sequential processing (default) is recommended for debugging
-            and small batch sizes.
-        max_workers : int or None, default=None
-            Maximum number of worker threads for parallel processing.
-            Only used when ``parallel=True``. If None, uses the default
-            from ThreadPoolExecutor (typically min(32, cpu_count + 4)).
-
-        Returns
-        -------
-        list of CircuitType
-            List of quantum circuits, one per input sample.
-
-        Examples
-        --------
-        Sequential processing (default, recommended for small batches):
-
-        >>> enc = SO2EquivariantFeatureMap(max_angular_momentum=1)
-        >>> X = np.array([[0.5, 0.3], [1.0, 0.0], [-0.2, 0.8]])
-        >>> circuits = enc.get_circuits(X, backend='pennylane')
-        >>> len(circuits)
-        3
-
-        Parallel processing for large batches:
-
-        >>> X_large = np.random.randn(1000, 2)
-        >>> circuits = enc.get_circuits(X_large, parallel=True, max_workers=4)
-
-        See Also
-        --------
-        get_circuit : Generate circuit for a single sample.
-        """
-        X_array = self._validate_input(X)
-        if X_array.ndim == 1:
-            X_array = X_array.reshape(1, -1)
-
-        n_samples = X_array.shape[0]
-
-        if parallel and n_samples > 1:
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                circuits = list(
-                    executor.map(
-                        lambda x: self.get_circuit(x, backend=backend),
-                        X_array,
-                    )
-                )
-        else:
-            circuits = [self.get_circuit(x, backend=backend) for x in X_array]
-
-        return circuits
 
     def _to_pennylane(
         self,
@@ -2597,6 +2542,9 @@ class CyclicEquivariantFeatureMap(EquivariantFeatureMap[int]):
     ) -> CircuitType:
         """Generate quantum circuit for input data.
 
+        Strict variant: a 2D input with more than one row raises
+        :class:`ValueError`. Use :meth:`get_circuits` for batches.
+
         Parameters
         ----------
         x : array_like
@@ -2609,70 +2557,36 @@ class CyclicEquivariantFeatureMap(EquivariantFeatureMap[int]):
         CircuitType
             Quantum circuit in the specified backend format.
         """
-        # Validate input
         x_array = self._validate_input(x)
         if x_array.ndim == 2:
             if x_array.shape[0] != 1:
                 raise ValueError("get_circuit requires a single sample")
             x_array = x_array[0]
+        return self._get_circuit_from_validated(x_array, backend)
+
+    def _get_circuit_from_validated(
+        self,
+        x: NDArray[np.floating[Any]],
+        backend: BackendType,
+    ) -> CircuitType:
+        """Dispatch cyclic-equivariant circuit construction.
+
+        Encoding-specific seam called by ``get_circuit`` and the inherited
+        ``get_circuits`` template method. Accepts a 1D array (the normal
+        case) or a 2D single-sample ``(1, n_features)`` array for
+        robustness when called directly.
+        """
+        if x.ndim == 2:
+            x = x[0]
 
         if backend == "pennylane":
-            return self._to_pennylane(x_array)
+            return self._to_pennylane(x)
         elif backend == "qiskit":
-            return self._to_qiskit(x_array)
+            return self._to_qiskit(x)
         elif backend == "cirq":
-            return self._to_cirq(x_array)
+            return self._to_cirq(x)
         else:
             raise ValueError(f"Unknown backend: {backend}")
-
-    def get_circuits(
-        self,
-        X: ArrayLike,
-        backend: BackendType = "pennylane",
-        *,
-        parallel: bool = False,
-        max_workers: int | None = None,
-    ) -> list[CircuitType]:
-        """Generate quantum circuits for multiple data samples.
-
-        Parameters
-        ----------
-        X : array_like
-            Input data of shape (n_samples, n_features).
-        backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
-            Target quantum computing framework.
-        parallel : bool, default=False
-            If True, use parallel processing via ThreadPoolExecutor for
-            circuit generation. This can speed up processing for large
-            batches (>100 samples) but adds overhead for small batches.
-        max_workers : int or None, default=None
-            Maximum number of worker threads for parallel processing.
-            Only used when ``parallel=True``. If None, uses the default
-            from ThreadPoolExecutor.
-
-        Returns
-        -------
-        list of CircuitType
-            List of quantum circuits.
-        """
-        X_array = self._validate_input(X)
-        if X_array.ndim == 1:
-            X_array = X_array.reshape(1, -1)
-
-        n_samples = X_array.shape[0]
-
-        if parallel and n_samples > 1:
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                circuits = list(
-                    executor.map(
-                        lambda x: self.get_circuit(x, backend=backend),
-                        X_array,
-                    )
-                )
-        else:
-            circuits = [self.get_circuit(x, backend=backend) for x in X_array]
-
-        return circuits
 
     def _to_pennylane(
         self,
@@ -3252,6 +3166,9 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
     ) -> CircuitType:
         """Generate quantum circuit for input data.
 
+        Strict variant: a 2D input with more than one row raises
+        :class:`ValueError`. Use :meth:`get_circuits` for batches.
+
         Parameters
         ----------
         x : array_like
@@ -3264,70 +3181,36 @@ class SwapEquivariantFeatureMap(EquivariantFeatureMap[list[bool]]):
         CircuitType
             Quantum circuit in the specified backend format.
         """
-        # Validate input
         x_array = self._validate_input(x)
         if x_array.ndim == 2:
             if x_array.shape[0] != 1:
                 raise ValueError("get_circuit requires a single sample")
             x_array = x_array[0]
+        return self._get_circuit_from_validated(x_array, backend)
+
+    def _get_circuit_from_validated(
+        self,
+        x: NDArray[np.floating[Any]],
+        backend: BackendType,
+    ) -> CircuitType:
+        """Dispatch swap-equivariant circuit construction.
+
+        Encoding-specific seam called by ``get_circuit`` and the inherited
+        ``get_circuits`` template method. Accepts a 1D array (the normal
+        case) or a 2D single-sample ``(1, n_features)`` array for
+        robustness when called directly.
+        """
+        if x.ndim == 2:
+            x = x[0]
 
         if backend == "pennylane":
-            return self._to_pennylane(x_array)
+            return self._to_pennylane(x)
         elif backend == "qiskit":
-            return self._to_qiskit(x_array)
+            return self._to_qiskit(x)
         elif backend == "cirq":
-            return self._to_cirq(x_array)
+            return self._to_cirq(x)
         else:
             raise ValueError(f"Unknown backend: {backend}")
-
-    def get_circuits(
-        self,
-        X: ArrayLike,
-        backend: BackendType = "pennylane",
-        *,
-        parallel: bool = False,
-        max_workers: int | None = None,
-    ) -> list[CircuitType]:
-        """Generate quantum circuits for multiple data samples.
-
-        Parameters
-        ----------
-        X : array_like
-            Input data of shape (n_samples, n_features).
-        backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
-            Target quantum computing framework.
-        parallel : bool, default=False
-            If True, use parallel processing via ThreadPoolExecutor for
-            circuit generation. This can speed up processing for large
-            batches (>100 samples) but adds overhead for small batches.
-        max_workers : int or None, default=None
-            Maximum number of worker threads for parallel processing.
-            Only used when ``parallel=True``. If None, uses the default
-            from ThreadPoolExecutor.
-
-        Returns
-        -------
-        list of CircuitType
-            List of quantum circuits.
-        """
-        X_array = self._validate_input(X)
-        if X_array.ndim == 1:
-            X_array = X_array.reshape(1, -1)
-
-        n_samples = X_array.shape[0]
-
-        if parallel and n_samples > 1:
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                circuits = list(
-                    executor.map(
-                        lambda x: self.get_circuit(x, backend=backend),
-                        X_array,
-                    )
-                )
-        else:
-            circuits = [self.get_circuit(x, backend=backend) for x in X_array]
-
-        return circuits
 
     def _to_pennylane(
         self,

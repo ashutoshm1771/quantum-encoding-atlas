@@ -115,7 +115,6 @@ from __future__ import annotations
 
 import logging
 import warnings
-from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 import numpy as np
@@ -1371,261 +1370,14 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
     ) -> CircuitType:
         """Generate quantum circuit for the given input data.
 
+        Strict variant: a 2D input with more than one row raises
+        :class:`ValueError`. Use :meth:`get_circuits` for batches.
+
         Parameters
         ----------
         x : array-like
-            Input feature vector of shape (n_features,).
+            Input feature vector of shape (n_features,) or (1, n_features).
         backend : {'pennylane', 'qiskit', 'cirq'}, default='pennylane'
-            Target quantum computing framework.
-
-        Returns
-        -------
-        CircuitType
-            Circuit in the specified backend's format:
-            - PennyLane: Callable that applies gates
-            - Qiskit: QuantumCircuit object
-            - Cirq: cirq.Circuit object
-
-        Raises
-        ------
-        ValueError
-            If input shape doesn't match n_features or backend is unknown.
-
-        Examples
-        --------
-        >>> enc = SymmetryInspiredFeatureMap(n_features=4, symmetry='rotation')
-        >>> x = np.array([0.1, 0.2, 0.3, 0.4])
-        >>> circuit = enc.get_circuit(x, backend='pennylane')
-        """
-        _logger.debug(
-            "Generating circuit: backend=%r, input_shape=%s",
-            backend,
-            getattr(x, "shape", f"len={len(x)}"),
-        )
-
-        # Validate and convert input
-        x_validated = self._validate_input(x)
-
-        # Handle 2D input (single sample)
-        if x_validated.ndim == 2:
-            if x_validated.shape[0] != 1:
-                raise ValueError(
-                    f"get_circuit expects a single sample, got shape "
-                    f"{x_validated.shape}. Use get_circuits for batches."
-                )
-            x_validated = x_validated[0]
-
-        # Validate input range and warn about potential issues
-        # This provides early feedback for problematic input values
-        self._validate_input_range(x_validated)
-
-        # Dispatch to backend-specific implementation
-        if backend == "pennylane":
-            circuit = self._to_pennylane(x_validated)
-        elif backend == "qiskit":
-            circuit = self._to_qiskit(x_validated)
-        elif backend == "cirq":
-            circuit = self._to_cirq(x_validated)
-        else:
-            raise ValueError(
-                f"Unknown backend: '{backend}'. "
-                f"Supported backends: 'pennylane', 'qiskit', 'cirq'"
-            )
-
-        _logger.debug("Circuit generated successfully for backend=%r", backend)
-        return circuit
-
-    def get_circuits(
-        self,
-        X: ArrayLike,
-        backend: BackendType = "pennylane",
-        *,
-        parallel: bool = False,
-        max_workers: int | None = None,
-    ) -> list[CircuitType]:
-        """Generate quantum circuits for multiple input samples.
-
-        Parameters
-        ----------
-        X : array-like
-            Input data of shape (n_samples, n_features) or (n_features,).
-            If 1D, treated as a single sample.
-        backend : {'pennylane', 'qiskit', 'cirq'}, default='pennylane'
-            Target quantum computing framework.
-        parallel : bool, default=False
-            If True, use parallel processing via ThreadPoolExecutor for
-            circuit generation. This can speed up processing for large
-            batches (>100 samples) but adds overhead for small batches.
-
-            Parallel processing is thread-safe because SymmetryInspiredFeatureMap's
-            circuit generation is stateless (no instance mutation occurs
-            during circuit generation). All precomputed values (entanglement
-            pairs, symmetry parameters) are read-only after initialization.
-        max_workers : int or None, default=None
-            Maximum number of worker threads for parallel processing.
-            Only used when ``parallel=True``. If None, uses the default
-            from ThreadPoolExecutor (typically min(32, cpu_count + 4)).
-
-            For CPU-bound workloads (like Cirq's moment construction),
-            set to ``os.cpu_count()``. For memory-constrained scenarios
-            with large qubit counts, lower values may be preferable.
-
-        Returns
-        -------
-        list[CircuitType]
-            List of circuits, one per sample. Order is preserved even
-            when using parallel processing.
-
-        Examples
-        --------
-        Sequential processing (default):
-
-        >>> enc = SymmetryInspiredFeatureMap(n_features=4)
-        >>> X = np.random.randn(10, 4)
-        >>> circuits = enc.get_circuits(X, backend='qiskit')
-        >>> len(circuits)
-        10
-
-        Parallel processing for large batches:
-
-        >>> enc = SymmetryInspiredFeatureMap(n_features=4, symmetry='rotation')
-        >>> X_large = np.random.randn(1000, 4)
-        >>> circuits = enc.get_circuits(X_large, backend='cirq', parallel=True)
-        >>> len(circuits)
-        1000
-
-        Custom worker count:
-
-        >>> import os
-        >>> circuits = enc.get_circuits(
-        ...     X_large, backend='qiskit', parallel=True, max_workers=os.cpu_count()
-        ... )
-
-        Notes
-        -----
-        **When to use parallel processing:**
-
-        - Large batches (>100 samples): Parallel processing overhead is
-          amortized across many samples.
-        - Qiskit/Cirq backends: These create full circuit objects which
-          has more overhead than PennyLane's lightweight closures.
-        - Complex symmetry types (full permutation): More gates per circuit
-          means more benefit from parallelization.
-
-        **When to use sequential processing:**
-
-        - Small batches (<100 samples): Overhead of thread pool management
-          may exceed the benefit.
-        - PennyLane backend: Circuit generation creates lightweight closures
-          and is already very fast.
-        - Already in a parallel context: Avoid nested parallelism which can
-          cause thread contention and deadlocks.
-        - Memory-constrained environments: Each worker may hold circuit
-          objects in memory simultaneously.
-
-        **Thread Safety:**
-
-        This method is thread-safe. The encoding object is not modified
-        during circuit generation, and each circuit is generated
-        independently. Key design elements ensuring thread safety:
-
-        - All configuration attributes are set once in ``__init__`` and
-          never mutated afterwards
-        - Precomputed values (``_entanglement_pairs``, ``_symmetry_params``)
-          are only read during circuit generation — no write access occurs
-        - Input validation creates defensive copies to prevent data races
-        - No shared mutable state is written during circuit generation
-
-        **Order Preservation:**
-
-        When ``parallel=True``, the returned list maintains the same order
-        as the input samples. This is achieved using ThreadPoolExecutor.map()
-        which preserves ordering.
-
-        **Performance Characteristics:**
-
-        Benchmarks on typical hardware (8-core CPU, SymmetryInspiredFeatureMap with
-        rotation symmetry, 4 features, 2 reps):
-
-        - 10 samples: Sequential ~5ms, Parallel ~15ms (overhead dominates)
-        - 100 samples: Sequential ~50ms, Parallel ~25ms (1.5-2x speedup)
-        - 1000 samples: Sequential ~500ms, Parallel ~100ms (4-5x speedup)
-
-        Actual speedup depends on backend, symmetry type, and hardware.
-
-        See Also
-        --------
-        get_circuit : Generate a single circuit (useful for individual samples).
-        resource_summary : Analyze resource requirements for this encoding.
-        """
-        X_validated = self._validate_input(X)
-
-        # Handle 1D input (single sample)
-        if X_validated.ndim == 1:
-            X_validated = X_validated.reshape(1, -1)
-
-        n_samples = X_validated.shape[0]
-
-        _logger.debug(
-            "Batch circuit generation: n_samples=%d, backend=%r, parallel=%s, "
-            "max_workers=%s",
-            n_samples,
-            backend,
-            parallel,
-            max_workers,
-        )
-
-        if parallel and n_samples > 1:
-            # Parallel processing using ThreadPoolExecutor
-            # ThreadPoolExecutor.map() preserves order of results
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                # Create a helper function that captures the backend parameter
-                # Uses internal method to avoid re-validating each sample
-                def generate_single(x: NDArray[np.floating[Any]]) -> CircuitType:
-                    return self._get_circuit_from_validated(x, backend)
-
-                # Map preserves order: result[i] corresponds to X_validated[i]
-                circuits = list(executor.map(generate_single, X_validated))
-
-            _logger.debug(
-                "Parallel batch generation completed: %d circuits using "
-                "ThreadPoolExecutor (max_workers=%s)",
-                len(circuits),
-                max_workers,
-            )
-        else:
-            # Sequential processing using internal method to avoid re-validation
-            # The batch was already validated above, so we can safely skip
-            # per-sample validation for better performance
-            circuits = [
-                self._get_circuit_from_validated(x, backend) for x in X_validated
-            ]
-
-            _logger.debug(
-                "Sequential batch generation completed: %d circuits",
-                len(circuits),
-            )
-
-        return circuits
-
-    def _get_circuit_from_validated(
-        self,
-        x: NDArray[np.floating[Any]],
-        backend: BackendType,
-    ) -> CircuitType:
-        """Generate circuit from pre-validated input (internal use only).
-
-        This method skips input validation, assuming the caller has already
-        validated the input. Used by ``get_circuits()`` to avoid double validation
-        when processing batches, improving performance for large datasets.
-
-        Parameters
-        ----------
-        x : NDArray
-            Pre-validated input features of shape (n_features,).
-            Must be a 1D array with exactly n_features elements.
-            Must not contain NaN or infinite values.
-        backend : BackendType
             Target quantum computing framework.
 
         Returns
@@ -1636,44 +1388,52 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         Raises
         ------
         ValueError
-            If backend is unknown.
+            If input shape doesn't match n_features, contains multiple
+            samples, or backend is unknown.
 
-        Warns
-        -----
-        UserWarning
-            If input values are outside recommended ranges for the feature
-            mapping (delegated to ``_validate_input_range``).
+        Examples
+        --------
+        >>> enc = SymmetryInspiredFeatureMap(n_features=4, symmetry='rotation')
+        >>> x = np.array([0.1, 0.2, 0.3, 0.4])
+        >>> circuit = enc.get_circuit(x, backend='pennylane')
+        """
+        x_validated = self._validate_input(x)
+        if x_validated.ndim == 2:
+            if x_validated.shape[0] != 1:
+                raise ValueError(
+                    f"get_circuit expects a single sample, got shape "
+                    f"{x_validated.shape}. Use get_circuits for batches."
+                )
+            x_validated = x_validated[0]
+        return self._get_circuit_from_validated(x_validated, backend)
+
+    def _get_circuit_from_validated(
+        self,
+        x: NDArray[np.floating[Any]],
+        backend: BackendType,
+    ) -> CircuitType:
+        """Generate circuit from pre-validated input.
+
+        Encoding-specific seam called by ``get_circuit`` and the inherited
+        ``get_circuits`` template method. Performs the symmetry-aware
+        input-range check before backend dispatch.
+
+        Accepts a 1D array (the normal case) or a 2D single-sample
+        ``(1, n_features)`` array for robustness when called directly.
 
         Notes
         -----
-        **Internal Use Only:**
-
-        This method is intended for internal use by ``get_circuits()`` and
-        should not be called directly by users. Use ``get_circuit()`` for
-        public API access with full validation.
-
-        **Performance:**
-
-        By skipping validation, this method provides ~20-30% speedup for
-        batch processing compared to calling ``get_circuit()`` repeatedly.
-        The speedup is more significant for small circuits where validation
-        overhead is proportionally larger.
-
-        **Thread Safety:**
-
-        This method is thread-safe and can be called concurrently from
-        multiple threads, as it does not modify any instance state.
-
-        See Also
-        --------
-        get_circuit : Public method with full input validation.
-        get_circuits : Batch processing method that uses this internally.
+        Thread-safe: does not mutate instance state; all precomputed values
+        (entanglement pairs, symmetry parameters) are read-only.
         """
-        # Validate input range and warn about potential issues
-        # This provides early feedback for problematic input values
+        # Defensive 2D-to-1D handling for direct callers; the template
+        # methods already pass 1D input.
+        if x.ndim == 2:
+            x = x[0]
+
+        # Provide early feedback for problematic input values.
         self._validate_input_range(x)
 
-        # Dispatch to backend-specific implementation
         if backend == "pennylane":
             return self._to_pennylane(x)
         elif backend == "qiskit":

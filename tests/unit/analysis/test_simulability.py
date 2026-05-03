@@ -1187,11 +1187,15 @@ def _make_mock_encoding(
     def _get_circuits_impl(self, X, backend="pennylane"):
         return []
 
+    def _get_circuit_from_validated_impl(self, x, backend):
+        return None
+
     cls_attrs["n_qubits"] = property(_n_qubits_prop)
     cls_attrs["depth"] = property(_depth_prop)
     cls_attrs["_compute_properties"] = _compute_properties_impl
     cls_attrs["get_circuit"] = _get_circuit_impl
     cls_attrs["get_circuits"] = _get_circuits_impl
+    cls_attrs["_get_circuit_from_validated"] = _get_circuit_from_validated_impl
 
     # Add entanglement_pairs as a method if needed
     if entanglement_pairs is not None:
@@ -1569,11 +1573,8 @@ class TestGetEntanglementPatternStrategies:
                     simulability="not_simulable",
                 )
 
-            def get_circuit(self, x, backend="pennylane"):
+            def _get_circuit_from_validated(self, x, backend):
                 return None
-
-            def get_circuits(self, X, backend="pennylane"):
-                return []
 
             def get_entanglement_pairs(self):
                 raise RuntimeError("broken")
@@ -1873,11 +1874,8 @@ class TestCheckSimulabilityDecisionBranches:
             def _compute_properties(self):
                 raise RuntimeError("broken")
 
-            def get_circuit(self, x, backend="pennylane"):
+            def _get_circuit_from_validated(self, x, backend):
                 return None
-
-            def get_circuits(self, X, backend="pennylane"):
-                return []
 
         enc = BrokenEncoding(n_features=4)
         with pytest.raises(AnalysisError, match="Failed to access encoding properties"):
@@ -2221,11 +2219,8 @@ class TestGetEntanglementPatternAdditional:
                     simulability="not_simulable",
                 )
 
-            def get_circuit(self, x, backend="pennylane"):
+            def _get_circuit_from_validated(self, x, backend):
                 return None
-
-            def get_circuits(self, X, backend="pennylane"):
-                return []
 
             def get_entanglement_pairs(self):
                 # Return non-iterable items and strings (should be skipped)
@@ -2267,11 +2262,8 @@ class TestGetEntanglementPatternAdditional:
                     simulability="not_simulable",
                 )
 
-            def get_circuit(self, x, backend="pennylane"):
+            def _get_circuit_from_validated(self, x, backend):
                 return None
-
-            def get_circuits(self, X, backend="pennylane"):
-                return []
 
             def get_entanglement_pairs(self):
                 # Single-element tuples should be skipped
@@ -2312,11 +2304,8 @@ class TestGetEntanglementPatternAdditional:
                     simulability="not_simulable",
                 )
 
-            def get_circuit(self, x, backend="pennylane"):
+            def _get_circuit_from_validated(self, x, backend):
                 return None
-
-            def get_circuits(self, X, backend="pennylane"):
-                return []
 
             def get_entanglement_pairs(self):
                 # Pairs where int() conversion will raise ValueError

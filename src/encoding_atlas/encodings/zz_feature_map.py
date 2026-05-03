@@ -79,11 +79,10 @@ from __future__ import annotations
 
 import logging
 import warnings
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Literal, TypedDict
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
 from encoding_atlas.core.base import BaseEncoding
 from encoding_atlas.core.properties import EncodingProperties
@@ -1015,84 +1014,30 @@ class ZZFeatureMap(BaseEncoding):
     # Circuit Generation
     # =========================================================================
 
-    def get_circuit(
+    def _get_circuit_from_validated(
         self,
-        x: ArrayLike,
-        backend: BackendType = "pennylane",
+        x: NDArray[np.floating[Any]],
+        backend: BackendType,
     ) -> CircuitType:
-        """Generate quantum circuit for a single data sample.
+        """Generate circuit from pre-validated input.
 
-        Creates a quantum circuit that encodes the input features using
-        Hadamard gates, phase rotations, and ZZ entangling interactions
-        with the (π - x) phase convention.
+        Encoding-specific seam called by the inherited ``get_circuit``/
+        ``get_circuits`` template methods. Emits a debug log when input
+        values fall outside the optimal [0, 2π] range and dispatches to
+        the backend-specific implementation.
 
-        Parameters
-        ----------
-        x : array-like
-            Input features of shape (n_features,) or (1, n_features).
-            Values are used as rotation angles (in radians). For optimal
-            encoding, scale features to [0, 2π] or [-π, π].
-        backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
-            Target quantum computing framework:
-
-            - "pennylane": Returns a callable function that applies gates
-            - "qiskit": Returns a Qiskit QuantumCircuit object
-            - "cirq": Returns a Cirq Circuit object
-
-        Returns
-        -------
-        CircuitType
-            Circuit in the specified backend's format.
-
-        Raises
-        ------
-        ValueError
-            If input shape doesn't match n_features.
-        ValueError
-            If input contains NaN or infinite values.
-        ValueError
-            If backend is not one of the supported options.
-        ImportError
-            If the requested backend is not installed.
-
-        Examples
-        --------
-        >>> enc = ZZFeatureMap(n_features=4)
-        >>> x = np.array([0.5, 1.0, 1.5, 2.0])
-        >>> circuit = enc.get_circuit(x, backend='pennylane')
-        >>> callable(circuit)
-        True
-
-        >>> qc = enc.get_circuit(x, backend='qiskit')
-        >>> qc.num_qubits
-        4
-
-        Notes
-        -----
-        The circuit prepares the state:
-
-            |ψ(x)⟩ = [U_ZZ(x) · H^⊗n]^reps |0⟩^⊗n
-
-        where U_ZZ applies single-qubit phase gates P(2xᵢ) and two-qubit
-        ZZ interactions with angle 2(π - xᵢ)(π - xⱼ).
+        Accepts a 1D array (the normal case) or a 2D single-sample
+        ``(1, n_features)`` array for robustness when called directly.
         """
-        _logger.debug(
-            "get_circuit called: backend=%r, input_shape=%s",
-            backend,
-            getattr(x, "shape", f"len={len(x)}" if hasattr(x, "__len__") else "scalar"),
-        )
-
-        # Validate and preprocess input
-        x_validated = self._validate_input(x)
-        if x_validated.ndim == 2:
-            x_validated = x_validated[0]
+        # Defensive 2D-to-1D handling for direct callers; the inherited
+        # template methods already pass 1D input.
+        if x.ndim == 2:
+            x = x[0]
 
         # Debug log if values are far outside the optimal [0, 2π] range.
         # The (π - x) phase convention has specific geometric meaning in that range.
-        # Values outside still work (rotations are periodic) but may produce
-        # unexpected kernel geometry.
         if _logger.isEnabledFor(logging.DEBUG):
-            x_min, x_max = float(x_validated.min()), float(x_validated.max())
+            x_min, x_max = float(x.min()), float(x.max())
             if (
                 abs(x_min) > _INPUT_RANGE_DEBUG_THRESHOLD
                 or abs(x_max) > _INPUT_RANGE_DEBUG_THRESHOLD
@@ -1105,199 +1050,6 @@ class ZZFeatureMap(BaseEncoding):
                     x_max,
                 )
 
-        # Dispatch to backend-specific implementation
-        if backend == "pennylane":
-            circuit = self._to_pennylane(x_validated)
-            _logger.debug("PennyLane circuit generated: n_qubits=%d", self.n_qubits)
-            return circuit
-        elif backend == "qiskit":
-            circuit = self._to_qiskit(x_validated)
-            _logger.debug("Qiskit circuit generated: n_qubits=%d", self.n_qubits)
-            return circuit
-        elif backend == "cirq":
-            circuit = self._to_cirq(x_validated)
-            _logger.debug("Cirq circuit generated: n_qubits=%d", self.n_qubits)
-            return circuit
-        else:
-            raise ValueError(
-                f"Unknown backend {backend!r}. "
-                f"Supported backends: 'pennylane', 'qiskit', 'cirq'"
-            )
-
-    def get_circuits(
-        self,
-        X: ArrayLike,
-        backend: BackendType = "pennylane",
-        *,
-        parallel: bool = False,
-        max_workers: int | None = None,
-    ) -> list[CircuitType]:
-        """Generate quantum circuits for multiple data samples.
-
-        Parameters
-        ----------
-        X : array-like
-            Input features of shape (n_samples, n_features) or (n_features,).
-            If 1D, treated as a single sample.
-        backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
-            Target quantum computing framework.
-        parallel : bool, default=False
-            If True, use parallel processing via ThreadPoolExecutor for
-            circuit generation. This can speed up processing for large
-            batches (>100 samples) but adds overhead for small batches.
-
-            Parallel processing is thread-safe due to ZZFeatureMap's
-            stateless circuit generation design.
-        max_workers : int or None, default=None
-            Maximum number of worker threads for parallel processing.
-            Only used when ``parallel=True``. If None, uses the default
-            from ThreadPoolExecutor (typically min(32, cpu_count + 4)).
-
-            For CPU-bound workloads, set to ``os.cpu_count()``.
-            For I/O-bound workloads, higher values may help.
-
-        Returns
-        -------
-        list[CircuitType]
-            List of circuits, one per sample. Order is preserved even
-            when using parallel processing.
-
-        Examples
-        --------
-        Sequential processing (default):
-
-        >>> enc = ZZFeatureMap(n_features=4)
-        >>> X = np.array([[0.1, 0.2, 0.3, 0.4], [0.5, 0.6, 0.7, 0.8]])
-        >>> circuits = enc.get_circuits(X, backend='pennylane')
-        >>> len(circuits)
-        2
-
-        Parallel processing for large batches:
-
-        >>> enc = ZZFeatureMap(n_features=4)
-        >>> X_large = np.random.randn(1000, 4)
-        >>> circuits = enc.get_circuits(X_large, backend='qiskit', parallel=True)
-        >>> len(circuits)
-        1000
-
-        Custom worker count:
-
-        >>> import os
-        >>> circuits = enc.get_circuits(
-        ...     X_large, backend='cirq', parallel=True, max_workers=os.cpu_count()
-        ... )
-
-        Notes
-        -----
-        **When to use parallel processing:**
-
-        - Large batches (>100 samples): Parallel processing overhead is
-          amortized across many samples.
-        - Qiskit/Cirq backends: These create full circuit objects which
-          has more overhead than PennyLane's lightweight closures.
-
-        **When to use sequential processing:**
-
-        - Small batches (<100 samples): Overhead of thread pool management
-          may exceed the benefit.
-        - PennyLane backend: Circuit generation is extremely fast.
-        - Already in a parallel context: Avoid nested parallelism.
-
-        **Thread Safety:**
-
-        This method is thread-safe. The encoding object is not modified
-        during circuit generation, and each circuit is generated
-        independently. Input validation creates defensive copies to
-        prevent data races.
-
-        **Order Preservation:**
-
-        When ``parallel=True``, the returned list maintains the same order
-        as the input samples. This is achieved using ThreadPoolExecutor.map()
-        which preserves ordering.
-        """
-        X_validated = self._validate_input(X)
-        if X_validated.ndim == 1:
-            X_validated = X_validated.reshape(1, -1)
-
-        n_samples = X_validated.shape[0]
-
-        # Log batch processing start
-        _logger.debug(
-            "Batch processing started: n_samples=%d, backend=%r, parallel=%s, "
-            "max_workers=%s",
-            n_samples,
-            backend,
-            parallel,
-            max_workers,
-        )
-
-        if parallel and n_samples > 1:
-            # Parallel processing using ThreadPoolExecutor
-            # ThreadPoolExecutor.map() preserves order of results
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                # Create a helper function that captures the backend parameter
-                def generate_single(x: NDArray[np.floating[Any]]) -> CircuitType:
-                    return self._get_circuit_from_validated(x, backend)
-
-                # Map preserves order: result[i] corresponds to X_validated[i]
-                circuits = list(executor.map(generate_single, X_validated))
-
-            _logger.debug(
-                "Parallel batch processing completed: generated %d circuits "
-                "using ThreadPoolExecutor",
-                len(circuits),
-            )
-        else:
-            # Sequential processing (default behavior)
-            # Use optimized internal method to avoid re-validation
-            circuits = [
-                self._get_circuit_from_validated(x, backend) for x in X_validated
-            ]
-
-            _logger.debug(
-                "Sequential batch processing completed: generated %d circuits",
-                len(circuits),
-            )
-
-        return circuits
-
-    def _get_circuit_from_validated(
-        self,
-        x: NDArray[np.floating[Any]],
-        backend: BackendType,
-    ) -> CircuitType:
-        """Generate circuit from pre-validated input (internal use only).
-
-        This method skips input validation, assuming the caller has already
-        validated the input. Used by get_circuits() to avoid double validation
-        when processing batches.
-
-        Parameters
-        ----------
-        x : NDArray
-            Pre-validated input features of shape (n_features,).
-        backend : BackendType
-            Target quantum computing framework.
-
-        Returns
-        -------
-        CircuitType
-            Circuit in the specified backend's format.
-
-        Raises
-        ------
-        ValueError
-            If backend is not one of the supported options.
-        ImportError
-            If the requested backend is not installed.
-
-        Notes
-        -----
-        This is an internal optimization method. External callers should use
-        ``get_circuit()`` which includes proper input validation.
-        """
-        # Dispatch to backend-specific implementation
         if backend == "pennylane":
             return self._to_pennylane(x)
         elif backend == "qiskit":

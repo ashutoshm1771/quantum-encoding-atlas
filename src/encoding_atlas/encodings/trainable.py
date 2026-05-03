@@ -147,7 +147,6 @@ from __future__ import annotations
 
 import logging
 import warnings
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Literal, TypedDict
 
 import numpy as np
@@ -1079,60 +1078,28 @@ class TrainableEncoding(BaseEncoding):
     # Circuit Generation
     # =========================================================================
 
-    def get_circuit(
+    def _get_circuit_from_validated(
         self,
-        x: ArrayLike,
-        backend: BackendType = "pennylane",
+        x: NDArray[np.floating[Any]],
+        backend: BackendType,
     ) -> CircuitType:
-        """Generate quantum circuit for a single data sample.
+        """Generate circuit from pre-validated input.
 
-        Creates a quantum circuit that encodes the input features using
-        data-encoding rotations, applies trainable rotations, and entangles
-        qubits.
+        Encoding-specific seam called by the inherited ``get_circuit``/
+        ``get_circuits`` template methods. Emits a debug log when input
+        values fall outside the typical [-2π, 2π] range and dispatches to
+        the backend-specific implementation.
 
-        Parameters
-        ----------
-        x : array-like
-            Input features of shape (n_features,) or (1, n_features).
-            Values are used as rotation angles (in radians).
-        backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
-            Target quantum computing framework.
-
-        Returns
-        -------
-        CircuitType
-            Circuit in the specified backend's format.
-
-        Raises
-        ------
-        ValueError
-            If input shape doesn't match n_features.
-        ValueError
-            If input contains NaN or infinite values.
-        ValueError
-            If backend is not recognized.
-
-        Examples
-        --------
-        >>> enc = TrainableEncoding(n_features=4, n_layers=2)
-        >>> x = np.array([0.1, 0.2, 0.3, 0.4])
-        >>> circuit = enc.get_circuit(x, backend='pennylane')
-        >>> callable(circuit)
-        True
+        Accepts a 1D array (the normal case) or a 2D single-sample
+        ``(1, n_features)`` array for robustness when called directly.
         """
-        _logger.debug(
-            "Generating circuit: backend=%r, input_shape=%s",
-            backend,
-            getattr(x, "shape", f"len={len(x)}"),
-        )
+        # Defensive 2D-to-1D handling for direct callers; the inherited
+        # template methods already pass 1D input.
+        if x.ndim == 2:
+            x = x[0]
 
-        x_validated = self._validate_input(x)
-        if x_validated.ndim == 2:
-            x_validated = x_validated[0]
-
-        # Debug logging for input value range
         if _logger.isEnabledFor(logging.DEBUG):
-            x_min, x_max = float(x_validated.min()), float(x_validated.max())
+            x_min, x_max = float(x.min()), float(x.max())
             if (
                 abs(x_min) > _INPUT_RANGE_DEBUG_THRESHOLD
                 or abs(x_max) > _INPUT_RANGE_DEBUG_THRESHOLD
@@ -1143,92 +1110,6 @@ class TrainableEncoding(BaseEncoding):
                     x_min,
                     x_max,
                 )
-
-        # Dispatch to backend-specific implementation
-        if backend == "pennylane":
-            circuit = self._to_pennylane(x_validated)
-        elif backend == "qiskit":
-            circuit = self._to_qiskit(x_validated)
-        elif backend == "cirq":
-            circuit = self._to_cirq(x_validated)
-        else:
-            raise ValueError(
-                f"Unknown backend {backend!r}. "
-                f"Supported backends: 'pennylane', 'qiskit', 'cirq'"
-            )
-
-        _logger.debug("Circuit generated successfully for backend=%r", backend)
-        return circuit
-
-    def get_circuits(
-        self,
-        X: ArrayLike,
-        backend: BackendType = "pennylane",
-        *,
-        parallel: bool = False,
-        max_workers: int | None = None,
-    ) -> list[CircuitType]:
-        """Generate quantum circuits for multiple data samples.
-
-        Parameters
-        ----------
-        X : array-like
-            Input features of shape (n_samples, n_features) or (n_features,).
-        backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
-            Target quantum computing framework.
-        parallel : bool, default=False
-            If True, use parallel processing via ThreadPoolExecutor.
-        max_workers : int or None, default=None
-            Maximum number of worker threads for parallel processing.
-
-        Returns
-        -------
-        list[CircuitType]
-            List of circuits, one per sample.
-
-        Examples
-        --------
-        >>> enc = TrainableEncoding(n_features=4)
-        >>> X = np.random.randn(10, 4)
-        >>> circuits = enc.get_circuits(X, backend='pennylane')
-        >>> len(circuits)
-        10
-        """
-        X_validated = self._validate_input(X)
-        if X_validated.ndim == 1:
-            X_validated = X_validated.reshape(1, -1)
-
-        n_samples = X_validated.shape[0]
-
-        _logger.debug(
-            "Batch circuit generation: n_samples=%d, backend=%r, parallel=%s",
-            n_samples,
-            backend,
-            parallel,
-        )
-
-        if parallel and n_samples > 1:
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-
-                def generate_single(x: NDArray[np.floating[Any]]) -> CircuitType:
-                    return self._get_circuit_from_validated(x, backend)
-
-                circuits = list(executor.map(generate_single, X_validated))
-        else:
-            circuits = [
-                self._get_circuit_from_validated(x, backend) for x in X_validated
-            ]
-
-        return circuits
-
-    def _get_circuit_from_validated(
-        self,
-        x: NDArray[np.floating[Any]],
-        backend: BackendType,
-    ) -> CircuitType:
-        """Generate circuit from pre-validated input (internal use only)."""
-        if x.ndim == 2:
-            x = x[0]
 
         if backend == "pennylane":
             return self._to_pennylane(x)

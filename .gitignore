@@ -15,6 +15,9 @@ site/
 # Linter cache
 .ruff_cache/
 
+# Generic cache directory (pytest/tooling)
+.cache/
+
 # Auto-generated version file (setuptools-scm)
 src/encoding_atlas/_version.py
 

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 import threading
 from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -14,6 +16,8 @@ from encoding_atlas.core.types import BackendType, CircuitType
 
 if TYPE_CHECKING:
     pass
+
+_logger = logging.getLogger(__name__)
 
 
 class BaseEncoding(ABC):
@@ -123,7 +127,6 @@ class BaseEncoding(ABC):
 
         return self._properties
 
-    @abstractmethod
     def get_circuit(
         self,
         x: ArrayLike,
@@ -131,10 +134,17 @@ class BaseEncoding(ABC):
     ) -> CircuitType:
         """Generate quantum circuit for the given data.
 
+        This is a template method that validates input and delegates to the
+        encoding-specific :meth:`_get_circuit_from_validated`. Subclasses
+        should normally override :meth:`_get_circuit_from_validated` rather
+        than this method.
+
         Parameters
         ----------
         x : ArrayLike
-            Input data of shape (n_features,) for a single sample.
+            Input data of shape (n_features,) or (1, n_features) for a single
+            sample. If 2D with a single row, the row is unwrapped before
+            dispatch.
         backend : {'pennylane', 'qiskit', 'cirq'}, default='pennylane'
             Target quantum computing framework.
 
@@ -142,28 +152,122 @@ class BaseEncoding(ABC):
         -------
         CircuitType
             Circuit in the specified backend's format.
-        """
-        ...
 
-    @abstractmethod
+        Raises
+        ------
+        ValueError
+            If input shape doesn't match n_features, contains NaN/Inf values,
+            or backend is not recognized.
+        """
+        x_validated = self._validate_input(x)
+        if x_validated.ndim == 2:
+            x_validated = x_validated[0]
+        return self._get_circuit_from_validated(x_validated, backend)
+
     def get_circuits(
         self,
         X: ArrayLike,
         backend: BackendType = "pennylane",
+        *,
+        parallel: bool = False,
+        max_workers: int | None = None,
     ) -> list[CircuitType]:
         """Generate quantum circuits for multiple data samples.
+
+        This is a template method that validates the batch and dispatches
+        each sample through :meth:`_get_circuit_from_validated`. The batch
+        is validated once; per-sample validation is skipped for performance.
 
         Parameters
         ----------
         X : ArrayLike
-            Input data of shape (n_samples, n_features).
+            Input data of shape (n_samples, n_features) or (n_features,).
+            If 1D, treated as a single sample.
         backend : {'pennylane', 'qiskit', 'cirq'}, default='pennylane'
             Target quantum computing framework.
+        parallel : bool, default=False
+            If True, use ``ThreadPoolExecutor`` for circuit generation.
+            Recommended for large batches (>100 samples), especially with
+            the Qiskit/Cirq backends. Order of results is preserved.
+        max_workers : int or None, default=None
+            Maximum number of worker threads when ``parallel=True``. If
+            ``None``, ``ThreadPoolExecutor`` chooses a default based on
+            CPU count.
 
         Returns
         -------
         list[CircuitType]
-            List of circuits, one per sample.
+            List of circuits, one per sample, in input order.
+
+        Notes
+        -----
+        Thread safety: each call to :meth:`_get_circuit_from_validated`
+        operates on an immutable validated copy of its input and does not
+        mutate instance state, so concurrent invocation is safe.
+        """
+        X_validated = self._validate_input(X)
+        if X_validated.ndim == 1:
+            X_validated = X_validated.reshape(1, -1)
+
+        n_samples = X_validated.shape[0]
+
+        _logger.debug(
+            "Batch circuit generation: encoding=%s, n_samples=%d, "
+            "backend=%r, parallel=%s, max_workers=%s",
+            type(self).__name__,
+            n_samples,
+            backend,
+            parallel,
+            max_workers,
+        )
+
+        if parallel and n_samples > 1:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                circuits = list(
+                    executor.map(
+                        lambda x: self._get_circuit_from_validated(x, backend),
+                        X_validated,
+                    )
+                )
+        else:
+            circuits = [
+                self._get_circuit_from_validated(x, backend) for x in X_validated
+            ]
+
+        return circuits
+
+    @abstractmethod
+    def _get_circuit_from_validated(
+        self,
+        x: NDArray[np.floating[Any]],
+        backend: BackendType,
+    ) -> CircuitType:
+        """Generate circuit from pre-validated input (subclass hook).
+
+        This is the encoding-specific seam called by :meth:`get_circuit` and
+        :meth:`get_circuits` after input has been validated. Subclasses
+        implement encoding-specific preprocessing (padding, normalization,
+        thresholding, etc.) and dispatch to backend-specific methods here.
+
+        Parameters
+        ----------
+        x : NDArray
+            Pre-validated 1D input features of shape (n_features,). Caller
+            guarantees: dtype is float64, no NaN/Inf, length matches
+            ``n_features``.
+        backend : BackendType
+            Target quantum computing framework.
+
+        Returns
+        -------
+        CircuitType
+            Circuit in the specified backend's format.
+
+        Notes
+        -----
+        Internal method. External callers should use :meth:`get_circuit`,
+        which performs full input validation. Implementations must be
+        thread-safe (no instance mutation).
         """
         ...
 

@@ -85,7 +85,6 @@ import logging
 import math
 import warnings
 from collections.abc import Iterator
-from concurrent.futures import ThreadPoolExecutor
 from itertools import combinations
 from typing import Any, Literal, TypedDict
 
@@ -783,37 +782,22 @@ class HigherOrderAngleEncoding(BaseEncoding):
     ) -> CircuitType:
         """Generate quantum circuit for the given input data.
 
-        Creates a quantum circuit that encodes the input features using
-        rotation gates with polynomial combinations of features.
+        Strict variant: a 2D input with more than one row raises
+        :class:`ValueError`. Use :meth:`get_circuits` for batches. Backend
+        names are case-insensitive and ``None`` resolves to the default
+        backend.
 
         Parameters
         ----------
         x : array-like
             Input feature vector of shape (n_features,) or (1, n_features).
-            Values are used to compute rotation angles based on polynomial
-            terms.
         backend : {'pennylane', 'qiskit', 'cirq'} or None, default='pennylane'
-            Target quantum computing framework. If None, defaults to 'pennylane'.
-            Backend names are case-insensitive (e.g., 'QISKIT', 'Qiskit', 'qiskit'
-            are all valid).
-
-            - "pennylane": Returns a callable function that applies gates
-            - "qiskit": Returns a Qiskit QuantumCircuit object
-            - "cirq": Returns a Cirq Circuit object
+            Target quantum computing framework. Case-insensitive.
 
         Returns
         -------
         CircuitType
             Circuit in the specified backend's format.
-
-        Raises
-        ------
-        ValueError
-            If input shape doesn't match n_features.
-        ValueError
-            If input contains NaN or infinite values.
-        ValueError
-            If backend is not recognized.
 
         Examples
         --------
@@ -822,32 +806,10 @@ class HigherOrderAngleEncoding(BaseEncoding):
         >>> circuit = enc.get_circuit(x, backend='pennylane')
         >>> callable(circuit)
         True
-
-        Backend is case-insensitive:
-
-        >>> circuit = enc.get_circuit(x, backend='PENNYLANE')
-        >>> callable(circuit)
-        True
-
-        None uses the default backend (pennylane):
-
-        >>> circuit = enc.get_circuit(x, backend=None)
-        >>> callable(circuit)
-        True
         """
-        # Normalize backend (handles None and case-insensitivity)
         backend = _normalize_backend(backend)
 
-        _logger.debug(
-            "Generating circuit: backend=%r, input_shape=%s",
-            backend,
-            getattr(x, "shape", f"len={len(x)}"),
-        )
-
-        # Validate and convert input
         x_validated = self._validate_input(x)
-
-        # Handle 2D input (single sample)
         if x_validated.ndim == 2:
             if x_validated.shape[0] != 1:
                 raise ValueError(
@@ -855,24 +817,7 @@ class HigherOrderAngleEncoding(BaseEncoding):
                     f"{x_validated.shape}. Use get_circuits for batches."
                 )
             x_validated = x_validated[0]
-
-        # Dispatch to backend-specific implementation
-        if backend == "pennylane":
-            circuit = self._to_pennylane(x_validated)
-        elif backend == "qiskit":
-            circuit = self._to_qiskit(x_validated)
-        elif backend == "cirq":
-            circuit = self._to_cirq(x_validated)
-        else:
-            # This should never be reached due to _normalize_backend validation,
-            # but kept for defensive programming
-            raise ValueError(
-                f"Unknown backend: {backend!r}. "
-                f"Supported backends: {', '.join(repr(b) for b in sorted(_SUPPORTED_BACKENDS))}"
-            )
-
-        _logger.debug("Circuit generated successfully for backend=%r", backend)
-        return circuit
+        return self._get_circuit_from_validated(x_validated, backend)
 
     def get_circuits(
         self,
@@ -884,190 +829,48 @@ class HigherOrderAngleEncoding(BaseEncoding):
     ) -> list[CircuitType]:
         """Generate quantum circuits for multiple input samples.
 
+        Thin wrapper around :meth:`BaseEncoding.get_circuits` that
+        normalizes the backend (case-insensitive, ``None`` allowed) before
+        delegating.
+
         Parameters
         ----------
         X : array-like
             Input data of shape (n_samples, n_features) or (n_features,).
-            If 1D, treated as a single sample.
         backend : {'pennylane', 'qiskit', 'cirq'} or None, default='pennylane'
-            Target quantum computing framework. If None, defaults to 'pennylane'.
-            Backend names are case-insensitive.
+            Target quantum computing framework. Case-insensitive.
         parallel : bool, default=False
-            If True, use parallel processing via ThreadPoolExecutor for
-            circuit generation. This can speed up processing for large
-            batches (>100 samples) but adds overhead for small batches.
-
-            Parallel processing is thread-safe because HigherOrderAngleEncoding's
-            circuit generation is stateless (no instance mutation occurs).
+            See :meth:`BaseEncoding.get_circuits`.
         max_workers : int or None, default=None
-            Maximum number of worker threads for parallel processing.
-            Only used when ``parallel=True``. If None, uses the default
-            from ThreadPoolExecutor (typically min(32, cpu_count + 4)).
-
-            For CPU-bound workloads, set to ``os.cpu_count()``.
-            For I/O-bound workloads, higher values may help.
+            See :meth:`BaseEncoding.get_circuits`.
 
         Returns
         -------
         list[CircuitType]
-            List of circuits, one per sample. Order is preserved even
-            when using parallel processing.
-
-        Examples
-        --------
-        Sequential processing (default):
-
-        >>> enc = HigherOrderAngleEncoding(n_features=4, order=2)
-        >>> X = np.random.randn(10, 4)
-        >>> circuits = enc.get_circuits(X, backend='pennylane')
-        >>> len(circuits)
-        10
-
-        Parallel processing for large batches:
-
-        >>> enc = HigherOrderAngleEncoding(n_features=4, order=2)
-        >>> X_large = np.random.randn(1000, 4)
-        >>> circuits = enc.get_circuits(X_large, backend='qiskit', parallel=True)
-        >>> len(circuits)
-        1000
-
-        Custom worker count:
-
-        >>> import os
-        >>> circuits = enc.get_circuits(
-        ...     X_large, backend='cirq', parallel=True, max_workers=os.cpu_count()
-        ... )
-
-        Notes
-        -----
-        **When to use parallel processing:**
-
-        - Large batches (>100 samples): Parallel processing overhead is
-          amortized across many samples.
-        - Qiskit/Cirq backends: These create full circuit objects which
-          has more overhead than PennyLane's lightweight closures.
-
-        **When to use sequential processing:**
-
-        - Small batches (<100 samples): Overhead of thread pool management
-          may exceed the benefit.
-        - PennyLane backend: Circuit generation is extremely fast.
-        - Already in a parallel context: Avoid nested parallelism.
-
-        **Thread Safety:**
-
-        This method is thread-safe. The encoding object is not modified
-        during circuit generation, and each circuit is generated
-        independently. Input validation creates defensive copies to
-        prevent data races.
-
-        **Order Preservation:**
-
-        When ``parallel=True``, the returned list maintains the same order
-        as the input samples. This is achieved using ThreadPoolExecutor.map()
-        which preserves ordering.
+            List of circuits, one per sample, in input order.
         """
-        # Normalize backend (handles None and case-insensitivity)
-        backend = _normalize_backend(backend)
-
-        X_validated = self._validate_input(X)
-
-        # Handle 1D input (single sample)
-        if X_validated.ndim == 1:
-            X_validated = X_validated.reshape(1, -1)
-
-        n_samples = X_validated.shape[0]
-
-        _logger.debug(
-            "Batch circuit generation: n_samples=%d, backend=%r, parallel=%s, "
-            "max_workers=%s",
-            n_samples,
-            backend,
-            parallel,
-            max_workers,
+        return super().get_circuits(
+            X,
+            _normalize_backend(backend),
+            parallel=parallel,
+            max_workers=max_workers,
         )
-
-        if parallel and n_samples > 1:
-            # Parallel processing using ThreadPoolExecutor
-            # ThreadPoolExecutor.map() preserves order of results
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                # Create a helper function that captures the backend parameter
-                # Uses internal method to avoid re-validating each sample
-                def generate_single(x: NDArray[np.floating[Any]]) -> CircuitType:
-                    return self._get_circuit_from_validated(x, backend)
-
-                # Map preserves order: result[i] corresponds to X_validated[i]
-                circuits = list(executor.map(generate_single, X_validated))
-
-            _logger.debug(
-                "Parallel batch generation completed: %d circuits using "
-                "ThreadPoolExecutor",
-                len(circuits),
-            )
-        else:
-            # Sequential processing using internal method to avoid re-validation
-            # The batch was already validated above, so we can safely skip
-            # per-sample validation for better performance
-            circuits = [
-                self._get_circuit_from_validated(x, backend) for x in X_validated
-            ]
-
-            _logger.debug(
-                "Sequential batch generation completed: %d circuits",
-                len(circuits),
-            )
-
-        return circuits
 
     def _get_circuit_from_validated(
         self,
         x: NDArray[np.floating[Any]],
         backend: BackendType,
     ) -> CircuitType:
-        """Generate circuit from pre-validated input (internal use only).
+        """Generate circuit from pre-validated input.
 
-        This method skips input validation, assuming the caller has already
-        validated the input. Used by get_circuits() to avoid double validation
-        when processing batches, improving performance for large datasets.
-
-        Parameters
-        ----------
-        x : NDArray
-            Pre-validated input features of shape (n_features,).
-            Must be a 1D array with exactly n_features elements.
-            Must not contain NaN or infinite values.
-        backend : BackendType
-            Target quantum computing framework.
-
-        Returns
-        -------
-        CircuitType
-            Circuit in the specified backend's format.
-
-        Raises
-        ------
-        ValueError
-            If backend is not one of the supported options.
-
-        Notes
-        -----
-        **Internal Method**: This method is not part of the public API.
-        External callers should use ``get_circuit()`` which includes
-        full input validation.
-
-        **Thread Safety**: This method is thread-safe. It does not modify
-        any instance state and operates only on the provided input array.
-
-        **Performance**: By skipping validation, this method is faster than
-        ``get_circuit()`` for batch processing where the entire batch has
-        already been validated once. The performance gain is proportional
-        to the batch size.
+        Encoding-specific seam called by ``get_circuit`` and ``get_circuits``.
+        Accepts a 1D array (the normal case) or a 2D single-sample
+        ``(1, n_features)`` array for robustness when called directly.
         """
-        # Handle 2D input (single sample as row)
+        # Defensive 2D-to-1D handling for direct callers.
         if x.ndim == 2:
             x = x[0]
 
-        # Dispatch to backend-specific implementation
         if backend == "pennylane":
             return self._to_pennylane(x)
         elif backend == "qiskit":
