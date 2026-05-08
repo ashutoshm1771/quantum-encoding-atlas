@@ -5,8 +5,10 @@ from __future__ import annotations
 import logging
 import threading
 from abc import ABC, abstractmethod
-from concurrent.futures import ThreadPoolExecutor
-from typing import TYPE_CHECKING, Any
+from collections import OrderedDict
+from collections.abc import Iterator
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from typing import TYPE_CHECKING, Any, Literal, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -18,6 +20,32 @@ if TYPE_CHECKING:
     pass
 
 _logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Process-pool worker globals
+# ---------------------------------------------------------------------------
+# ProcessPoolExecutor pickles arguments per-task by default. To avoid shipping
+# the full encoding instance with every sample, we use the standard
+# initializer/initargs pattern: each worker process unpickles the encoding
+# once at startup, then `_process_worker_generate` reads from module globals.
+_WORKER_ENCODING: BaseEncoding | None = None
+_WORKER_BACKEND: BackendType | None = None
+
+
+def _process_worker_init(encoding: BaseEncoding, backend: BackendType) -> None:
+    """Initializer for ProcessPoolExecutor workers (top-level for picklability)."""
+    global _WORKER_ENCODING, _WORKER_BACKEND
+    _WORKER_ENCODING = encoding
+    _WORKER_BACKEND = backend
+
+
+def _process_worker_generate(x: NDArray[np.floating[Any]]) -> CircuitType:
+    """Worker entrypoint that reads encoding/backend from module globals."""
+    assert (
+        _WORKER_ENCODING is not None and _WORKER_BACKEND is not None
+    ), "Process pool worker invoked before initializer ran"
+    return _WORKER_ENCODING._get_circuit_from_validated(x, _WORKER_BACKEND)
 
 
 class BaseEncoding(ABC):
@@ -53,6 +81,9 @@ class BaseEncoding(ABC):
         "_config",
         "_properties",
         "_properties_lock",
+        "_circuit_cache",
+        "_circuit_cache_maxsize",
+        "_circuit_cache_lock",
     )
 
     def __init__(self, n_features: int, **kwargs: Any) -> None:
@@ -65,6 +96,12 @@ class BaseEncoding(ABC):
         # Thread lock for safe lazy initialization of properties
         # Uses double-checked locking pattern for efficiency
         self._properties_lock: threading.Lock = threading.Lock()
+
+        # Optional LRU cache for circuit construction (disabled by default).
+        # Enabled via :meth:`enable_cache`. ``None`` means caching is off.
+        self._circuit_cache: OrderedDict[tuple[bytes, str], CircuitType] | None = None
+        self._circuit_cache_maxsize: int = 0
+        self._circuit_cache_lock: threading.Lock = threading.Lock()
 
     @property
     def n_features(self) -> int:
@@ -139,6 +176,10 @@ class BaseEncoding(ABC):
         should normally override :meth:`_get_circuit_from_validated` rather
         than this method.
 
+        If circuit caching has been enabled via :meth:`enable_cache`, the
+        result for repeated calls with byte-identical inputs is returned
+        from cache.
+
         Parameters
         ----------
         x : ArrayLike
@@ -162,14 +203,14 @@ class BaseEncoding(ABC):
         x_validated = self._validate_input(x)
         if x_validated.ndim == 2:
             x_validated = x_validated[0]
-        return self._get_circuit_from_validated(x_validated, backend)
+        return self._cached_dispatch(x_validated, backend)
 
     def get_circuits(
         self,
         X: ArrayLike,
         backend: BackendType = "pennylane",
         *,
-        parallel: bool = False,
+        parallel: Union[bool, Literal["thread", "process"]] = False,
         max_workers: int | None = None,
     ) -> list[CircuitType]:
         """Generate quantum circuits for multiple data samples.
@@ -185,26 +226,65 @@ class BaseEncoding(ABC):
             If 1D, treated as a single sample.
         backend : {'pennylane', 'qiskit', 'cirq'}, default='pennylane'
             Target quantum computing framework.
-        parallel : bool, default=False
-            If True, use ``ThreadPoolExecutor`` for circuit generation.
-            Recommended for large batches (>100 samples), especially with
-            the Qiskit/Cirq backends. Order of results is preserved.
+        parallel : bool or {'thread', 'process'}, default=False
+            Parallelization mode for circuit generation:
+
+            - ``False`` (default) — sequential, no executor overhead.
+            - ``True`` or ``'thread'`` — :class:`ThreadPoolExecutor`.
+              Best for I/O-bound work or PennyLane closures. Limited by
+              the CPython GIL for pure-Python work.
+            - ``'process'`` — :class:`ProcessPoolExecutor` with the
+              standard initializer/initargs pattern (encoding pickled
+              once per worker). Use for CPU-bound circuit construction
+              such as Cirq's amplitude unitary materialization on large
+              batches. Has process-startup overhead, so only worthwhile
+              for batches of roughly 100+ samples. **Not supported with
+              ``backend='pennylane'``** — PennyLane returns circuits as
+              local closures which cannot be pickled across processes;
+              use ``'thread'`` instead.
+
+            Order of results is preserved across all modes.
         max_workers : int or None, default=None
-            Maximum number of worker threads when ``parallel=True``. If
-            ``None``, ``ThreadPoolExecutor`` chooses a default based on
-            CPU count.
+            Maximum number of workers when ``parallel`` is enabled. If
+            ``None``, the executor chooses a default based on CPU count.
 
         Returns
         -------
         list[CircuitType]
             List of circuits, one per sample, in input order.
 
+        Raises
+        ------
+        ValueError
+            If ``parallel`` is not one of the accepted values.
+
         Notes
         -----
         Thread safety: each call to :meth:`_get_circuit_from_validated`
         operates on an immutable validated copy of its input and does not
         mutate instance state, so concurrent invocation is safe.
+
+        Per-sample caching (see :meth:`enable_cache`) is bypassed in
+        batch mode — caching is intended for repeated single-sample
+        calls and would add lock contention to batch hot paths.
         """
+        # Resolve the parallel mode early so we can fail fast on bad input
+        # before doing any expensive validation.
+        mode = self._resolve_parallel_mode(parallel)
+
+        # PennyLane returns circuits as local closures (qfuncs) that are not
+        # picklable, so they cannot cross the process boundary. Reject the
+        # combination up front with a helpful message instead of letting the
+        # ProcessPoolExecutor fail mid-batch with a cryptic pickling error.
+        if mode == "process" and backend == "pennylane":
+            raise ValueError(
+                "parallel='process' is not supported with backend='pennylane' "
+                "because PennyLane circuits are local closures which cannot "
+                "be pickled across process boundaries. Use parallel='thread' "
+                "for PennyLane, or switch to backend='qiskit' or "
+                "backend='cirq' for process-pool parallelism."
+            )
+
         X_validated = self._validate_input(X)
         if X_validated.ndim == 1:
             X_validated = X_validated.reshape(1, -1)
@@ -217,24 +297,203 @@ class BaseEncoding(ABC):
             type(self).__name__,
             n_samples,
             backend,
-            parallel,
+            mode,
             max_workers,
         )
 
-        if parallel and n_samples > 1:
+        # Sequential fast path (also used when only one sample is present).
+        if mode == "sequential" or n_samples <= 1:
+            return [self._get_circuit_from_validated(x, backend) for x in X_validated]
+
+        if mode == "thread":
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                circuits = list(
+                return list(
                     executor.map(
                         lambda x: self._get_circuit_from_validated(x, backend),
                         X_validated,
                     )
                 )
-        else:
-            circuits = [
-                self._get_circuit_from_validated(x, backend) for x in X_validated
-            ]
 
-        return circuits
+        # mode == "process"
+        with ProcessPoolExecutor(
+            max_workers=max_workers,
+            initializer=_process_worker_init,
+            initargs=(self, backend),
+        ) as executor:
+            return list(executor.map(_process_worker_generate, X_validated))
+
+    def iter_circuits(
+        self,
+        X: ArrayLike,
+        backend: BackendType = "pennylane",
+    ) -> Iterator[CircuitType]:
+        """Yield quantum circuits one sample at a time (memory-efficient).
+
+        Generator alternative to :meth:`get_circuits`: validates the batch
+        once, then yields a single circuit per sample without ever
+        materializing the full list. Use for datasets that don't fit in
+        memory or when circuits can be processed and discarded as they
+        come.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Input data of shape (n_samples, n_features) or (n_features,).
+            If 1D, treated as a single sample.
+        backend : {'pennylane', 'qiskit', 'cirq'}, default='pennylane'
+            Target quantum computing framework.
+
+        Yields
+        ------
+        CircuitType
+            Circuit for each sample, in input order.
+
+        Examples
+        --------
+        Stream circuits without loading the full list:
+
+        >>> from itertools import islice
+        >>> first_ten = list(islice(enc.iter_circuits(X_huge), 10))
+
+        Notes
+        -----
+        Each yielded circuit holds only its own state. The generator
+        itself is not thread-safe; for parallelism, use
+        :meth:`get_circuits` with ``parallel='thread'`` or
+        ``parallel='process'`` instead.
+        """
+        X_validated = self._validate_input(X)
+        if X_validated.ndim == 1:
+            X_validated = X_validated.reshape(1, -1)
+        for x in X_validated:
+            yield self._get_circuit_from_validated(x, backend)
+
+    @staticmethod
+    def _resolve_parallel_mode(
+        parallel: Union[bool, Literal["thread", "process"]],
+    ) -> Literal["sequential", "thread", "process"]:
+        """Map the public ``parallel`` argument to an internal mode label."""
+        if parallel is False:
+            return "sequential"
+        if parallel is True or parallel == "thread":
+            return "thread"
+        if parallel == "process":
+            return "process"
+        raise ValueError(
+            f"parallel must be False, True, 'thread', or 'process', "
+            f"got {parallel!r}"
+        )
+
+    # ------------------------------------------------------------------
+    # Optional circuit cache (LRU, opt-in)
+    # ------------------------------------------------------------------
+
+    def enable_cache(self, maxsize: int = 128) -> None:
+        """Enable LRU caching of single-sample circuit construction.
+
+        When enabled, :meth:`get_circuit` returns cached circuits for
+        byte-identical inputs (same ``backend`` and same
+        ``x.tobytes()``). Useful for training loops that revisit the
+        same data points across epochs.
+
+        Parameters
+        ----------
+        maxsize : int, default=128
+            Maximum number of entries before least-recently-used eviction.
+            Must be a positive integer.
+
+        Raises
+        ------
+        ValueError
+            If ``maxsize`` is not a positive integer.
+
+        Notes
+        -----
+        - The cache holds backend-specific circuit objects. PennyLane
+          callables, Qiskit ``QuantumCircuit`` instances, and Cirq
+          ``Circuit`` objects can all consume non-trivial memory; choose
+          ``maxsize`` accordingly.
+        - The cache is bypassed in :meth:`get_circuits` (batch mode) and
+          :meth:`iter_circuits` to avoid lock contention.
+        - The cache is dropped on pickle and must be re-enabled on the
+          unpickled instance if desired.
+        """
+        if not isinstance(maxsize, int) or maxsize < 1:
+            raise ValueError(f"maxsize must be a positive integer, got {maxsize!r}")
+        with self._circuit_cache_lock:
+            self._circuit_cache_maxsize = maxsize
+            if self._circuit_cache is None:
+                self._circuit_cache = OrderedDict()
+            elif len(self._circuit_cache) > maxsize:
+                # Trim down to the new (smaller) limit.
+                while len(self._circuit_cache) > maxsize:
+                    self._circuit_cache.popitem(last=False)
+
+    def disable_cache(self) -> None:
+        """Disable circuit caching and discard all cached entries."""
+        with self._circuit_cache_lock:
+            self._circuit_cache = None
+            self._circuit_cache_maxsize = 0
+
+    def clear_cache(self) -> None:
+        """Discard cached circuits while leaving caching enabled."""
+        with self._circuit_cache_lock:
+            if self._circuit_cache is not None:
+                self._circuit_cache.clear()
+
+    def cache_info(self) -> dict[str, int | bool]:
+        """Return introspection data about the circuit cache.
+
+        Returns
+        -------
+        dict
+            ``enabled`` (bool), ``size`` (current entries), ``maxsize``
+            (configured limit, 0 if disabled).
+        """
+        with self._circuit_cache_lock:
+            return {
+                "enabled": self._circuit_cache is not None,
+                "size": (
+                    len(self._circuit_cache) if self._circuit_cache is not None else 0
+                ),
+                "maxsize": self._circuit_cache_maxsize,
+            }
+
+    def _cached_dispatch(
+        self,
+        x: NDArray[np.floating[Any]],
+        backend: BackendType,
+    ) -> CircuitType:
+        """Cache-aware wrapper around :meth:`_get_circuit_from_validated`.
+
+        On a cache miss, computes outside the lock to avoid blocking
+        other threads, then re-checks under the lock before inserting.
+        """
+        if self._circuit_cache is None:
+            return self._get_circuit_from_validated(x, backend)
+
+        cache_key = (x.tobytes(), backend)
+        with self._circuit_cache_lock:
+            cached = self._circuit_cache.get(cache_key)
+            if cached is not None:
+                self._circuit_cache.move_to_end(cache_key)
+                return cached
+
+        result = self._get_circuit_from_validated(x, backend)
+
+        with self._circuit_cache_lock:
+            # Caching may have been disabled while we were computing.
+            if self._circuit_cache is None:
+                return result
+            # Re-check: another thread may have inserted while we computed.
+            existing = self._circuit_cache.get(cache_key)
+            if existing is not None:
+                self._circuit_cache.move_to_end(cache_key)
+                return existing
+            self._circuit_cache[cache_key] = result
+            if len(self._circuit_cache) > self._circuit_cache_maxsize:
+                self._circuit_cache.popitem(last=False)
+            return result
 
     @abstractmethod
     def _get_circuit_from_validated(
@@ -502,12 +761,24 @@ class BaseEncoding(ABC):
         """
         state: dict[str, Any] = {"slots": {}, "dict": None}
 
+        # Slots that must NOT be pickled:
+        # - threading.Lock instances cannot be pickled at all.
+        # - The circuit cache may hold backend-specific closures
+        #   (PennyLane qfuncs in particular) that are not pickle-safe; we
+        #   drop the cache rather than risk a confusing pickle error.
+        _NON_PICKLED_SLOTS = frozenset(
+            {
+                "_properties_lock",
+                "_circuit_cache",
+                "_circuit_cache_lock",
+            }
+        )
+
         # Collect slot attributes from the entire class hierarchy
         for cls in type(self).__mro__:
             if hasattr(cls, "__slots__"):
                 for slot in cls.__slots__:
-                    # Skip the lock - it cannot be pickled
-                    if slot == "_properties_lock":
+                    if slot in _NON_PICKLED_SLOTS:
                         continue
                     # Only include slots that have been set
                     if hasattr(self, slot):
@@ -547,5 +818,10 @@ class BaseEncoding(ABC):
                 object.__setattr__(self, "__dict__", {})
             self.__dict__.update(state["dict"])
 
-        # Recreate the thread lock
+        # Recreate non-picklable state. The circuit cache is intentionally
+        # dropped on pickle (see __getstate__) — the unpickled instance
+        # starts with caching disabled and can re-enable via enable_cache.
         self._properties_lock = threading.Lock()
+        self._circuit_cache_lock = threading.Lock()
+        self._circuit_cache = None
+        self._circuit_cache_maxsize = 0
