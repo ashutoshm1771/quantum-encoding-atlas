@@ -12,10 +12,26 @@ Quick Start
 >>> fig = compare_encodings(['angle', 'iqp'], n_features=8, output='matplotlib')
 >>> fig.savefig('comparison.png')
 
+>>> # Render an individual encoding's circuit
+>>> import numpy as np
+>>> from encoding_atlas import IQPEncoding
+>>> from encoding_atlas.visualization import visualize_circuit
+>>> fig = visualize_circuit(IQPEncoding(n_features=4), np.zeros(4))
+
+>>> # Plot the qubit connectivity (entanglement) graph
+>>> from encoding_atlas.visualization import plot_entanglement_graph
+>>> graph_fig = plot_entanglement_graph(IQPEncoding(n_features=4))
+
 Available Functions
 -------------------
 compare_encodings
     Compare multiple encodings side-by-side with ASCII or matplotlib output.
+visualize_circuit
+    Render the gate-level circuit produced by an encoding, via the target
+    backend's native drawing routine (PennyLane, Qiskit, or Cirq).
+plot_entanglement_graph
+    Visualize an encoding's qubit connectivity (entangling pairs) as a
+    networkx graph drawn with matplotlib.
 
 Examples
 --------
@@ -49,6 +65,10 @@ Compare with custom configurations:
 ... )
 """
 
+from encoding_atlas.visualization.circuit import (
+    plot_entanglement_graph,
+    visualize_circuit,
+)
 from encoding_atlas.visualization.comparison import (
     EncodingComparison,
     compare_encodings,
@@ -57,4 +77,6 @@ from encoding_atlas.visualization.comparison import (
 __all__ = [
     "compare_encodings",
     "EncodingComparison",
+    "plot_entanglement_graph",
+    "visualize_circuit",
 ]
