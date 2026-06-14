@@ -123,11 +123,13 @@ from __future__ import annotations
 
 import logging
 import warnings
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from typing import Any, Literal, TypedDict, overload
 
 import numpy as np
 from numpy.typing import NDArray
 
+from encoding_atlas.analysis._parallel import ParallelArg, resolve_parallel_mode
 from encoding_atlas.analysis._utils import (
     create_rng,
     simulate_encoding_statevector,
@@ -323,6 +325,85 @@ class TrainabilityResult(TypedDict):
 
 
 # =============================================================================
+# Process-pool worker plumbing (top-level for picklability)
+# =============================================================================
+#
+# These globals are populated *once per worker process* by
+# ``_trainability_worker_init`` so the encoding + observable label travel
+# across the wire only once per worker. The worker function returns either
+# the gradient array or a sentinel ``None`` for failed samples; the main
+# process aggregates and packs successful gradients contiguously, matching
+# the sequential implementation byte-for-byte.
+
+_TRAIN_WORKER_ENCODING: BaseEncoding | None = None
+_TRAIN_WORKER_BACKEND: str | None = None
+_TRAIN_WORKER_OBSERVABLE: str | None = None
+
+
+def _trainability_worker_init(
+    encoding: BaseEncoding, backend: str, observable: str
+) -> None:
+    """ProcessPoolExecutor initializer — runs once per worker process."""
+    global _TRAIN_WORKER_ENCODING, _TRAIN_WORKER_BACKEND, _TRAIN_WORKER_OBSERVABLE
+    _TRAIN_WORKER_ENCODING = encoding
+    _TRAIN_WORKER_BACKEND = backend
+    _TRAIN_WORKER_OBSERVABLE = observable
+
+
+def _trainability_worker_compute(
+    x: NDArray[np.floating[Any]],
+) -> tuple[NDArray[np.floating[Any]] | None, str | None]:
+    """Worker entrypoint: compute gradients for one sample input.
+
+    Returns ``(gradients, None)`` on success or ``(None, error_message)``
+    on a tolerated failure (``SimulationError`` /
+    ``NumericalInstabilityError`` / unexpected ``Exception``). Sample-level
+    failures must NOT raise out of the worker because that would tear down
+    the executor; the sequential code path tolerates these failures and
+    we preserve that behavior.
+    """
+    assert (
+        _TRAIN_WORKER_ENCODING is not None
+        and _TRAIN_WORKER_BACKEND is not None
+        and _TRAIN_WORKER_OBSERVABLE is not None
+    ), "Process pool worker invoked before initializer ran"
+    return _compute_one_gradient_sample(
+        _TRAIN_WORKER_ENCODING,
+        x,
+        _TRAIN_WORKER_BACKEND,
+        _TRAIN_WORKER_OBSERVABLE,
+    )
+
+
+def _compute_one_gradient_sample(
+    encoding: BaseEncoding,
+    x: NDArray[np.floating[Any]],
+    backend: str,
+    observable: str,
+) -> tuple[NDArray[np.floating[Any]] | None, str | None]:
+    """Compute gradients for one sample, tolerating expected failures.
+
+    Returns
+    -------
+    (gradients, None) on success.
+    (None, error_message) on a tolerated failure — the caller is
+    responsible for counting failures and bumping the appropriate logger.
+    """
+    try:
+        gradients = _compute_encoding_gradients(
+            encoding=encoding,
+            x=x,
+            observable=observable,
+            backend=backend,
+        )
+        return gradients, None
+    except (SimulationError, NumericalInstabilityError) as e:
+        return None, f"expected:{type(e).__name__}:{e}"
+    except Exception as e:  # noqa: BLE001 - matches sequential tolerance
+        return None, f"unexpected:{type(e).__name__}:{e}"
+
+
+# =============================================================================
 # Main Public Function
 # =============================================================================
 
@@ -337,6 +418,8 @@ def estimate_trainability(
     backend: Literal["pennylane", "qiskit", "cirq"] = ...,
     return_details: Literal[False] = ...,
     verbose: bool = ...,
+    parallel: ParallelArg = ...,
+    max_workers: int | None = ...,
 ) -> float: ...
 
 
@@ -350,6 +433,8 @@ def estimate_trainability(
     backend: Literal["pennylane", "qiskit", "cirq"] = ...,
     return_details: Literal[True] = ...,
     verbose: bool = ...,
+    parallel: ParallelArg = ...,
+    max_workers: int | None = ...,
 ) -> TrainabilityResult: ...
 
 
@@ -362,6 +447,8 @@ def estimate_trainability(
     backend: Literal["pennylane", "qiskit", "cirq"] = "pennylane",
     return_details: bool = False,
     verbose: bool = False,
+    parallel: ParallelArg = False,
+    max_workers: int | None = None,
 ) -> float | TrainabilityResult:
     """Estimate the trainability of a quantum encoding.
 
@@ -409,6 +496,28 @@ def estimate_trainability(
         If False, return only the trainability estimate as a float.
     verbose : bool, default=False
         If True, log progress information during computation.
+    parallel : bool or {'thread', 'process'}, default=False
+        Parallel-dispatch mode for the per-sample gradient computation.
+        Trainability is the most expensive of the three analyses
+        (``2 * n_features`` simulations per sample for the
+        parameter-shift rule), so parallelism delivers the largest
+        wall-clock speedup here.
+
+        - ``False`` (default) — sequential, no executor overhead.
+        - ``True`` or ``'thread'`` — :class:`ThreadPoolExecutor`.
+        - ``'process'`` — :class:`ProcessPoolExecutor` with the encoding
+          pickled once per worker. Workers exchange only NumPy float
+          arrays (gradient vectors), so process-pool parallelism works
+          with **all** three backends here.
+
+        Output is numerically identical across all modes for a fixed
+        ``seed`` — the RNG is fully consumed in the main process before
+        any work is dispatched. Failed samples are still counted (so the
+        ``failure_fraction`` check produces the same result as
+        sequential), and successful gradients are stored contiguously
+        from index 0 just like the sequential version.
+    max_workers : int or None, default=None
+        Maximum number of workers when ``parallel`` is enabled.
 
     Returns
     -------
@@ -559,6 +668,9 @@ def estimate_trainability(
             f"backend must be one of {sorted(valid_backends)}, got {backend!r}."
         )
 
+    # Validate parallel argument upfront for a clean ValueError on bad input.
+    mode = resolve_parallel_mode(parallel)
+
     # =========================================================================
     # Setup
     # =========================================================================
@@ -633,57 +745,97 @@ def estimate_trainability(
     # Log progress at 10% intervals
     log_interval = max(1, n_samples // 10)
 
-    for i in range(n_samples):
-        # Generate random input parameters
-        x = rng.uniform(input_range[0], input_range[1], size=n_features)
-        x = x.astype(np.float64)
+    # Pre-generate all random inputs in the main process. For
+    # ``np.random.Generator``, a single batched draw produces an identical
+    # sequence to calling once per sample with the same seed, so this
+    # preserves the seeded output exactly across all parallel modes.
+    X_samples = rng.uniform(
+        input_range[0], input_range[1], size=(n_samples, n_features)
+    ).astype(np.float64)
 
-        try:
-            # Compute gradients using parameter-shift rule
-            gradients = _compute_encoding_gradients(
-                encoding=encoding,
-                x=x,
-                observable=observable,
-                backend=backend,
+    if mode == "sequential" or n_samples <= 1:
+        # Sequential path keeps the inline loop so the per-sample log
+        # messages remain available with their sample indices intact.
+        for i in range(n_samples):
+            x = X_samples[i]
+            gradients, error = _compute_one_gradient_sample(
+                encoding, x, backend, observable
             )
+            if gradients is not None:
+                if len(gradients) != n_features:
+                    gradients = _pad_or_truncate(gradients, n_features)
+                gradient_samples[n_successful, :] = gradients
+                n_successful += 1
+            else:
+                n_failed += 1
+                # Preserve original log levels: expected failures at DEBUG,
+                # unexpected at WARNING.
+                assert error is not None
+                if error.startswith("expected:"):
+                    _logger.debug(
+                        "Gradient computation failed at sample %d/%d: %s",
+                        i + 1,
+                        n_samples,
+                        error.split(":", 2)[2],
+                    )
+                else:
+                    _logger.warning(
+                        "Unexpected error during gradient computation at sample %d: %s",
+                        i + 1,
+                        error.split(":", 2)[2],
+                    )
+            if verbose and (i + 1) % log_interval == 0:
+                _logger.info(
+                    "Progress: %d/%d samples completed (%d successful, %d failed)",
+                    i + 1,
+                    n_samples,
+                    n_successful,
+                    n_failed,
+                )
+    else:
+        # Parallel path. Results come back in input order thanks to
+        # ``executor.map``, so packing successful gradients contiguously
+        # from index 0 matches the sequential implementation exactly.
+        if mode == "thread":
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                results = list(
+                    executor.map(
+                        lambda x: _compute_one_gradient_sample(
+                            encoding, x, backend, observable
+                        ),
+                        X_samples,
+                    )
+                )
+        else:  # mode == "process"
+            with ProcessPoolExecutor(
+                max_workers=max_workers,
+                initializer=_trainability_worker_init,
+                initargs=(encoding, backend, observable),
+            ) as executor:
+                results = list(executor.map(_trainability_worker_compute, X_samples))
 
-            # Handle dimension mismatch (some encodings have different param count)
-            if len(gradients) != n_features:
-                gradients = _pad_or_truncate(gradients, n_features)
-
-            # Store successful sample contiguously at the next available index
-            gradient_samples[n_successful, :] = gradients
-            n_successful += 1
-
-        except (SimulationError, NumericalInstabilityError) as e:
-            # Log but continue - single failure shouldn't abort entire analysis.
-            # Failed samples are NOT stored, ensuring unbiased variance estimation.
-            n_failed += 1
-            _logger.debug(
-                "Gradient computation failed at sample %d/%d: %s",
-                i + 1,
-                n_samples,
-                str(e),
-            )
-
-        except Exception as e:
-            # Unexpected error - log warning but continue.
-            # Failed samples are excluded from variance computation.
-            n_failed += 1
-            _logger.warning(
-                "Unexpected error during gradient computation at sample %d: %s",
-                i + 1,
-                str(e),
-            )
-
-        if verbose and (i + 1) % log_interval == 0:
-            _logger.info(
-                "Progress: %d/%d samples completed (%d successful, %d failed)",
-                i + 1,
-                n_samples,
-                n_successful,
-                n_failed,
-            )
+        for i, (gradients, error) in enumerate(results):
+            if gradients is not None:
+                if len(gradients) != n_features:
+                    gradients = _pad_or_truncate(gradients, n_features)
+                gradient_samples[n_successful, :] = gradients
+                n_successful += 1
+            else:
+                n_failed += 1
+                assert error is not None
+                if error.startswith("expected:"):
+                    _logger.debug(
+                        "Gradient computation failed at sample %d/%d: %s",
+                        i + 1,
+                        n_samples,
+                        error.split(":", 2)[2],
+                    )
+                else:
+                    _logger.warning(
+                        "Unexpected error during gradient computation at sample %d: %s",
+                        i + 1,
+                        error.split(":", 2)[2],
+                    )
 
     # Check if too many samples failed
     failure_fraction = n_failed / n_samples

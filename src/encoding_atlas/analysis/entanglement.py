@@ -116,12 +116,14 @@ from __future__ import annotations
 
 import logging
 import warnings
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from itertools import combinations
 from typing import Any, Literal, TypedDict, Union, overload
 
 import numpy as np
 from numpy.typing import NDArray
 
+from encoding_atlas.analysis._parallel import ParallelArg, resolve_parallel_mode
 from encoding_atlas.analysis._utils import (
     compute_purity,
     create_rng,
@@ -253,6 +255,83 @@ _MAX_VERBOSE_QUBITS: int = 10
 
 
 # =============================================================================
+# Process-pool worker plumbing (top-level for picklability)
+# =============================================================================
+#
+# These globals are populated *once per worker process* by
+# ``_entanglement_worker_init`` so the encoding + measure configuration
+# travel across the wire only once per worker, not once per sample.
+# Same pattern as :mod:`encoding_atlas.core.base` and
+# :mod:`encoding_atlas.analysis.expressibility`.
+
+_ENT_WORKER_ENCODING: BaseEncoding | None = None
+_ENT_WORKER_BACKEND: str | None = None
+_ENT_WORKER_MEASURE: str | None = None
+_ENT_WORKER_N_QUBITS: int | None = None
+_ENT_WORKER_SCOTT_K: int | None = None
+
+
+def _entanglement_worker_init(
+    encoding: BaseEncoding,
+    backend: str,
+    measure: str,
+    n_qubits: int,
+    scott_k: int | None,
+) -> None:
+    """ProcessPoolExecutor initializer — runs once per worker process."""
+    global _ENT_WORKER_ENCODING, _ENT_WORKER_BACKEND, _ENT_WORKER_MEASURE
+    global _ENT_WORKER_N_QUBITS, _ENT_WORKER_SCOTT_K
+    _ENT_WORKER_ENCODING = encoding
+    _ENT_WORKER_BACKEND = backend
+    _ENT_WORKER_MEASURE = measure
+    _ENT_WORKER_N_QUBITS = n_qubits
+    _ENT_WORKER_SCOTT_K = scott_k
+
+
+def _entanglement_worker_compute(
+    x: NDArray[np.floating[Any]],
+) -> tuple[float, NDArray[np.floating[Any]]]:
+    """Worker entrypoint: compute entanglement for one sample input."""
+    assert (
+        _ENT_WORKER_ENCODING is not None
+        and _ENT_WORKER_BACKEND is not None
+        and _ENT_WORKER_MEASURE is not None
+        and _ENT_WORKER_N_QUBITS is not None
+    ), "Process pool worker invoked before initializer ran"
+    return _compute_one_entanglement(
+        _ENT_WORKER_ENCODING,
+        x,
+        _ENT_WORKER_BACKEND,
+        _ENT_WORKER_MEASURE,
+        _ENT_WORKER_N_QUBITS,
+        _ENT_WORKER_SCOTT_K,
+    )
+
+
+def _compute_one_entanglement(
+    encoding: BaseEncoding,
+    x: NDArray[np.floating[Any]],
+    backend: str,
+    measure: str,
+    n_qubits: int,
+    scott_k: int | None,
+) -> tuple[float, NDArray[np.floating[Any]]]:
+    """Simulate ``x`` and return ``(ent_value, per_qubit)``.
+
+    Shared by the sequential, thread, and process code paths so the
+    arithmetic is identical regardless of parallelization mode.
+    """
+    statevector = simulate_encoding_statevector(encoding, x, backend=backend)
+    if measure == "meyer_wallach":
+        return compute_meyer_wallach_with_breakdown(statevector, n_qubits)
+    # measure == "scott"
+    assert scott_k is not None  # caller responsibility
+    ent_value = compute_scott_measure(statevector, n_qubits, k=scott_k)
+    per_qubit = np.zeros(n_qubits, dtype=np.float64)
+    return ent_value, per_qubit
+
+
+# =============================================================================
 # Main Public Function
 # =============================================================================
 
@@ -268,6 +347,8 @@ def compute_entanglement_capability(
     scott_k: int | None = ...,
     return_details: Literal[False] = ...,
     verbose: bool = ...,
+    parallel: ParallelArg = ...,
+    max_workers: int | None = ...,
 ) -> float: ...
 
 
@@ -282,6 +363,8 @@ def compute_entanglement_capability(
     scott_k: int | None = ...,
     return_details: Literal[True] = ...,
     verbose: bool = ...,
+    parallel: ParallelArg = ...,
+    max_workers: int | None = ...,
 ) -> EntanglementResult: ...
 
 
@@ -295,6 +378,8 @@ def compute_entanglement_capability(
     scott_k: int | None = None,
     return_details: bool = False,
     verbose: bool = False,
+    parallel: ParallelArg = False,
+    max_workers: int | None = None,
 ) -> Union[float, EntanglementResult]:
     """Compute the entanglement capability of a quantum encoding.
 
@@ -340,6 +425,23 @@ def compute_entanglement_capability(
         If False, return only the entanglement capability score.
     verbose : bool, default=False
         If True, log progress during computation.
+    parallel : bool or {'thread', 'process'}, default=False
+        Parallel-dispatch mode for the per-sample simulation +
+        entanglement-measure computation.
+
+        - ``False`` (default) — sequential, no executor overhead.
+        - ``True`` or ``'thread'`` — :class:`ThreadPoolExecutor`.
+        - ``'process'`` — :class:`ProcessPoolExecutor` with the encoding
+          pickled once per worker. Workers exchange only float / NumPy
+          arrays, so process-pool parallelism works with **all** three
+          backends here (unlike ``BaseEncoding.get_circuits`` where
+          PennyLane's local-closure qfuncs prevent process-pool use).
+
+        Output is numerically identical across all modes for a fixed
+        ``seed`` — the RNG is fully consumed in the main process before
+        any work is dispatched.
+    max_workers : int or None, default=None
+        Maximum number of workers when ``parallel`` is enabled.
 
     Returns
     -------
@@ -470,6 +572,9 @@ def compute_entanglement_capability(
             f"backend must be 'pennylane', 'qiskit', or 'cirq', got {backend!r}"
         )
 
+    # Validate parallel argument upfront for a clean ValueError on bad input.
+    mode = resolve_parallel_mode(parallel)
+
     # Validate and resolve scott_k parameter
     effective_scott_k: int | None = None
     if measure == "scott":
@@ -528,60 +633,104 @@ def compute_entanglement_capability(
     entanglement_samples = np.zeros(n_samples, dtype=np.float64)
     per_qubit_sum = np.zeros(n_qubits, dtype=np.float64)
 
+    # Pre-generate all random inputs in the main process. ``np.random.Generator``
+    # produces an identical sequence whether called once with size=(n_samples,
+    # n_features) or n_samples times with size=n_features, so this preserves
+    # the original seeded output exactly.
+    X_samples = rng.uniform(
+        input_range[0], input_range[1], size=(n_samples, n_features)
+    ).astype(np.float64)
+
     # Progress logging interval (every 10%)
     log_interval = max(1, n_samples // 10)
 
-    for i in range(n_samples):
-        # Generate random input features
-        x = rng.uniform(input_range[0], input_range[1], size=n_features)
-        x = x.astype(np.float64)
+    if mode == "sequential" or n_samples <= 1:
+        # Sequential path: keep the inline loop so progress logging and
+        # per-sample error context remain available.
+        for i in range(n_samples):
+            x = X_samples[i]
+            try:
+                ent_value, per_qubit = _compute_one_entanglement(
+                    encoding, x, backend, measure, n_qubits, effective_scott_k
+                )
+                entanglement_samples[i] = ent_value
+                per_qubit_sum += per_qubit
+            except SimulationError:
+                raise
+            except Exception as e:
+                raise SimulationError(
+                    f"Entanglement computation failed at sample {i}: {e}",
+                    backend=backend,
+                    details={
+                        "sample_index": i,
+                        "input": x.tolist(),
+                        "error_type": type(e).__name__,
+                        "measure": measure,
+                        "scott_k": effective_scott_k,
+                    },
+                ) from e
 
+            if verbose and (i + 1) % log_interval == 0:
+                current_mean = np.mean(entanglement_samples[: i + 1])
+                _logger.debug(
+                    "Processed %d/%d samples (current mean: %.4f)",
+                    i + 1,
+                    n_samples,
+                    current_mean,
+                )
+    else:
+        # Parallel path. Wrap simulation errors with a generic context — the
+        # specific sample index is no longer well-defined when work is being
+        # done out of order across workers, but the upstream exception's
+        # traceback still pinpoints the failure.
         try:
-            # Simulate circuit to get statevector
-            statevector = simulate_encoding_statevector(encoding, x, backend=backend)
-
-            # Compute entanglement measure
-            if measure == "meyer_wallach":
-                ent_value, per_qubit = compute_meyer_wallach_with_breakdown(
-                    statevector, n_qubits
-                )
-            else:  # scott
-                # effective_scott_k is guaranteed to be valid here
-                assert effective_scott_k is not None  # Type narrowing for mypy
-                ent_value = compute_scott_measure(
-                    statevector, n_qubits, k=effective_scott_k
-                )
-                # For Scott measure, per-qubit breakdown is not directly available
-                per_qubit = np.zeros(n_qubits, dtype=np.float64)
-
-            entanglement_samples[i] = ent_value
-            per_qubit_sum += per_qubit
-
+            if mode == "thread":
+                with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    results = list(
+                        executor.map(
+                            lambda x: _compute_one_entanglement(
+                                encoding,
+                                x,
+                                backend,
+                                measure,
+                                n_qubits,
+                                effective_scott_k,
+                            ),
+                            X_samples,
+                        )
+                    )
+            else:  # mode == "process"
+                with ProcessPoolExecutor(
+                    max_workers=max_workers,
+                    initializer=_entanglement_worker_init,
+                    initargs=(
+                        encoding,
+                        backend,
+                        measure,
+                        n_qubits,
+                        effective_scott_k,
+                    ),
+                ) as executor:
+                    results = list(
+                        executor.map(_entanglement_worker_compute, X_samples)
+                    )
         except SimulationError:
-            # Re-raise simulation errors with context
             raise
         except Exception as e:
             raise SimulationError(
-                f"Entanglement computation failed at sample {i}: {e}",
+                f"Entanglement computation failed in {mode} pool: {e}",
                 backend=backend,
                 details={
-                    "sample_index": i,
-                    "input": x.tolist(),
                     "error_type": type(e).__name__,
                     "measure": measure,
                     "scott_k": effective_scott_k,
+                    "parallel": mode,
                 },
             ) from e
 
-        # Progress logging
-        if verbose and (i + 1) % log_interval == 0:
-            current_mean = np.mean(entanglement_samples[: i + 1])
-            _logger.debug(
-                "Processed %d/%d samples (current mean: %.4f)",
-                i + 1,
-                n_samples,
-                current_mean,
-            )
+        for i, (ent_value, per_qubit) in enumerate(results):
+            entanglement_samples[i] = ent_value
+            per_qubit_sum += per_qubit
 
     # -------------------------------------------------------------------------
     # Compute Statistics

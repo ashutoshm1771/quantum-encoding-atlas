@@ -154,12 +154,14 @@ from __future__ import annotations
 
 import logging
 import warnings
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, overload
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.special import rel_entr
 
+from encoding_atlas.analysis._parallel import ParallelArg, resolve_parallel_mode
 from encoding_atlas.analysis._utils import (
     compute_fidelity,
     create_rng,
@@ -336,6 +338,8 @@ def compute_expressibility(
     backend: Literal["pennylane", "qiskit", "cirq"] = ...,
     return_distributions: Literal[False] = ...,
     verbose: bool = ...,
+    parallel: ParallelArg = ...,
+    max_workers: int | None = ...,
 ) -> float: ...
 
 
@@ -349,6 +353,8 @@ def compute_expressibility(
     backend: Literal["pennylane", "qiskit", "cirq"] = ...,
     return_distributions: Literal[True] = ...,
     verbose: bool = ...,
+    parallel: ParallelArg = ...,
+    max_workers: int | None = ...,
 ) -> ExpressibilityResult: ...
 
 
@@ -361,6 +367,8 @@ def compute_expressibility(
     backend: Literal["pennylane", "qiskit", "cirq"] = "pennylane",
     return_distributions: bool = False,
     verbose: bool = False,
+    parallel: ParallelArg = False,
+    max_workers: int | None = None,
 ) -> float | ExpressibilityResult:
     """Compute the expressibility of a quantum encoding.
 
@@ -410,6 +418,31 @@ def compute_expressibility(
         If False, return only the expressibility score (float).
     verbose : bool, default=False
         If True, log progress information during computation.
+    parallel : bool or {'thread', 'process'}, default=False
+        Parallel-dispatch mode for the per-sample fidelity computation.
+        Each sample requires two independent statevector simulations,
+        making the loop embarrassingly parallel.
+
+        - ``False`` (default) — sequential, no executor overhead.
+        - ``True`` or ``'thread'`` — :class:`ThreadPoolExecutor`. Useful
+          when the backend simulator releases the GIL during numerical
+          work (NumPy operations typically do).
+        - ``'process'`` — :class:`ProcessPoolExecutor` for true CPU
+          parallelism. The encoding is pickled once per worker. Best
+          for large ``n_samples`` and CPU-bound backends. Has
+          process-startup overhead, so only worthwhile for batches of
+          roughly 100+ samples. Workers exchange only NumPy arrays /
+          floats, so process-pool parallelism works with **all** three
+          backends here (unlike ``BaseEncoding.get_circuits`` where
+          PennyLane's local-closure qfuncs prevent process-pool use).
+
+        Output is numerically identical across all modes for a fixed
+        ``seed``: the RNG is fully consumed in the main process before
+        any work is dispatched to workers.
+    max_workers : int or None, default=None
+        Maximum number of workers when ``parallel`` is enabled.
+        ``None`` defers to the executor's default (typically based on
+        CPU count).
 
     Returns
     -------
@@ -579,6 +612,11 @@ def compute_expressibility(
             f"got [{input_range[0]}, {input_range[1]}]"
         )
 
+    # Validate parallel argument early so a bad value surfaces as a clean
+    # ``ValueError`` instead of being wrapped in ``AnalysisError`` by the
+    # broad ``except`` around the sampling loop below.
+    resolve_parallel_mode(parallel)
+
     # Warn about large qubit counts
     n_qubits = encoding.n_qubits
     if n_qubits > _QUBIT_WARNING_THRESHOLD:
@@ -627,6 +665,8 @@ def compute_expressibility(
             rng=rng,
             backend=backend,
             verbose=verbose,
+            parallel=parallel,
+            max_workers=max_workers,
         )
     except SimulationError:
         raise
@@ -791,6 +831,8 @@ def compute_fidelity_distribution(
     input_range: tuple[float, float] = _DEFAULT_INPUT_RANGE,
     seed: int | None = None,
     backend: Literal["pennylane", "qiskit", "cirq"] = "pennylane",
+    parallel: ParallelArg = False,
+    max_workers: int | None = None,
 ) -> NDArray[np.floating[Any]]:
     """Compute the fidelity distribution for an encoding.
 
@@ -814,6 +856,11 @@ def compute_fidelity_distribution(
         - ``"pennylane"``: Uses PennyLane's default.qubit simulator (recommended)
         - ``"qiskit"``: Uses Qiskit's Statevector class
         - ``"cirq"``: Uses Cirq's Simulator for statevector simulation
+    parallel : bool or {'thread', 'process'}, default=False
+        Parallel-dispatch mode for the per-sample fidelity computation.
+        See :func:`compute_expressibility` for the full discussion.
+    max_workers : int or None, default=None
+        Maximum number of workers when ``parallel`` is enabled.
 
     Returns
     -------
@@ -875,6 +922,9 @@ def compute_fidelity_distribution(
             f"backend must be 'pennylane', 'qiskit', or 'cirq', got {backend!r}"
         )
 
+    # Validate parallel argument upfront for a clean ValueError on bad input.
+    resolve_parallel_mode(parallel)
+
     # Setup and sample
     rng = create_rng(seed)
     n_features = encoding.n_features
@@ -887,6 +937,8 @@ def compute_fidelity_distribution(
         rng=rng,
         backend=backend,
         verbose=False,
+        parallel=parallel,
+        max_workers=max_workers,
     )
 
 
@@ -1029,6 +1081,53 @@ def compute_haar_distribution(
 # =============================================================================
 
 
+# ---------------------------------------------------------------------------
+# Process-pool worker plumbing (top-level for picklability)
+# ---------------------------------------------------------------------------
+#
+# These globals are populated *once per worker process* by
+# ``_fidelity_worker_init`` (registered as the executor's ``initializer``)
+# so that the encoding instance and backend label are pickled across the
+# wire just once per worker, not once per sample. The same pattern is used
+# in :mod:`encoding_atlas.core.base` and proven safe there.
+
+_FID_WORKER_ENCODING: BaseEncoding | None = None
+_FID_WORKER_BACKEND: str | None = None
+
+
+def _fidelity_worker_init(encoding: BaseEncoding, backend: str) -> None:
+    """ProcessPoolExecutor initializer — runs once per worker process."""
+    global _FID_WORKER_ENCODING, _FID_WORKER_BACKEND
+    _FID_WORKER_ENCODING = encoding
+    _FID_WORKER_BACKEND = backend
+
+
+def _fidelity_worker_compute(
+    pair: tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]]],
+) -> float:
+    """Worker entrypoint: compute one fidelity from an (x1, x2) pair."""
+    assert (
+        _FID_WORKER_ENCODING is not None and _FID_WORKER_BACKEND is not None
+    ), "Process pool worker invoked before initializer ran"
+    return _compute_one_fidelity(_FID_WORKER_ENCODING, pair, _FID_WORKER_BACKEND)
+
+
+def _compute_one_fidelity(
+    encoding: BaseEncoding,
+    pair: tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]]],
+    backend: str,
+) -> float:
+    """Simulate both inputs and return the clamped fidelity.
+
+    Shared by the sequential, thread-pool, and process-pool code paths so
+    they always produce identical floats for the same inputs.
+    """
+    x1, x2 = pair
+    state1 = simulate_encoding_statevector(encoding, x1, backend=backend)
+    state2 = simulate_encoding_statevector(encoding, x2, backend=backend)
+    return float(np.clip(compute_fidelity(state1, state2), 0.0, 1.0))
+
+
 def _sample_fidelities(
     encoding: BaseEncoding,
     n_samples: int,
@@ -1037,6 +1136,8 @@ def _sample_fidelities(
     rng: np.random.Generator,
     backend: str,
     verbose: bool,
+    parallel: ParallelArg = False,
+    max_workers: int | None = None,
 ) -> NDArray[np.floating[Any]]:
     """Sample fidelities between random input pairs.
 
@@ -1060,40 +1161,117 @@ def _sample_fidelities(
         Backend for circuit simulation.
     verbose : bool
         If True, log progress.
+    parallel : bool or {'thread', 'process'}, default=False
+        Parallel-dispatch mode for the per-sample simulation. See
+        :func:`compute_expressibility` for details.
+    max_workers : int or None, default=None
+        Maximum number of workers when ``parallel`` is enabled.
 
     Returns
     -------
     NDArray[np.floating]
-        Array of fidelity values, shape (n_samples,).
+        Array of fidelity values, shape ``(n_samples,)``. The numerical
+        output is identical across ``parallel`` modes for a fixed
+        ``rng`` — the RNG is fully consumed up front in the main
+        process before any work is dispatched.
 
     Raises
     ------
     SimulationError
-        If circuit simulation fails.
+        If circuit simulation fails for any sample.
     """
-    # Batch RNG generation — single call per input set
+    # Batch RNG generation — single call per input set. Pre-generating
+    # the entire (X1, X2) batch in the main process means workers do no
+    # RNG work, so the output is bit-identical across sequential /
+    # thread / process modes for the same seeded ``rng``.
     X1 = rng.uniform(input_range[0], input_range[1], size=(n_samples, n_features))
     X2 = rng.uniform(input_range[0], input_range[1], size=(n_samples, n_features))
 
-    fidelities = np.zeros(n_samples, dtype=np.float64)
+    mode = resolve_parallel_mode(parallel)
 
-    # Logging interval (log every 10% of progress)
+    # Sequential fast path. Also used when there's only one sample (where
+    # an executor is pure overhead) and for thread mode of trivial sizes.
+    if mode == "sequential" or n_samples <= 1:
+        return _sample_fidelities_sequential(
+            encoding, X1, X2, backend, verbose, n_samples
+        )
+
+    pairs = list(zip(X1, X2))
+
+    if mode == "thread":
+        # ThreadPoolExecutor shares memory; we close over ``encoding`` and
+        # ``backend`` directly via the small worker callable below.
+        def _one(pair):  # noqa: ANN001 - inner closure, types obvious
+            return _compute_one_fidelity(encoding, pair, backend)
+
+        try:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                fidelities = np.fromiter(
+                    executor.map(_one, pairs),
+                    dtype=np.float64,
+                    count=n_samples,
+                )
+        except SimulationError:
+            raise
+        except Exception as e:
+            raise SimulationError(
+                f"Failed to compute fidelities in thread pool: {e}",
+                backend=backend,
+                details={
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "parallel": "thread",
+                },
+            ) from e
+        return fidelities
+
+    # mode == "process"
+    # ProcessPoolExecutor pickles arguments per task; the
+    # initializer/initargs pattern pickles the encoding once per worker
+    # rather than once per sample.
+    try:
+        with ProcessPoolExecutor(
+            max_workers=max_workers,
+            initializer=_fidelity_worker_init,
+            initargs=(encoding, backend),
+        ) as executor:
+            fidelities = np.fromiter(
+                executor.map(_fidelity_worker_compute, pairs),
+                dtype=np.float64,
+                count=n_samples,
+            )
+    except SimulationError:
+        raise
+    except Exception as e:
+        raise SimulationError(
+            f"Failed to compute fidelities in process pool: {e}",
+            backend=backend,
+            details={
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "parallel": "process",
+            },
+        ) from e
+    return fidelities
+
+
+def _sample_fidelities_sequential(
+    encoding: BaseEncoding,
+    X1: NDArray[np.floating[Any]],
+    X2: NDArray[np.floating[Any]],
+    backend: str,
+    verbose: bool,
+    n_samples: int,
+) -> NDArray[np.floating[Any]]:
+    """Sequential implementation kept separate so the parallel branch in
+    :func:`_sample_fidelities` stays linear-flow and easy to read."""
+    fidelities = np.zeros(n_samples, dtype=np.float64)
     log_interval = max(1, n_samples // 10)
 
     for i in range(n_samples):
         try:
-            # Simulate encoding to get statevectors
-            state1 = simulate_encoding_statevector(encoding, X1[i], backend=backend)
-            state2 = simulate_encoding_statevector(encoding, X2[i], backend=backend)
-
-            # Compute fidelity: F = |⟨ψ₁|ψ₂⟩|²
-            fidelity = compute_fidelity(state1, state2)
-
-            # Clamp to [0, 1] for numerical safety
-            fidelities[i] = float(np.clip(fidelity, 0.0, 1.0))
-
+            fidelities[i] = _compute_one_fidelity(encoding, (X1[i], X2[i]), backend)
         except SimulationError:
-            # Re-raise simulation errors with context
             raise
         except Exception as e:
             raise SimulationError(
@@ -1106,7 +1284,6 @@ def _sample_fidelities(
                 },
             ) from e
 
-        # Log progress
         if verbose and (i + 1) % log_interval == 0:
             _logger.debug(
                 "Sampled %d/%d fidelities (%.1f%%)",
