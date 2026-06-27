@@ -161,7 +161,13 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.special import rel_entr
 
+from encoding_atlas.analysis._ci import percentile_bootstrap_ci, validate_ci_args
 from encoding_atlas.analysis._parallel import ParallelArg, resolve_parallel_mode
+from encoding_atlas.analysis._sampling import (
+    SamplingMethod,
+    generate_sample_batch,
+    validate_sampling,
+)
 from encoding_atlas.analysis._utils import (
     compute_fidelity,
     create_rng,
@@ -237,6 +243,23 @@ class ExpressibilityResult(TypedDict):
         the typical overlap between encoded states.
     std_fidelity : float
         Standard deviation of the sampled fidelities.
+    expressibility_ci_lower : float
+        Lower bound of the percentile bootstrap confidence interval on
+        ``expressibility`` at ``confidence_level``. Computed by
+        resampling the per-sample fidelity array and re-running the
+        full histogram → KL → score pipeline on each resample.
+    expressibility_ci_upper : float
+        Upper bound of the percentile bootstrap CI on ``expressibility``.
+    mean_fidelity_ci_lower : float
+        Lower bound of the bootstrap CI on ``mean_fidelity``.
+    mean_fidelity_ci_upper : float
+        Upper bound of the bootstrap CI on ``mean_fidelity``.
+    confidence_level : float
+        Two-sided confidence level used for the CI bounds above
+        (default 0.95 → 95% CIs).
+    sampling : {'uniform', 'sobol'}
+        Sampling strategy that produced the fidelity pairs. See
+        :func:`compute_expressibility` for details.
 
     Examples
     --------
@@ -244,6 +267,8 @@ class ExpressibilityResult(TypedDict):
     >>> print(f"Expressibility: {result['expressibility']:.4f}")
     >>> print(f"KL Divergence: {result['kl_divergence']:.4f}")
     >>> print(f"Mean Fidelity: {result['mean_fidelity']:.4f}")
+    >>> lo, hi = result['expressibility_ci_lower'], result['expressibility_ci_upper']
+    >>> print(f"95% CI: [{lo:.4f}, {hi:.4f}]")
     """
 
     expressibility: float
@@ -256,6 +281,12 @@ class ExpressibilityResult(TypedDict):
     convergence_estimate: float
     mean_fidelity: float
     std_fidelity: float
+    expressibility_ci_lower: float
+    expressibility_ci_upper: float
+    mean_fidelity_ci_lower: float
+    mean_fidelity_ci_upper: float
+    confidence_level: float
+    sampling: str
 
 
 # =============================================================================
@@ -319,6 +350,14 @@ _DEFAULT_INPUT_RANGE: tuple[float, float] = (0.0, 2.0 * np.pi)
 # Number of bootstrap samples for convergence estimation
 _DEFAULT_N_BOOTSTRAP: int = 100
 
+# Default number of bootstrap resamples for confidence-interval estimation.
+# 200 is enough to stabilize the percentile endpoints to ~1% jitter without
+# adding meaningful cost on top of the (much more expensive) simulation work.
+_DEFAULT_N_BOOTSTRAP_CI: int = 200
+
+# Default two-sided confidence level for reported CIs.
+_DEFAULT_CONFIDENCE_LEVEL: float = 0.95
+
 # Qubit threshold for performance warnings
 _QUBIT_WARNING_THRESHOLD: int = 10
 
@@ -340,6 +379,9 @@ def compute_expressibility(
     verbose: bool = ...,
     parallel: ParallelArg = ...,
     max_workers: int | None = ...,
+    sampling: SamplingMethod = ...,
+    confidence_level: float = ...,
+    n_bootstrap_ci: int = ...,
 ) -> float: ...
 
 
@@ -355,6 +397,9 @@ def compute_expressibility(
     verbose: bool = ...,
     parallel: ParallelArg = ...,
     max_workers: int | None = ...,
+    sampling: SamplingMethod = ...,
+    confidence_level: float = ...,
+    n_bootstrap_ci: int = ...,
 ) -> ExpressibilityResult: ...
 
 
@@ -369,6 +414,9 @@ def compute_expressibility(
     verbose: bool = False,
     parallel: ParallelArg = False,
     max_workers: int | None = None,
+    sampling: SamplingMethod = "uniform",
+    confidence_level: float = _DEFAULT_CONFIDENCE_LEVEL,
+    n_bootstrap_ci: int = _DEFAULT_N_BOOTSTRAP_CI,
 ) -> float | ExpressibilityResult:
     """Compute the expressibility of a quantum encoding.
 
@@ -443,6 +491,31 @@ def compute_expressibility(
         Maximum number of workers when ``parallel`` is enabled.
         ``None`` defers to the executor's default (typically based on
         CPU count).
+    sampling : {'uniform', 'sobol'}, default='uniform'
+        Strategy for drawing the random input pairs ``(X1, X2)``:
+
+        - ``'uniform'`` (default, unchanged behavior): pseudo-random
+          i.i.d. samples via :meth:`numpy.random.Generator.uniform`.
+        - ``'sobol'``: Sobol' low-discrepancy quasi-random sequence
+          via :class:`scipy.stats.qmc.Sobol`. Covers the hypercube
+          much more evenly than i.i.d. uniform draws and typically
+          reaches the same KL accuracy with **30-50% fewer samples**.
+          For best statistical properties round ``n_samples`` up to
+          the nearest power of two.
+
+        Sobol is seeded from the same ``seed`` argument so a given
+        ``(seed, sampling)`` pair is fully reproducible.
+    confidence_level : float, default=0.95
+        Two-sided confidence level for the bootstrap CIs reported in
+        the result dict (only used when ``return_distributions=True``).
+        Must lie strictly in ``(0, 1)``. Common choices: 0.90, 0.95,
+        0.99.
+    n_bootstrap_ci : int, default=200
+        Number of bootstrap resamples used to estimate the
+        ``expressibility`` and ``mean_fidelity`` percentile CIs
+        (only when ``return_distributions=True``). 200 stabilizes
+        the percentile endpoints to ~1% jitter; raise to ~1000 for
+        publication-grade precision.
 
     Returns
     -------
@@ -617,6 +690,11 @@ def compute_expressibility(
     # broad ``except`` around the sampling loop below.
     resolve_parallel_mode(parallel)
 
+    # Validate sampling/CI arguments upfront for the same reason — bad
+    # values must surface as plain ValueErrors before any expensive work.
+    validate_sampling(sampling)
+    validate_ci_args(confidence_level, n_bootstrap_ci)
+
     # Warn about large qubit counts
     n_qubits = encoding.n_qubits
     if n_qubits > _QUBIT_WARNING_THRESHOLD:
@@ -667,6 +745,7 @@ def compute_expressibility(
             verbose=verbose,
             parallel=parallel,
             max_workers=max_workers,
+            sampling=sampling,
         )
     except SimulationError:
         raise
@@ -805,6 +884,32 @@ def compute_expressibility(
         )
 
     # =========================================================================
+    # Bootstrap Confidence Intervals (only for the detailed result)
+    # =========================================================================
+    #
+    # The CI cost is bounded by ``n_bootstrap_ci`` × histogram-pipeline-cost,
+    # which is negligible next to the ``n_samples`` simulations we already
+    # paid for above. We only compute them when the caller asked for the
+    # detailed result; the float-only return path stays fast.
+
+    if return_distributions:
+        expressibility_ci = _bootstrap_expressibility_ci(
+            fidelities=fidelities,
+            n_bins=n_bins,
+            n_qubits=n_qubits,
+            rng=rng,
+            n_bootstrap=n_bootstrap_ci,
+            confidence_level=confidence_level,
+        )
+        mean_fidelity_ci = percentile_bootstrap_ci(
+            samples=fidelities,
+            statistic_fn=np.mean,
+            rng=rng,
+            n_bootstrap=n_bootstrap_ci,
+            confidence_level=confidence_level,
+        )
+
+    # =========================================================================
     # Return Results
     # =========================================================================
 
@@ -820,6 +925,12 @@ def compute_expressibility(
             convergence_estimate=convergence_estimate,
             mean_fidelity=mean_fidelity,
             std_fidelity=std_fidelity,
+            expressibility_ci_lower=expressibility_ci[0],
+            expressibility_ci_upper=expressibility_ci[1],
+            mean_fidelity_ci_lower=mean_fidelity_ci[0],
+            mean_fidelity_ci_upper=mean_fidelity_ci[1],
+            confidence_level=float(confidence_level),
+            sampling=str(sampling),
         )
 
     return expressibility
@@ -833,6 +944,7 @@ def compute_fidelity_distribution(
     backend: Literal["pennylane", "qiskit", "cirq"] = "pennylane",
     parallel: ParallelArg = False,
     max_workers: int | None = None,
+    sampling: SamplingMethod = "uniform",
 ) -> NDArray[np.floating[Any]]:
     """Compute the fidelity distribution for an encoding.
 
@@ -861,6 +973,9 @@ def compute_fidelity_distribution(
         See :func:`compute_expressibility` for the full discussion.
     max_workers : int or None, default=None
         Maximum number of workers when ``parallel`` is enabled.
+    sampling : {'uniform', 'sobol'}, default='uniform'
+        Strategy for drawing the random input pairs. See
+        :func:`compute_expressibility` for the full discussion.
 
     Returns
     -------
@@ -922,8 +1037,9 @@ def compute_fidelity_distribution(
             f"backend must be 'pennylane', 'qiskit', or 'cirq', got {backend!r}"
         )
 
-    # Validate parallel argument upfront for a clean ValueError on bad input.
+    # Validate parallel + sampling arguments upfront for clean ValueErrors.
     resolve_parallel_mode(parallel)
+    validate_sampling(sampling)
 
     # Setup and sample
     rng = create_rng(seed)
@@ -939,6 +1055,7 @@ def compute_fidelity_distribution(
         verbose=False,
         parallel=parallel,
         max_workers=max_workers,
+        sampling=sampling,
     )
 
 
@@ -1138,6 +1255,7 @@ def _sample_fidelities(
     verbose: bool,
     parallel: ParallelArg = False,
     max_workers: int | None = None,
+    sampling: SamplingMethod = "uniform",
 ) -> NDArray[np.floating[Any]]:
     """Sample fidelities between random input pairs.
 
@@ -1183,9 +1301,11 @@ def _sample_fidelities(
     # Batch RNG generation — single call per input set. Pre-generating
     # the entire (X1, X2) batch in the main process means workers do no
     # RNG work, so the output is bit-identical across sequential /
-    # thread / process modes for the same seeded ``rng``.
-    X1 = rng.uniform(input_range[0], input_range[1], size=(n_samples, n_features))
-    X2 = rng.uniform(input_range[0], input_range[1], size=(n_samples, n_features))
+    # thread / process modes for the same seeded ``rng``. The
+    # ``sampling`` selector picks between i.i.d. uniform and
+    # quasi-random Sobol' draws; both are seeded from the same ``rng``.
+    X1 = generate_sample_batch(n_samples, n_features, input_range, rng, sampling)
+    X2 = generate_sample_batch(n_samples, n_features, input_range, rng, sampling)
 
     mode = resolve_parallel_mode(parallel)
 
@@ -1379,3 +1499,87 @@ def _estimate_convergence(
 
     # Return standard deviation of bootstrap KL values
     return float(np.std(bootstrap_kls, ddof=1))
+
+
+def _expressibility_score_from_fidelities(
+    fidelities: NDArray[np.floating[Any]],
+    n_bins: int,
+    n_qubits: int,
+) -> float:
+    """Map a fidelity sample directly to the [0, 1] expressibility score.
+
+    Mirrors the histogram → KL → normalize pipeline used in
+    :func:`compute_expressibility` exactly, so it can be invoked from
+    the bootstrap CI loop and produce values commensurate with the
+    main-path result. Returns ``0.0`` for fidelity arrays that the
+    main path would treat as numerically degenerate (saturated bin or
+    NaN/Inf KL); this is the same conservative fallback the main path
+    uses.
+    """
+    # Histogram → density → PMF.
+    hist, bin_edges = np.histogram(
+        fidelities,
+        bins=n_bins,
+        range=(0.0, 1.0),
+        density=True,
+    )
+    bin_width = bin_edges[1] - bin_edges[0]
+    P_enc = hist * bin_width
+    P_enc_sum = P_enc.sum()
+    if P_enc_sum > _NUMERICAL_EPSILON:
+        P_enc = P_enc / P_enc_sum
+    else:
+        # Degenerate case — fall back to uniform exactly as the main
+        # function does. (Logging is intentionally suppressed inside
+        # the bootstrap to avoid spamming users.)
+        P_enc = np.ones(n_bins, dtype=np.float64) / n_bins
+
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.0
+    P_haar = compute_haar_distribution(n_qubits, bin_centers)
+
+    P_enc_safe = P_enc + _NUMERICAL_EPSILON
+    P_haar_safe = P_haar + _NUMERICAL_EPSILON
+    P_enc_safe = P_enc_safe / P_enc_safe.sum()
+    P_haar_safe = P_haar_safe / P_haar_safe.sum()
+
+    kl_array = rel_entr(P_enc_safe, P_haar_safe)
+    kl = float(np.sum(kl_array))
+    if not np.isfinite(kl) or kl < 0.0:
+        kl = max(0.0, kl) if np.isfinite(kl) else _MAX_KL_DIVERGENCE
+    score = 1.0 - min(1.0, kl / _MAX_KL_DIVERGENCE)
+    return float(np.clip(score, 0.0, 1.0))
+
+
+def _bootstrap_expressibility_ci(
+    fidelities: NDArray[np.floating[Any]],
+    n_bins: int,
+    n_qubits: int,
+    rng: np.random.Generator,
+    n_bootstrap: int,
+    confidence_level: float,
+) -> tuple[float, float]:
+    """Percentile bootstrap CI on the expressibility score.
+
+    The score is a non-linear function of the fidelity sample (mean of
+    a histogram → KL → 1 - min(1, KL/MAX_KL)) so a simple bootstrap of
+    a single scalar would miss the histogram non-linearity. We
+    instead resample the fidelities and recompute the full score per
+    resample.
+    """
+    n = len(fidelities)
+    if n < 2:
+        score = _expressibility_score_from_fidelities(fidelities, n_bins, n_qubits)
+        return score, score
+
+    indices = rng.integers(0, n, size=(n_bootstrap, n))
+    boot_scores = np.empty(n_bootstrap, dtype=np.float64)
+    for b in range(n_bootstrap):
+        boot_scores[b] = _expressibility_score_from_fidelities(
+            fidelities[indices[b]], n_bins, n_qubits
+        )
+    alpha = 1.0 - float(confidence_level)
+    lower = float(np.percentile(boot_scores, 100.0 * (alpha / 2.0)))
+    upper = float(np.percentile(boot_scores, 100.0 * (1.0 - alpha / 2.0)))
+    if upper < lower:
+        upper = lower
+    return lower, upper

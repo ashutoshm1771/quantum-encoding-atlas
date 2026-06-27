@@ -123,7 +123,13 @@ from typing import Any, Literal, TypedDict, Union, overload
 import numpy as np
 from numpy.typing import NDArray
 
+from encoding_atlas.analysis._ci import percentile_bootstrap_ci, validate_ci_args
 from encoding_atlas.analysis._parallel import ParallelArg, resolve_parallel_mode
+from encoding_atlas.analysis._sampling import (
+    SamplingMethod,
+    generate_sample_batch,
+    validate_sampling,
+)
 from encoding_atlas.analysis._utils import (
     compute_purity,
     create_rng,
@@ -178,6 +184,18 @@ class EntanglementResult(TypedDict):
         The entanglement measure used: ``"meyer_wallach"`` or ``"scott"``.
     scott_k : int | None
         The k value used for Scott measure, or None if Meyer-Wallach was used.
+    entanglement_ci_lower : float
+        Lower bound of the percentile bootstrap confidence interval on
+        ``entanglement_capability`` at ``confidence_level``. Computed by
+        resampling ``entanglement_samples`` with replacement.
+    entanglement_ci_upper : float
+        Upper bound of the bootstrap CI on ``entanglement_capability``.
+    confidence_level : float
+        Two-sided confidence level used for the CI bounds above
+        (default 0.95 → 95% CIs).
+    sampling : {'uniform', 'sobol'}
+        Sampling strategy that produced the per-sample inputs. See
+        :func:`compute_entanglement_capability` for details.
     """
 
     entanglement_capability: float
@@ -187,6 +205,10 @@ class EntanglementResult(TypedDict):
     per_qubit_entanglement: FloatArray
     measure: str
     scott_k: int | None
+    entanglement_ci_lower: float
+    entanglement_ci_upper: float
+    confidence_level: float
+    sampling: str
 
 
 # =============================================================================
@@ -252,6 +274,14 @@ _EPSILON: float = 1e-15
 
 # Maximum number of qubits for which detailed logging is practical
 _MAX_VERBOSE_QUBITS: int = 10
+
+# Default number of bootstrap resamples for the entanglement-mean CI.
+# 200 keeps the CI cost negligible next to the (much more expensive)
+# per-sample simulation work.
+_DEFAULT_N_BOOTSTRAP_CI: int = 200
+
+# Default two-sided confidence level for reported CIs.
+_DEFAULT_CONFIDENCE_LEVEL: float = 0.95
 
 
 # =============================================================================
@@ -349,6 +379,9 @@ def compute_entanglement_capability(
     verbose: bool = ...,
     parallel: ParallelArg = ...,
     max_workers: int | None = ...,
+    sampling: SamplingMethod = ...,
+    confidence_level: float = ...,
+    n_bootstrap_ci: int = ...,
 ) -> float: ...
 
 
@@ -365,6 +398,9 @@ def compute_entanglement_capability(
     verbose: bool = ...,
     parallel: ParallelArg = ...,
     max_workers: int | None = ...,
+    sampling: SamplingMethod = ...,
+    confidence_level: float = ...,
+    n_bootstrap_ci: int = ...,
 ) -> EntanglementResult: ...
 
 
@@ -380,6 +416,9 @@ def compute_entanglement_capability(
     verbose: bool = False,
     parallel: ParallelArg = False,
     max_workers: int | None = None,
+    sampling: SamplingMethod = "uniform",
+    confidence_level: float = _DEFAULT_CONFIDENCE_LEVEL,
+    n_bootstrap_ci: int = _DEFAULT_N_BOOTSTRAP_CI,
 ) -> Union[float, EntanglementResult]:
     """Compute the entanglement capability of a quantum encoding.
 
@@ -442,6 +481,25 @@ def compute_entanglement_capability(
         any work is dispatched.
     max_workers : int or None, default=None
         Maximum number of workers when ``parallel`` is enabled.
+    sampling : {'uniform', 'sobol'}, default='uniform'
+        Strategy for drawing the random per-sample inputs:
+
+        - ``'uniform'`` (default, unchanged): pseudo-random i.i.d.
+          uniform draws.
+        - ``'sobol'``: Sobol' low-discrepancy quasi-random sequence,
+          seeded from the same ``seed`` argument. Typically gives the
+          same mean accuracy with **30-50% fewer samples**. For best
+          statistical properties choose ``n_samples`` as a power of
+          two.
+    confidence_level : float, default=0.95
+        Two-sided confidence level for the bootstrap CI reported in
+        the result dict (only used when ``return_details=True``).
+        Must lie strictly in ``(0, 1)``.
+    n_bootstrap_ci : int, default=200
+        Number of bootstrap resamples used to estimate the
+        ``entanglement_capability`` percentile CI (only when
+        ``return_details=True``). 200 stabilizes the percentile
+        endpoints to ~1% jitter at negligible cost.
 
     Returns
     -------
@@ -575,6 +633,10 @@ def compute_entanglement_capability(
     # Validate parallel argument upfront for a clean ValueError on bad input.
     mode = resolve_parallel_mode(parallel)
 
+    # Validate the new sampling / CI arguments for the same reason.
+    validate_sampling(sampling)
+    validate_ci_args(confidence_level, n_bootstrap_ci)
+
     # Validate and resolve scott_k parameter
     effective_scott_k: int | None = None
     if measure == "scott":
@@ -633,13 +695,13 @@ def compute_entanglement_capability(
     entanglement_samples = np.zeros(n_samples, dtype=np.float64)
     per_qubit_sum = np.zeros(n_qubits, dtype=np.float64)
 
-    # Pre-generate all random inputs in the main process. ``np.random.Generator``
-    # produces an identical sequence whether called once with size=(n_samples,
-    # n_features) or n_samples times with size=n_features, so this preserves
-    # the original seeded output exactly.
-    X_samples = rng.uniform(
-        input_range[0], input_range[1], size=(n_samples, n_features)
-    ).astype(np.float64)
+    # Pre-generate all random inputs in the main process. The
+    # ``sampling`` selector picks between i.i.d. uniform draws (default,
+    # unchanged behavior — numpy.random.Generator produces an identical
+    # sequence whether called batched or per-iteration) and quasi-random
+    # Sobol' sequences; both are seeded from the same ``rng`` so a given
+    # ``(seed, sampling)`` pair is fully reproducible.
+    X_samples = generate_sample_batch(n_samples, n_features, input_range, rng, sampling)
 
     # Progress logging interval (every 10%)
     log_interval = max(1, n_samples // 10)
@@ -764,6 +826,22 @@ def compute_entanglement_capability(
             )
 
     # -------------------------------------------------------------------------
+    # Bootstrap CI on the mean (only for the detailed result path)
+    # -------------------------------------------------------------------------
+    if return_details:
+        ent_ci_lower, ent_ci_upper = percentile_bootstrap_ci(
+            samples=entanglement_samples,
+            statistic_fn=np.mean,
+            rng=rng,
+            n_bootstrap=n_bootstrap_ci,
+            confidence_level=confidence_level,
+        )
+        # Mirror the [0, 1] clamp applied to the point estimate so the CI
+        # respects the documented value range.
+        ent_ci_lower = float(np.clip(ent_ci_lower, 0.0, 1.0))
+        ent_ci_upper = float(np.clip(ent_ci_upper, 0.0, 1.0))
+
+    # -------------------------------------------------------------------------
     # Return Results
     # -------------------------------------------------------------------------
     if return_details:
@@ -775,6 +853,10 @@ def compute_entanglement_capability(
             per_qubit_entanglement=per_qubit_entanglement,
             measure=measure,
             scott_k=effective_scott_k,
+            entanglement_ci_lower=ent_ci_lower,
+            entanglement_ci_upper=ent_ci_upper,
+            confidence_level=float(confidence_level),
+            sampling=str(sampling),
         )
 
     return entanglement_capability

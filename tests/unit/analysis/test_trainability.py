@@ -112,6 +112,13 @@ class TestEstimateTrainabilityBasic:
             "n_successful_samples",
             "per_parameter_variance",
             "n_failed_samples",
+            # Bootstrap CI fields added in the analysis statistics commit.
+            "trainability_ci_lower",
+            "trainability_ci_upper",
+            "gradient_variance_ci_lower",
+            "gradient_variance_ci_upper",
+            "confidence_level",
+            "sampling",
         }
         assert expected_keys == set(result.keys())
 

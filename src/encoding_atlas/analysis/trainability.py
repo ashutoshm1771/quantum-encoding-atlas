@@ -129,7 +129,13 @@ from typing import Any, Literal, TypedDict, overload
 import numpy as np
 from numpy.typing import NDArray
 
+from encoding_atlas.analysis._ci import percentile_bootstrap_ci, validate_ci_args
 from encoding_atlas.analysis._parallel import ParallelArg, resolve_parallel_mode
+from encoding_atlas.analysis._sampling import (
+    SamplingMethod,
+    generate_sample_batch,
+    validate_sampling,
+)
 from encoding_atlas.analysis._utils import (
     create_rng,
     simulate_encoding_statevector,
@@ -260,6 +266,14 @@ _MAX_FAILURE_FRACTION: float = 0.2
 # Higher values create sharper transition between trainable/untrainable.
 _SIGMOID_STEEPNESS: float = 2.0
 
+# Default number of bootstrap resamples for the trainability /
+# variance CIs. 200 stabilizes the percentile endpoints to ~1% jitter
+# at negligible cost next to the per-sample gradient computation.
+_DEFAULT_N_BOOTSTRAP_CI: int = 200
+
+# Default two-sided confidence level for reported CIs.
+_DEFAULT_CONFIDENCE_LEVEL: float = 0.95
+
 
 # =============================================================================
 # Type Definitions
@@ -312,6 +326,23 @@ class TrainabilityResult(TypedDict):
         may indicate issues with the encoding or simulation backend.
         Failed samples are excluded from variance computation to ensure
         unbiased statistical estimates.
+    trainability_ci_lower : float
+        Lower bound of the percentile bootstrap CI on
+        ``trainability_estimate`` at ``confidence_level``. Computed by
+        resampling the per-sample gradient matrix and re-running the
+        variance → trainability mapping on each resample.
+    trainability_ci_upper : float
+        Upper bound of the bootstrap CI on ``trainability_estimate``.
+    gradient_variance_ci_lower : float
+        Lower bound of the bootstrap CI on ``gradient_variance``.
+    gradient_variance_ci_upper : float
+        Upper bound of the bootstrap CI on ``gradient_variance``.
+    confidence_level : float
+        Two-sided confidence level used for the CI bounds above
+        (default 0.95 → 95% CIs).
+    sampling : {'uniform', 'sobol'}
+        Sampling strategy that produced the per-sample inputs. See
+        :func:`estimate_trainability` for details.
     """
 
     trainability_estimate: float
@@ -322,6 +353,12 @@ class TrainabilityResult(TypedDict):
     n_successful_samples: int
     per_parameter_variance: NDArray[np.floating[Any]]
     n_failed_samples: int
+    trainability_ci_lower: float
+    trainability_ci_upper: float
+    gradient_variance_ci_lower: float
+    gradient_variance_ci_upper: float
+    confidence_level: float
+    sampling: str
 
 
 # =============================================================================
@@ -420,6 +457,9 @@ def estimate_trainability(
     verbose: bool = ...,
     parallel: ParallelArg = ...,
     max_workers: int | None = ...,
+    sampling: SamplingMethod = ...,
+    confidence_level: float = ...,
+    n_bootstrap_ci: int = ...,
 ) -> float: ...
 
 
@@ -435,6 +475,9 @@ def estimate_trainability(
     verbose: bool = ...,
     parallel: ParallelArg = ...,
     max_workers: int | None = ...,
+    sampling: SamplingMethod = ...,
+    confidence_level: float = ...,
+    n_bootstrap_ci: int = ...,
 ) -> TrainabilityResult: ...
 
 
@@ -449,6 +492,9 @@ def estimate_trainability(
     verbose: bool = False,
     parallel: ParallelArg = False,
     max_workers: int | None = None,
+    sampling: SamplingMethod = "uniform",
+    confidence_level: float = _DEFAULT_CONFIDENCE_LEVEL,
+    n_bootstrap_ci: int = _DEFAULT_N_BOOTSTRAP_CI,
 ) -> float | TrainabilityResult:
     """Estimate the trainability of a quantum encoding.
 
@@ -518,6 +564,26 @@ def estimate_trainability(
         from index 0 just like the sequential version.
     max_workers : int or None, default=None
         Maximum number of workers when ``parallel`` is enabled.
+    sampling : {'uniform', 'sobol'}, default='uniform'
+        Strategy for drawing the random per-sample inputs:
+
+        - ``'uniform'`` (default, unchanged): pseudo-random i.i.d.
+          uniform draws.
+        - ``'sobol'``: Sobol' low-discrepancy quasi-random sequence,
+          seeded from the same ``seed`` argument. Typically gives the
+          same variance accuracy with **30-50% fewer samples**. For
+          best statistical properties choose ``n_samples`` as a power
+          of two.
+    confidence_level : float, default=0.95
+        Two-sided confidence level for the bootstrap CIs on
+        ``trainability_estimate`` and ``gradient_variance`` reported
+        in the result dict (only used when ``return_details=True``).
+        Must lie strictly in ``(0, 1)``.
+    n_bootstrap_ci : int, default=200
+        Number of bootstrap resamples used to estimate the
+        percentile CIs (only when ``return_details=True``). 200
+        stabilizes the percentile endpoints to ~1% jitter at
+        negligible cost.
 
     Returns
     -------
@@ -671,6 +737,10 @@ def estimate_trainability(
     # Validate parallel argument upfront for a clean ValueError on bad input.
     mode = resolve_parallel_mode(parallel)
 
+    # Validate sampling / CI arguments for the same reason.
+    validate_sampling(sampling)
+    validate_ci_args(confidence_level, n_bootstrap_ci)
+
     # =========================================================================
     # Setup
     # =========================================================================
@@ -745,13 +815,12 @@ def estimate_trainability(
     # Log progress at 10% intervals
     log_interval = max(1, n_samples // 10)
 
-    # Pre-generate all random inputs in the main process. For
-    # ``np.random.Generator``, a single batched draw produces an identical
-    # sequence to calling once per sample with the same seed, so this
-    # preserves the seeded output exactly across all parallel modes.
-    X_samples = rng.uniform(
-        input_range[0], input_range[1], size=(n_samples, n_features)
-    ).astype(np.float64)
+    # Pre-generate all random inputs in the main process. The
+    # ``sampling`` selector picks between i.i.d. uniform draws (default,
+    # unchanged behavior) and Sobol' low-discrepancy sequences; both are
+    # seeded from the same ``rng`` so a given ``(seed, sampling)`` pair
+    # produces identical numerical output across all parallel modes.
+    X_samples = generate_sample_batch(n_samples, n_features, input_range, rng, sampling)
 
     if mode == "sequential" or n_samples <= 1:
         # Sequential path keeps the inline loop so the per-sample log
@@ -950,6 +1019,47 @@ def estimate_trainability(
         )
 
     # =========================================================================
+    # Bootstrap CIs (only for the detailed result path)
+    # =========================================================================
+    # We resample rows of ``successful_gradients`` with replacement and
+    # re-run the same per-parameter-variance → mean → variance-to-
+    # trainability chain that produced the point estimates. Doing the
+    # bootstrap on the gradient matrix (rather than on the variance
+    # scalar) properly propagates the variance estimator's own
+    # non-linearity through the CI.
+    if return_details:
+        if n_successful >= 2:
+            indices = rng.integers(0, n_successful, size=(n_bootstrap_ci, n_successful))
+            boot_variances = np.empty(n_bootstrap_ci, dtype=np.float64)
+            for b in range(n_bootstrap_ci):
+                resample = successful_gradients[indices[b]]
+                per_param = np.var(resample, axis=0, ddof=1)
+                boot_variances[b] = float(np.mean(per_param))
+            boot_trainabilities = np.array(
+                [_variance_to_trainability(variance=v) for v in boot_variances],
+                dtype=np.float64,
+            )
+            alpha = 1.0 - float(confidence_level)
+            lo_q = 100.0 * (alpha / 2.0)
+            hi_q = 100.0 * (1.0 - alpha / 2.0)
+            gradient_variance_ci_lower = float(np.percentile(boot_variances, lo_q))
+            gradient_variance_ci_upper = float(np.percentile(boot_variances, hi_q))
+            trainability_ci_lower = float(np.percentile(boot_trainabilities, lo_q))
+            trainability_ci_upper = float(np.percentile(boot_trainabilities, hi_q))
+            # Guard against tiny numerical inversions of (lower, upper).
+            if gradient_variance_ci_upper < gradient_variance_ci_lower:
+                gradient_variance_ci_upper = gradient_variance_ci_lower
+            if trainability_ci_upper < trainability_ci_lower:
+                trainability_ci_upper = trainability_ci_lower
+        else:
+            # Degenerate case — collapse CIs to the point estimates so
+            # consumers can still index every CI key safely.
+            gradient_variance_ci_lower = gradient_variance
+            gradient_variance_ci_upper = gradient_variance
+            trainability_ci_lower = trainability_estimate
+            trainability_ci_upper = trainability_estimate
+
+    # =========================================================================
     # Return Results
     # =========================================================================
     if return_details:
@@ -962,6 +1072,12 @@ def estimate_trainability(
             n_successful_samples=n_successful,
             per_parameter_variance=per_param_variance,
             n_failed_samples=n_failed,
+            trainability_ci_lower=trainability_ci_lower,
+            trainability_ci_upper=trainability_ci_upper,
+            gradient_variance_ci_lower=gradient_variance_ci_lower,
+            gradient_variance_ci_upper=gradient_variance_ci_upper,
+            confidence_level=float(confidence_level),
+            sampling=str(sampling),
         )
 
     return trainability_estimate

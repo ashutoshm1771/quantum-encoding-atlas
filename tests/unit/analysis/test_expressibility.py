@@ -145,6 +145,13 @@ class TestComputeExpressibilityBasic:
             "convergence_estimate",
             "mean_fidelity",
             "std_fidelity",
+            # Bootstrap CI fields added in the analysis statistics commit.
+            "expressibility_ci_lower",
+            "expressibility_ci_upper",
+            "mean_fidelity_ci_lower",
+            "mean_fidelity_ci_upper",
+            "confidence_level",
+            "sampling",
         }
         assert set(result.keys()) == required_keys
 
@@ -1012,6 +1019,13 @@ class TestBackendConsistency:
             "convergence_estimate",
             "mean_fidelity",
             "std_fidelity",
+            # Bootstrap CI fields added in the analysis statistics commit.
+            "expressibility_ci_lower",
+            "expressibility_ci_upper",
+            "mean_fidelity_ci_lower",
+            "mean_fidelity_ci_upper",
+            "confidence_level",
+            "sampling",
         }
         assert set(result.keys()) == required_keys
 
@@ -3650,6 +3664,13 @@ class TestExpressibilityResultCompleteness:
             "convergence_estimate",
             "mean_fidelity",
             "std_fidelity",
+            # Bootstrap CI fields added in the analysis statistics commit.
+            "expressibility_ci_lower",
+            "expressibility_ci_upper",
+            "mean_fidelity_ci_lower",
+            "mean_fidelity_ci_upper",
+            "confidence_level",
+            "sampling",
         }
         assert set(result.keys()) == expected_keys
 
