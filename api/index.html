@@ -7086,19 +7086,41 @@ get_resource_summary : Quick summary for a single encoding.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Compute gradients for all parameters using parameter-shift rule.</p>
+        <p>Compute gradients for all parameters using the parameter-shift rule.</p>
+<p>Builds the full <code>(2 * n_params, n_features)</code> matrix of shifted
+parameter vectors, dispatches a single
+:func:<code>simulate_encoding_statevectors_batch</code> call, and evaluates all
+expectation values with one vectorised observable computation.</p>
+<p>Compared to the previous implementation — a Python <code>for</code> loop over
+parameters, each calling :func:<code>compute_parameter_gradient</code> and
+therefore each invoking the backend simulator twice independently —
+this version still performs the same <code>2 * n_params</code> statevector
+simulations (the parameter-shift rule fundamentally requires them)
+but amortises the Python and observable-evaluation overhead into a
+single pass. The numerical result is <strong>identical</strong> to the per-call
+version (verified by <code>test_batched_matches_per_call_gradient</code>).</p>
 <h5 id="encoding_atlas.analysis.compute_all_parameter_gradients--parameters">Parameters<a class="headerlink" href="#encoding_atlas.analysis.compute_all_parameter_gradients--parameters" title="Anchor link to this section">&para;</a></h5>
 <p>encoding : BaseEncoding
     The encoding instance.
 x : NDArray[np.floating]
-    Input data vector.
+    Input data vector of shape <code>(n_features,)</code>.
 observable : {"computational", "global_z", "local_z", "pauli_z"}, default="computational"
-    Observable to measure. See :func:<code>compute_parameter_gradient</code> for details.
+    Observable to measure. See :func:<code>compute_parameter_gradient</code>
+    for the mathematical definitions. <code>"pauli_z"</code> is a deprecated
+    alias for <code>"global_z"</code> and emits a <code>DeprecationWarning</code>.
 backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
     Simulation backend.</p>
 <h5 id="encoding_atlas.analysis.compute_all_parameter_gradients--returns">Returns<a class="headerlink" href="#encoding_atlas.analysis.compute_all_parameter_gradients--returns" title="Anchor link to this section">&para;</a></h5>
 <p>FloatArray
-    Array of gradients, one per parameter.</p>
+    Array of gradients of shape <code>(n_features,)</code>. The element at
+    index <code>i</code> is <code>∂⟨O⟩/∂xᵢ</code> evaluated at the input point <code>x</code>.</p>
+<h5 id="encoding_atlas.analysis.compute_all_parameter_gradients--raises">Raises<a class="headerlink" href="#encoding_atlas.analysis.compute_all_parameter_gradients--raises" title="Anchor link to this section">&para;</a></h5>
+<p>ValidationError
+    If <code>x</code> is not a 1-D array.
+ValueError
+    If <code>observable</code> is not one of the recognised options.
+SimulationError
+    If the underlying batched simulation fails.</p>
 <h5 id="encoding_atlas.analysis.compute_all_parameter_gradients--examples">Examples<a class="headerlink" href="#encoding_atlas.analysis.compute_all_parameter_gradients--examples" title="Anchor link to this section">&para;</a></h5>
 <blockquote>
 <blockquote>
