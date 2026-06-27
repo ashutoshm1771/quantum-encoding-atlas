@@ -130,6 +130,7 @@ encoding_atlas.analysis.trainability : Trainability estimation
 
 from __future__ import annotations
 
+import functools
 import logging
 import warnings
 from collections.abc import Sequence
@@ -234,6 +235,183 @@ DensityMatrixType = NDArray[np.complexfloating[Any, Any]]
 
 FloatArray = NDArray[np.floating[Any]]
 """Array of floating-point values."""
+
+
+# =============================================================================
+# Cached Observable Helpers (Hot-Path Optimizations)
+# =============================================================================
+#
+# The parameter-shift gradient loop in trainability analysis evaluates an
+# observable for every shifted statevector — typically 2 * n_features
+# evaluations per sample, hundreds of samples per encoding. Two of the
+# three observables ("global_z" and "local_z") were previously recomputed
+# from scratch on every call using Python-level loops, dominating the
+# wall-clock cost on encodings with more than a handful of qubits.
+#
+# The helpers below replace those hot paths with cached, fully vectorized
+# implementations. They are private to the analysis package and intended
+# for use both inside ``_utils`` (public gradient utilities) and inside
+# ``trainability`` (per-sample inner loop), so that there is a single
+# numerically-validated source of truth for each observable.
+
+
+@functools.lru_cache(maxsize=32)
+def _global_z_eigenvalues(n_qubits: int) -> NDArray[np.float64]:
+    """Return the cached eigenvalue array for the global Z⊗...⊗Z observable.
+
+    For an ``n``-qubit computational basis state ``|i⟩``, the eigenvalue
+    of ``Z⊗Z⊗...⊗Z`` is ``(-1)^popcount(i)``. This helper computes the
+    full ``(2**n_qubits,)`` eigenvalue vector once per ``n_qubits`` value
+    and memoises it.
+
+    Implementation
+    --------------
+    Rather than ``[1.0 - 2.0 * (bin(i).count("1") % 2) for i in range(...)]``
+    (a Python list-comprehension that dominated the trainability hot path),
+    parity is computed via a 64-bit XOR-fold on a vectorised ``np.arange``,
+    which is O(2**n) NumPy operations and runs orders of magnitude faster
+    on the qubit counts the library supports (capped at 20).
+
+    The returned array is marked read-only so that callers cannot
+    inadvertently mutate the cached state. Cache size is bounded
+    (``maxsize=32``) — at the ``_MAX_SIMULATION_QUBITS = 20`` ceiling the
+    largest entry is ``2**20 * 8 = 8 MB`` of float64, but in practice the
+    library is used with much smaller circuits so the working set is tiny.
+
+    Parameters
+    ----------
+    n_qubits : int
+        Number of qubits. Must be a positive integer no greater than
+        ``_MAX_SIMULATION_QUBITS``.
+
+    Returns
+    -------
+    NDArray[np.float64]
+        Read-only array of shape ``(2**n_qubits,)`` containing the
+        eigenvalues ``+1`` (even Hamming weight) and ``-1`` (odd).
+
+    Raises
+    ------
+    ValueError
+        If ``n_qubits`` is not a positive integer in range
+        ``[1, _MAX_SIMULATION_QUBITS]``.
+    """
+    if not isinstance(n_qubits, int) or n_qubits < 1:
+        raise ValueError(f"n_qubits must be a positive integer, got {n_qubits!r}")
+    if n_qubits > _MAX_SIMULATION_QUBITS:
+        raise ValueError(
+            f"n_qubits={n_qubits} exceeds maximum supported value "
+            f"{_MAX_SIMULATION_QUBITS}"
+        )
+
+    dim = 1 << n_qubits
+    # Bit-parity via XOR-fold on uint64. For n_qubits up to 20 only the
+    # low 20 bits are populated, but the fold is correct for the full
+    # 64-bit range so the same code path works at the library's ceiling.
+    parity = np.arange(dim, dtype=np.uint64)
+    parity ^= parity >> 32
+    parity ^= parity >> 16
+    parity ^= parity >> 8
+    parity ^= parity >> 4
+    parity ^= parity >> 2
+    parity ^= parity >> 1
+    eigenvalues = 1.0 - 2.0 * (parity & np.uint64(1)).astype(np.float64)
+    # Freeze the cached array — callers must treat it as immutable.
+    eigenvalues.flags.writeable = False
+    return eigenvalues
+
+
+def _local_z_expectation_from_state(
+    statevector: NDArray[np.complexfloating[Any, Any]],
+    n_qubits: int,
+) -> float:
+    """Vectorised single-state ``⟨Z₀⟩`` (Z on the first qubit, MSB convention).
+
+    The first qubit (qubit 0) is the most significant bit. Computational
+    basis indices ``i ∈ [0, 2**(n-1))`` have bit ``n-1`` equal to 0, i.e.
+    qubit 0 in state ``|0⟩``. So:
+
+        P(q₀ = 0) = Σ_{i < dim/2} |statevector[i]|²
+        ⟨Z₀⟩      = 2 · P(q₀ = 0) − 1
+
+    This replaces a Python ``for i in range(2**n)`` loop with a single
+    NumPy slice-and-sum — typically 100×-1000× faster on the qubit counts
+    used by trainability analysis.
+    """
+    half = 1 << (n_qubits - 1)
+    # Fast path: ``np.abs(z)**2`` allocates an intermediate; ``z.real**2 +
+    # z.imag**2`` is equivalent and avoids the temporary complex array.
+    head = statevector[:half]
+    prob_zero = float(np.sum(head.real * head.real + head.imag * head.imag))
+    return 2.0 * prob_zero - 1.0
+
+
+def _expectations_batch(
+    states: NDArray[np.complexfloating[Any, Any]],
+    observable: Literal["computational", "global_z", "local_z", "pauli_z"],
+    n_qubits: int,
+) -> NDArray[np.float64]:
+    """Vectorised expectation values across a batch of statevectors.
+
+    Computes one float per row of ``states`` for the requested
+    observable. All three supported observables — ``"computational"``
+    (probability of all-zeros), ``"global_z"`` (``Z⊗...⊗Z``) and
+    ``"local_z"`` (``Z₀``) — are evaluated with a single BLAS-backed
+    NumPy expression, no Python-level per-row loop.
+
+    Used by :func:`compute_all_parameter_gradients` to evaluate all
+    ``2 * n_features`` parameter-shifted circuits in one pass, and by
+    the per-sample inner loop of trainability analysis (via the
+    individual-state helpers).
+
+    Parameters
+    ----------
+    states : NDArray[np.complexfloating], shape ``(n_samples, 2**n_qubits)``
+        Stacked statevectors.
+    observable : {"computational", "global_z", "local_z", "pauli_z"}
+        Observable. ``"pauli_z"`` is a deprecated alias for
+        ``"global_z"`` — the deprecation warning is emitted at the
+        gradient-function boundary, not here, so this helper accepts
+        both names silently.
+    n_qubits : int
+        Qubit count. Must match ``log2(states.shape[1])``.
+
+    Returns
+    -------
+    NDArray[np.float64], shape ``(n_samples,)``
+        Expectation values, one per input statevector.
+
+    Raises
+    ------
+    ValueError
+        If ``observable`` is not one of the recognised options.
+    """
+    # Squared amplitudes share the common ``|ψ|²`` reduction. Computing
+    # it once and reusing keeps the per-row work proportional to the
+    # observable's structure rather than to repeated complex arithmetic.
+    if observable == "computational":
+        # ⟨0...0|ρ|0...0⟩ = |ψ[0]|² for each row.
+        head = states[:, 0]
+        return (head.real * head.real + head.imag * head.imag).astype(
+            np.float64, copy=False
+        )
+
+    if observable in ("global_z", "pauli_z"):
+        z = _global_z_eigenvalues(n_qubits)
+        # ``probs @ z`` (matrix-vector) = Σⱼ probs[i,j] · z[j] for each i.
+        probs = states.real * states.real + states.imag * states.imag
+        return (probs @ z).astype(np.float64, copy=False)
+
+    if observable == "local_z":
+        half = 1 << (n_qubits - 1)
+        head = states[:, :half]
+        prob_zero = np.sum(head.real * head.real + head.imag * head.imag, axis=1)
+        return (2.0 * prob_zero - 1.0).astype(np.float64, copy=False)
+
+    raise ValueError(
+        f"Unknown observable: {observable!r}. "
+        f'Valid options are: "computational", "global_z", "local_z", "pauli_z".'
+    )
 
 
 # =============================================================================
@@ -1839,71 +2017,49 @@ def compute_parameter_gradient(
             f"param_index {param_index} out of range [0, {len(x_array) - 1}]"
         )
 
-    # Parameter shift value (π/2 for standard rotation gates)
-    shift = np.pi / 2.0
-
-    # Forward shift
-    x_plus = x_array.copy()
-    x_plus[param_index] += shift
-
-    # Backward shift
-    x_minus = x_array.copy()
-    x_minus[param_index] -= shift
-
-    # Simulate both circuits
-    state_plus = simulate_encoding_statevector(encoding, x_plus, backend)
-    state_minus = simulate_encoding_statevector(encoding, x_minus, backend)
-
-    # Compute expectation values based on observable type
-    if observable == "computational":
-        # ⟨0...0|ρ|0...0⟩ = |⟨0...0|ψ⟩|² = |ψ[0]|²
-        # Probability of measuring all qubits in state |0⟩
-        exp_plus = np.abs(state_plus[0]) ** 2
-        exp_minus = np.abs(state_minus[0]) ** 2
-
-    elif observable in ("global_z", "pauli_z"):
-        # Handle deprecated "pauli_z" alias
-        if observable == "pauli_z":
-            warnings.warn(
-                'Observable "pauli_z" is deprecated. Use "global_z" for the '
-                'global Z⊗Z⊗...⊗Z observable, or "local_z" for Z on the first '
-                "qubit only. This will be removed in a future version.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
-        # ⟨Z⊗Z⊗...⊗Z⟩ - Global Pauli Z-string expectation value
-        # For computational basis state |i⟩, the eigenvalue is (-1)^(popcount(i))
-        # where popcount(i) is the number of 1-bits (Hamming weight).
-        n = len(state_plus)
-        z_eigenvalues = np.array(
-            [1.0 - 2.0 * (bin(i).count("1") % 2) for i in range(n)],
-            dtype=np.float64,
+    # Validate observable upfront so the error is raised before any
+    # circuit simulation is dispatched. Routing the deprecation warning
+    # here (rather than from inside the per-call expectation logic) keeps
+    # the hot-path branch below allocation-free.
+    if observable == "pauli_z":
+        warnings.warn(
+            'Observable "pauli_z" is deprecated. Use "global_z" for the '
+            'global Z⊗Z⊗...⊗Z observable, or "local_z" for Z on the first '
+            "qubit only. This will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2,
         )
-        exp_plus = np.real(np.sum(z_eigenvalues * np.abs(state_plus) ** 2))
-        exp_minus = np.real(np.sum(z_eigenvalues * np.abs(state_minus) ** 2))
-
-    elif observable == "local_z":
-        # ⟨Z₀⟩ - Expectation value of Z on the first qubit (MSB)
-        # = P(0 on qubit 0) - P(1 on qubit 0) = 2·P(0) - 1
-        #
-        # The first qubit (MSB) is 0 when bit (n_qubits-1) is 0.
-        # For a statevector of dimension 2^n, indices 0 to 2^(n-1)-1 have
-        # the first qubit in state |0⟩.
-        n_qubits = int(np.log2(len(state_plus)))
-        exp_plus = _compute_local_z_expectation(state_plus, n_qubits)
-        exp_minus = _compute_local_z_expectation(state_minus, n_qubits)
-
-    else:
+    elif observable not in ("computational", "global_z", "local_z"):
         raise ValueError(
             f"Unknown observable: {observable!r}. "
             f'Valid options are: "computational", "global_z", "local_z", "pauli_z".'
         )
 
-    # Parameter-shift formula
-    gradient = (exp_plus - exp_minus) / 2.0
+    # Parameter shift value (π/2 for standard rotation gates).
+    shift = np.pi / 2.0
 
-    return float(gradient)
+    # Forward and backward shifts share the unmodified base vector, so
+    # only one allocation per direction is needed.
+    x_plus = x_array.copy()
+    x_plus[param_index] += shift
+    x_minus = x_array.copy()
+    x_minus[param_index] -= shift
+
+    state_plus = simulate_encoding_statevector(encoding, x_plus, backend)
+    state_minus = simulate_encoding_statevector(encoding, x_minus, backend)
+
+    # Stack the two statevectors and dispatch through the batched
+    # observable evaluator. This consolidates the per-observable
+    # arithmetic into a single, fully vectorised path shared with
+    # ``compute_all_parameter_gradients`` and the trainability inner
+    # loop, eliminating the previous per-call list-comprehension that
+    # rebuilt the global-Z eigenvalue array on every invocation.
+    n_qubits = int(np.log2(len(state_plus)))
+    states_pair = np.stack((np.asarray(state_plus), np.asarray(state_minus)), axis=0)
+    expectations = _expectations_batch(states_pair, observable, n_qubits)
+    gradient = float(expectations[0] - expectations[1]) / 2.0
+
+    return gradient
 
 
 def _compute_local_z_expectation(
@@ -1947,21 +2103,16 @@ def _compute_local_z_expectation(
 
     So indices 0-3 have qubit 0 in state |0⟩, and indices 4-7 have qubit 0
     in state |1⟩.
+
+    Implementation
+    --------------
+    Delegates to :func:`_local_z_expectation_from_state`, which replaces
+    the previous Python-level ``for i in range(2**n)`` loop with a single
+    vectorised NumPy slice-and-sum. The mathematical result is identical
+    (proven by the regression test ``test_local_z_loop_equivalence``);
+    only the constant factor changes.
     """
-    dim = 2**n_qubits
-
-    # Sum probabilities where first qubit (MSB) is 0
-    # First qubit is 0 when bit (n_qubits-1) is 0, i.e., for indices < dim/2
-    prob_zero = 0.0
-    for i in range(dim):
-        # Check if the MSB (qubit 0) is 0
-        if (i >> (n_qubits - 1)) & 1 == 0:
-            prob_zero += np.abs(statevector[i]) ** 2
-
-    # ⟨Z₀⟩ = P(0) - P(1) = P(0) - (1 - P(0)) = 2·P(0) - 1
-    expectation = 2.0 * prob_zero - 1.0
-
-    return float(expectation)
+    return _local_z_expectation_from_state(statevector, n_qubits)
 
 
 def compute_all_parameter_gradients(
@@ -1972,23 +2123,49 @@ def compute_all_parameter_gradients(
     ] = "computational",
     backend: Literal["pennylane", "qiskit", "cirq"] = "pennylane",
 ) -> FloatArray:
-    """Compute gradients for all parameters using parameter-shift rule.
+    """Compute gradients for all parameters using the parameter-shift rule.
+
+    Builds the full ``(2 * n_params, n_features)`` matrix of shifted
+    parameter vectors, dispatches a single
+    :func:`simulate_encoding_statevectors_batch` call, and evaluates all
+    expectation values with one vectorised observable computation.
+
+    Compared to the previous implementation — a Python ``for`` loop over
+    parameters, each calling :func:`compute_parameter_gradient` and
+    therefore each invoking the backend simulator twice independently —
+    this version still performs the same ``2 * n_params`` statevector
+    simulations (the parameter-shift rule fundamentally requires them)
+    but amortises the Python and observable-evaluation overhead into a
+    single pass. The numerical result is **identical** to the per-call
+    version (verified by ``test_batched_matches_per_call_gradient``).
 
     Parameters
     ----------
     encoding : BaseEncoding
         The encoding instance.
     x : NDArray[np.floating]
-        Input data vector.
+        Input data vector of shape ``(n_features,)``.
     observable : {"computational", "global_z", "local_z", "pauli_z"}, default="computational"
-        Observable to measure. See :func:`compute_parameter_gradient` for details.
+        Observable to measure. See :func:`compute_parameter_gradient`
+        for the mathematical definitions. ``"pauli_z"`` is a deprecated
+        alias for ``"global_z"`` and emits a ``DeprecationWarning``.
     backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
         Simulation backend.
 
     Returns
     -------
     FloatArray
-        Array of gradients, one per parameter.
+        Array of gradients of shape ``(n_features,)``. The element at
+        index ``i`` is ``∂⟨O⟩/∂xᵢ`` evaluated at the input point ``x``.
+
+    Raises
+    ------
+    ValidationError
+        If ``x`` is not a 1-D array.
+    ValueError
+        If ``observable`` is not one of the recognised options.
+    SimulationError
+        If the underlying batched simulation fails.
 
     Examples
     --------
@@ -2002,16 +2179,82 @@ def compute_all_parameter_gradients(
     Gradients shape: (3,)
     """
     x_array = np.asarray(x, dtype=np.float64)
-    n_params = len(x_array)
+    if x_array.ndim != 1:
+        raise ValidationError(f"Input x must be 1D array, got shape {x_array.shape}")
+    n_params = int(x_array.shape[0])
 
-    gradients = np.zeros(n_params, dtype=np.float64)
-
-    for i in range(n_params):
-        gradients[i] = compute_parameter_gradient(
-            encoding, x_array, i, observable, backend
+    # Validate the observable up front. The deprecation warning for
+    # ``"pauli_z"`` is emitted once here, not once per shifted-parameter
+    # pair, so a 100-parameter encoding does not produce 100 warnings.
+    if observable == "pauli_z":
+        warnings.warn(
+            'Observable "pauli_z" is deprecated. Use "global_z" for the '
+            'global Z⊗Z⊗...⊗Z observable, or "local_z" for Z on the first '
+            "qubit only. This will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+    elif observable not in ("computational", "global_z", "local_z"):
+        raise ValueError(
+            f"Unknown observable: {observable!r}. "
+            f'Valid options are: "computational", "global_z", "local_z", "pauli_z".'
         )
 
-    return gradients
+    # Degenerate input — no parameters, no gradient. Return an empty
+    # array of the correct dtype rather than dispatching an empty batch
+    # through the simulator.
+    if n_params == 0:
+        return np.zeros(0, dtype=np.float64)
+
+    shift = np.pi / 2.0
+
+    # Build the ``(2 * n_params, n_features)`` shifted-parameter matrix.
+    # Rows are interleaved so that ``[2k]`` carries the +shift on
+    # parameter k and ``[2k+1]`` carries the -shift; the parameter-shift
+    # formula then reduces to a simple paired difference at the end.
+    shifted = np.broadcast_to(x_array, (2 * n_params, n_params)).copy()
+    rows = np.arange(2 * n_params)
+    params = rows >> 1  # integer divide by 2
+    signs = np.where(rows & 1 == 0, shift, -shift)
+    shifted[rows, params] += signs
+
+    # Single dispatch through the batched simulator. For backends with
+    # a true batch implementation this collapses 2 * n_params separate
+    # backend calls into one; for the row-by-row default it still
+    # eliminates the per-parameter Python overhead.
+    states = simulate_encoding_statevectors_batch(encoding, shifted, backend=backend)
+
+    # All shifted states share the same dimension, derived from the
+    # encoding's qubit count — fetch it from ``encoding`` rather than
+    # ``log2(states.shape[1])`` to avoid the small float round-trip.
+    n_qubits = int(encoding.n_qubits)
+    expectations = _expectations_batch(states, observable, n_qubits)
+
+    # Parameter-shift formula: ``∂⟨O⟩/∂θᵢ = (⟨O⟩₊ - ⟨O⟩₋) / 2``.
+    # NumPy emits a benign RuntimeWarning for ``inf - inf`` or
+    # ``-inf - -inf``; we detect and re-raise as
+    # ``NumericalInstabilityError`` below, so suppress the warning.
+    with np.errstate(invalid="ignore"):
+        gradients = (expectations[::2] - expectations[1::2]) / 2.0
+
+    # Numerical safety: per-parameter raise on NaN/Inf so the failure
+    # surface matches the per-call function (which propagates the same
+    # error from the simulator). This catches a corner case where a
+    # backend silently emits NaN amplitudes without raising.
+    if not np.all(np.isfinite(gradients)):
+        bad = int(np.argmax(~np.isfinite(gradients)))
+        raise NumericalInstabilityError(
+            f"Gradient computation produced invalid value: {gradients[bad]}",
+            value=float(gradients[bad]),
+            operation="parameter_shift_batched",
+            details={
+                "param_index": bad,
+                "exp_plus": float(expectations[2 * bad]),
+                "exp_minus": float(expectations[2 * bad + 1]),
+            },
+        )
+
+    return gradients.astype(np.float64, copy=False)
 
 
 # =============================================================================

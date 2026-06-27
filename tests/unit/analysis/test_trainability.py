@@ -1903,19 +1903,23 @@ class TestNumericalInstabilityDetection:
     def test_nan_expectation_raises_numerical_instability(self) -> None:
         """NaN expectation value causes NumericalInstabilityError.
 
-        When _compute_expectation_value returns NaN, the parameter-shift
-        rule computes (NaN - NaN) / 2 = NaN, which is caught by the
-        NaN/Inf validation check.
+        ``_compute_encoding_gradients`` evaluates all ``2 * n_features``
+        shifted expectation values in one batched call to
+        ``_expectations_batch``. Forcing that call to return NaN
+        triggers ``(NaN - NaN) / 2 = NaN``, which the NaN/Inf
+        validation check is required to catch.
         """
         from encoding_atlas import AngleEncoding
 
         enc = AngleEncoding(n_features=1)
         x = np.array([0.5], dtype=np.float64)
 
+        # 2 * n_features = 2 shifted states → 2 expectations.
+        nan_expectations = np.array([float("nan"), float("nan")], dtype=np.float64)
         with (
             patch(
-                "encoding_atlas.analysis.trainability._compute_expectation_value",
-                return_value=float("nan"),
+                "encoding_atlas.analysis.trainability._expectations_batch",
+                return_value=nan_expectations,
             ),
             pytest.raises(NumericalInstabilityError, match="invalid value") as exc_info,
         ):
@@ -1927,27 +1931,19 @@ class TestNumericalInstabilityDetection:
     def test_inf_expectation_raises_numerical_instability(self) -> None:
         """Inf expectation value causes NumericalInstabilityError.
 
-        When one expectation value is Inf and the other is finite,
-        the gradient is (Inf - finite) / 2 = Inf, which is caught
-        by the NaN/Inf validation check.
+        ``exp_plus = +inf`` and ``exp_minus = 0.5`` makes the gradient
+        ``(+inf - 0.5) / 2 = +inf``, caught by the NaN/Inf check.
         """
         from encoding_atlas import AngleEncoding
 
         enc = AngleEncoding(n_features=1)
         x = np.array([0.5], dtype=np.float64)
 
-        call_count = [0]
-
-        def mock_exp_value(encoding, x, observable, backend):
-            call_count[0] += 1
-            if call_count[0] == 1:  # exp_plus
-                return float("inf")
-            return 0.5  # exp_minus is normal
-
+        inf_expectations = np.array([float("inf"), 0.5], dtype=np.float64)
         with (
             patch(
-                "encoding_atlas.analysis.trainability._compute_expectation_value",
-                side_effect=mock_exp_value,
+                "encoding_atlas.analysis.trainability._expectations_batch",
+                return_value=inf_expectations,
             ),
             pytest.raises(NumericalInstabilityError, match="invalid value") as exc_info,
         ):
@@ -1963,40 +1959,39 @@ class TestNumericalInstabilityDetection:
         enc = AngleEncoding(n_features=1)
         x = np.array([0.5], dtype=np.float64)
 
+        neg_inf_expectations = np.array(
+            [float("-inf"), float("-inf")], dtype=np.float64
+        )
         with (
             patch(
-                "encoding_atlas.analysis.trainability._compute_expectation_value",
-                return_value=float("-inf"),
+                "encoding_atlas.analysis.trainability._expectations_batch",
+                return_value=neg_inf_expectations,
             ),
             pytest.raises(NumericalInstabilityError),
         ):
             _compute_encoding_gradients(enc, x, "computational", "pennylane")
 
     def test_nan_on_second_param_reports_correct_index(self) -> None:
-        """NaN on second parameter reports param_index=1 in error details.
+        """NaN on second parameter reports ``param_index=1`` in error details.
 
-        The first parameter (2 calls: exp_plus, exp_minus) succeeds.
-        The second parameter returns NaN, so the error details should
-        report param_index=1.
+        The expectations layout is ``[exp_plus_0, exp_minus_0,
+        exp_plus_1, exp_minus_1]``. Making the first parameter finite
+        and the second parameter NaN must cause the error to point at
+        ``param_index=1``.
         """
         from encoding_atlas import AngleEncoding
 
         enc = AngleEncoding(n_features=2)
         x = np.array([0.5, 1.0], dtype=np.float64)
 
-        call_count = [0]
-
-        def mock_exp_value(encoding, x, observable, backend):
-            call_count[0] += 1
-            # First param (2 calls) succeeds, second param returns NaN
-            if call_count[0] <= 2:
-                return 0.5
-            return float("nan")
-
+        # [exp_plus_0, exp_minus_0, exp_plus_1, exp_minus_1]
+        expectations = np.array(
+            [0.5, 0.5, float("nan"), float("nan")], dtype=np.float64
+        )
         with (
             patch(
-                "encoding_atlas.analysis.trainability._compute_expectation_value",
-                side_effect=mock_exp_value,
+                "encoding_atlas.analysis.trainability._expectations_batch",
+                return_value=expectations,
             ),
             pytest.raises(NumericalInstabilityError) as exc_info,
         ):
@@ -2011,10 +2006,11 @@ class TestNumericalInstabilityDetection:
         enc = AngleEncoding(n_features=1)
         x = np.array([1.5], dtype=np.float64)
 
+        nan_expectations = np.array([float("nan"), float("nan")], dtype=np.float64)
         with (
             patch(
-                "encoding_atlas.analysis.trainability._compute_expectation_value",
-                return_value=float("nan"),
+                "encoding_atlas.analysis.trainability._expectations_batch",
+                return_value=nan_expectations,
             ),
             pytest.raises(NumericalInstabilityError) as exc_info,
         ):

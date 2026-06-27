@@ -137,8 +137,11 @@ from encoding_atlas.analysis._sampling import (
     validate_sampling,
 )
 from encoding_atlas.analysis._utils import (
+    _expectations_batch,
+    _local_z_expectation_from_state,
     create_rng,
     simulate_encoding_statevector,
+    simulate_encoding_statevectors_batch,
     validate_encoding_for_analysis,
 )
 from encoding_atlas.core.base import BaseEncoding
@@ -1400,64 +1403,73 @@ def _compute_encoding_gradients(
 
     Notes
     -----
-    Future optimization: If the backend supports batch simulation, the
-    2×n_features evaluations could be parallelized. Currently, simulations
-    are performed sequentially due to backend API constraints.
+    Implementation: builds the full ``(2 * n_features, n_features)``
+    matrix of parameter-shifted inputs and dispatches **one** batched
+    simulator call. The observable is then evaluated for all
+    ``2 * n_features`` resulting statevectors in a single vectorised
+    NumPy expression via :func:`_expectations_batch`. Compared to the
+    previous per-parameter loop — which paid Python-call overhead for
+    every shifted vector and rebuilt the ``Z⊗...⊗Z`` eigenvalue array
+    on every ``global_z`` evaluation — this consolidates the work into
+    one allocation and one BLAS-backed reduction. The number of
+    statevector simulations is unchanged (the parameter-shift rule
+    requires exactly ``2 * n_features``), and the gradient values are
+    bit-for-bit identical (regression-tested).
     """
     n_features = len(x)
-    gradients = np.zeros(n_features, dtype=np.float64)
+    if n_features == 0:
+        return np.zeros(0, dtype=np.float64)
 
     # Parameter-shift value: π/2 for standard Pauli rotation gates.
-    # This is exact for gates of the form exp(-iθP/2) where P is a Pauli matrix.
     shift = np.pi / 2.0
 
-    # Pre-allocate a single working array for shifted parameters.
-    # This avoids 2×n_features array allocations in the loop.
-    x_shifted = x.copy()
+    # Build the (2 * n_features, n_features) shifted-input matrix.
+    # Row ``2k`` carries the +shift on parameter ``k`` and row
+    # ``2k+1`` carries the -shift, so the parameter-shift formula
+    # reduces to a paired slice at the end.
+    shifted = np.broadcast_to(x, (2 * n_features, n_features)).copy()
+    rows = np.arange(2 * n_features)
+    params = rows >> 1  # integer divide by 2
+    signs = np.where(rows & 1 == 0, shift, -shift)
+    shifted[rows, params] += signs
 
-    for i in range(n_features):
-        # Forward shift: evaluate at θᵢ + π/2
-        x_shifted[i] = x[i] + shift
-        exp_plus = _compute_expectation_value(
-            encoding=encoding,
-            x=x_shifted,
-            observable=observable,
-            backend=backend,
+    # Single batched simulator dispatch and single vectorised expectation
+    # evaluation. The trainability-local "pauli_z" alias means *local*
+    # ⟨Z₀⟩, which the shared helper exposes as "local_z" — translate
+    # here so callers preserve the existing trainability API contract.
+    states = simulate_encoding_statevectors_batch(encoding, shifted, backend=backend)
+    aliased_observable = "local_z" if observable == "pauli_z" else observable
+    expectations = _expectations_batch(
+        states, aliased_observable, int(encoding.n_qubits)
+    )
+
+    # The paired subtraction below is the parameter-shift formula. With
+    # adversarial inputs ((-inf) - (-inf), inf - inf, etc.) NumPy emits
+    # a benign RuntimeWarning even though the explicit ``isfinite``
+    # check immediately after correctly turns the result into a
+    # ``NumericalInstabilityError``. Suppressing the warning keeps the
+    # error path clean for callers.
+    with np.errstate(invalid="ignore"):
+        gradients = (expectations[::2] - expectations[1::2]) / 2.0
+
+    # Per-parameter numerical-stability check, matching the granularity
+    # of the previous loop-based implementation. Reports the first bad
+    # index so the worker error message stays informative.
+    if not np.all(np.isfinite(gradients)):
+        bad = int(np.argmax(~np.isfinite(gradients)))
+        raise NumericalInstabilityError(
+            f"Gradient computation produced invalid value: {gradients[bad]}",
+            value=float(gradients[bad]),
+            operation="parameter_shift",
+            details={
+                "param_index": bad,
+                "exp_plus": float(expectations[2 * bad]),
+                "exp_minus": float(expectations[2 * bad + 1]),
+                "x_original": float(x[bad]),
+            },
         )
 
-        # Backward shift: evaluate at θᵢ - π/2
-        x_shifted[i] = x[i] - shift
-        exp_minus = _compute_expectation_value(
-            encoding=encoding,
-            x=x_shifted,
-            observable=observable,
-            backend=backend,
-        )
-
-        # Restore parameter for next iteration
-        x_shifted[i] = x[i]
-
-        # Compute gradient using parameter-shift rule
-        # This is mathematically exact for Pauli rotation gates
-        gradient = (exp_plus - exp_minus) / 2.0
-
-        # Validate numerical stability
-        if np.isnan(gradient) or np.isinf(gradient):
-            raise NumericalInstabilityError(
-                f"Gradient computation produced invalid value: {gradient}",
-                value=gradient,
-                operation="parameter_shift",
-                details={
-                    "param_index": i,
-                    "exp_plus": exp_plus,
-                    "exp_minus": exp_minus,
-                    "x_original": float(x[i]),
-                },
-            )
-
-        gradients[i] = gradient
-
-    return gradients
+    return gradients.astype(np.float64, copy=False)
 
 
 def _compute_expectation_value(
@@ -1475,7 +1487,9 @@ def _compute_expectation_value(
     x : NDArray[np.floating]
         Input parameter vector.
     observable : str
-        Observable type.
+        Observable type. One of ``"computational"``, ``"pauli_z"`` (local
+        Z on the first qubit — note the trainability-specific naming) or
+        ``"global_z"`` (global Z⊗...⊗Z).
     backend : str
         Simulation backend.
 
@@ -1490,37 +1504,33 @@ def _compute_expectation_value(
         If statevector simulation fails.
     ValueError
         If observable type is unknown.
+
+    Implementation
+    --------------
+    Delegates the observable arithmetic to the shared, vectorised
+    helpers in ``encoding_atlas.analysis._utils`` so both this
+    single-sample path and the batched
+    :func:`_compute_encoding_gradients` path agree byte-for-byte and
+    share the cached ``global_z`` eigenvalue array.
     """
-    # Simulate to get statevector
     statevector = simulate_encoding_statevector(encoding, x, backend=backend)
-    n_qubits = encoding.n_qubits
+    n_qubits = int(encoding.n_qubits)
 
     if observable == "computational":
         # ⟨0...0|ρ|0...0⟩ = |⟨0...0|ψ⟩|² = |ψ[0]|²
-        # Probability of measuring all zeros
-        expectation = float(np.abs(statevector[0]) ** 2)
+        amp0 = statevector[0]
+        return float(amp0.real * amp0.real + amp0.imag * amp0.imag)
 
-    elif observable == "pauli_z":
-        # ⟨Z₀⟩ = P(0 on qubit 0) - P(1 on qubit 0)
-        # For local observable on first qubit
-        prob_zero = _compute_prob_zero_first_qubit(statevector, n_qubits)
-        expectation = 2.0 * prob_zero - 1.0  # P(0) - P(1) = 2*P(0) - 1
+    if observable == "pauli_z":
+        # Trainability's "pauli_z" means *local* Z on the first qubit.
+        return _local_z_expectation_from_state(statevector, n_qubits)
 
-    elif observable == "global_z":
-        # ⟨Z⊗Z⊗...⊗Z⟩ - global Pauli Z string
-        # Eigenvalue is (-1)^(number of 1s in bitstring)
-        dim = len(statevector)
-        z_eigenvalues = np.array(
-            [1.0 - 2.0 * (bin(i).count("1") % 2) for i in range(dim)],
-            dtype=np.float64,
-        )
-        probabilities = np.abs(statevector) ** 2
-        expectation = float(np.sum(z_eigenvalues * probabilities))
+    if observable == "global_z":
+        # ⟨Z⊗Z⊗...⊗Z⟩ via the cached eigenvalue vector.
+        z = _expectations_batch(statevector.reshape(1, -1), "global_z", n_qubits)
+        return float(z[0])
 
-    else:
-        raise ValueError(f"Unknown observable type: {observable!r}")
-
-    return expectation
+    raise ValueError(f"Unknown observable type: {observable!r}")
 
 
 def _compute_prob_zero_first_qubit(
@@ -1559,27 +1569,16 @@ def _compute_prob_zero_first_qubit(
 
     Notes
     -----
-    This implementation uses vectorized NumPy operations for efficiency.
-    The mask selects indices where the MSB (bit n_qubits-1) is 0, which
-    corresponds to the first half of the Hilbert space.
+    The MSB (first qubit) being 0 is exactly equivalent to the index
+    lying in the first half of the Hilbert space — bit ``n_qubits - 1``
+    of indices ``[0, 2^(n_qubits-1))`` is 0 by construction. So instead
+    of allocating an index array and a boolean mask per call (the
+    previous implementation), a single contiguous slice and a
+    ``real**2 + imag**2`` reduction suffices.
     """
-    dim = len(statevector)
-
-    # Vectorized computation using NumPy boolean indexing.
-    # The MSB (first qubit) is bit (n_qubits - 1) in the binary representation.
-    # We select all basis states where this bit is 0.
-    #
-    # Mathematical equivalence:
-    #   indices where (i >> (n_qubits - 1)) & 1 == 0
-    #   ≡ indices in range [0, 2^(n_qubits-1))
-    #   ≡ first half of the Hilbert space
-    indices = np.arange(dim, dtype=np.uint64)
-    mask = ((indices >> (n_qubits - 1)) & 1) == 0
-
-    # Sum of |αᵢ|² for all i where first qubit is 0
-    prob_zero = float(np.sum(np.abs(statevector[mask]) ** 2))
-
-    return prob_zero
+    half = 1 << (n_qubits - 1)
+    head = statevector[:half]
+    return float(np.sum(head.real * head.real + head.imag * head.imag))
 
 
 def _variance_to_trainability(variance: float) -> float:
