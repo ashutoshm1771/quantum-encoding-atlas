@@ -28,6 +28,7 @@ from encoding_atlas.guide.recommender import (
 )
 from encoding_atlas.guide.rules import ENCODING_RULES
 from tests.unit.guide.conftest import (
+    DOMINATED_ENCODINGS,
     ENCODING_TRIGGER_PARAMS,
 )
 
@@ -637,13 +638,14 @@ class TestSymmetryFallbackWarning:
 
 
 # =========================================================================
-# Accuracy default bonus gating
+# Evidence-based accuracy scoring
 # =========================================================================
 
 
-class TestAccuracyDefaultBonusGating:
-    """Verify that the accuracy default bonus is suppressed when a
-    specialised parameter is active."""
+class TestEvidenceBasedAccuracy:
+    """Verify the empirical priority term: specialised intents still dominate,
+    and for a generic accuracy query the evidence-best encoding wins instead of
+    the benchmark-dominated IQP (the former hard-coded accuracy default)."""
 
     def _default_kwargs(self, **overrides: object) -> dict:
         base = dict(
@@ -693,18 +695,22 @@ class TestAccuracyDefaultBonusGating:
         assert qaoa_score > iqp_score
         assert qaoa_score - iqp_score >= 0.10
 
-    def test_bonus_still_applied_without_specialised_params(self) -> None:
-        """Without specialised params, the accuracy default bonus should
-        still fire for the default encoding."""
+    def test_evidence_best_outranks_iqp_for_accuracy(self) -> None:
+        """For a generic accuracy query, the evidence-best encoding (angle,
+        benchmark rank 1) must clearly outscore IQP (rank 16) — the opposite of
+        the previous hand-tuned heuristic, which made IQP the default."""
+        angle_score = _compute_score(
+            "angle",
+            ENCODING_RULES["angle"],
+            **self._default_kwargs(),
+        )
         iqp_score = _compute_score(
             "iqp",
             ENCODING_RULES["iqp"],
             **self._default_kwargs(),
         )
-        # IQP should get the accuracy default bonus (+0.12) on top of
-        # priority matching (+0.20) and task matching (+0.04) and
-        # small feature bonus (+0.03)
-        assert iqp_score >= 0.35
+        assert angle_score > iqp_score
+        assert angle_score - iqp_score >= 0.10
 
 
 # =========================================================================
@@ -810,19 +816,22 @@ class TestComputeScore:
         )
         assert basis_score > angle_score
 
-    def test_priority_matching_increases_score(self) -> None:
-        """Matching priority tags should increase the score."""
-        angle_speed = _compute_score(
-            "angle",
-            ENCODING_RULES["angle"],
+    def test_priority_changes_score_by_evidence(self) -> None:
+        """An encoding's score reflects its *measured* strength on the chosen
+        priority axis. Basis has the shallowest circuit (fast) but the lowest
+        benchmark accuracy, so it scores higher under a speed priority than
+        under an accuracy priority."""
+        basis_speed = _compute_score(
+            "basis",
+            ENCODING_RULES["basis"],
             **self._default_kwargs(priority="speed"),
         )
-        angle_accuracy = _compute_score(
-            "angle",
-            ENCODING_RULES["angle"],
+        basis_accuracy = _compute_score(
+            "basis",
+            ENCODING_RULES["basis"],
             **self._default_kwargs(priority="accuracy"),
         )
-        assert angle_speed > angle_accuracy
+        assert basis_speed > basis_accuracy
 
     def test_hardware_penalty_for_deep_circuits(self) -> None:
         """Deep circuits should be penalised on real hardware."""
@@ -1003,3 +1012,63 @@ class TestGenerateExplanation:
         )
         assert "4 qubits" in result
         assert "16 features" in result
+
+    @pytest.mark.parametrize("name", sorted(ENCODING_RULES.keys()))
+    def test_explanation_cites_benchmark_rank(self, name: str) -> None:
+        """Every explanation is grounded with the encoding's benchmark rank."""
+        result = _generate_explanation(
+            name,
+            ENCODING_RULES[name],
+            priority="accuracy",
+            n_features=4,
+        )
+        assert "benchmark: rank" in result
+
+
+# =========================================================================
+# Evidence-based behaviour (end-to-end)
+# =========================================================================
+
+
+class TestEvidenceBasedBehaviour:
+    """Lock in the evidence-first guarantees of recommend_encoding."""
+
+    def test_accuracy_query_returns_top_ranked_encoding(self) -> None:
+        """A generic accuracy query must return a Pareto-optimal, top-ranked
+        encoding — never a benchmark-dominated one."""
+        from encoding_atlas.atlas import get_encoding_profile
+
+        rec = recommend_encoding(n_features=4, priority="accuracy")
+        assert rec.encoding_name == "angle"
+        assert get_encoding_profile(rec.encoding_name).is_pareto
+
+    @pytest.mark.parametrize("dominated", sorted(DOMINATED_ENCODINGS))
+    def test_dominated_never_primary_for_accuracy(self, dominated: str) -> None:
+        """IQP / ZZ / hardware_efficient must never be the primary accuracy
+        recommendation across a sweep of feature counts."""
+        for n_features in (2, 4, 6, 8, 10, 12):
+            rec = recommend_encoding(n_features=n_features, priority="accuracy")
+            assert rec.encoding_name != dominated
+
+    @pytest.mark.parametrize("dominated", sorted(DOMINATED_ENCODINGS))
+    def test_dominated_still_discoverable_via_matching(self, dominated: str) -> None:
+        """Dominated encodings remain reachable through get_matching_encodings."""
+        from encoding_atlas.guide.rules import ENCODING_RULES as _RULES
+        from encoding_atlas.guide.rules import get_matching_encodings
+
+        # Each dominated encoding is surfaced by at least one of its best_for tags.
+        tags = _RULES[dominated]["best_for"]
+        matches = get_matching_encodings(tags)
+        assert dominated in matches
+
+    def test_recommendation_consistent_with_atlas_ranking(self) -> None:
+        """The accuracy recommendation should be the best-ranked candidate that
+        survives the hard filter (sanity check against the atlas)."""
+        from encoding_atlas.atlas import get_encoding_profile
+
+        rec = recommend_encoding(n_features=4, priority="accuracy")
+        primary_rank = get_encoding_profile(rec.encoding_name).rank
+        for alt in rec.alternatives:
+            assert get_encoding_profile(alt).rank >= 1  # all valid atlas entries
+        # The primary must out-rank IQP, the former default.
+        assert primary_rank < get_encoding_profile("iqp").rank

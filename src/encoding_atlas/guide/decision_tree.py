@@ -1,9 +1,17 @@
 """Decision tree for encoding selection.
 
 Provides a deterministic, interpretable encoding selection path based on
-user-specified problem characteristics.  All 16 encodings are reachable
-through the tree, with *data_reuploading* reachable by two distinct paths
-(``problem_structure="time_series"`` and ``priority="trainability"``).
+user-specified problem characteristics.  The leaves are kept consistent with
+the evidence-based :func:`~encoding_atlas.guide.recommender.recommend_encoding`,
+so the two tools agree.
+
+The soft-priority and accuracy fallbacks are derived from the empirical
+benchmark (see :mod:`encoding_atlas.atlas`).  Consequently three
+benchmark-dominated encodings — *iqp*, *zz_feature_map*, and *hardware_efficient*
+— are **not** surfaced as primary leaves: they are out-performed on every
+measured axis by the encodings above.  They remain discoverable through
+:func:`~encoding_atlas.guide.rules.get_matching_encodings` for callers who want
+them explicitly (e.g. high-expressibility kernels for research).
 
 Decision priority (highest to lowest):
 
@@ -15,10 +23,12 @@ Decision priority (highest to lowest):
    physics_simulation → *hamiltonian*, time_series → *data_reuploading*.
 5. **Feature interactions** — polynomial → *higher_order_angle*,
    custom_pauli → *pauli_feature_map*.
-6. **Priority** — speed → *angle*, noise_resilience → *hardware_efficient*,
-   trainability → *data_reuploading*.
-7. **Feature count** (accuracy fallback) — ≤4 → *iqp*, 5–8 → *zz_feature_map*,
-   >8 → *amplitude*.
+6. **Priority** (evidence-based) — speed / noise_resilience / trainability all
+   route to *higher_order_angle*, the best-measured general-purpose encoding on
+   those axes (shallowest depth, highest retained fidelity, highest gradient
+   variance among non-symmetry encodings).
+7. **Feature count** (accuracy fallback, evidence-based) — ≤8 → *angle*
+   (benchmark rank 1), >8 → *amplitude* (logarithmic qubit scaling).
 """
 
 from __future__ import annotations
@@ -87,14 +97,13 @@ class EncodingDecisionTree:
                                                 "none": {
                                                     "question": "What is your optimisation priority?",
                                                     "options": {
-                                                        "speed": "angle",
-                                                        "noise_resilience": "hardware_efficient",
-                                                        "trainability": "data_reuploading",
+                                                        "speed": "higher_order_angle",
+                                                        "noise_resilience": "higher_order_angle",
+                                                        "trainability": "higher_order_angle",
                                                         "accuracy": {
                                                             "question": "How many features?",
                                                             "options": {
-                                                                "few (<= 4)": "iqp",
-                                                                "medium (5-8)": "zz_feature_map",
+                                                                "few-to-medium (<= 8)": "angle",
                                                                 "many (> 8)": "amplitude",
                                                             },
                                                         },
@@ -203,20 +212,18 @@ class EncodingDecisionTree:
         if feature_interactions == "custom_pauli":
             return "pauli_feature_map"
 
-        # Level 6 — priority
-        if priority == "speed":
-            return "angle"
-        if priority == "noise_resilience":
-            return "hardware_efficient"
-        if priority == "trainability":
-            return "data_reuploading"
+        # Level 6 — priority (evidence-based; see module docstring).
+        # higher_order_angle is the best-measured general-purpose encoding for
+        # speed (depth 1), noise resilience, and trainability.
+        if priority in ("speed", "noise_resilience", "trainability"):
+            return "higher_order_angle"
 
-        # Level 7 — accuracy-based feature count selection (default)
-        if n_features <= 4:
-            return "iqp"
-        if n_features <= 8:
-            return "zz_feature_map"
-        return "amplitude"
+        # Level 7 — accuracy fallback (evidence-based). angle ranks #1 in the
+        # benchmark at small/medium feature counts; amplitude's logarithmic
+        # qubit scaling makes it the choice when feature count is large.
+        if n_features > 8:
+            return "amplitude"
+        return "angle"
 
     # -----------------------------------------------------------------
     # Validation

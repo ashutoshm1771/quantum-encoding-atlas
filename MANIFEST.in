@@ -11,6 +11,9 @@ recursive-include src *.py
 recursive-include src *.pyi
 include src/encoding_atlas/py.typed
 
+# Include bundled empirical atlas dataset (package data)
+recursive-include src/encoding_atlas/atlas/data *.json
+
 # Include tests
 recursive-include tests *.py
 

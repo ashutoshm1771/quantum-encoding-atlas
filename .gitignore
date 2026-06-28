@@ -3,8 +3,8 @@ external_drivers/
 driver_files/
 demonstration/
 
-# Claude Code local settings
-.claude/
+# Local agent/editor settings
+.agent/
 
 # MkDocs build output
 site/

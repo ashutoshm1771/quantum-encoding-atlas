@@ -17,22 +17,27 @@ ALL_ENCODING_NAMES: list[str] = sorted(ENCODING_RULES.keys())
 
 
 # ---------------------------------------------------------------------------
-# Trigger parameter sets — one per encoding
+# Trigger parameter sets — one per primary-reachable encoding
 # ---------------------------------------------------------------------------
 # Each mapping is guaranteed to cause the named encoding to be the *primary*
 # recommendation from both ``recommend_encoding()`` and
 # ``EncodingDecisionTree.decide()``.
+#
+# Under the evidence-based guide, three encodings are intentionally *not*
+# primary-reachable: ``iqp``, ``zz_feature_map``, and ``hardware_efficient``.
+# The benchmark ranks them #16, #13, and #9 respectively, and they are
+# dominated on every measured axis (accuracy, speed, trainability, noise) by the
+# encodings below, so the guide never returns them as the single best pick.
+# They remain discoverable via ``get_matching_encodings`` and surface as
+# alternatives — see ``DOMINATED_ENCODINGS`` and the dedicated tests.
 
 ENCODING_TRIGGER_PARAMS: dict[str, dict] = {
-    "angle": dict(n_features=4, priority="speed"),
+    "angle": dict(n_features=4, priority="accuracy"),
+    "amplitude": dict(n_features=16, priority="accuracy"),
     "basis": dict(n_features=4, data_type="binary"),
     "higher_order_angle": dict(n_features=4, feature_interactions="polynomial"),
-    "iqp": dict(n_features=4, priority="accuracy"),
-    "zz_feature_map": dict(n_features=6, priority="accuracy"),
     "pauli_feature_map": dict(n_features=4, feature_interactions="custom_pauli"),
-    "data_reuploading": dict(n_features=4, priority="trainability"),
-    "hardware_efficient": dict(n_features=4, priority="noise_resilience"),
-    "amplitude": dict(n_features=16, priority="accuracy"),
+    "data_reuploading": dict(n_features=4, problem_structure="time_series"),
     "qaoa": dict(n_features=4, problem_structure="combinatorial"),
     "hamiltonian": dict(n_features=4, problem_structure="physics_simulation"),
     "trainable": dict(n_features=4, trainable=True),
@@ -41,6 +46,12 @@ ENCODING_TRIGGER_PARAMS: dict[str, dict] = {
     "cyclic_equivariant": dict(n_features=4, symmetry="cyclic"),
     "swap_equivariant": dict(n_features=4, symmetry="permutation_pairs"),
 }
+
+# Benchmark-dominated encodings: never a primary recommendation, but still
+# present in the rule base and reachable via ``get_matching_encodings``.
+DOMINATED_ENCODINGS: frozenset[str] = frozenset(
+    {"iqp", "zz_feature_map", "hardware_efficient"}
+)
 
 
 # ---------------------------------------------------------------------------

@@ -39,7 +39,7 @@ For more information, see the documentation at:
 https://q-encoding-atlas.web.app/documentation
 """
 
-from encoding_atlas import analysis, benchmark, guide, visualization
+from encoding_atlas import analysis, atlas, benchmark, guide, visualization
 from encoding_atlas._version import __version__
 from encoding_atlas.core.base import BaseEncoding
 from encoding_atlas.core.properties import EncodingProperties
@@ -109,6 +109,7 @@ __all__ = [
     "ZZFeatureMap",
     # Modules
     "analysis",
+    "atlas",
     "benchmark",
     "guide",
     "visualization",

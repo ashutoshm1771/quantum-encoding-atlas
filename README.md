@@ -34,6 +34,7 @@ The **Quantum Encoding Atlas** is the definitive open-source resource for unders
 - 📈 **Analysis Tools** — Compute expressibility, entanglement capability, and trainability
 - 🧪 **Benchmarking Framework** — Systematic comparison infrastructure
 - 🧭 **Decision Guide** — Evidence-based encoding recommendations
+- 🗺️ **Empirical Atlas** — Query the measured benchmark results (rank, accuracy, expressibility, trainability, …) bundled with the package
 - 📚 **Extensive Documentation** — Tutorials, API docs, and theoretical background
 
 ## Installation
@@ -89,6 +90,27 @@ rec = recommend_encoding(
 )
 print(f"Recommended: {rec.encoding_name}")
 print(f"Reason: {rec.explanation}")
+```
+
+### Query the empirical atlas
+
+The measured benchmark results for every encoding ship with the package as a
+queryable, read-only API:
+
+```python
+from encoding_atlas.atlas import get_encoding_profile, rank_encodings, pareto_front
+
+# Measured profile of a single encoding
+angle = get_encoding_profile("angle")
+print(angle.rank, round(angle.metric("kernel_accuracy"), 3))   # 1 0.958
+
+# Rank encodings by any measured metric
+print([p.name for p in rank_encodings(by="kernel_accuracy", limit=3)])
+# ['angle', 'cyclic_equivariant', 'qaoa']
+
+# The Pareto-optimal set across accuracy, depth, trainability, and noise
+print(sorted(p.name for p in pareto_front()))
+# ['angle', 'basis', 'higher_order_angle', 'swap_equivariant']
 ```
 
 ## Supported Encodings

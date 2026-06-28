@@ -101,6 +101,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 encoding_atlas = ["py.typed"]
+"encoding_atlas.atlas" = ["data/*.json"]
 
 [tool.setuptools_scm]
 write_to = "src/encoding_atlas/_version.py"

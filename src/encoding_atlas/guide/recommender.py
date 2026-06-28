@@ -12,18 +12,23 @@ Provides a two-phase recommendation pipeline:
 All new parameters introduced after ``priority`` are keyword-only with
 backward-compatible defaults so that existing callers are not broken.
 
-Scoring categories (in descending order of weight):
+Scoring categories:
 
 1. **Hard-precondition bonuses** — data type, symmetry, feature count,
-   trainable match.
+   trainable match (structural guardrails that dominate routing).
 2. **Binary / discrete penalty** — non-binary encodings on binary data.
-3. **Priority matching** — user-stated optimisation goal.
+3. **Empirical priority match** — the user's stated priority is scored by the
+   *measured* benchmark axis (accuracy, trainability, speed, noise resilience)
+   from :mod:`encoding_atlas.atlas`, normalised across encodings. This replaces
+   the former hand-tuned priority tags and feature-count accuracy defaults, so
+   the guide no longer recommends benchmark-dominated encodings (e.g. IQP, ZZ)
+   for accuracy-driven queries.
 4. **Problem structure** — domain-specific encodings.
 5. **Feature interactions** — custom interaction structures.
 6. **Task matching** — classification vs regression suitability.
 7. **Hardware suitability** — NISQ bonus, deep-circuit penalty,
    ``avoid_when`` penalty.
-8. **Feature count** — qubit efficiency and default routing.
+8. **Feature count** — qubit efficiency (logarithmic scaling, small-feature).
 9. **Sample count** — simulability for tiny datasets.
 """
 
@@ -33,6 +38,8 @@ import math
 from dataclasses import dataclass
 from typing import Literal
 
+from encoding_atlas.atlas import get_encoding_profile
+from encoding_atlas.guide._evidence import evidence_score
 from encoding_atlas.guide.rules import (
     ENCODING_RULES,
     VALID_DATA_TYPES,
@@ -160,9 +167,14 @@ _W_TRAINABLE_BONUS: float = 0.40
 # Penalty for non-binary encodings when user declares binary/discrete data.
 _W_BINARY_PENALTY: float = 0.20
 
-# Priority matching — per matched ``best_for`` tag (capped at 2).
-_W_PRIORITY_PER_TAG: float = 0.10
-_PRIORITY_TAG_CAP: int = 2
+# Empirical priority weight — scales the measured benchmark score (in [0, 1])
+# for the user's stated priority.  Sized below the hard-precondition bonuses so
+# that structural intents (binary→basis, symmetry→equivariant, trainable, etc.)
+# still dominate routing, yet large enough to be the decisive differentiator
+# among general-purpose encodings for a given priority.  See
+# ``encoding_atlas.guide._evidence`` for how the score is derived from the
+# bundled atlas.
+_W_EVIDENCE: float = 0.30
 
 # Problem structure bonus for domain-specific encodings.
 _W_STRUCTURE_BONUS: float = 0.36
@@ -182,7 +194,6 @@ _W_AVOID_WHEN_PENALTY: float = 0.08
 
 # Feature count suitability.
 _W_LOGARITHMIC_BONUS: float = 0.15
-_W_ACCURACY_DEFAULT_BONUS: float = 0.12
 _W_SMALL_FEATURE_BONUS: float = 0.03
 
 # Sample count factor.
@@ -200,31 +211,10 @@ _HARDWARE_AVOID_TAGS: frozenset[str] = frozenset({"noisy_hardware", "nisq_hardwa
 # Scoring helpers
 # ---------------------------------------------------------------------------
 
-# Maps user-facing priority values to relevant ``best_for`` tags.
-_PRIORITY_TAG_MAP: dict[str, list[str]] = {
-    "speed": ["speed", "simplicity"],
-    "noise_resilience": ["nisq_hardware", "native_gates", "noise_resilience"],
-    "trainability": ["trainability", "task_specific", "optimization"],
-    "accuracy": [
-        "expressibility",
-        "quantum_advantage",
-        "universal_approximation",
-        "kernel_methods",
-    ],
-}
-
 # Maps ML task type to relevant ``best_for`` tags.
 _TASK_TAG_MAP: dict[str, list[str]] = {
     "classification": ["kernel_methods"],
     "regression": ["universal_approximation"],
-}
-
-# Default encoding for each feature-count range when priority is accuracy.
-# This mirrors the decision tree's feature-count-based fallback (level 7).
-_ACCURACY_DEFAULT_BY_FEATURE_RANGE: dict[str, str] = {
-    "small": "iqp",  # n_features <= 4
-    "medium": "zz_feature_map",  # 5 <= n_features <= 8
-    "large": "amplitude",  # n_features > 8
 }
 
 # Maps user-facing problem_structure values to relevant ``best_for`` tags.
@@ -301,10 +291,13 @@ def _compute_score(
     if data_type in ("binary", "discrete") and rules["requires_data_type"] is None:
         score -= _W_BINARY_PENALTY
 
-    # --- 3. Priority matching -----------------------------------------------
-    priority_tags = _PRIORITY_TAG_MAP.get(priority, [])
-    matched_priority = sum(1 for t in priority_tags if t in rules["best_for"])
-    score += _W_PRIORITY_PER_TAG * min(matched_priority, _PRIORITY_TAG_CAP)
+    # --- 3. Empirical priority match ----------------------------------------
+    # Score the user's stated priority by the *measured* benchmark axis
+    # (accuracy, trainability, speed, noise resilience), normalised across all
+    # encodings, instead of by hand-tuned ``best_for`` tags.  This is what makes
+    # the recommendation evidence-based and keeps benchmark-dominated encodings
+    # (e.g. IQP, ZZ) from being recommended for accuracy.
+    score += _W_EVIDENCE * evidence_score(name, priority)
 
     # --- 4. Problem structure matching --------------------------------------
     if problem_structure is not None:
@@ -343,24 +336,6 @@ def _compute_score(
     # --- 8. Feature count suitability ---------------------------------------
     if n_features > 8 and rules["qubit_scaling"] == "logarithmic":
         score += _W_LOGARITHMIC_BONUS
-
-    # Default-for-feature-range bonus (accuracy priority only).
-    # Only applied when no specialised parameter (trainable, symmetry,
-    # problem_structure, feature_interactions) is active.  When the user
-    # expresses a specific intent, the corresponding hard-precondition or
-    # structure bonus already dominates; the accuracy default would otherwise
-    # erode the margin between the specialised winner and the generic
-    # feature-count-based default (e.g. IQP for ≤4 features).
-    _has_specialised_intent = (
-        trainable
-        or symmetry is not None
-        or problem_structure is not None
-        or feature_interactions is not None
-    )
-    if priority == "accuracy" and not _has_specialised_intent:
-        size = "small" if n_features <= 4 else "medium" if n_features <= 8 else "large"
-        if name == _ACCURACY_DEFAULT_BY_FEATURE_RANGE.get(size):
-            score += _W_ACCURACY_DEFAULT_BONUS
 
     # Small-feature bonus for encodings with an explicit max_features limit.
     if (
@@ -409,6 +384,22 @@ def _score_to_confidence(score: float) -> float:
     return 0.50 + score * 0.50
 
 
+def _evidence_suffix(name: str) -> str:
+    """Return a benchmark-grounded suffix (rank + accuracy) for an encoding.
+
+    Returns an empty string if the encoding has no bundled atlas profile, so
+    the recommender degrades gracefully if the rule base and atlas ever drift.
+    """
+    try:
+        profile = get_encoding_profile(name)
+    except KeyError:
+        return ""
+    kernel = profile.metric("kernel_accuracy")
+    if kernel is None:
+        return f" [benchmark: rank {profile.rank}/16]"
+    return f" [benchmark: rank {profile.rank}/16, mean kernel accuracy {kernel:.2f}]"
+
+
 def _generate_explanation(
     name: str,
     rules: EncodingRule,
@@ -416,7 +407,11 @@ def _generate_explanation(
     priority: str,
     n_features: int,
 ) -> str:
-    """Produce a human-readable explanation for the recommendation.
+    """Produce a human-readable, benchmark-grounded explanation.
+
+    The qualitative template is followed by an empirical suffix citing the
+    encoding's measured benchmark rank and mean kernel accuracy, so the
+    rationale reflects the evidence rather than heuristics alone.
 
     Parameters
     ----------
@@ -441,13 +436,14 @@ def _generate_explanation(
         max(1, math.ceil(math.log2(max(n_features, 1)))) if name == "amplitude" else 0
     )
     try:
-        return template.format(
+        base = template.format(
             reason=priority,
             n_features=n_features,
             n_qubits=n_qubits,
         )
     except (KeyError, ValueError, IndexError):
-        return template
+        base = template
+    return base + _evidence_suffix(name)
 
 
 # ---------------------------------------------------------------------------

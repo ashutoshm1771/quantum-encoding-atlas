@@ -1,0 +1,668 @@
+{
+  "schema_version": "1.0",
+  "n_encodings": 16,
+  "encoding_profiles": [
+    {
+      "encoding": "angle",
+      "display_name": "AngleEncoding",
+      "family": "Non-Entangling",
+      "rank": 1,
+      "score": 0.772,
+      "is_pareto": true,
+      "is_simulable": true,
+      "metrics": {
+        "depth": 2,
+        "expressibility": 0.9303530029086299,
+        "entanglement_capability": null,
+        "trainability_estimate": 0.0976969481424412,
+        "noise_resilience": 1.0043523025316534,
+        "vqc_accuracy": 0.8484711063240697,
+        "vqc_ci": [
+          0.8372442604021115,
+          0.859469346231545
+        ],
+        "kernel_accuracy": 0.9581781795935266,
+        "kernel_ci": [
+          0.9530109020708113,
+          0.9632932196826876
+        ]
+      }
+    },
+    {
+      "encoding": "swap_equivariant",
+      "display_name": "SwapEquivariantFeatureMap",
+      "family": "Equivariant",
+      "rank": 2,
+      "score": 0.6406,
+      "is_pareto": true,
+      "is_simulable": false,
+      "metrics": {
+        "depth": 6,
+        "expressibility": 0.8598411842552155,
+        "entanglement_capability": 0.13656653247264053,
+        "trainability_estimate": 0.21318761680375353,
+        "noise_resilience": 0.6586028010535101,
+        "vqc_accuracy": 0.77089767745322,
+        "vqc_ci": [
+          0.7551312567231131,
+          0.7868674529474498
+        ],
+        "kernel_accuracy": 0.8352207861098173,
+        "kernel_ci": [
+          0.8235986292242405,
+          0.846493572103193
+        ]
+      }
+    },
+    {
+      "encoding": "higher_order_angle",
+      "display_name": "HigherOrderAngleEncoding",
+      "family": "Non-Entangling",
+      "rank": 3,
+      "score": 0.5415,
+      "is_pareto": true,
+      "is_simulable": true,
+      "metrics": {
+        "depth": 1,
+        "expressibility": 0.934098689235974,
+        "entanglement_capability": null,
+        "trainability_estimate": 0.09848667674385109,
+        "noise_resilience": 1.0052422885264538,
+        "vqc_accuracy": 0.5040910924065325,
+        "vqc_ci": [
+          0.48430260808270675,
+          0.5239720534281871
+        ],
+        "kernel_accuracy": 0.7667937542972475,
+        "kernel_ci": [
+          0.7520055651666038,
+          0.7810082262486969
+        ]
+      }
+    },
+    {
+      "encoding": "cyclic_equivariant",
+      "display_name": "CyclicEquivariantFeatureMap",
+      "family": "Equivariant",
+      "rank": 4,
+      "score": 0.5301,
+      "is_pareto": false,
+      "is_simulable": false,
+      "metrics": {
+        "depth": 6,
+        "expressibility": 0.9890595221456452,
+        "entanglement_capability": 0.4411227658969334,
+        "trainability_estimate": 0.052257238620165146,
+        "noise_resilience": 0.4143958923061686,
+        "vqc_accuracy": 0.7747115618138265,
+        "vqc_ci": [
+          0.7598722863343832,
+          0.7891962016952411
+        ],
+        "kernel_accuracy": 0.9540668596269435,
+        "kernel_ci": [
+          0.9469862832551512,
+          0.9609066141108672
+        ]
+      }
+    },
+    {
+      "encoding": "amplitude",
+      "display_name": "AmplitudeEncoding",
+      "family": "Amplitude",
+      "rank": 5,
+      "score": 0.5097,
+      "is_pareto": false,
+      "is_simulable": false,
+      "metrics": {
+        "depth": 4,
+        "expressibility": null,
+        "entanglement_capability": 0.19080626814768611,
+        "trainability_estimate": 0.037614549393298974,
+        "noise_resilience": 0.9565448141536271,
+        "vqc_accuracy": 0.7555973525258575,
+        "vqc_ci": [
+          0.7290133679631416,
+          0.7797899519262759
+        ],
+        "kernel_accuracy": 0.9098307485158323,
+        "kernel_ci": [
+          0.9021769135227449,
+          0.9173290018926372
+        ]
+      }
+    },
+    {
+      "encoding": "qaoa_encoding",
+      "display_name": "QAOAEncoding",
+      "family": "QAOA/Hamiltonian",
+      "rank": 6,
+      "score": 0.4916,
+      "is_pareto": false,
+      "is_simulable": false,
+      "metrics": {
+        "depth": 9,
+        "expressibility": 0.9813685401083129,
+        "entanglement_capability": 0.6702789211379979,
+        "trainability_estimate": 0.02361800741981334,
+        "noise_resilience": 0.45401689856076954,
+        "vqc_accuracy": 0.7528102543416062,
+        "vqc_ci": [
+          0.7364675091120132,
+          0.7686675992733493
+        ],
+        "kernel_accuracy": 0.9170856390607788,
+        "kernel_ci": [
+          0.9069519219555155,
+          0.9267234226791167
+        ]
+      }
+    },
+    {
+      "encoding": "trainable_encoding",
+      "display_name": "TrainableEncoding",
+      "family": "Trainable",
+      "rank": 7,
+      "score": 0.4825,
+      "is_pareto": false,
+      "is_simulable": false,
+      "metrics": {
+        "depth": 10,
+        "expressibility": 0.9407011400723194,
+        "entanglement_capability": 0.6050229871806553,
+        "trainability_estimate": 0.04098796435982776,
+        "noise_resilience": 0.4196888630481129,
+        "vqc_accuracy": 0.7560627116278897,
+        "vqc_ci": [
+          0.7383107873389225,
+          0.7736150993957978
+        ],
+        "kernel_accuracy": 0.8618139790848803,
+        "kernel_ci": [
+          0.8499579846093848,
+          0.8733620819194003
+        ]
+      }
+    },
+    {
+      "encoding": "symmetry_inspired",
+      "display_name": "SymmetryInspiredFeatureMap",
+      "family": "Symmetry-Based",
+      "rank": 8,
+      "score": 0.4753,
+      "is_pareto": false,
+      "is_simulable": false,
+      "metrics": {
+        "depth": 8,
+        "expressibility": 0.9143725242044979,
+        "entanglement_capability": 0.12367704491985021,
+        "trainability_estimate": 0.08710092331910037,
+        "noise_resilience": 0.686826946647916,
+        "vqc_accuracy": 0.6936244288819393,
+        "vqc_ci": [
+          0.6782694303975279,
+          0.7089956979007253
+        ],
+        "kernel_accuracy": 0.8487286616245628,
+        "kernel_ci": [
+          0.8377931836990152,
+          0.8594677558571946
+        ]
+      }
+    },
+    {
+      "encoding": "hardware_efficient",
+      "display_name": "HardwareEfficientEncoding",
+      "family": "Hardware-Efficient",
+      "rank": 9,
+      "score": 0.4748,
+      "is_pareto": false,
+      "is_simulable": false,
+      "metrics": {
+        "depth": 4,
+        "expressibility": 0.9456679259472677,
+        "entanglement_capability": 0.5464711163086062,
+        "trainability_estimate": 0.039646583105810186,
+        "noise_resilience": 0.44631379565577634,
+        "vqc_accuracy": 0.7185928658297662,
+        "vqc_ci": [
+          0.7018053846591036,
+          0.734874814710079
+        ],
+        "kernel_accuracy": 0.8625413182661669,
+        "kernel_ci": [
+          0.8490000637656087,
+          0.8757347530884735
+        ]
+      }
+    },
+    {
+      "encoding": "data_reuploading",
+      "display_name": "DataReuploading",
+      "family": "Data Re-uploading",
+      "rank": 10,
+      "score": 0.4648,
+      "is_pareto": false,
+      "is_simulable": false,
+      "metrics": {
+        "depth": 8,
+        "expressibility": 0.9461389208506896,
+        "entanglement_capability": 0.5526045247908093,
+        "trainability_estimate": 0.04739422238417625,
+        "noise_resilience": 0.46710911921119025,
+        "vqc_accuracy": 0.7170580461108524,
+        "vqc_ci": [
+          0.6988793882752604,
+          0.7346666317110992
+        ],
+        "kernel_accuracy": 0.8625413182661669,
+        "kernel_ci": [
+          0.8490627120899594,
+          0.8757604353804866
+        ]
+      }
+    },
+    {
+      "encoding": "so2_equivariant",
+      "display_name": "SO2EquivariantFeatureMap",
+      "family": "Equivariant",
+      "rank": 11,
+      "score": 0.4195,
+      "is_pareto": false,
+      "is_simulable": false,
+      "metrics": {
+        "depth": 6,
+        "expressibility": 0.6504740802741075,
+        "entanglement_capability": 0.9688499050161017,
+        "trainability_estimate": 0.005497689722180986,
+        "noise_resilience": 0.8137841069884237,
+        "vqc_accuracy": 0.761125,
+        "vqc_ci": [
+          0.746875,
+          0.774875
+        ],
+        "kernel_accuracy": 0.895,
+        "kernel_ci": [
+          0.8873749999999999,
+          0.9023749999999999
+        ]
+      }
+    },
+    {
+      "encoding": "pauli_feature_map",
+      "display_name": "PauliFeatureMap",
+      "family": "Pauli-Based",
+      "rank": 12,
+      "score": 0.3257,
+      "is_pareto": false,
+      "is_simulable": false,
+      "metrics": {
+        "depth": 10,
+        "expressibility": 0.998823338246455,
+        "entanglement_capability": 0.7547586379847512,
+        "trainability_estimate": 0.05964755880984882,
+        "noise_resilience": 0.0,
+        "vqc_accuracy": 0.5890491965533302,
+        "vqc_ci": [
+          0.571299094447494,
+          0.6066125219367555
+        ],
+        "kernel_accuracy": 0.692944104361198,
+        "kernel_ci": [
+          0.6771668672048854,
+          0.7085593639334324
+        ]
+      }
+    },
+    {
+      "encoding": "zz_feature_map",
+      "display_name": "ZZFeatureMap",
+      "family": "IQP-Based",
+      "rank": 13,
+      "score": 0.319,
+      "is_pareto": false,
+      "is_simulable": false,
+      "metrics": {
+        "depth": 22,
+        "expressibility": 0.9984429611393226,
+        "entanglement_capability": 0.7492244848432978,
+        "trainability_estimate": 0.06318063466594377,
+        "noise_resilience": 0.0,
+        "vqc_accuracy": 0.5879033927924531,
+        "vqc_ci": [
+          0.5694841831948974,
+          0.6061228082651318
+        ],
+        "kernel_accuracy": 0.692944104361198,
+        "kernel_ci": [
+          0.6772019313586326,
+          0.708340357022719
+        ]
+      }
+    },
+    {
+      "encoding": "basis",
+      "display_name": "BasisEncoding",
+      "family": "Non-Entangling",
+      "rank": 14,
+      "score": 0.3186,
+      "is_pareto": true,
+      "is_simulable": true,
+      "metrics": {
+        "depth": 1,
+        "expressibility": null,
+        "entanglement_capability": null,
+        "trainability_estimate": 0.0,
+        "noise_resilience": null,
+        "vqc_accuracy": 0.5696593618079122,
+        "vqc_ci": [
+          0.5602299186849867,
+          0.5786757978556272
+        ],
+        "kernel_accuracy": 0.6282437749979669,
+        "kernel_ci": [
+          0.6191944033202474,
+          0.6369392637197714
+        ]
+      }
+    },
+    {
+      "encoding": "hamiltonian_encoding",
+      "display_name": "HamiltonianEncoding",
+      "family": "QAOA/Hamiltonian",
+      "rank": 15,
+      "score": 0.2883,
+      "is_pareto": false,
+      "is_simulable": false,
+      "metrics": {
+        "depth": 21,
+        "expressibility": 0.9990844984008831,
+        "entanglement_capability": 0.8408089942576068,
+        "trainability_estimate": 8.214250168558111e-29,
+        "noise_resilience": 0.0,
+        "vqc_accuracy": 0.613770142539239,
+        "vqc_ci": [
+          0.5948651052178751,
+          0.6326697686209439
+        ],
+        "kernel_accuracy": 0.7295127568182995,
+        "kernel_ci": [
+          0.7168694251299339,
+          0.7421399559693851
+        ]
+      }
+    },
+    {
+      "encoding": "iqp",
+      "display_name": "IQPEncoding",
+      "family": "IQP-Based",
+      "rank": 16,
+      "score": 0.2845,
+      "is_pareto": false,
+      "is_simulable": false,
+      "metrics": {
+        "depth": 6,
+        "expressibility": 0.9991118504790045,
+        "entanglement_capability": 0.7722851761334266,
+        "trainability_estimate": 0.03707369386308996,
+        "noise_resilience": 0.0,
+        "vqc_accuracy": 0.5526376787285323,
+        "vqc_ci": [
+          0.5365883256029085,
+          0.5688517959606798
+        ],
+        "kernel_accuracy": 0.6390839146169258,
+        "kernel_ci": [
+          0.6212353415341452,
+          0.6568946097729575
+        ]
+      }
+    }
+  ],
+  "stage_counts": {
+    "resources": {
+      "total": 170,
+      "success": 170,
+      "failed": 0
+    },
+    "simulability": {
+      "total": 16,
+      "success": 16,
+      "failed": 0
+    },
+    "expressibility": {
+      "total": 143,
+      "success": 143,
+      "failed": 0
+    },
+    "entanglement": {
+      "total": 122,
+      "success": 121,
+      "failed": 1
+    },
+    "trainability": {
+      "total": 121,
+      "success": 121,
+      "failed": 0
+    },
+    "noise": {
+      "total": 16,
+      "success": 16,
+      "failed": 0
+    },
+    "vqc": {
+      "total": 34,
+      "success": 34,
+      "failed": 0
+    },
+    "kernel": {
+      "total": 31,
+      "success": 31,
+      "failed": 0
+    }
+  },
+  "hypothesis_verdicts": {
+    "H1": {
+      "verdict": "refuted",
+      "confidence": "moderate",
+      "evidence": "No positive correlation between expressibility and accuracy (rho=-0.68).",
+      "test_statistic": {
+        "spearman_rho": -0.6783216783216784,
+        "p_value": 0.0153173290532817
+      }
+    },
+    "H2": {
+      "verdict": "inconclusive",
+      "confidence": "low",
+      "evidence": "Equivariant encodings outperform on both symmetric (2) and non-symmetric (5) datasets \u2014 advantage is not symmetry-specific.",
+      "test_statistic": {
+        "sym_wins": 2,
+        "non_sym_wins": 5
+      }
+    },
+    "H3": {
+      "verdict": "inconclusive",
+      "confidence": "low",
+      "evidence": "Mixed results: DataReuploading wins 2/8 pairs but not statistically significant (p=0.0391).",
+      "test_statistic": {
+        "wilcoxon_p": 0.0390625,
+        "positive_pairs": 2
+      }
+    },
+    "H4": {
+      "verdict": "supported",
+      "confidence": "high",
+      "evidence": "Depth is the dominant predictor of gradient variance (partial rho=-0.472, p=0.0003) after controlling for encoding family (family partial rho=0.017, p=0.8997).",
+      "test_statistic": {
+        "depth_partial_rho": -0.47208301284530296,
+        "depth_partial_p": 0.0002739674725813544,
+        "family_partial_rho": 0.01739481608538308,
+        "family_partial_p": 0.8996924843922043
+      }
+    },
+    "H5": {
+      "verdict": "supported",
+      "confidence": "moderate",
+      "evidence": "Entangling encodings have significantly higher fidelity decay (mean=0.4863) vs non-entangling (mean=0.0173), Mann-Whitney p=0.0036, r=1.000.",
+      "test_statistic": {
+        "u_stat": 39.0,
+        "p_value": 0.0035714285714285713,
+        "rank_biserial": 1.0
+      }
+    },
+    "H6": {
+      "verdict": "inconclusive",
+      "confidence": "low",
+      "evidence": "Moderate correlation (mean tau=0.524), unclear whether rankings are meaningfully different.",
+      "test_statistic": {
+        "mean_tau": 0.5241071428571429
+      }
+    },
+    "H7": {
+      "verdict": "supported",
+      "confidence": "moderate",
+      "evidence": "Pareto front contains 4 encodings (angle, basis, higher_order_angle, swap_equivariant), confirming no single encoding dominates all objectives.",
+      "test_statistic": {
+        "n_pareto": 4
+      }
+    }
+  },
+  "pareto_front": {
+    "n_pareto_optimal": 4,
+    "pareto_optimal": [
+      "angle",
+      "basis",
+      "higher_order_angle",
+      "swap_equivariant"
+    ],
+    "objective_names": [
+      "accuracy",
+      "inv_depth",
+      "trainability",
+      "noise_resilience"
+    ]
+  },
+  "sensitivity_analysis": {
+    "grid": {
+      "learning_rates": [
+        0.001,
+        0.01,
+        0.05
+      ],
+      "n_var_layers": [
+        1,
+        2,
+        3
+      ],
+      "encodings": [
+        "angle",
+        "iqp"
+      ],
+      "datasets": [
+        "moons",
+        "circles"
+      ],
+      "n_runs": 3,
+      "n_folds": 5,
+      "epochs": 100
+    },
+    "analysis": {
+      "best_config_per_encoding_dataset": {
+        "angle/moons": {
+          "lr": 0.01,
+          "n_var_layers": 3,
+          "mean_accuracy": 0.8483333333333333,
+          "ci_lower": 0.8366666666666664,
+          "ci_upper": 0.86
+        },
+        "angle/circles": {
+          "lr": 0.001,
+          "n_var_layers": 2,
+          "mean_accuracy": 0.7633333333333333,
+          "ci_lower": 0.7133333333333334,
+          "ci_upper": 0.8099999999999999
+        },
+        "iqp/moons": {
+          "lr": 0.05,
+          "n_var_layers": 3,
+          "mean_accuracy": 0.5316666666666666,
+          "ci_lower": 0.51,
+          "ci_upper": 0.5533333333333332
+        },
+        "iqp/circles": {
+          "lr": 0.01,
+          "n_var_layers": 2,
+          "mean_accuracy": 0.6683333333333333,
+          "ci_lower": 0.6383333333333334,
+          "ci_upper": 0.6983333333333335
+        }
+      },
+      "lr_sensitivity": {
+        "angle/moons": {
+          "0.001": 0.663333,
+          "0.01": 0.697222,
+          "0.05": 0.707222
+        },
+        "angle/circles": {
+          "0.001": 0.683889,
+          "0.01": 0.733333,
+          "0.05": 0.747222
+        },
+        "iqp/moons": {
+          "0.001": 0.501111,
+          "0.01": 0.499444,
+          "0.05": 0.519444
+        },
+        "iqp/circles": {
+          "0.001": 0.608333,
+          "0.01": 0.602778,
+          "0.05": 0.591667
+        }
+      },
+      "layer_sensitivity": {
+        "angle/moons": {
+          "1": 0.581667,
+          "2": 0.638889,
+          "3": 0.847222
+        },
+        "angle/circles": {
+          "1": 0.658333,
+          "2": 0.750556,
+          "3": 0.755556
+        },
+        "iqp/moons": {
+          "1": 0.504444,
+          "2": 0.498889,
+          "3": 0.516667
+        },
+        "iqp/circles": {
+          "1": 0.488889,
+          "2": 0.666667,
+          "3": 0.647222
+        }
+      },
+      "default_config_rank": {
+        "angle/moons": {
+          "rank": 5,
+          "total_configs": 9,
+          "mean_accuracy": 0.6500000000000001
+        },
+        "angle/circles": {
+          "rank": 6,
+          "total_configs": 9,
+          "mean_accuracy": 0.7383333333333333
+        },
+        "iqp/moons": {
+          "rank": 8,
+          "total_configs": 9,
+          "mean_accuracy": 0.4933333333333333
+        },
+        "iqp/circles": {
+          "rank": 1,
+          "total_configs": 9,
+          "mean_accuracy": 0.6683333333333333
+        }
+      }
+    }
+  }
+}

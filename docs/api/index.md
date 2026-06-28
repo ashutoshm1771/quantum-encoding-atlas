@@ -129,6 +129,39 @@ All encodings inherit from `BaseEncoding` and share a unified interface.
 
 ---
 
+## Atlas Module
+
+The empirical benchmark results — measured circuit resources, simulability,
+expressibility, entanglement, trainability, noise resilience, and downstream
+VQC / quantum-kernel accuracy for all 16 encodings — bundled with the package
+as a queryable, read-only API.
+
+::: encoding_atlas.atlas.get_encoding_profile
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.atlas.rank_encodings
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.atlas.pareto_front
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.atlas.hypothesis_verdicts
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.atlas.atlas_metadata
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.atlas.EncodingProfile
+    options:
+      show_root_heading: true
+
+---
+
 ## Exceptions
 
 ::: encoding_atlas.core.exceptions

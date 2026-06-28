@@ -21,7 +21,7 @@ import pytest
 from encoding_atlas.guide.decision_tree import EncodingDecisionTree
 from encoding_atlas.guide.recommender import recommend_encoding
 from encoding_atlas.guide.rules import ENCODING_RULES
-from tests.unit.guide.conftest import ENCODING_TRIGGER_PARAMS
+from tests.unit.guide.conftest import DOMINATED_ENCODINGS, ENCODING_TRIGGER_PARAMS
 
 # =========================================================================
 # Helpers
@@ -64,13 +64,27 @@ class TestDecisionTreeConstruction:
         for leaf in leaves:
             assert leaf in ENCODING_RULES, f"Leaf '{leaf}' is not a valid encoding name"
 
-    def test_all_16_encodings_appear_in_tree(
+    def test_reachable_encodings_appear_in_tree(
         self, decision_tree: EncodingDecisionTree
     ) -> None:
-        """Every encoding must appear at least once as a tree leaf."""
+        """Every primary-reachable encoding appears as a tree leaf.
+
+        Under the evidence-based guide the three benchmark-dominated encodings
+        (iqp, zz_feature_map, hardware_efficient) are intentionally absent as
+        primary leaves; all other encodings must appear exactly as before.
+        """
         leaves = set(_collect_leaves(decision_tree.tree))
-        missing = set(ENCODING_RULES.keys()) - leaves
-        assert not missing, f"Encodings missing from tree: {missing}"
+        expected = set(ENCODING_RULES.keys()) - DOMINATED_ENCODINGS
+        missing = expected - leaves
+        assert not missing, f"Reachable encodings missing from tree: {missing}"
+
+    def test_dominated_encodings_not_in_tree(
+        self, decision_tree: EncodingDecisionTree
+    ) -> None:
+        """Benchmark-dominated encodings must not be surfaced as tree leaves."""
+        leaves = set(_collect_leaves(decision_tree.tree))
+        intruders = leaves & DOMINATED_ENCODINGS
+        assert not intruders, f"Dominated encodings present as leaves: {intruders}"
 
 
 # =========================================================================
