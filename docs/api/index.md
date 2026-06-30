@@ -129,6 +129,56 @@ All encodings inherit from `BaseEncoding` and share a unified interface.
 
 ---
 
+## Benchmark Module
+
+Evaluate encodings on classification tasks with variational quantum classifiers
+and quantum-kernel SVMs, paired stratified cross-validation, classical
+baselines, and statistical comparison (Wilcoxon + Holm–Bonferroni + Cliff's
+delta).
+
+::: encoding_atlas.benchmark.EncodingBenchmark
+    options:
+      show_root_heading: true
+      members:
+        - run
+        - statistical_tests
+        - plot_comparison
+        - save_results
+
+::: encoding_atlas.benchmark.evaluate_encoding
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.VQCClassifier
+    options:
+      show_root_heading: true
+      members:
+        - fit
+        - predict
+        - score
+
+::: encoding_atlas.benchmark.QuantumKernelClassifier
+    options:
+      show_root_heading: true
+      members:
+        - fit
+        - predict
+        - score
+
+::: encoding_atlas.benchmark.compute_kernel_matrix
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.kernel_target_alignment
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.compare_encodings_corrected
+    options:
+      show_root_heading: true
+
+---
+
 ## Atlas Module
 
 The empirical benchmark results — measured circuit resources, simulability,

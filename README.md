@@ -113,6 +113,33 @@ print(sorted(p.name for p in pareto_front()))
 # ['angle', 'basis', 'higher_order_angle', 'swap_equivariant']
 ```
 
+### Benchmark encodings on your own data
+
+Run variational-quantum-classifier and quantum-kernel comparisons with paired
+cross-validation, classical baselines, and statistical testing:
+
+```python
+from encoding_atlas import AngleEncoding, IQPEncoding
+from encoding_atlas.benchmark import EncodingBenchmark, evaluate_encoding
+
+# Compare encodings across datasets and methods
+bench = EncodingBenchmark(
+    encodings=[AngleEncoding(n_features=2), IQPEncoding(n_features=2)],
+    datasets=["moons", "circles"],
+    methods=("vqc", "kernel"),
+    n_runs=3,
+    n_folds=5,
+    baselines=("svm_rbf",),
+    seed=0,
+)
+results = bench.run()
+stats = bench.statistical_tests()   # Wilcoxon + Holm–Bonferroni + Cliff's delta
+
+# ...or evaluate a single encoding on your own (X, y)
+report = evaluate_encoding(AngleEncoding(n_features=2), X, y, method="kernel")
+print(report["mean"], report["ci_low"], report["ci_high"])
+```
+
 ## Supported Encodings
 
 | Category | Encodings |
