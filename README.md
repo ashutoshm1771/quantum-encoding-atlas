@@ -140,6 +140,29 @@ report = evaluate_encoding(AngleEncoding(n_features=2), X, y, method="kernel")
 print(report["mean"], report["ci_low"], report["ci_high"])
 ```
 
+### Diagnose *why* an encoding generalizes
+
+Cheap, training-free kernel-geometry metrics that predict downstream
+performance — kernel-target alignment, geometric difference, and effective
+dimension:
+
+```python
+from encoding_atlas.analysis import (
+    compute_kernel_target_alignment,
+    compute_geometric_difference,
+    compute_effective_dimension,
+)
+
+# How well the encoding's kernel matches the task (predicts accuracy)
+kta = compute_kernel_target_alignment(AngleEncoding(n_features=2), X, y)
+
+# How distinct the quantum kernel is from a classical one (advantage diagnostic)
+gd = compute_geometric_difference(AngleEncoding(n_features=2), X)
+
+# Effective feature-space dimension the encoding uses (capacity)
+d_eff = compute_effective_dimension(AngleEncoding(n_features=2), X)
+```
+
 ## Supported Encodings
 
 | Category | Encodings |

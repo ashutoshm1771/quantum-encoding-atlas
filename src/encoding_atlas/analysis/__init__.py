@@ -103,6 +103,18 @@ from encoding_atlas.analysis.expressibility import (
     compute_fidelity_distribution,
     compute_haar_distribution,
 )
+
+# Generalization diagnostics (kernel-geometry metrics)
+from encoding_atlas.analysis.generalization import (
+    centered_kernel_target_alignment,
+    compute_effective_dimension,
+    compute_fidelity_kernel,
+    compute_geometric_difference,
+    compute_kernel_target_alignment,
+    geometric_difference,
+    kernel_effective_dimension,
+    kernel_target_alignment,
+)
 from encoding_atlas.analysis.resources import (
     compare_resources,
     count_resources,
@@ -148,6 +160,15 @@ __all__ = [
     "is_clifford_circuit",
     "is_matchgate_circuit",
     "estimate_entanglement_bound",
+    # Generalization diagnostics
+    "compute_fidelity_kernel",
+    "compute_kernel_target_alignment",
+    "compute_geometric_difference",
+    "compute_effective_dimension",
+    "kernel_target_alignment",
+    "centered_kernel_target_alignment",
+    "geometric_difference",
+    "kernel_effective_dimension",
     # Type definitions
     "SimulabilityResult",
     "EntanglementResult",
