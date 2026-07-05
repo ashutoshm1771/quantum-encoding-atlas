@@ -3200,6 +3200,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.centered_kernel_target_alignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;centered_kernel_target_alignment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#encoding_atlas.analysis.check_simulability" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3226,6 +3237,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;compute_all_parameter_gradients
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.compute_effective_dimension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;compute_effective_dimension
       
     </span>
   </a>
@@ -3277,6 +3299,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.compute_fidelity_kernel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;compute_fidelity_kernel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.compute_geometric_difference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;compute_geometric_difference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#encoding_atlas.analysis.compute_gradient_variance" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3292,6 +3336,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;compute_haar_distribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.compute_kernel_target_alignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;compute_kernel_target_alignment
       
     </span>
   </a>
@@ -3453,6 +3508,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.geometric_difference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;geometric_difference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#encoding_atlas.analysis.get_gate_breakdown" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3501,6 +3567,28 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;is_matchgate_circuit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.kernel_effective_dimension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;kernel_effective_dimension
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.kernel_target_alignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;kernel_target_alignment
       
     </span>
   </a>
@@ -7175,6 +7263,29 @@ sampling : {'uniform', 'sobol'}
 <div class="doc doc-object doc-function">
 
 
+<h3 id="encoding_atlas.analysis.centered_kernel_target_alignment" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">centered_kernel_target_alignment</span>
+
+
+<a href="#encoding_atlas.analysis.centered_kernel_target_alignment" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">centered_kernel_target_alignment</span><span class="p">(</span><span class="n">K</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]],</span> <span class="n">y</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.integer">integer</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n"><span title="float">float</span></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Centred kernel-target alignment in <code>[-1, 1]</code> (Cortes et al., 2012).</p>
+<p>Centring removes the bias the uncentred score suffers for fidelity kernels
+(whose diagonal is always 1), giving a more faithful measure of task
+alignment. Returns <code>0.0</code> for degenerate inputs or <code>n &lt; 2</code>.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="encoding_atlas.analysis.check_simulability" class="doc doc-heading">
 <code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">check_simulability</span>
 
@@ -7445,6 +7556,29 @@ Gradients shape: (3,)</p>
 </blockquote>
 </blockquote>
 </blockquote>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="encoding_atlas.analysis.compute_effective_dimension" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">compute_effective_dimension</span>
+
+
+<a href="#encoding_atlas.analysis.compute_effective_dimension" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">compute_effective_dimension</span><span class="p">(</span><span class="n">encoding</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;BaseEncoding&lt;/span&gt; (&lt;code&gt;encoding_atlas.core.base.BaseEncoding&lt;/code&gt;)" href="#encoding_atlas.core.base.BaseEncoding">BaseEncoding</a></span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n">regularization</span><span class="p">:</span> <span class="n"><span title="float">float</span></span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="n"><span title="typing.Literal">Literal</span></span><span class="p">[</span><span class="s1">&#39;pennylane&#39;</span><span class="p">,</span> <span class="s1">&#39;qiskit&#39;</span><span class="p">,</span> <span class="s1">&#39;cirq&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;pennylane&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="float">float</span></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Feature-space effective dimension of an encoding's fidelity kernel.</p>
+<p>Larger values indicate the encoding spreads data across more effective
+feature-space directions (higher capacity). See
+:func:<code>kernel_effective_dimension</code> for the definition.</p>
 
 
     </div>
@@ -8005,6 +8139,76 @@ compute_haar_distribution : Theoretical Haar distribution.</p>
 <div class="doc doc-object doc-function">
 
 
+<h3 id="encoding_atlas.analysis.compute_fidelity_kernel" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">compute_fidelity_kernel</span>
+
+
+<a href="#encoding_atlas.analysis.compute_fidelity_kernel" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">compute_fidelity_kernel</span><span class="p">(</span><span class="n">encoding</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;BaseEncoding&lt;/span&gt; (&lt;code&gt;encoding_atlas.core.base.BaseEncoding&lt;/code&gt;)" href="#encoding_atlas.core.base.BaseEncoding">BaseEncoding</a></span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="n"><span title="typing.Literal">Literal</span></span><span class="p">[</span><span class="s1">&#39;pennylane&#39;</span><span class="p">,</span> <span class="s1">&#39;qiskit&#39;</span><span class="p">,</span> <span class="s1">&#39;cirq&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;pennylane&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]]</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Compute the fidelity (overlap) kernel matrix for <code>X</code>.</p>
+<p><code>K[i, j] = |&lt;phi(x_i)|phi(x_j)&gt;|^2</code> where <code>|phi(x)&gt; = U(x)|0&gt;</code> is the
+encoded state. The matrix is symmetric, PSD, has unit diagonal, and entries
+in <code>[0, 1]</code>.</p>
+<h5 id="encoding_atlas.analysis.compute_fidelity_kernel--parameters">Parameters<a class="headerlink" href="#encoding_atlas.analysis.compute_fidelity_kernel--parameters" title="Anchor link to this section">&para;</a></h5>
+<p>encoding : BaseEncoding
+    Encoding used for state preparation. <code>encoding.n_features</code> must equal
+    <code>X.shape[1]</code>.
+X : ndarray, shape (n_samples, n_features)
+    Input data.
+backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
+    Statevector simulation backend.</p>
+<h5 id="encoding_atlas.analysis.compute_fidelity_kernel--returns">Returns<a class="headerlink" href="#encoding_atlas.analysis.compute_fidelity_kernel--returns" title="Anchor link to this section">&para;</a></h5>
+<p>ndarray, shape (n_samples, n_samples)
+    The fidelity kernel matrix.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="encoding_atlas.analysis.compute_geometric_difference" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">compute_geometric_difference</span>
+
+
+<a href="#encoding_atlas.analysis.compute_geometric_difference" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">compute_geometric_difference</span><span class="p">(</span><span class="n">encoding</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;BaseEncoding&lt;/span&gt; (&lt;code&gt;encoding_atlas.core.base.BaseEncoding&lt;/code&gt;)" href="#encoding_atlas.core.base.BaseEncoding">BaseEncoding</a></span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n">classical_kernel</span><span class="p">:</span> <span class="n"><span title="typing.Literal">Literal</span></span><span class="p">[</span><span class="s1">&#39;rbf&#39;</span><span class="p">,</span> <span class="s1">&#39;linear&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;rbf&#39;</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="n"><span title="float">float</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">regularization</span><span class="p">:</span> <span class="n"><span title="float">float</span></span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="n"><span title="typing.Literal">Literal</span></span><span class="p">[</span><span class="s1">&#39;pennylane&#39;</span><span class="p">,</span> <span class="s1">&#39;qiskit&#39;</span><span class="p">,</span> <span class="s1">&#39;cirq&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;pennylane&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="float">float</span></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Geometric difference <code>g(K_classical || K_quantum)</code> for an encoding.</p>
+<p>A large value means the encoding's fidelity kernel is geometrically distinct
+from the classical reference kernel — a necessary (not sufficient) condition
+for a quantum advantage over that classical kernel.</p>
+<h5 id="encoding_atlas.analysis.compute_geometric_difference--parameters">Parameters<a class="headerlink" href="#encoding_atlas.analysis.compute_geometric_difference--parameters" title="Anchor link to this section">&para;</a></h5>
+<p>encoding : BaseEncoding
+    Encoding under test.
+X : ndarray, shape (n_samples, n_features)
+    Input data.
+classical_kernel : {"rbf", "linear"}, default="rbf"
+    Classical reference kernel.
+gamma : float or None, default=None
+    RBF bandwidth (<code>None</code> -&gt; <code>1 / n_features</code>, scikit-learn default).
+regularization : float, default=1e-6
+    Ridge for the classical-kernel inversion.
+backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
+    Statevector backend.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="encoding_atlas.analysis.compute_gradient_variance" class="doc doc-heading">
 <code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">compute_gradient_variance</span>
 
@@ -8123,6 +8327,28 @@ are equally likely.</p>
 <p>.. [1] Życzkowski, K., &amp; Sommers, H.-J. (2001).
        "Induced measures in the space of mixed quantum states."
        Journal of Physics A, 34(35), 7111.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="encoding_atlas.analysis.compute_kernel_target_alignment" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">compute_kernel_target_alignment</span>
+
+
+<a href="#encoding_atlas.analysis.compute_kernel_target_alignment" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">compute_kernel_target_alignment</span><span class="p">(</span><span class="n">encoding</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;BaseEncoding&lt;/span&gt; (&lt;code&gt;encoding_atlas.core.base.BaseEncoding&lt;/code&gt;)" href="#encoding_atlas.core.base.BaseEncoding">BaseEncoding</a></span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]],</span> <span class="n">y</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.integer">integer</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n">centered</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="n"><span title="typing.Literal">Literal</span></span><span class="p">[</span><span class="s1">&#39;pennylane&#39;</span><span class="p">,</span> <span class="s1">&#39;qiskit&#39;</span><span class="p">,</span> <span class="s1">&#39;cirq&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;pennylane&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="float">float</span></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Kernel-target alignment of an encoding's fidelity kernel on <code>(X, y)</code>.</p>
+<p>Higher alignment predicts stronger quantum-kernel classification accuracy.
+Uses the centred variant by default.</p>
 
 
     </div>
@@ -9377,6 +9603,38 @@ print(params.shape)
 <div class="doc doc-object doc-function">
 
 
+<h3 id="encoding_atlas.analysis.geometric_difference" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">geometric_difference</span>
+
+
+<a href="#encoding_atlas.analysis.geometric_difference" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">geometric_difference</span><span class="p">(</span><span class="n">K1</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]],</span> <span class="n">K2</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n">regularization</span><span class="p">:</span> <span class="n"><span title="float">float</span></span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="float">float</span></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Asymmetric geometric difference <code>g(K1 || K2)</code> (Huang et al., 2021).</p>
+<p><code>g(K1 || K2) = sqrt( || sqrt(K2) (K1 + reg I)^-1 sqrt(K2) ||_inf )</code> where
+<code>||.||_inf</code> is the spectral norm and both kernels are trace-normalised to
+<code>n</code>. It quantifies how well a model expressed in <code>K1</code>'s space can
+reproduce <code>K2</code>'s geometry: <code>g</code> is large when <code>K2</code> explores directions
+<code>K1</code> cannot. <code>g(K, K) = 1</code> (in the <code>reg -&gt; 0</code> limit).</p>
+<h5 id="encoding_atlas.analysis.geometric_difference--parameters">Parameters<a class="headerlink" href="#encoding_atlas.analysis.geometric_difference--parameters" title="Anchor link to this section">&para;</a></h5>
+<p>K1, K2 : ndarray, shape (n, n)
+    Kernel matrices (symmetric PSD). <code>K1</code> is the reference (inverted);
+    for a quantum-advantage diagnostic use <code>K1 = classical</code> and
+    <code>K2 = quantum</code>.
+regularization : float, default=1e-6
+    Ridge added to <code>K1</code> before inversion for numerical stability.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="encoding_atlas.analysis.get_gate_breakdown" class="doc doc-heading">
 <code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">get_gate_breakdown</span>
 
@@ -9678,6 +9936,60 @@ False</p>
 <h5 id="encoding_atlas.analysis.is_matchgate_circuit--see-also">See Also<a class="headerlink" href="#encoding_atlas.analysis.is_matchgate_circuit--see-also" title="Anchor link to this section">&para;</a></h5>
 <p>is_clifford_circuit : Check for Clifford-only circuits.
 check_simulability : Full simulability analysis.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="encoding_atlas.analysis.kernel_effective_dimension" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">kernel_effective_dimension</span>
+
+
+<a href="#encoding_atlas.analysis.kernel_effective_dimension" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">kernel_effective_dimension</span><span class="p">(</span><span class="n">K</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n">regularization</span><span class="p">:</span> <span class="n"><span title="float">float</span></span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">normalize</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="float">float</span></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Effective degrees of freedom of a kernel's eigenspectrum.</p>
+<p><code>d_eff(lambda) = sum_i lambda_i / (lambda_i + lambda)</code> over the eigenvalues
+<code>lambda_i</code> of <code>K</code> (Zhang, 2005). It is a smooth "soft rank" measuring how
+many feature-space directions the kernel effectively uses, in <code>[0, n]</code>.</p>
+<h5 id="encoding_atlas.analysis.kernel_effective_dimension--parameters">Parameters<a class="headerlink" href="#encoding_atlas.analysis.kernel_effective_dimension--parameters" title="Anchor link to this section">&para;</a></h5>
+<p>K : ndarray, shape (n, n)
+    Kernel matrix (symmetric PSD).
+regularization : float, default=1.0
+    Ridge <code>lambda</code>. With <code>normalize=True</code> the mean eigenvalue is 1, so
+    <code>lambda = 1</code> weights each direction by its relative strength.
+normalize : bool, default=True
+    Trace-normalise <code>K</code> to <code>n</code> (mean eigenvalue 1) before the sum, making
+    the value comparable across encodings and dataset sizes.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="encoding_atlas.analysis.kernel_target_alignment" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">kernel_target_alignment</span>
+
+
+<a href="#encoding_atlas.analysis.kernel_target_alignment" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">kernel_target_alignment</span><span class="p">(</span><span class="n">K</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]],</span> <span class="n">y</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.integer">integer</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n"><span title="float">float</span></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Uncentred kernel-target alignment in <code>[-1, 1]</code> (Cristianini, 2002).</p>
+<p><code>A(K, y) = &lt;K, yy^T&gt;_F / (||K||_F ||yy^T||_F)</code> with labels mapped to
+<code>{-1, +1}</code>. Returns <code>0.0</code> for degenerate kernels or single-class labels.</p>
 
 
     </div>
