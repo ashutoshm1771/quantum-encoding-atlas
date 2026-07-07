@@ -3178,6 +3178,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.NoiseResilienceResult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;NoiseResilienceResult
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#encoding_atlas.analysis.SimulabilityResult" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3380,6 +3391,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;compute_meyer_wallach_with_breakdown
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.compute_noise_resilience" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;compute_noise_resilience
       
     </span>
   </a>
@@ -3633,6 +3655,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;simulate_encoding_statevectors_batch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.simulate_noisy_density_matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;simulate_noisy_density_matrix
       
     </span>
   </a>
@@ -7085,6 +7118,73 @@ print(f"95% CI: [{lo:.4f}, {hi:.4f}]")</p>
 
 
 
+<h3 id="encoding_atlas.analysis.NoiseResilienceResult" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">NoiseResilienceResult</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#encoding_atlas.analysis.NoiseResilienceResult" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">NoiseResilienceResult</span><span class="p">(</span><span class="n">retained_fidelity</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">fidelity_decay</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">noise_level</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">single_qubit_error</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">two_qubit_error</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">n_samples</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">std_fidelity</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">min_fidelity</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">max_fidelity</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">)</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Result of a noise-resilience analysis.</p>
+<h5 id="encoding_atlas.analysis.NoiseResilienceResult--attributes">Attributes<a class="headerlink" href="#encoding_atlas.analysis.NoiseResilienceResult--attributes" title="Anchor link to this section">&para;</a></h5>
+<p>retained_fidelity : float
+    Mean fidelity between the ideal and noisy states over the sampled
+    inputs, in <code>[0, 1]</code> (1 = perfectly resilient).
+fidelity_decay : float
+    <code>1 - retained_fidelity</code>: the fraction of state fidelity lost to noise.
+noise_level : str
+    The preset level used, or <code>"custom"</code> for explicit <code>noise_params</code>.
+single_qubit_error, two_qubit_error : float
+    The depolarizing probabilities applied after one- and two-qubit gates.
+n_samples : int
+    Number of random inputs averaged over.
+std_fidelity : float
+    Standard deviation of the per-input fidelities.
+min_fidelity, max_fidelity : float
+    Extremes of the per-input fidelities.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
 <h3 id="encoding_atlas.analysis.SimulabilityResult" class="doc doc-heading">
 <code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">SimulabilityResult</span>
 
@@ -8564,6 +8664,58 @@ print(f"Per-qubit entropies: {per_qubit}")</p>
 </ol>
 <p>For the GHZ state, all qubits have equal entropy (= 0.5).
 For the W state, all qubits also have equal entropy (= &#8532;).</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="encoding_atlas.analysis.compute_noise_resilience" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">compute_noise_resilience</span>
+
+
+<a href="#encoding_atlas.analysis.compute_noise_resilience" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">compute_noise_resilience</span><span class="p">(</span><span class="n">encoding</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;BaseEncoding&lt;/span&gt; (&lt;code&gt;encoding_atlas.core.base.BaseEncoding&lt;/code&gt;)" href="#encoding_atlas.core.base.BaseEncoding">BaseEncoding</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">noise_level</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">&#39;medium&#39;</span><span class="p">,</span> <span class="n">noise_params</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="float">float</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">feature_range</span><span class="p">:</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n"><span title="float">float</span></span><span class="p">]</span> <span class="o">=</span> <span class="n"><span title="encoding_atlas.analysis.noise._DEFAULT_RANGE">_DEFAULT_RANGE</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;NoiseResilienceResult&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt; (&lt;code&gt;encoding_atlas.analysis.noise.NoiseResilienceResult&lt;/code&gt;)" href="#encoding_atlas.analysis.NoiseResilienceResult">NoiseResilienceResult</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Measure an encoding's resilience to depolarizing gate noise.</p>
+<p>For <code>n_samples</code> random inputs, simulates the ideal state <code>|phi(x)&gt;</code> and
+the noisy density matrix <code>rho(x)</code> and averages the fidelity
+<code>F(x) = &lt;phi(x)| rho(x) |phi(x)&gt;</code>. Higher retained fidelity means the
+encoding degrades less under noise.</p>
+<h5 id="encoding_atlas.analysis.compute_noise_resilience--parameters">Parameters<a class="headerlink" href="#encoding_atlas.analysis.compute_noise_resilience--parameters" title="Anchor link to this section">&para;</a></h5>
+<p>encoding : BaseEncoding
+    Encoding to analyze (at most 12 qubits; density-matrix memory is
+    O(4^n)).
+noise_level : {"low", "medium", "high"}, default="medium"
+    Preset depolarizing error rates (ignored if <code>noise_params</code> is given).
+noise_params : dict or None, default=None
+    Explicit <code>{"single_qubit": p1, "two_qubit": p2}</code> error probabilities,
+    overriding <code>noise_level</code>.
+n_samples : int, default=25
+    Number of random inputs to average over. Depolarizing fidelity is
+    nearly input-independent, so modest values are accurate.
+seed : int or None, default=None
+    Seed for input sampling (reproducibility).
+feature_range : tuple, default=(0, 2*pi)
+    Range for uniformly sampled input features.</p>
+<h5 id="encoding_atlas.analysis.compute_noise_resilience--returns">Returns<a class="headerlink" href="#encoding_atlas.analysis.compute_noise_resilience--returns" title="Anchor link to this section">&para;</a></h5>
+<p>NoiseResilienceResult
+    Retained fidelity, fidelity decay, and per-sample statistics.</p>
+<h5 id="encoding_atlas.analysis.compute_noise_resilience--raises">Raises<a class="headerlink" href="#encoding_atlas.analysis.compute_noise_resilience--raises" title="Anchor link to this section">&para;</a></h5>
+<p>ValueError
+    If <code>n_samples &lt; 1</code>, the encoding exceeds the qubit cap, or the noise
+    specification is invalid.</p>
 
 
     </div>
@@ -10349,6 +10501,39 @@ Number of states: 3</p>
 </blockquote>
 </blockquote>
 </blockquote>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="encoding_atlas.analysis.simulate_noisy_density_matrix" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">simulate_noisy_density_matrix</span>
+
+
+<a href="#encoding_atlas.analysis.simulate_noisy_density_matrix" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">simulate_noisy_density_matrix</span><span class="p">(</span><span class="n">encoding</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;BaseEncoding&lt;/span&gt; (&lt;code&gt;encoding_atlas.core.base.BaseEncoding&lt;/code&gt;)" href="#encoding_atlas.core.base.BaseEncoding">BaseEncoding</a></span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n">single_qubit_error</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">two_qubit_error</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.complexfloating">complexfloating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]]</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Simulate the encoding under depolarizing noise; return the density matrix.</p>
+<p>A depolarizing channel is inserted after each gate: <code>single_qubit_error</code>
+after one-qubit gates, and <code>two_qubit_error</code> on each qubit of two-qubit
+(or larger) gates. Uses PennyLane's <code>default.mixed</code> device.</p>
+<h5 id="encoding_atlas.analysis.simulate_noisy_density_matrix--parameters">Parameters<a class="headerlink" href="#encoding_atlas.analysis.simulate_noisy_density_matrix--parameters" title="Anchor link to this section">&para;</a></h5>
+<p>encoding : BaseEncoding
+    Encoding to simulate.
+x : ndarray, shape (n_features,)
+    Input to encode.
+single_qubit_error, two_qubit_error : float
+    Depolarizing probabilities in <code>[0, 1]</code>.</p>
+<h5 id="encoding_atlas.analysis.simulate_noisy_density_matrix--returns">Returns<a class="headerlink" href="#encoding_atlas.analysis.simulate_noisy_density_matrix--returns" title="Anchor link to this section">&para;</a></h5>
+<p>ndarray, shape (2**n_qubits, 2**n_qubits)
+    The noisy density matrix.</p>
 
 
     </div>

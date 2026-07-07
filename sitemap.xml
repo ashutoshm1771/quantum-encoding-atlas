@@ -2,246 +2,246 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/installation/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/quickstart/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/tags/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/api/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/concepts/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/concepts/encoding-properties/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/concepts/quantum-advantage/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/concepts/what-is-encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/contributing/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/contributing/adding-encodings/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/contributing/code-style/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/contributing/development-setup/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/contributing/release-process/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/amplitude/amplitude_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/angle/angle_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/basis/basis_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/cyclic_equivariant/cyclic_equivariant/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/data_reuploading/data_reuploading/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/hamiltonian/hamiltonian_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/hardware_efficient/hardware_efficient/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/higher_order_angle/higher_order_angle_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/iqp/iqp_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/pauli_feature_map/pauli_feature_map/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/qaoa/qaoa/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/so2_equivariant/so2_equivariant_feature_map/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/swap_equivariant/swap_equivariant_feature_map/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/symmetry_inspired/symmetry_inspired_feature_map/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/trainable/trainable_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/encodings/zz_feature_map/zz_feature_map/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/guide/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/guide/decision-flowchart/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/guide/faq/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/guide/recommendation-architecture/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/guide/which-encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/hooks/version_hook/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/amplitude_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/angle_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/basis_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/cyclic_equivariant_feature_map/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/data_reuploading/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/guide_recommendation_system/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/hamiltonian_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/hardware_efficient_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/higher_order_angle_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/iqp_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/pauli_feature_map/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/qaoa_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/so2_equivariant_feature_map/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/swap_equivariant_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/symmetry_inspired_feature_map/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/trainable_encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/notebooks/zz_feature_map/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/tutorials/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/tutorials/benchmarking/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/tutorials/comparing-encodings/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/tutorials/custom-encoding/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/tutorials/getting-started/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://encoding-atlas.github.io/quantum-encoding-atlas/tutorials/hardware-considerations/</loc>
-         <lastmod>2026-07-05</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
 </urlset>
