@@ -163,6 +163,18 @@ gd = compute_geometric_difference(AngleEncoding(n_features=2), X)
 d_eff = compute_effective_dimension(AngleEncoding(n_features=2), X)
 ```
 
+### Measure noise resilience
+
+Simulate an encoding under a depolarizing noise model and measure the retained
+state fidelity — entangling encodings degrade far more than non-entangling ones:
+
+```python
+from encoding_atlas.analysis import compute_noise_resilience
+
+result = compute_noise_resilience(AngleEncoding(n_features=4), noise_level="medium")
+print(result.retained_fidelity, result.fidelity_decay)   # e.g. 0.987 0.013
+```
+
 ## Supported Encodings
 
 | Category | Encodings |

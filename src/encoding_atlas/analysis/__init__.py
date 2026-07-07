@@ -115,6 +115,14 @@ from encoding_atlas.analysis.generalization import (
     kernel_effective_dimension,
     kernel_target_alignment,
 )
+
+# Noise-resilience analysis (depolarizing noise model)
+from encoding_atlas.analysis.noise import (
+    NOISE_LEVELS,
+    NoiseResilienceResult,
+    compute_noise_resilience,
+    simulate_noisy_density_matrix,
+)
 from encoding_atlas.analysis.resources import (
     compare_resources,
     count_resources,
@@ -169,7 +177,12 @@ __all__ = [
     "centered_kernel_target_alignment",
     "geometric_difference",
     "kernel_effective_dimension",
+    # Noise-resilience analysis
+    "compute_noise_resilience",
+    "simulate_noisy_density_matrix",
+    "NOISE_LEVELS",
     # Type definitions
+    "NoiseResilienceResult",
     "SimulabilityResult",
     "EntanglementResult",
     "TrainabilityResult",
