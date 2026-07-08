@@ -123,6 +123,14 @@ from encoding_atlas.analysis.noise import (
     compute_noise_resilience,
     simulate_noisy_density_matrix,
 )
+
+# Unified encoding profiler
+from encoding_atlas.analysis.profile import (
+    EncodingCharacterization,
+    atlas_comparable_metrics,
+    compare_to_atlas,
+    profile_encoding,
+)
 from encoding_atlas.analysis.resources import (
     compare_resources,
     count_resources,
@@ -181,7 +189,12 @@ __all__ = [
     "compute_noise_resilience",
     "simulate_noisy_density_matrix",
     "NOISE_LEVELS",
+    # Unified profiler
+    "profile_encoding",
+    "compare_to_atlas",
+    "atlas_comparable_metrics",
     # Type definitions
+    "EncodingCharacterization",
     "NoiseResilienceResult",
     "SimulabilityResult",
     "EntanglementResult",

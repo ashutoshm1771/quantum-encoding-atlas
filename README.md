@@ -175,6 +175,22 @@ result = compute_noise_resilience(AngleEncoding(n_features=4), noise_level="medi
 print(result.retained_fidelity, result.fidelity_decay)   # e.g. 0.987 0.013
 ```
 
+### Profile any encoding in one call
+
+Characterize an encoding — including your own custom one — across every axis,
+and rank it against the 16 built-in encodings:
+
+```python
+from encoding_atlas.analysis import profile_encoding, compare_to_atlas
+
+profile = profile_encoding(AngleEncoding(n_features=2), X=X, y=y)
+print(profile.metrics)            # depth, expressibility, entanglement, trainability,
+                                  # noise, kernel-target alignment, effective dimension, ...
+
+cmp = compare_to_atlas(profile, "expressibility")
+print(cmp["rank"], cmp["percentile"])   # where it ranks among the atlas encodings
+```
+
 ## Supported Encodings
 
 | Category | Encodings |
