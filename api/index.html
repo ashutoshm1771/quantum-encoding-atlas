@@ -3156,6 +3156,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.EncodingCharacterization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;EncodingCharacterization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#encoding_atlas.analysis.EntanglementResult" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3211,6 +3222,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.atlas_comparable_metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;atlas_comparable_metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#encoding_atlas.analysis.centered_kernel_target_alignment" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3237,6 +3259,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;compare_resources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.compare_to_atlas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;compare_to_atlas
       
     </span>
   </a>
@@ -3633,6 +3666,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;partial_trace_subsystem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encoding_atlas.analysis.profile_encoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;profile_encoding
       
     </span>
   </a>
@@ -6926,6 +6970,96 @@ encoding_atlas.core.exceptions : Analysis-related exceptions.</p>
 
 
 
+<h3 id="encoding_atlas.analysis.EncodingCharacterization" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">EncodingCharacterization</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#encoding_atlas.analysis.EncodingCharacterization" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">EncodingCharacterization</span><span class="p">(</span><span class="n">encoding_name</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">n_qubits</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">n_features</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">is_simulable</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n"><span title="collections.abc.Mapping">Mapping</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">],</span> <span class="n">notes</span><span class="p">:</span> <span class="n"><span title="collections.abc.Mapping">Mapping</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="str">str</span></span><span class="p">])</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>A computed, multi-axis profile of a single encoding.</p>
+<h5 id="encoding_atlas.analysis.EncodingCharacterization--attributes">Attributes<a class="headerlink" href="#encoding_atlas.analysis.EncodingCharacterization--attributes" title="Anchor link to this section">&para;</a></h5>
+<p>encoding_name : str
+    The encoding's class name.
+n_qubits, n_features : int
+    Circuit width and input dimensionality.
+is_simulable : bool or None
+    Whether the encoding is classically efficiently simulable.
+metrics : Mapping[str, float | None]
+    Measured metrics. Always includes <code>depth</code>, <code>expressibility</code>,
+    <code>entanglement_capability</code>, <code>trainability_estimate</code> and
+    <code>noise_retained_fidelity</code>; includes <code>kernel_target_alignment</code>,
+    <code>geometric_difference</code> and <code>effective_dimension</code> when a dataset was
+    supplied. A value is <code>None</code> if that axis could not be computed (see
+    <code>notes</code>). <code>depth</code>/<code>expressibility</code>/<code>entanglement_capability</code>/
+    <code>trainability_estimate</code> share the atlas's definitions;
+    <code>noise_retained_fidelity</code> is the fidelity-based noise metric (distinct
+    from the atlas's <code>noise_resilience</code> trade-off column).
+notes : Mapping[str, str]
+    Per-axis failure reasons for any metric that is <code>None</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="encoding_atlas.analysis.EncodingCharacterization.metric" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">metric</span>
+
+
+<a href="#encoding_atlas.analysis.EncodingCharacterization.metric" class="headerlink" title="Anchor link to this section">&para;</a></h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">metric</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n"><span title="float">float</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="float">float</span></span> <span class="o">|</span> <span class="kc">None</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return a metric value, or <code>default</code> if absent or uncomputable.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
 <h3 id="encoding_atlas.analysis.EntanglementResult" class="doc doc-heading">
 <code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">EntanglementResult</span>
 
@@ -7363,6 +7497,26 @@ sampling : {'uniform', 'sobol'}
 <div class="doc doc-object doc-function">
 
 
+<h3 id="encoding_atlas.analysis.atlas_comparable_metrics" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">atlas_comparable_metrics</span>
+
+
+<a href="#encoding_atlas.analysis.atlas_comparable_metrics" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">atlas_comparable_metrics</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return the metric keys that can be compared against the atlas.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="encoding_atlas.analysis.centered_kernel_target_alignment" class="doc doc-heading">
 <code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">centered_kernel_target_alignment</span>
 
@@ -7588,6 +7742,49 @@ with specific input data for actual counts.</p>
 <h5 id="encoding_atlas.analysis.compare_resources--see-also">See Also<a class="headerlink" href="#encoding_atlas.analysis.compare_resources--see-also" title="Anchor link to this section">&para;</a></h5>
 <p>count_resources : Get resources for a single encoding.
 get_resource_summary : Quick summary for a single encoding.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="encoding_atlas.analysis.compare_to_atlas" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">compare_to_atlas</span>
+
+
+<a href="#encoding_atlas.analysis.compare_to_atlas" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">compare_to_atlas</span><span class="p">(</span><span class="n">characterization</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;EncodingCharacterization&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt; (&lt;code&gt;encoding_atlas.analysis.profile.EncodingCharacterization&lt;/code&gt;)" href="#encoding_atlas.analysis.EncodingCharacterization">EncodingCharacterization</a></span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Rank a profiled encoding against the 16 built-in encodings on <code>metric</code>.</p>
+<p>Only axes that share the atlas's definition are supported (see
+:func:<code>atlas_comparable_metrics</code>): <code>depth</code> (lower is better),
+<code>expressibility</code>, <code>entanglement_capability</code> and
+<code>trainability_estimate</code> (higher is better).</p>
+<h5 id="encoding_atlas.analysis.compare_to_atlas--parameters">Parameters<a class="headerlink" href="#encoding_atlas.analysis.compare_to_atlas--parameters" title="Anchor link to this section">&para;</a></h5>
+<p>characterization : EncodingCharacterization
+    A profile produced by :func:<code>profile_encoding</code>.
+metric : str
+    The axis to compare on.</p>
+<h5 id="encoding_atlas.analysis.compare_to_atlas--returns">Returns<a class="headerlink" href="#encoding_atlas.analysis.compare_to_atlas--returns" title="Anchor link to this section">&para;</a></h5>
+<p>dict
+    <code>{"metric", "value", "rank", "n_atlas", "percentile", "beats",
+    "atlas_min", "atlas_median", "atlas_max", "higher_is_better"}</code> where
+    <code>rank</code> is 1-based (1 = better than every atlas encoding) and
+    <code>percentile</code> is the fraction of atlas encodings the value beats.</p>
+<h5 id="encoding_atlas.analysis.compare_to_atlas--raises">Raises<a class="headerlink" href="#encoding_atlas.analysis.compare_to_atlas--raises" title="Anchor link to this section">&para;</a></h5>
+<p>ValueError
+    If <code>metric</code> is not atlas-comparable or was not computed.</p>
 
 
     </div>
@@ -10348,6 +10545,54 @@ first index of the output density matrix corresponds to qubit 1.</p>
 <li>Analyzing local properties of entangled states</li>
 <li>Verifying separability of quantum states</li>
 </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="encoding_atlas.analysis.profile_encoding" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">profile_encoding</span>
+
+
+<a href="#encoding_atlas.analysis.profile_encoding" class="headerlink" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">profile_encoding</span><span class="p">(</span><span class="n">encoding</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;BaseEncoding&lt;/span&gt; (&lt;code&gt;encoding_atlas.core.base.BaseEncoding&lt;/code&gt;)" href="#encoding_atlas.core.base.BaseEncoding">BaseEncoding</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.integer">integer</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">expressibility_samples</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span> <span class="n">entanglement_samples</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span> <span class="n">trainability_samples</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">noise_level</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">&#39;medium&#39;</span><span class="p">,</span> <span class="n">noise_samples</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">include_noise</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;EncodingCharacterization&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt; (&lt;code&gt;encoding_atlas.analysis.profile.EncodingCharacterization&lt;/code&gt;)" href="#encoding_atlas.analysis.EncodingCharacterization">EncodingCharacterization</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Characterise an encoding across every analysis axis.</p>
+<h5 id="encoding_atlas.analysis.profile_encoding--parameters">Parameters<a class="headerlink" href="#encoding_atlas.analysis.profile_encoding--parameters" title="Anchor link to this section">&para;</a></h5>
+<p>encoding : BaseEncoding
+    The encoding to profile (may be any custom encoding, not just a
+    built-in one).
+X : ndarray or None, default=None
+    Optional feature matrix (<code>n_features</code> must match the encoding). When
+    given, the kernel-geometry axes are computed.
+y : ndarray or None, default=None
+    Optional binary labels; required for kernel-target alignment.
+expressibility_samples, entanglement_samples, trainability_samples : int
+    Sample counts for the corresponding stochastic estimators.
+noise_level : {"low", "medium", "high"}, default="medium"
+    Noise preset for the noise-resilience axis.
+noise_samples : int, default=20
+    Inputs averaged for the noise-resilience axis.
+include_noise : bool, default=True
+    Whether to compute the (density-matrix) noise axis.
+seed : int or None, default=None
+    Base random seed for all stochastic axes.</p>
+<h5 id="encoding_atlas.analysis.profile_encoding--returns">Returns<a class="headerlink" href="#encoding_atlas.analysis.profile_encoding--returns" title="Anchor link to this section">&para;</a></h5>
+<p>EncodingCharacterization
+    The computed multi-axis profile. Axes that fail are recorded as <code>None</code>
+    with a note, so the call always returns a profile for a valid encoding.</p>
 
 
     </div>
