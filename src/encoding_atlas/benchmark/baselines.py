@@ -66,19 +66,21 @@ def run_baseline_single_fold(
     """Train and evaluate a classical baseline on one train/test split.
 
     Returns a dict with ``test_accuracy``, ``precision``, ``recall``, ``f1``,
-    and ``status``. Failures are reported as ``status="failed"``.
+    and ``status``. Metrics use macro averaging for multi-class tasks. Failures
+    are reported as ``status="failed"``.
     """
-    from sklearn.metrics import f1_score, precision_score, recall_score
+    from encoding_atlas.benchmark.metrics import compute_metrics
 
     try:
         clf = get_classical_baseline(name, seed=seed)
         clf.fit(X_train, y_train)
         y_pred = clf.predict(X_test)
+        scores = compute_metrics(y_test, y_pred)
         return {
-            "test_accuracy": float(np.mean(y_pred == y_test)),
-            "precision": float(precision_score(y_test, y_pred, zero_division=0)),
-            "recall": float(recall_score(y_test, y_pred, zero_division=0)),
-            "f1": float(f1_score(y_test, y_pred, zero_division=0)),
+            "test_accuracy": scores["accuracy"],
+            "precision": scores["precision"],
+            "recall": scores["recall"],
+            "f1": scores["f1"],
             "status": "success",
         }
     except Exception as exc:  # noqa: BLE001 - report and continue the sweep

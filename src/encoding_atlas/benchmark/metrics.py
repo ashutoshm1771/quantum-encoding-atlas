@@ -1,10 +1,22 @@
-"""Evaluation metrics for benchmarking."""
+"""Evaluation metrics for benchmarking (binary and multi-class)."""
+
+from __future__ import annotations
 
 import numpy as np
 
 
+def _average_for(y_true: np.ndarray) -> str:
+    """Return the sklearn averaging mode: ``"binary"`` for two classes, else
+    ``"macro"`` (so every class contributes equally)."""
+    return "binary" if len(np.unique(y_true)) == 2 else "macro"
+
+
 def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
-    """Compute evaluation metrics.
+    """Compute accuracy, precision, recall, and F1.
+
+    Binary tasks use standard positive-class precision/recall/F1; multi-class
+    tasks (more than two labels) use macro averaging. Values are ``0.0`` where
+    a class has no predictions (``zero_division=0``).
 
     Parameters
     ----------
@@ -16,26 +28,23 @@ def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
     Returns
     -------
     dict
-        Dictionary of metrics.
+        ``{"accuracy", "precision", "recall", "f1"}``.
     """
-    accuracy = np.mean(y_true == y_pred)
-
-    # Simple F1 for binary classification
-    tp = np.sum((y_true == 1) & (y_pred == 1))
-    fp = np.sum((y_true == 0) & (y_pred == 1))
-    fn = np.sum((y_true == 1) & (y_pred == 0))
-
-    precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-    recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-    f1 = (
-        2 * precision * recall / (precision + recall)
-        if (precision + recall) > 0
-        else 0.0
+    from sklearn.metrics import (
+        accuracy_score,
+        f1_score,
+        precision_score,
+        recall_score,
     )
 
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+    average = _average_for(y_true)
     return {
-        "accuracy": float(accuracy),
-        "precision": float(precision),
-        "recall": float(recall),
-        "f1": float(f1),
+        "accuracy": float(accuracy_score(y_true, y_pred)),
+        "precision": float(
+            precision_score(y_true, y_pred, average=average, zero_division=0)
+        ),
+        "recall": float(recall_score(y_true, y_pred, average=average, zero_division=0)),
+        "f1": float(f1_score(y_true, y_pred, average=average, zero_division=0)),
     }

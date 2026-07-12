@@ -18,7 +18,11 @@ from encoding_atlas.benchmark.baselines import (
     get_classical_baseline,
     run_baseline_single_fold,
 )
-from encoding_atlas.benchmark.datasets import get_dataset, list_datasets
+from encoding_atlas.benchmark.datasets import (
+    get_dataset,
+    list_datasets,
+    list_multiclass_datasets,
+)
 from encoding_atlas.benchmark.kernel import (
     QuantumKernelClassifier,
     centered_kernel_target_alignment,
@@ -45,6 +49,7 @@ __all__ = [
     # Datasets & metrics
     "get_dataset",
     "list_datasets",
+    "list_multiclass_datasets",
     "compute_metrics",
     # Classifiers
     "VQCClassifier",

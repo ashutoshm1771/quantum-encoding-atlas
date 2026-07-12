@@ -82,10 +82,13 @@ class VQCClassifier:
         self.params_: NDArray[np.floating[Any]] | None = None
         self.loss_history_: list[float] = []
         self.status_: str = "not_fitted"
+        self.classes_: NDArray[np.intp] | None = None
 
         self._qnode: Any | None = None
         self._device: Any | None = None
         self._n_qubits: int = encoding.n_qubits
+        # For >2 classes, a one-vs-rest ensemble of binary VQCs is used.
+        self._ovr_models: list[VQCClassifier] | None = None
 
     def _build_circuit(self) -> None:
         """Construct the PennyLane QNode (encoding + variational + ``<Z_0>``)."""
@@ -111,7 +114,19 @@ class VQCClassifier:
         self._qnode = circuit
 
     def fit(self, X: NDArray[np.floating[Any]], y: NDArray[np.intp]) -> VQCClassifier:
-        """Train on ``X`` (features) and ``y`` (labels in ``{0, 1}``)."""
+        """Train on ``X`` and labels ``y``.
+
+        Two-class problems (labels in ``{0, 1}``) train a single VQC that reads
+        out ``<Z_0>``. Problems with more than two classes train a one-vs-rest
+        ensemble of binary VQCs.
+        """
+        y = np.asarray(y)
+        self.classes_ = np.unique(y)
+        if len(self.classes_) > 2:
+            return self._fit_multiclass(X, y)
+
+        # --- Binary path (labels in {0, 1}) -------------------------------
+        self._ovr_models = None
         import pennylane as qml
         from pennylane import numpy as pnp
 
@@ -155,8 +170,37 @@ class VQCClassifier:
 
         return self
 
+    def _fit_multiclass(
+        self, X: NDArray[np.floating[Any]], y: NDArray[np.intp]
+    ) -> VQCClassifier:
+        """Train a one-vs-rest ensemble, one binary VQC per class."""
+        assert self.classes_ is not None
+        self._ovr_models = []
+        statuses = []
+        for i, cls in enumerate(self.classes_):
+            sub = VQCClassifier(
+                self.encoding,
+                n_var_layers=self.n_var_layers,
+                lr=self.lr,
+                epochs=self.epochs,
+                seed=None if self.seed is None else self.seed + i,
+            )
+            sub.fit(X, (y == cls).astype(np.intp))
+            self._ovr_models.append(sub)
+            statuses.append(sub.status_)
+        self.status_ = "diverged" if "diverged" in statuses else "success"
+        self.loss_history_ = []
+        return self
+
     def predict_proba(self, X: NDArray[np.floating[Any]]) -> NDArray[np.floating[Any]]:
-        """Return class probabilities of shape ``(n_samples, 2)``."""
+        """Return class probabilities of shape ``(n_samples, n_classes)``."""
+        if self._ovr_models is not None:
+            columns = [model.predict_proba(X)[:, 1] for model in self._ovr_models]
+            probs = np.column_stack(columns)
+            row_sums = probs.sum(axis=1, keepdims=True)
+            row_sums[row_sums == 0.0] = 1.0
+            return probs / row_sums
+
         if self.params_ is None:
             raise ValueError("Model not fitted. Call fit() first.")
         if self._qnode is None:
@@ -170,7 +214,11 @@ class VQCClassifier:
         return np.array(predictions)
 
     def predict(self, X: NDArray[np.floating[Any]]) -> NDArray[np.intp]:
-        """Return predicted labels in ``{0, 1}``."""
+        """Return predicted labels (in ``{0, 1}`` for binary tasks)."""
+        if self._ovr_models is not None:
+            assert self.classes_ is not None
+            indices = np.argmax(self.predict_proba(X), axis=1)
+            return self.classes_[indices].astype(np.intp)
         proba = self.predict_proba(X)
         return (proba[:, 1] >= 0.5).astype(np.intp)
 
@@ -179,7 +227,18 @@ class VQCClassifier:
         return float(np.mean(self.predict(X) == y))
 
     def get_final_loss(self) -> float | None:
-        """Return the final epoch's mean loss, or ``None`` if not fitted."""
+        """Return the final training loss, or ``None`` if not fitted.
+
+        For a one-vs-rest ensemble this is the mean of the sub-models' final
+        losses.
+        """
+        if self._ovr_models is not None:
+            losses = [
+                loss
+                for model in self._ovr_models
+                if (loss := model.get_final_loss()) is not None
+            ]
+            return float(np.mean(losses)) if losses else None
         return self.loss_history_[-1] if self.loss_history_ else None
 
 
@@ -198,10 +257,11 @@ def run_vqc_single_fold(
     """Train and evaluate a VQC on one train/test split.
 
     Returns a dict with ``test_accuracy``, ``train_accuracy``, ``precision``,
-    ``recall``, ``f1``, ``final_loss``, and ``status``. Failures are caught and
-    reported as ``status="failed"`` so a sweep can continue.
+    ``recall``, ``f1``, ``final_loss``, and ``status``. Metrics use macro
+    averaging for multi-class tasks. Failures are caught and reported as
+    ``status="failed"`` so a sweep can continue.
     """
-    from sklearn.metrics import f1_score, precision_score, recall_score
+    from encoding_atlas.benchmark.metrics import compute_metrics
 
     try:
         vqc = VQCClassifier(
@@ -213,12 +273,13 @@ def run_vqc_single_fold(
         )
         vqc.fit(X_train, y_train)
         y_pred_test = vqc.predict(X_test)
+        scores = compute_metrics(y_test, y_pred_test)
         return {
             "train_accuracy": float(np.mean(vqc.predict(X_train) == y_train)),
-            "test_accuracy": float(np.mean(y_pred_test == y_test)),
-            "precision": float(precision_score(y_test, y_pred_test, zero_division=0)),
-            "recall": float(recall_score(y_test, y_pred_test, zero_division=0)),
-            "f1": float(f1_score(y_test, y_pred_test, zero_division=0)),
+            "test_accuracy": scores["accuracy"],
+            "precision": scores["precision"],
+            "recall": scores["recall"],
+            "f1": scores["f1"],
             "final_loss": vqc.get_final_loss(),
             "status": vqc.status_,
         }

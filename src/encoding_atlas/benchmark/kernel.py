@@ -228,18 +228,24 @@ def run_kernel_single_fold(
     """Train and evaluate a quantum-kernel SVM on one train/test split.
 
     Returns a dict with ``test_accuracy``, ``precision``, ``recall``, ``f1``,
-    ``kernel_target_alignment`` (centred, on the training kernel),
-    ``kernel_regularized``, and ``status``. Failures are reported as
-    ``status="failed"`` so a sweep can continue.
+    ``kernel_target_alignment`` (centred, on the training kernel; ``None`` for
+    multi-class tasks, where it is undefined), ``kernel_regularized``, and
+    ``status``. Metrics use macro averaging for multi-class tasks. Failures are
+    reported as ``status="failed"`` so a sweep can continue.
     """
-    from sklearn.metrics import f1_score, precision_score, recall_score
+    from encoding_atlas.benchmark.metrics import compute_metrics
 
     try:
         K_train, train_states = compute_kernel_matrix(
             encoding, X_train, return_states=True
         )
         K_train_psd, regularized = ensure_psd(K_train)
-        alignment = centered_kernel_target_alignment(K_train, y_train)
+        # Kernel-target alignment is a binary label-alignment; undefined for >2.
+        alignment = (
+            centered_kernel_target_alignment(K_train, y_train)
+            if len(np.unique(y_train)) == 2
+            else None
+        )
 
         from sklearn.svm import SVC
 
@@ -250,11 +256,12 @@ def run_kernel_single_fold(
             encoding, X_train, X_test, train_states=train_states
         )
         y_pred = svm.predict(K_test)
+        scores = compute_metrics(y_test, y_pred)
         return {
-            "test_accuracy": float(np.mean(y_pred == y_test)),
-            "precision": float(precision_score(y_test, y_pred, zero_division=0)),
-            "recall": float(recall_score(y_test, y_pred, zero_division=0)),
-            "f1": float(f1_score(y_test, y_pred, zero_division=0)),
+            "test_accuracy": scores["accuracy"],
+            "precision": scores["precision"],
+            "recall": scores["recall"],
+            "f1": scores["f1"],
             "kernel_target_alignment": alignment,
             "kernel_regularized": regularized,
             "status": "success",

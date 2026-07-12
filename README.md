@@ -140,6 +140,11 @@ report = evaluate_encoding(AngleEncoding(n_features=2), X, y, method="kernel")
 print(report["mean"], report["ci_low"], report["ci_high"])
 ```
 
+Both **binary and multi-class** classification are supported — pass multi-class
+labels or a built-in multi-class dataset (`list_multiclass_datasets()`, e.g.
+`"iris3"`, `"blobs3"`); the VQC uses a one-vs-rest ensemble and metrics switch to
+macro averaging automatically.
+
 ### Diagnose *why* an encoding generalizes
 
 Cheap, training-free kernel-geometry metrics that predict downstream

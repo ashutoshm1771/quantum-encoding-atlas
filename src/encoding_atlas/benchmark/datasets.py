@@ -4,7 +4,15 @@ from __future__ import annotations
 
 import numpy as np
 
-_DATASETS = ["iris", "moons", "circles", "linear", "xor"]
+_DATASETS = ["iris", "moons", "circles", "linear", "xor", "iris3", "blobs3"]
+
+# Datasets with more than two classes (for multi-class benchmarking).
+_MULTICLASS_DATASETS = frozenset({"iris3", "blobs3"})
+
+
+def list_multiclass_datasets() -> list[str]:
+    """List the available multi-class (more than two labels) datasets."""
+    return sorted(_MULTICLASS_DATASETS)
 
 
 def list_datasets() -> list[str]:
@@ -79,5 +87,28 @@ def get_dataset(
         X = rng.standard_normal((n_samples, 2))
         y = ((X[:, 0] > 0) ^ (X[:, 1] > 0)).astype(int)
         return X, y
+
+    elif name == "iris3":
+        try:
+            from sklearn.datasets import load_iris
+        except ImportError:
+            raise ImportError("sklearn required for iris3 dataset")
+        data = load_iris()
+        # All three classes, first two features.
+        return data.data[:, :2], data.target
+
+    elif name == "blobs3":
+        try:
+            from sklearn.datasets import make_blobs
+        except ImportError:
+            raise ImportError("sklearn required for blobs3 dataset")
+        X, y = make_blobs(
+            n_samples=n_samples,
+            centers=3,
+            n_features=2,
+            cluster_std=1.0,
+            random_state=seed,
+        )
+        return X, y.astype(int)
 
     raise ValueError(f"Unknown dataset: {name}")
