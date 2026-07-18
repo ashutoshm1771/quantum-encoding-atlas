@@ -242,6 +242,156 @@ class VQCClassifier:
         return self.loss_history_[-1] if self.loss_history_ else None
 
 
+class VQCRegressor:
+    """Variational quantum regressor with a configurable encoding.
+
+    Uses the same circuit as :class:`VQCClassifier` but reads ``<Z_0>`` as a
+    continuous prediction and trains with mean-squared error. Targets are
+    min-max scaled into ``[-1, 1]`` (the range of ``<Z_0>``) using **training**
+    statistics only, and predictions are mapped back to the original scale.
+
+    Parameters
+    ----------
+    encoding : BaseEncoding
+        The quantum encoding to benchmark.
+    n_var_layers : int, default=2
+        Number of variational layers after the encoding.
+    lr : float, default=0.05
+        Adam learning rate.
+    epochs : int, default=30
+        Number of training epochs.
+    seed : int or None, default=None
+        Random seed for parameter initialisation and shuffling.
+    """
+
+    def __init__(
+        self,
+        encoding: Any,
+        n_var_layers: int = 2,
+        lr: float = 0.05,
+        epochs: int = 30,
+        seed: int | None = None,
+    ) -> None:
+        if n_var_layers < 1:
+            raise ValueError(f"n_var_layers must be at least 1, got {n_var_layers}")
+        if lr <= 0:
+            raise ValueError(f"lr must be positive, got {lr}")
+        if epochs < 1:
+            raise ValueError(f"epochs must be at least 1, got {epochs}")
+
+        self.encoding = encoding
+        self.n_var_layers = n_var_layers
+        self.lr = lr
+        self.epochs = epochs
+        self.seed = seed
+
+        self.params_: NDArray[np.floating[Any]] | None = None
+        self.loss_history_: list[float] = []
+        self.status_: str = "not_fitted"
+
+        self._qnode: Any | None = None
+        self._device: Any | None = None
+        self._n_qubits: int = encoding.n_qubits
+        self._y_min: float = 0.0
+        self._y_span: float = 1.0
+
+    def _build_circuit(self) -> None:
+        """Construct the PennyLane QNode (encoding + variational + ``<Z_0>``)."""
+        import pennylane as qml
+
+        n_qubits = self._n_qubits
+        n_var_layers = self.n_var_layers
+        self._device = qml.device("lightning.qubit", wires=n_qubits)
+        encoding = self.encoding
+
+        @qml.qnode(self._device, interface="autograd", diff_method="adjoint")
+        def circuit(
+            x: NDArray[np.floating[Any]], params: NDArray[np.floating[Any]]
+        ) -> float:
+            encoding.get_circuit(x, backend="pennylane")()
+            for layer in range(n_var_layers):
+                for i in range(n_qubits):
+                    qml.RY(params[layer, i], wires=i)
+                for i in range(n_qubits - 1):
+                    qml.CNOT(wires=[i, i + 1])
+            return qml.expval(qml.PauliZ(0))
+
+        self._qnode = circuit
+
+    def fit(
+        self, X: NDArray[np.floating[Any]], y: NDArray[np.floating[Any]]
+    ) -> VQCRegressor:
+        """Train on ``X`` and continuous targets ``y`` using MSE loss."""
+        import pennylane as qml
+        from pennylane import numpy as pnp
+
+        if self._qnode is None:
+            self._build_circuit()
+
+        y = np.asarray(y, dtype=np.float64)
+        self._y_min = float(y.min())
+        span = float(y.max()) - self._y_min
+        self._y_span = span if span > 0.0 else 1.0
+        # Map targets onto [-1, 1], the range of <Z_0>.
+        y_scaled = 2.0 * (y - self._y_min) / self._y_span - 1.0
+
+        rng = np.random.default_rng(self.seed)
+        self.params_ = pnp.array(
+            rng.uniform(-np.pi, np.pi, size=(self.n_var_layers, self._n_qubits)),
+            requires_grad=True,
+        )
+
+        opt = qml.AdamOptimizer(stepsize=self.lr)
+        self.loss_history_ = []
+        self.status_ = "success"
+        n_samples = len(X)
+
+        for epoch in range(self.epochs):
+            epoch_loss = 0.0
+            indices = rng.permutation(n_samples)
+            X_epoch, y_epoch = X[indices], y_scaled[indices]
+
+            for xi, ti in zip(X_epoch, y_epoch):
+
+                def cost(params: NDArray[np.floating[Any]]) -> float:
+                    return (self._qnode(xi, params) - ti) ** 2
+
+                self.params_, loss = opt.step_and_cost(cost, self.params_)
+                epoch_loss += float(loss)
+
+            avg_loss = epoch_loss / n_samples
+            self.loss_history_.append(avg_loss)
+
+            if np.isnan(avg_loss) or avg_loss > _MAX_LOSS:
+                logger.warning("VQC regression diverged at epoch %d", epoch)
+                self.status_ = "diverged"
+                break
+
+        return self
+
+    def predict(self, X: NDArray[np.floating[Any]]) -> NDArray[np.floating[Any]]:
+        """Predict continuous targets on the original target scale."""
+        if self.params_ is None:
+            raise ValueError("Model not fitted. Call fit() first.")
+        if self._qnode is None:
+            self._build_circuit()
+
+        raw = np.array([float(self._qnode(xi, self.params_)) for xi in X])
+        return (raw + 1.0) / 2.0 * self._y_span + self._y_min
+
+    def score(
+        self, X: NDArray[np.floating[Any]], y: NDArray[np.floating[Any]]
+    ) -> float:
+        """Return the coefficient of determination (R^2) on ``(X, y)``."""
+        from encoding_atlas.benchmark.metrics import compute_regression_metrics
+
+        return compute_regression_metrics(y, self.predict(X))["r2"]
+
+    def get_final_loss(self) -> float | None:
+        """Return the final training loss, or ``None`` if not fitted."""
+        return self.loss_history_[-1] if self.loss_history_ else None
+
+
 def run_vqc_single_fold(
     encoding: Any,
     X_train: NDArray[np.floating[Any]],
@@ -291,6 +441,58 @@ def run_vqc_single_fold(
             "precision": 0.0,
             "recall": 0.0,
             "f1": 0.0,
+            "final_loss": None,
+            "status": "failed",
+            "error": str(exc),
+        }
+
+
+def run_vqc_regression_fold(
+    encoding: Any,
+    X_train: NDArray[np.floating[Any]],
+    X_test: NDArray[np.floating[Any]],
+    y_train: NDArray[np.floating[Any]],
+    y_test: NDArray[np.floating[Any]],
+    *,
+    n_var_layers: int = 2,
+    lr: float = 0.05,
+    epochs: int = 30,
+    seed: int = 42,
+) -> dict[str, Any]:
+    """Train and evaluate a VQC regressor on one train/test split.
+
+    Returns a dict with ``test_r2``, ``mse``, ``rmse``, ``mae``, ``final_loss``,
+    and ``status``. Failures are reported as ``status="failed"`` so a sweep can
+    continue; failed folds report ``test_r2`` as ``nan`` (0.0 would falsely
+    imply mean-level performance).
+    """
+    from encoding_atlas.benchmark.metrics import compute_regression_metrics
+
+    try:
+        model = VQCRegressor(
+            encoding=encoding,
+            n_var_layers=n_var_layers,
+            lr=lr,
+            epochs=epochs,
+            seed=seed,
+        )
+        model.fit(X_train, y_train)
+        scores = compute_regression_metrics(y_test, model.predict(X_test))
+        return {
+            "test_r2": scores["r2"],
+            "mse": scores["mse"],
+            "rmse": scores["rmse"],
+            "mae": scores["mae"],
+            "final_loss": model.get_final_loss(),
+            "status": model.status_,
+        }
+    except Exception as exc:  # noqa: BLE001 - report and continue the sweep
+        logger.error("VQC regression fold failed: %s", exc)
+        return {
+            "test_r2": float("nan"),
+            "mse": float("nan"),
+            "rmse": float("nan"),
+            "mae": float("nan"),
             "final_loss": None,
             "status": "failed",
             "error": str(exc),

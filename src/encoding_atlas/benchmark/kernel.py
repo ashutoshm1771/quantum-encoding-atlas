@@ -215,6 +215,63 @@ class QuantumKernelClassifier:
         return float(np.mean(self.predict(X) == y))
 
 
+class QuantumKernelRegressor:
+    """Fidelity-kernel ridge regressor for a fixed encoding.
+
+    Computes the quantum kernel for the training data, enforces PSD, and fits a
+    precomputed-kernel :class:`sklearn.kernel_ridge.KernelRidge`. Prediction
+    uses the test/train cross kernel.
+
+    Parameters
+    ----------
+    encoding : BaseEncoding
+        Encoding used for state preparation.
+    alpha : float, default=1.0
+        Ridge regularisation strength (must be positive).
+    """
+
+    def __init__(self, encoding: Any, *, alpha: float = 1.0) -> None:
+        if alpha <= 0:
+            raise ValueError(f"alpha must be positive, got {alpha}")
+        self.encoding = encoding
+        self.alpha = alpha
+        self._model: Any | None = None
+        self._X_train: NDArray[np.floating[Any]] | None = None
+        self._train_states: list[NDArray[np.complexfloating[Any, Any]]] | None = None
+        self.kernel_regularized_: bool = False
+
+    def fit(
+        self, X: NDArray[np.floating[Any]], y: NDArray[np.floating[Any]]
+    ) -> QuantumKernelRegressor:
+        """Fit the precomputed-kernel ridge regressor on ``(X, y)``."""
+        from sklearn.kernel_ridge import KernelRidge
+
+        K_train, states = compute_kernel_matrix(self.encoding, X, return_states=True)
+        K_train_psd, self.kernel_regularized_ = ensure_psd(K_train)
+        self._model = KernelRidge(kernel="precomputed", alpha=self.alpha)
+        self._model.fit(K_train_psd, np.asarray(y, dtype=np.float64))
+        self._X_train = X
+        self._train_states = states
+        return self
+
+    def predict(self, X: NDArray[np.floating[Any]]) -> NDArray[np.floating[Any]]:
+        """Predict continuous targets using the test/train cross kernel."""
+        if self._model is None or self._X_train is None:
+            raise ValueError("Model not fitted. Call fit() first.")
+        K_test = compute_kernel_matrix_cross(
+            self.encoding, self._X_train, X, train_states=self._train_states
+        )
+        return np.asarray(self._model.predict(K_test), dtype=np.float64)
+
+    def score(
+        self, X: NDArray[np.floating[Any]], y: NDArray[np.floating[Any]]
+    ) -> float:
+        """Return the coefficient of determination (R^2) on ``(X, y)``."""
+        from encoding_atlas.benchmark.metrics import compute_regression_metrics
+
+        return compute_regression_metrics(y, self.predict(X))["r2"]
+
+
 def run_kernel_single_fold(
     encoding: Any,
     X_train: NDArray[np.floating[Any]],
@@ -274,6 +331,49 @@ def run_kernel_single_fold(
             "recall": 0.0,
             "f1": 0.0,
             "kernel_target_alignment": 0.0,
+            "kernel_regularized": False,
+            "status": "failed",
+            "error": str(exc),
+        }
+
+
+def run_kernel_regression_fold(
+    encoding: Any,
+    X_train: NDArray[np.floating[Any]],
+    X_test: NDArray[np.floating[Any]],
+    y_train: NDArray[np.floating[Any]],
+    y_test: NDArray[np.floating[Any]],
+    *,
+    alpha: float = 1.0,
+    seed: int = 42,  # noqa: ARG001 - kept for a uniform fold-runner signature
+) -> dict[str, Any]:
+    """Train and evaluate a quantum-kernel ridge regressor on one split.
+
+    Returns a dict with ``test_r2``, ``mse``, ``rmse``, ``mae``,
+    ``kernel_regularized``, and ``status``. Failures are reported as
+    ``status="failed"`` with ``nan`` scores so a sweep can continue.
+    """
+    from encoding_atlas.benchmark.metrics import compute_regression_metrics
+
+    try:
+        model = QuantumKernelRegressor(encoding, alpha=alpha)
+        model.fit(X_train, y_train)
+        scores = compute_regression_metrics(y_test, model.predict(X_test))
+        return {
+            "test_r2": scores["r2"],
+            "mse": scores["mse"],
+            "rmse": scores["rmse"],
+            "mae": scores["mae"],
+            "kernel_regularized": model.kernel_regularized_,
+            "status": "success",
+        }
+    except Exception as exc:  # noqa: BLE001 - report and continue the sweep
+        logger.error("Kernel regression fold failed: %s", exc)
+        return {
+            "test_r2": float("nan"),
+            "mse": float("nan"),
+            "rmse": float("nan"),
+            "mae": float("nan"),
             "kernel_regularized": False,
             "status": "failed",
             "error": str(exc),

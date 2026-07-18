@@ -345,9 +345,12 @@ class TestBatchedGradientCorrectness:
             ],
             dtype=np.float64,
         )
-        # Byte-for-byte equality is the goal — any drift would mean the
-        # observable arithmetic differs between paths.
-        assert_array_equal(batched, per_call)
+        # The invariant is numerical agreement, not bit-identity: the batched
+        # path sums in a different order (and may use vectorised BLAS), so the
+        # results can differ in the last ULP depending on the platform's BLAS.
+        # The tolerance matches the entangling-encoding test below; anything
+        # larger would mean the observable arithmetic genuinely differs.
+        assert_allclose(batched, per_call, atol=1e-13)
 
     @pytest.mark.parametrize("observable", ["computational", "global_z", "local_z"])
     def test_matches_per_call_on_entangling_encoding(self, observable: str) -> None:

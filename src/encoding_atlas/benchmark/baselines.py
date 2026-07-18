@@ -93,3 +93,87 @@ def run_baseline_single_fold(
             "status": "failed",
             "error": str(exc),
         }
+
+
+# Names accepted by :func:`get_regression_baseline`.
+REGRESSION_BASELINE_NAMES: list[str] = [
+    "svr_rbf",
+    "random_forest_reg",
+    "mlp_2layer_reg",
+]
+
+
+def get_regression_baseline(name: str, seed: int) -> Any:
+    """Return a fresh scikit-learn regressor for the named baseline.
+
+    Parameters
+    ----------
+    name : {"svr_rbf", "random_forest_reg", "mlp_2layer_reg"}
+        Baseline identifier.
+    seed : int
+        Random seed (ignored by ``svr_rbf``, which is deterministic).
+
+    Raises
+    ------
+    ValueError
+        If ``name`` is not a known regression baseline.
+    """
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.neural_network import MLPRegressor
+    from sklearn.svm import SVR
+
+    builders = {
+        # SVR has no random_state parameter; it is deterministic.
+        "svr_rbf": lambda: SVR(kernel="rbf"),
+        "random_forest_reg": lambda: RandomForestRegressor(
+            n_estimators=100, random_state=seed
+        ),
+        "mlp_2layer_reg": lambda: MLPRegressor(
+            hidden_layer_sizes=(32, 16), max_iter=200, random_state=seed
+        ),
+    }
+    if name not in builders:
+        raise ValueError(
+            f"Unknown regression baseline: {name}. "
+            f"Available: {REGRESSION_BASELINE_NAMES}"
+        )
+    return builders[name]()
+
+
+def run_regression_baseline_single_fold(
+    name: str,
+    X_train: NDArray[np.floating[Any]],
+    X_test: NDArray[np.floating[Any]],
+    y_train: NDArray[np.floating[Any]],
+    y_test: NDArray[np.floating[Any]],
+    *,
+    seed: int = 42,
+) -> dict[str, Any]:
+    """Train and evaluate a classical regression baseline on one split.
+
+    Returns a dict with ``test_r2``, ``mse``, ``rmse``, ``mae``, and ``status``.
+    Failures are reported as ``status="failed"`` with ``nan`` scores.
+    """
+    from encoding_atlas.benchmark.metrics import compute_regression_metrics
+
+    try:
+        model = get_regression_baseline(name, seed=seed)
+        model.fit(X_train, y_train)
+        scores = compute_regression_metrics(y_test, model.predict(X_test))
+        return {
+            "test_r2": scores["r2"],
+            "mse": scores["mse"],
+            "rmse": scores["rmse"],
+            "mae": scores["mae"],
+            "status": "success",
+        }
+    except Exception as exc:  # noqa: BLE001 - report and continue the sweep
+        logger.error("Regression baseline %s fold failed: %s", name, exc)
+        return {
+            "test_r2": float("nan"),
+            "mse": float("nan"),
+            "rmse": float("nan"),
+            "mae": float("nan"),
+            "status": "failed",
+            "error": str(exc),
+        }

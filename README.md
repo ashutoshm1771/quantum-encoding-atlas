@@ -145,6 +145,19 @@ labels or a built-in multi-class dataset (`list_multiclass_datasets()`, e.g.
 `"iris3"`, `"blobs3"`); the VQC uses a one-vs-rest ensemble and metrics switch to
 macro averaging automatically.
 
+**Regression** is supported via `task="regression"`, which reports R² and uses
+K-fold splits (stratification is undefined for continuous targets):
+
+```python
+from encoding_atlas.benchmark import get_regression_dataset
+
+X, y = get_regression_dataset("sine_reg", n_samples=120, seed=0)
+report = evaluate_encoding(
+    AngleEncoding(n_features=2), X, y, task="regression", method="kernel"
+)
+print(report["score_metric"], report["mean"])   # r2 0.97
+```
+
 ### Diagnose *why* an encoding generalizes
 
 Cheap, training-free kernel-geometry metrics that predict downstream

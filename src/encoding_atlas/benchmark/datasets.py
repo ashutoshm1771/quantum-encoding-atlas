@@ -112,3 +112,60 @@ def get_dataset(
         return X, y.astype(int)
 
     raise ValueError(f"Unknown dataset: {name}")
+
+
+# Regression datasets (continuous targets), all two-dimensional so that
+# two-qubit encodings apply directly.
+_REGRESSION_DATASETS = ["linear_reg", "sine_reg"]
+
+
+def list_regression_datasets() -> list[str]:
+    """List available regression datasets (continuous targets)."""
+    return _REGRESSION_DATASETS.copy()
+
+
+def get_regression_dataset(
+    name: str,
+    n_samples: int = 200,
+    seed: int | None = None,
+    noise: float = 0.1,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Get a benchmark regression dataset with continuous targets.
+
+    Parameters
+    ----------
+    name : {"linear_reg", "sine_reg"}
+        Dataset name. ``linear_reg`` is a noisy linear function of two
+        features; ``sine_reg`` is a smooth non-linear (sinusoidal) function.
+    n_samples : int, default=200
+        Number of samples.
+    seed : int or None, default=None
+        Random seed.
+    noise : float, default=0.1
+        Standard deviation of additive Gaussian noise on the target.
+
+    Returns
+    -------
+    X : ndarray, shape (n_samples, 2)
+        Feature matrix.
+    y : ndarray, shape (n_samples,)
+        Continuous targets (float).
+    """
+    if name not in _REGRESSION_DATASETS:
+        raise ValueError(
+            f"Unknown regression dataset: {name}. Available: {_REGRESSION_DATASETS}"
+        )
+
+    rng = np.random.default_rng(seed)
+    X = rng.uniform(-1.0, 1.0, size=(n_samples, 2))
+
+    if name == "linear_reg":
+        y = 2.0 * X[:, 0] - 3.0 * X[:, 1]
+    else:  # "sine_reg"
+        # One period across the input range: high-frequency variants are not
+        # learnable at practical sample sizes (by quantum *or* classical
+        # models), which would make the benchmark uninformative.
+        y = np.sin(np.pi * X[:, 0]) + 0.5 * np.cos(np.pi * X[:, 1])
+
+    y = y + rng.normal(0.0, noise, size=n_samples)
+    return X, y.astype(np.float64)
