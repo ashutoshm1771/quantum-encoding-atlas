@@ -61,7 +61,8 @@ def _scale_features(
     mins = X.min(axis=0)
     span = X.max(axis=0) - mins
     span = np.where(span == 0.0, 1.0, span)
-    return low + (X - mins) / span * (high - low)
+    scaled: NDArray[np.floating[Any]] = low + (X - mins) / span * (high - low)
+    return scaled
 
 
 def _stratified_folds(

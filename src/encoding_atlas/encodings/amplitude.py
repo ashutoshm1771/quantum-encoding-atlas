@@ -641,7 +641,7 @@ class AmplitudeEncoding(BaseEncoding):
         This depth is an upper bound for general state preparation. Some
         backends may optimize for specific cases (e.g., sparse amplitudes).
         """
-        return 2**self._n_qubits
+        return int(2**self._n_qubits)
 
     # ==========================================================================
     # Circuit Generation
@@ -1721,7 +1721,8 @@ class _AmplitudePreparationGate:
 
         # Cache the result for subsequent calls
         self._unitary_matrix = Q
-        return Q
+        unitary: np.ndarray = Q
+        return unitary
 
     def on(self, *qubits: Any) -> Any:
         """Apply this gate to the specified qubits.

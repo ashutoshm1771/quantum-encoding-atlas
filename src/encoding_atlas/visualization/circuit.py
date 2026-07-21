@@ -42,7 +42,7 @@ Design Notes
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal, Union, cast
 
 from encoding_atlas.core.protocols import is_entanglement_queryable
 
@@ -268,7 +268,7 @@ def visualize_circuit(
         # crisp without extra whitespace.
         result.savefig(save_path, bbox_inches="tight")
 
-    return result
+    return cast("Figure | str", result)
 
 
 def plot_entanglement_graph(
@@ -367,9 +367,10 @@ def plot_entanglement_graph(
     # empty list — we still plot the qubit nodes so the user sees them.
     if is_entanglement_queryable(encoding):
         # Cast normalizes (qi, qj) so we don't draw both (0,1) and (1,0).
+        queryable = cast("Any", encoding)
         pairs = [
             (int(min(a, b)), int(max(a, b)))
-            for a, b in encoding.get_entanglement_pairs()
+            for a, b in queryable.get_entanglement_pairs()
         ]
         # De-duplicate while preserving the natural ordering.
         pairs = list(dict.fromkeys(pairs))
@@ -448,4 +449,4 @@ def plot_entanglement_graph(
     if save_path is not None:
         fig.savefig(save_path, bbox_inches="tight")
 
-    return fig
+    return cast("Figure", fig)

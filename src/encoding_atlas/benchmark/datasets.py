@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 
 _DATASETS = ["iris", "moons", "circles", "linear", "xor", "iris3", "blobs3"]
@@ -64,7 +66,10 @@ def get_dataset(
         try:
             from sklearn.datasets import make_moons
 
-            return make_moons(n_samples=n_samples, noise=0.1, random_state=seed)
+            return cast(
+                "tuple[np.ndarray, np.ndarray]",
+                make_moons(n_samples=n_samples, noise=0.1, random_state=seed),
+            )
         except ImportError:
             raise ImportError("sklearn required for moons dataset")
 
@@ -72,8 +77,11 @@ def get_dataset(
         try:
             from sklearn.datasets import make_circles
 
-            return make_circles(
-                n_samples=n_samples, noise=0.1, factor=0.5, random_state=seed
+            return cast(
+                "tuple[np.ndarray, np.ndarray]",
+                make_circles(
+                    n_samples=n_samples, noise=0.1, factor=0.5, random_state=seed
+                ),
             )
         except ImportError:
             raise ImportError("sklearn required for circles dataset")

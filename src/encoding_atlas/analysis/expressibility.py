@@ -154,8 +154,8 @@ from __future__ import annotations
 
 import logging
 import warnings
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, overload
+from concurrent.futures import Executor, ProcessPoolExecutor, ThreadPoolExecutor
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -1149,7 +1149,8 @@ def compute_haar_distribution(
         P_haar = np.ones_like(F, dtype=np.float64)
         # Normalize
         P_haar = P_haar / (P_haar.sum() + _NUMERICAL_EPSILON)
-        return P_haar
+        normalized: NDArray[np.floating[Any]] = P_haar
+        return normalized
 
     # General case: P_Haar(F) = (d - 1)(1 - F)^(d - 2)
     # Clip (1-F) to avoid numerical issues at F=1
@@ -1190,7 +1191,7 @@ def compute_haar_distribution(
         )
         P_haar = np.ones_like(P_haar) / len(P_haar)
 
-    return P_haar.astype(np.float64)
+    return cast("NDArray[np.floating[Any]]", P_haar.astype(np.float64))
 
 
 # =============================================================================
@@ -1240,8 +1241,12 @@ def _compute_one_fidelity(
     they always produce identical floats for the same inputs.
     """
     x1, x2 = pair
-    state1 = simulate_encoding_statevector(encoding, x1, backend=backend)
-    state2 = simulate_encoding_statevector(encoding, x2, backend=backend)
+    state1 = simulate_encoding_statevector(
+        encoding, x1, backend=cast("Literal['pennylane', 'qiskit', 'cirq']", backend)
+    )
+    state2 = simulate_encoding_statevector(
+        encoding, x2, backend=cast("Literal['pennylane', 'qiskit', 'cirq']", backend)
+    )
     return float(np.clip(compute_fidelity(state1, state2), 0.0, 1.0))
 
 
@@ -1318,10 +1323,12 @@ def _sample_fidelities(
 
     pairs = list(zip(X1, X2))
 
+    # Declared up front so both pool branches share one narrowed type.
+    executor: Executor
     if mode == "thread":
         # ThreadPoolExecutor shares memory; we close over ``encoding`` and
         # ``backend`` directly via the small worker callable below.
-        def _one(pair):  # noqa: ANN001 - inner closure, types obvious
+        def _one(pair: Any) -> float:
             return _compute_one_fidelity(encoding, pair, backend)
 
         try:
@@ -1385,7 +1392,7 @@ def _sample_fidelities_sequential(
 ) -> NDArray[np.floating[Any]]:
     """Sequential implementation kept separate so the parallel branch in
     :func:`_sample_fidelities` stays linear-flow and easy to read."""
-    fidelities = np.zeros(n_samples, dtype=np.float64)
+    fidelities: NDArray[np.float64] = np.zeros(n_samples, dtype=np.float64)
     log_interval = max(1, n_samples // 10)
 
     for i in range(n_samples):
@@ -1453,7 +1460,7 @@ def _estimate_convergence(
     if n_samples < 20:
         return float("inf")
 
-    bootstrap_kls = np.zeros(n_bootstrap, dtype=np.float64)
+    bootstrap_kls: NDArray[np.float64] = np.zeros(n_bootstrap, dtype=np.float64)
 
     # Pre-compute Haar distribution (same for all bootstrap samples)
     bin_edges = np.linspace(0.0, 1.0, n_bins + 1)
@@ -1572,7 +1579,7 @@ def _bootstrap_expressibility_ci(
         return score, score
 
     indices = rng.integers(0, n, size=(n_bootstrap, n))
-    boot_scores = np.empty(n_bootstrap, dtype=np.float64)
+    boot_scores: NDArray[np.float64] = np.empty(n_bootstrap, dtype=np.float64)
     for b in range(n_bootstrap):
         boot_scores[b] = _expressibility_score_from_fidelities(
             fidelities[indices[b]], n_bins, n_qubits

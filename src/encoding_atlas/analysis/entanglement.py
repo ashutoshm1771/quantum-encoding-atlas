@@ -118,7 +118,10 @@ import logging
 import warnings
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from itertools import combinations
-from typing import Any, Literal, TypedDict, Union, overload
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, Union, cast, overload
+
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
@@ -151,10 +154,10 @@ from encoding_atlas.core.exceptions import (
 # =============================================================================
 
 # Type aliases for clarity
-StatevectorType = NDArray[np.complexfloating[Any, Any]]
+StatevectorType: TypeAlias = NDArray[np.complexfloating[Any, Any]]
 """Complex array representing a quantum statevector, shape (2^n_qubits,)."""
 
-FloatArray = NDArray[np.floating[Any]]
+FloatArray: TypeAlias = NDArray[np.floating[Any]]
 """Array of floating-point values."""
 
 
@@ -351,13 +354,15 @@ def _compute_one_entanglement(
     Shared by the sequential, thread, and process code paths so the
     arithmetic is identical regardless of parallelization mode.
     """
-    statevector = simulate_encoding_statevector(encoding, x, backend=backend)
+    statevector = simulate_encoding_statevector(
+        encoding, x, backend=cast("Literal['pennylane', 'qiskit', 'cirq']", backend)
+    )
     if measure == "meyer_wallach":
         return compute_meyer_wallach_with_breakdown(statevector, n_qubits)
     # measure == "scott"
     assert scott_k is not None  # caller responsibility
     ent_value = compute_scott_measure(statevector, n_qubits, k=scott_k)
-    per_qubit = np.zeros(n_qubits, dtype=np.float64)
+    per_qubit: NDArray[np.float64] = np.zeros(n_qubits, dtype=np.float64)
     return ent_value, per_qubit
 
 
@@ -676,7 +681,7 @@ def compute_entanglement_capability(
     rng = create_rng(seed)
 
     if verbose:
-        measure_desc = measure
+        measure_desc: str = measure
         if measure == "scott" and effective_scott_k is not None:
             measure_desc = f"scott (k={effective_scott_k})"
         _logger.info(
@@ -692,8 +697,8 @@ def compute_entanglement_capability(
     # -------------------------------------------------------------------------
     # Sample Entanglement Values
     # -------------------------------------------------------------------------
-    entanglement_samples = np.zeros(n_samples, dtype=np.float64)
-    per_qubit_sum = np.zeros(n_qubits, dtype=np.float64)
+    entanglement_samples: NDArray[np.float64] = np.zeros(n_samples, dtype=np.float64)
+    per_qubit_sum: NDArray[np.float64] = np.zeros(n_qubits, dtype=np.float64)
 
     # Pre-generate all random inputs in the main process. The
     # ``sampling`` selector picks between i.i.d. uniform draws (default,
@@ -1009,7 +1014,7 @@ def compute_meyer_wallach_with_breakdown(
         return 0.0, np.zeros(1, dtype=np.float64)
 
     # Compute per-qubit linear entropy
-    per_qubit_entropy = np.zeros(n_qubits, dtype=np.float64)
+    per_qubit_entropy: NDArray[np.float64] = np.zeros(n_qubits, dtype=np.float64)
 
     for i in range(n_qubits):
         # Compute reduced density matrix for qubit i
@@ -1026,7 +1031,7 @@ def compute_meyer_wallach_with_breakdown(
     # Meyer-Wallach measure: (2/n) * sum of linear entropies
     # The factor of 2 normalizes to [0, 1] range
     # (maximum linear entropy per qubit is 0.5 for maximally mixed state)
-    mw_value = (2.0 / n_qubits) * np.sum(per_qubit_entropy)
+    mw_value = float((2.0 / n_qubits) * np.sum(per_qubit_entropy))
 
     # Clamp to [0, 1] for numerical stability
     mw_value = float(np.clip(mw_value, 0.0, 1.0))

@@ -1,5 +1,7 @@
 """Data preprocessing utilities."""
 
+from typing import cast
+
 import numpy as np
 from numpy.typing import ArrayLike
 
@@ -31,7 +33,10 @@ def scale_features(
     if x_max - x_min < 1e-10:
         return np.full_like(x, (range_min + range_max) / 2)
 
-    return (x - x_min) / (x_max - x_min) * (range_max - range_min) + range_min
+    return cast(
+        "np.ndarray",
+        (x - x_min) / (x_max - x_min) * (range_max - range_min) + range_min,
+    )
 
 
 def normalize_features(x: ArrayLike) -> np.ndarray:
@@ -53,4 +58,4 @@ def normalize_features(x: ArrayLike) -> np.ndarray:
     if norm < 1e-10:
         return x
 
-    return x / norm
+    return cast("np.ndarray", x / norm)

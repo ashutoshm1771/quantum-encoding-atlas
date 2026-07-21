@@ -171,7 +171,11 @@ ignore = [
 known-first-party = ["encoding_atlas"]
 
 [tool.mypy]
-python_version = "3.9"
+# Type-check against the top of the supported/tested matrix (3.10–3.12). 3.12
+# is required because current NumPy ships PEP 695 (`type` statement) stubs that
+# only parse under a 3.12+ target, and mypy >= 2.0 no longer accepts a 3.9
+# target at all.
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -194,8 +198,14 @@ module = [
     "scipy.*",
     "sklearn.*",
     "matplotlib.*",
+    "networkx.*",
 ]
 ignore_missing_imports = true
+# Treat these third-party libraries as opaque instead of parsing their
+# installed source. This keeps type checking identical whether or not the
+# optional backends are installed (some ship source that only parses on newer
+# Python versions than the configured target).
+follow_imports = "skip"
 
 [tool.pytest.ini_options]
 minversion = "7.0"

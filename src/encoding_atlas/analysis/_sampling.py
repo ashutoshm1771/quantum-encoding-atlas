@@ -24,7 +24,7 @@ pair.
 from __future__ import annotations
 
 import warnings
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -130,4 +130,7 @@ def generate_sample_batch(
         # is informative for QMC theorists but noise for our users.
         warnings.simplefilter("ignore", UserWarning)
         unit_samples = sampler.random(n_samples)
-    return (unit_samples * (high - low) + low).astype(np.float64, copy=False)
+    return cast(
+        "NDArray[np.floating[Any]]",
+        (unit_samples * (high - low) + low).astype(np.float64, copy=False),
+    )

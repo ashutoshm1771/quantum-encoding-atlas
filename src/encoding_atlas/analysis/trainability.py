@@ -124,7 +124,7 @@ from __future__ import annotations
 import logging
 import warnings
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from typing import Any, Literal, TypedDict, overload
+from typing import Any, Literal, TypedDict, cast, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -811,7 +811,9 @@ def estimate_trainability(
     # contiguously starting from index 0. Failed samples are not stored,
     # ensuring variance computation uses only valid data.
     #
-    gradient_samples = np.zeros((n_samples, n_features), dtype=np.float64)
+    gradient_samples: NDArray[np.float64] = np.zeros(
+        (n_samples, n_features), dtype=np.float64
+    )
     n_successful = 0
     n_failed = 0
 
@@ -1033,7 +1035,9 @@ def estimate_trainability(
     if return_details:
         if n_successful >= 2:
             indices = rng.integers(0, n_successful, size=(n_bootstrap_ci, n_successful))
-            boot_variances = np.empty(n_bootstrap_ci, dtype=np.float64)
+            boot_variances: NDArray[np.float64] = np.empty(
+                n_bootstrap_ci, dtype=np.float64
+            )
             for b in range(n_bootstrap_ci):
                 resample = successful_gradients[indices[b]]
                 per_param = np.var(resample, axis=0, ddof=1)
@@ -1437,10 +1441,19 @@ def _compute_encoding_gradients(
     # evaluation. The trainability-local "pauli_z" alias means *local*
     # ⟨Z₀⟩, which the shared helper exposes as "local_z" — translate
     # here so callers preserve the existing trainability API contract.
-    states = simulate_encoding_statevectors_batch(encoding, shifted, backend=backend)
+    states = simulate_encoding_statevectors_batch(
+        encoding,
+        shifted,
+        backend=cast("Literal['pennylane', 'qiskit', 'cirq']", backend),
+    )
     aliased_observable = "local_z" if observable == "pauli_z" else observable
     expectations = _expectations_batch(
-        states, aliased_observable, int(encoding.n_qubits)
+        states,
+        cast(
+            "Literal['computational', 'global_z', 'local_z', 'pauli_z']",
+            aliased_observable,
+        ),
+        int(encoding.n_qubits),
     )
 
     # The paired subtraction below is the parameter-shift formula. With
@@ -1513,7 +1526,9 @@ def _compute_expectation_value(
     :func:`_compute_encoding_gradients` path agree byte-for-byte and
     share the cached ``global_z`` eigenvalue array.
     """
-    statevector = simulate_encoding_statevector(encoding, x, backend=backend)
+    statevector = simulate_encoding_statevector(
+        encoding, x, backend=cast("Literal['pennylane', 'qiskit', 'cirq']", backend)
+    )
     n_qubits = int(encoding.n_qubits)
 
     if observable == "computational":

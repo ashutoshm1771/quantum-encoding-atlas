@@ -40,7 +40,7 @@ References
 from __future__ import annotations
 
 import logging
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -1643,9 +1643,8 @@ class QAOAEncoding(BaseEncoding):
         }
 
         # Clean up None values from native_gates
-        summary["hardware_requirements"]["native_gates"] = [
-            g for g in summary["hardware_requirements"]["native_gates"] if g is not None
-        ]
+        hw_req = cast("dict[str, Any]", summary["hardware_requirements"])
+        hw_req["native_gates"] = [g for g in hw_req["native_gates"] if g is not None]
 
         _logger.debug(
             "Resource summary generated: n_qubits=%d, depth=%d, total_gates=%d, "
@@ -1741,7 +1740,7 @@ class QAOAEncoding(BaseEncoding):
                 ) from e
 
             circuit = self._to_qiskit(x_validated)
-            return circuit.depth()
+            return int(circuit.depth())
 
         elif backend == "cirq":
             try:

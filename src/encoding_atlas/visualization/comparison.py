@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import numpy as np
 
@@ -353,7 +353,7 @@ def _create_matplotlib_comparison(
     )
 
     plt.tight_layout()
-    return fig
+    return cast("Figure", fig)
 
 
 def compare_encodings(

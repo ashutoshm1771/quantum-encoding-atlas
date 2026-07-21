@@ -1153,8 +1153,8 @@ def _get_summary_from_protocol(encoding: BaseEncoding) -> ResourceCountSummary:
     _get_detailed_breakdown_from_protocol : For detailed gate-by-gate breakdown.
     """
     # Get data from protocol methods
-    resource_dict = encoding.resource_summary()  # type: ignore[union-attr]
-    gate_breakdown = encoding.gate_count_breakdown()  # type: ignore[union-attr]
+    resource_dict = encoding.resource_summary()  # type: ignore[attr-defined]
+    gate_breakdown = encoding.gate_count_breakdown()  # type: ignore[attr-defined]
 
     total_gates = gate_breakdown.get("total", 0)
     total_single = gate_breakdown.get("total_single_qubit", 0)
@@ -1226,7 +1226,7 @@ def _get_detailed_breakdown_from_protocol(
     DetailedGateBreakdown
         Detailed gate-by-gate breakdown.
     """
-    breakdown = encoding.gate_count_breakdown()  # type: ignore[union-attr]
+    breakdown = encoding.gate_count_breakdown()  # type: ignore[attr-defined]
 
     # Map various gate naming conventions
     rz_total = (
@@ -1385,11 +1385,11 @@ def _count_data_dependent_resources(
     if hasattr(encoding, "resource_summary"):
         try:
             # Call with input data for data-dependent encodings
-            resource_dict = encoding.resource_summary(x)  # type: ignore[arg-type]
+            resource_dict = encoding.resource_summary(x)
         except TypeError:
             # Fallback if method doesn't accept x
             try:
-                resource_dict = encoding.resource_summary()  # type: ignore[call-arg]
+                resource_dict = encoding.resource_summary()
             except Exception as e:
                 _logger.warning(
                     "Failed to get resource_summary for %s: %s",
@@ -1402,7 +1402,7 @@ def _count_data_dependent_resources(
     actual_gates = 0
     if hasattr(encoding, "actual_gate_count"):
         try:
-            actual_gates = encoding.actual_gate_count(x)  # type: ignore[union-attr]
+            actual_gates = encoding.actual_gate_count(x)
         except Exception as e:
             _logger.warning(
                 "Failed to get actual_gate_count for %s: %s",

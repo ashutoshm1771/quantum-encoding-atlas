@@ -134,7 +134,7 @@ import functools
 import logging
 import warnings
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -148,7 +148,7 @@ from encoding_atlas.core.exceptions import (
 )
 
 if TYPE_CHECKING:
-    pass
+    from typing_extensions import TypeAlias
 
 # =============================================================================
 # Module-Level Logger
@@ -227,13 +227,13 @@ _DEFAULT_PARAM_MAX: float = 2.0 * np.pi
 # Type Aliases
 # =============================================================================
 
-StatevectorType = NDArray[np.complexfloating[Any, Any]]
+StatevectorType: TypeAlias = NDArray[np.complexfloating[Any, Any]]
 """Complex array representing a quantum statevector, shape (2^n_qubits,)."""
 
-DensityMatrixType = NDArray[np.complexfloating[Any, Any]]
+DensityMatrixType: TypeAlias = NDArray[np.complexfloating[Any, Any]]
 """Complex array representing a density matrix, shape (2^n, 2^n)."""
 
-FloatArray = NDArray[np.floating[Any]]
+FloatArray: TypeAlias = NDArray[np.floating[Any]]
 """Array of floating-point values."""
 
 
@@ -406,7 +406,10 @@ def _expectations_batch(
         half = 1 << (n_qubits - 1)
         head = states[:, :half]
         prob_zero = np.sum(head.real * head.real + head.imag * head.imag, axis=1)
-        return (2.0 * prob_zero - 1.0).astype(np.float64, copy=False)
+        local_z_exp: NDArray[np.float64] = (2.0 * prob_zero - 1.0).astype(
+            np.float64, copy=False
+        )
+        return local_z_exp
 
     raise ValueError(
         f"Unknown observable: {observable!r}. "
@@ -828,8 +831,8 @@ def _simulate_pennylane(
                 },
             )
 
-        @qml.qnode(dev)
-        def statevector_circuit():
+        @qml.qnode(dev)  # type: ignore[untyped-decorator]
+        def statevector_circuit() -> Any:
             """Execute circuit and return statevector."""
             # Apply the encoding circuit (validated as callable above)
             circuit_fn()
@@ -1194,7 +1197,7 @@ def validate_statevector(
         if norm < _MIN_NORM_THRESHOLD:
             raise NumericalInstabilityError(
                 f"Statevector has near-zero norm: {norm}",
-                value=norm,
+                value=float(norm),
                 operation="validate_statevector",
             )
         if not np.isclose(norm, 1.0, atol=tolerance):
@@ -1361,7 +1364,7 @@ def partial_trace_single_qubit(
         )
         rho_reduced = rho_reduced / trace_val
 
-    return rho_reduced
+    return cast("NDArray[np.complexfloating[Any, Any]]", rho_reduced)
 
 
 def partial_trace_subsystem(
@@ -1543,7 +1546,7 @@ def partial_trace_subsystem(
         )
         rho_reduced = rho_reduced / trace_val
 
-    return rho_reduced
+    return cast("NDArray[np.complexfloating[Any, Any]]", rho_reduced)
 
 
 # =============================================================================
@@ -1695,7 +1698,7 @@ def _compute_fidelities_batch(
     fidelities = np.abs(overlaps) ** 2
     fidelities = np.clip(fidelities, 0.0, 1.0).astype(np.float64)
 
-    return fidelities
+    return cast("NDArray[np.floating[Any]]", fidelities)
 
 
 def compute_purity(
@@ -1912,7 +1915,7 @@ def compute_von_neumann_entropy(
         return 0.0
 
     # S = -Σᵢ λᵢ log₂(λᵢ)
-    entropy = -np.sum(positive_eigenvalues * np.log2(positive_eigenvalues))
+    entropy = float(-np.sum(positive_eigenvalues * np.log2(positive_eigenvalues)))
 
     # Clamp to valid range
     d = rho.shape[0]

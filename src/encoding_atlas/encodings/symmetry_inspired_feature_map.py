@@ -115,7 +115,7 @@ from __future__ import annotations
 
 import logging
 import warnings
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -2562,7 +2562,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
         n_samples: int = 100,
         cost_observable: str = "local",
         seed: int | None = None,
-    ) -> dict[str, float | NDArray[np.floating[Any]]]:
+    ) -> dict[str, float | str | None | NDArray[np.floating[Any]]]:
         """Empirically measure gradient variance (trainability) of this encoding.
 
         This method provides a rigorous measurement of trainability by computing
@@ -2759,8 +2759,8 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
                 for i in range(1, self.n_qubits):
                     observable = observable @ qml.PauliZ(i)
 
-        @qml.qnode(dev, diff_method="parameter-shift")
-        def circuit_with_trainable_param(theta):
+        @qml.qnode(dev, diff_method="parameter-shift")  # type: ignore[untyped-decorator]
+        def circuit_with_trainable_param(theta: Any) -> Any:
             """Circuit with encoding followed by a trainable rotation.
 
             The trainable parameter is applied after the encoding to measure
@@ -2795,7 +2795,7 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
 
             # Handle both scalar and array gradient returns
             gradients[i] = (
-                float(grad_value)
+                float(cast("Any", grad_value))
                 if np.isscalar(grad_value)
                 else float(grad_value.item())
             )
@@ -2987,10 +2987,10 @@ class SymmetryInspiredFeatureMap(BaseEncoding):
     def _reconstruct(
         cls,
         n_features: int,
-        symmetry: str,
+        symmetry: Literal["rotation", "cyclic", "reflection", "full"],
         reps: int,
-        entanglement: str,
-        feature_map: str,
+        entanglement: Literal["full", "linear", "circular", "none"],
+        feature_map: Literal["angle", "fourier", "polynomial"],
         include_barriers: bool,
     ) -> SymmetryInspiredFeatureMap:
         """Reconstruct instance from pickled constructor arguments.
@@ -3451,7 +3451,11 @@ def convert_state_vector_ordering(
 
     # Validate state_vector type
     if not isinstance(state_vector, np.ndarray):
-        state_vector = np.asarray(state_vector, dtype=np.complex128)
+        # Defensive at runtime for array-like inputs, though the annotation
+        # promises an ndarray; mypy therefore sees this branch as dead.
+        state_vector = np.asarray(  # type: ignore[unreachable]
+            state_vector, dtype=np.complex128
+        )
 
     # Validate n_qubits
     if not isinstance(n_qubits, (int, np.integer)):

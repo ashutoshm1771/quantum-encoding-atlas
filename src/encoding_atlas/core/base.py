@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 from collections.abc import Iterator
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from typing import TYPE_CHECKING, Any, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -482,17 +482,23 @@ class BaseEncoding(ABC):
         result = self._get_circuit_from_validated(x, backend)
 
         with self._circuit_cache_lock:
-            # Caching may have been disabled while we were computing.
-            if self._circuit_cache is None:
+            # Read the attribute once under the lock; casting back to the
+            # Optional type lets mypy see that a concurrent ``disable`` (which
+            # sets the cache to ``None``) is still possible here.
+            cache = cast(
+                "OrderedDict[tuple[bytes, str], CircuitType] | None",
+                self._circuit_cache,
+            )
+            if cache is None:
                 return result
             # Re-check: another thread may have inserted while we computed.
-            existing = self._circuit_cache.get(cache_key)
+            existing = cache.get(cache_key)
             if existing is not None:
-                self._circuit_cache.move_to_end(cache_key)
+                cache.move_to_end(cache_key)
                 return existing
-            self._circuit_cache[cache_key] = result
-            if len(self._circuit_cache) > self._circuit_cache_maxsize:
-                self._circuit_cache.popitem(last=False)
+            cache[cache_key] = result
+            if len(cache) > self._circuit_cache_maxsize:
+                cache.popitem(last=False)
             return result
 
     @abstractmethod

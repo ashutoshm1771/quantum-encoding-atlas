@@ -56,7 +56,8 @@ def load_raw() -> dict[str, Any]:
     """
     text = (
         resources.files(_DATA_PACKAGE)
-        .joinpath(_DATA_SUBDIR, _DATA_FILENAME)
+        .joinpath(_DATA_SUBDIR)
+        .joinpath(_DATA_FILENAME)
         .read_text(encoding="utf-8")
     )
     data: dict[str, Any] = json.loads(text)

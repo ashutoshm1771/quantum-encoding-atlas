@@ -50,9 +50,8 @@ jobs:
       - name: Black (formatting)
         run: black --check src tests
 
-      # mypy disabled until type annotations are cleaned up (105 errors in 23 files)
-      # - name: mypy (type checking)
-      #   run: mypy src
+      - name: mypy (type checking)
+        run: mypy src
 
   # ── Job 2: Test ─────────────────────────────────────────────
   test:

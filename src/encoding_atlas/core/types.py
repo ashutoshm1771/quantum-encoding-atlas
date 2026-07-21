@@ -17,6 +17,8 @@ Protocols
 - **BaseEncodingProtocol**: Protocol defining the encoding interface
 """
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, TypeVar, Union
 
 import numpy as np
@@ -26,6 +28,7 @@ if TYPE_CHECKING:
     import cirq
     import pennylane as qml
     from qiskit import QuantumCircuit
+    from typing_extensions import TypeAlias
 
 # =============================================================================
 # Public API
@@ -55,10 +58,10 @@ BackendType = Literal["pennylane", "qiskit", "cirq"]
 CircuitType = Union["qml.QNode", "QuantumCircuit", "cirq.Circuit", Any]
 """Union type for quantum circuit objects from different backends."""
 
-FloatArray = NDArray[np.floating[Any]]
+FloatArray: TypeAlias = NDArray[np.floating[Any]]
 """NumPy array of floating-point values."""
 
-IntArray = NDArray[np.integer[Any]]
+IntArray: TypeAlias = NDArray[np.integer[Any]]
 """NumPy array of integer values."""
 
 FeatureData = Union[FloatArray, list[float], tuple[float, ...]]

@@ -18,7 +18,7 @@ Havlicek et al. (2019), *Nature* 567:209; Schuld & Killoran (2019), *PRL*
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -63,7 +63,7 @@ def compute_kernel_matrix(
     so the states can be reused for the cross kernel.
     """
     n = len(X)
-    K = np.zeros((n, n), dtype=np.float64)
+    K: NDArray[np.float64] = np.zeros((n, n), dtype=np.float64)
     states = [simulate_encoding_state(encoding, xi, backend) for xi in X]
 
     for i in range(n):
@@ -89,7 +89,7 @@ def compute_kernel_matrix_cross(
     if train_states is None:
         train_states = [simulate_encoding_state(encoding, x, backend) for x in X_train]
 
-    K = np.zeros((len(X_test), len(X_train)), dtype=np.float64)
+    K: NDArray[np.float64] = np.zeros((len(X_test), len(X_train)), dtype=np.float64)
     for i, xi in enumerate(X_test):
         state_i = simulate_encoding_state(encoding, xi, backend)
         for j, state_j in enumerate(train_states):
@@ -208,7 +208,7 @@ class QuantumKernelClassifier:
         K_test = compute_kernel_matrix_cross(
             self.encoding, self._X_train, X, train_states=self._train_states
         )
-        return self._svm.predict(K_test).astype(np.intp)
+        return cast("NDArray[np.intp]", self._svm.predict(K_test).astype(np.intp))
 
     def score(self, X: NDArray[np.floating[Any]], y: NDArray[np.intp]) -> float:
         """Return classification accuracy on ``(X, y)``."""

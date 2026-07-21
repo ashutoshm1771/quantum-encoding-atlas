@@ -280,7 +280,7 @@ from __future__ import annotations
 import logging
 import warnings
 from abc import abstractmethod
-from typing import Any, Generic, Literal, TypedDict, TypeVar
+from typing import Any, Generic, Literal, TypedDict, TypeVar, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -668,8 +668,8 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
         # Create a device and execute the circuit
         dev = qml.device("default.qubit", wires=self.n_qubits)
 
-        @qml.qnode(dev)
-        def get_state():
+        @qml.qnode(dev)  # type: ignore[untyped-decorator]
+        def get_state() -> Any:
             circuit()
             return qml.state()
 
@@ -958,10 +958,10 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
         # Convert to probability distribution
         total = counts.sum()
         if total > 0:
-            return counts / total
+            return cast("NDArray[np.floating[Any]]", counts / total)
         else:
             # Return uniform distribution if no valid samples
-            return np.ones(dim, dtype=float) / dim
+            return cast("NDArray[np.floating[Any]]", np.ones(dim, dtype=float) / dim)
 
     def verify_equivariance_statistical(
         self,
@@ -1087,7 +1087,7 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
         dev = qml.device("default.qubit", wires=self.n_qubits, shots=n_shots)
 
         # Circuit 1: Prepare |ψ(x)⟩, apply U(g), measure
-        @qml.qnode(dev)
+        @qml.qnode(dev)  # type: ignore[untyped-decorator]
         def circuit_transformed() -> NDArray[np.integer[Any]]:
             """Generate samples from U(g)|ψ(x)⟩."""
             # Prepare |ψ(x)⟩
@@ -1096,17 +1096,17 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
             # Apply U(g) as gates
             self._apply_group_unitary_as_gates(g)
             # Return computational basis samples
-            return qml.sample()
+            return cast("NDArray[np.integer[Any]]", qml.sample())
 
         # Circuit 2: Prepare |ψ(g·x)⟩, measure
         gx = self.group_action(g, x_array)
 
-        @qml.qnode(dev)
+        @qml.qnode(dev)  # type: ignore[untyped-decorator]
         def circuit_direct() -> NDArray[np.integer[Any]]:
             """Generate samples from |ψ(g·x)⟩."""
             circuit_func = self.get_circuit(gx, backend="pennylane")
             circuit_func()
-            return qml.sample()
+            return cast("NDArray[np.integer[Any]]", qml.sample())
 
         # Execute circuits and get samples
         samples_transformed = circuit_transformed()
@@ -1172,7 +1172,7 @@ class EquivariantFeatureMap(BaseEncoding, Generic[G]):
         ).sum()
 
         # Degrees of freedom: (number of valid bins - 1)
-        dof = max(1, valid_bins.sum() - 1)
+        dof = max(1, int(valid_bins.sum()) - 1)
 
         # Compute p-value using scipy's chi-squared distribution
         try:

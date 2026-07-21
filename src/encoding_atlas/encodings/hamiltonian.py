@@ -209,7 +209,7 @@ References
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -904,7 +904,7 @@ class HamiltonianEncoding(BaseEncoding):
             )
         else:
             self._entanglement_pairs = all_pairs
-            self._pairs_truncated: bool = False
+            self._pairs_truncated = False
 
         # Compute time step for Trotterization
         self._time_step: float = evolution_time / reps
@@ -1006,7 +1006,7 @@ class HamiltonianEncoding(BaseEncoding):
             return self._cached_depth
 
         # Compute and cache the exact depth
-        self._cached_depth: int = self._compute_exact_depth()
+        self._cached_depth = self._compute_exact_depth()
         return self._cached_depth
 
     def _compute_exact_depth(self) -> int:
@@ -2536,10 +2536,14 @@ class HamiltonianEncoding(BaseEncoding):
         # This ensures all initialization logic runs correctly
         return HamiltonianEncoding(
             n_features=self.n_features,
-            hamiltonian_type=self.hamiltonian_type,
+            hamiltonian_type=cast(
+                "Literal['iqp', 'xy', 'heisenberg', 'pauli_z']", self.hamiltonian_type
+            ),
             evolution_time=self.evolution_time,
             reps=self.reps,
-            entanglement=self.entanglement,
+            entanglement=cast(
+                "Literal['full', 'linear', 'circular']", self.entanglement
+            ),
             insert_barriers=self.insert_barriers,
             max_pairs=self.max_pairs,
             include_single_qubit_terms=self.include_single_qubit_terms,

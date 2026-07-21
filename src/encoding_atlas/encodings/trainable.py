@@ -560,7 +560,7 @@ class TrainableEncoding(BaseEncoding):
         self.data_rotation: Literal["X", "Y", "Z"] = data_rotation
         self.trainable_rotation: Literal["X", "Y", "Z"] = trainable_rotation
         self.entanglement: Literal["linear", "circular", "full", "none"] = entanglement
-        self.initialization: str = initialization
+        self.initialization = initialization
         self._seed: int | None = seed
 
         # Initialize RNG for reproducibility

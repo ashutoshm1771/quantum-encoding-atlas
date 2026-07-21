@@ -435,7 +435,7 @@ def check_simulability(
 
     is_entangling = props.is_entangling
     two_qubit_gates = props.two_qubit_gates
-    declared_simulability = props.simulability
+    declared_simulability: str = props.simulability
 
     # Initialize result containers
     recommendations: list[str] = []
@@ -473,7 +473,7 @@ def check_simulability(
         if non_clifford_analysis["non_clifford_gates"]:
             details["non_clifford_gates"] = non_clifford_analysis["non_clifford_gates"]
     else:
-        details: dict[str, Any] = {}
+        details = {}
 
     # =========================================================================
     # Simulability Decision Logic
@@ -1050,7 +1050,7 @@ def estimate_entanglement_bound(
     # This catches import errors and backend configuration issues early
     # rather than after many failed samples.
     # =========================================================================
-    test_x = np.zeros(n_features, dtype=np.float64)
+    test_x: NDArray[np.float64] = np.zeros(n_features, dtype=np.float64)
     try:
         _ = simulate_encoding_statevector(encoding, test_x, backend=backend)
     except ImportError as e:
@@ -1706,7 +1706,7 @@ def _compute_bipartite_entropy(
         return 0.0
 
     # Compute von Neumann entropy: S = -Σᵢ λᵢ log₂(λᵢ)
-    entropy = -np.sum(positive_eigenvalues * np.log2(positive_eigenvalues))
+    entropy = float(-np.sum(positive_eigenvalues * np.log2(positive_eigenvalues)))
 
     # Ensure non-negative (numerical precision)
     entropy = max(0.0, float(entropy))

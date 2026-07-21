@@ -139,7 +139,7 @@ def percentile_bootstrap_ci(
     # to ``statistic_fn`` cannot perturb the random sequence.
     indices = rng.integers(0, n, size=(n_bootstrap, n))
 
-    bootstrap_stats = np.empty(n_bootstrap, dtype=np.float64)
+    bootstrap_stats: NDArray[np.float64] = np.empty(n_bootstrap, dtype=np.float64)
     for b in range(n_bootstrap):
         bootstrap_stats[b] = float(statistic_fn(samples[indices[b]]))
 

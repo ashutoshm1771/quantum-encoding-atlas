@@ -71,7 +71,8 @@ def _symmetric_psd_sqrt(K: NDArray[np.floating[Any]]) -> NDArray[np.floating[Any
     K_sym = (K + K.T) / 2.0
     eigvals, eigvecs = np.linalg.eigh(K_sym)
     eigvals = np.clip(eigvals, 0.0, None)
-    return (eigvecs * np.sqrt(eigvals)) @ eigvecs.T
+    sqrt_matrix: NDArray[np.floating[Any]] = (eigvecs * np.sqrt(eigvals)) @ eigvecs.T
+    return sqrt_matrix
 
 
 # ---------------------------------------------------------------------------
@@ -309,7 +310,7 @@ def kernel_effective_dimension(
     if regularization <= 0:
         raise ValueError(f"regularization must be positive, got {regularization}")
     n = K.shape[0]
-    K_sym = (K + K.T) / 2.0
+    K_sym: NDArray[np.floating[Any]] = (K + K.T) / 2.0
     if normalize:
         K_sym = _trace_normalize(K_sym, n)
     eigvals = np.clip(np.linalg.eigvalsh(K_sym), 0.0, None)

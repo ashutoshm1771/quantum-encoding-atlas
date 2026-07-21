@@ -726,7 +726,7 @@ class HigherOrderAngleEncoding(BaseEncoding):
                 value *= x[idx]
             return value
         else:  # sum
-            return sum(x[idx] for idx in term)
+            return float(sum(x[idx] for idx in term))
 
     def _compute_qubit_angle(
         self,
@@ -824,7 +824,7 @@ class HigherOrderAngleEncoding(BaseEncoding):
         X: ArrayLike,
         backend: BackendType | None = "pennylane",
         *,
-        parallel: bool = False,
+        parallel: bool | Literal["thread", "process"] = False,
         max_workers: int | None = None,
     ) -> list[CircuitType]:
         """Generate quantum circuits for multiple input samples.

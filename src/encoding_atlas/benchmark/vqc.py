@@ -99,10 +99,10 @@ class VQCClassifier:
         self._device = qml.device("lightning.qubit", wires=n_qubits)
         encoding = self.encoding
 
-        @qml.qnode(self._device, interface="autograd", diff_method="adjoint")
+        @qml.qnode(self._device, interface="autograd", diff_method="adjoint")  # type: ignore[untyped-decorator]
         def circuit(
             x: NDArray[np.floating[Any]], params: NDArray[np.floating[Any]]
-        ) -> float:
+        ) -> Any:
             encoding.get_circuit(x, backend="pennylane")()
             for layer in range(n_var_layers):
                 for i in range(n_qubits):
@@ -132,6 +132,8 @@ class VQCClassifier:
 
         if self._qnode is None:
             self._build_circuit()
+        assert self._qnode is not None  # set by _build_circuit
+        qnode = self._qnode
 
         rng = np.random.default_rng(self.seed)
         self.params_ = pnp.array(
@@ -151,8 +153,8 @@ class VQCClassifier:
 
             for xi, yi in zip(X_epoch, y_epoch):
 
-                def cost(params: NDArray[np.floating[Any]]) -> float:
-                    pred = self._qnode(xi, params)
+                def cost(params: NDArray[np.floating[Any]]) -> Any:
+                    pred = qnode(xi, params)
                     p = (pred + 1) / 2
                     p = pnp.clip(p, 1e-7, 1 - 1e-7)
                     return -yi * pnp.log(p) - (1 - yi) * pnp.log(1 - p)
@@ -199,12 +201,14 @@ class VQCClassifier:
             probs = np.column_stack(columns)
             row_sums = probs.sum(axis=1, keepdims=True)
             row_sums[row_sums == 0.0] = 1.0
-            return probs / row_sums
+            probs_normalized: NDArray[np.floating[Any]] = probs / row_sums
+            return probs_normalized
 
         if self.params_ is None:
             raise ValueError("Model not fitted. Call fit() first.")
         if self._qnode is None:
             self._build_circuit()
+        assert self._qnode is not None  # set by _build_circuit
 
         predictions = []
         for xi in X:
@@ -218,7 +222,8 @@ class VQCClassifier:
         if self._ovr_models is not None:
             assert self.classes_ is not None
             indices = np.argmax(self.predict_proba(X), axis=1)
-            return self.classes_[indices].astype(np.intp)
+            labels: NDArray[np.intp] = self.classes_[indices].astype(np.intp)
+            return labels
         proba = self.predict_proba(X)
         return (proba[:, 1] >= 0.5).astype(np.intp)
 
@@ -304,10 +309,10 @@ class VQCRegressor:
         self._device = qml.device("lightning.qubit", wires=n_qubits)
         encoding = self.encoding
 
-        @qml.qnode(self._device, interface="autograd", diff_method="adjoint")
+        @qml.qnode(self._device, interface="autograd", diff_method="adjoint")  # type: ignore[untyped-decorator]
         def circuit(
             x: NDArray[np.floating[Any]], params: NDArray[np.floating[Any]]
-        ) -> float:
+        ) -> Any:
             encoding.get_circuit(x, backend="pennylane")()
             for layer in range(n_var_layers):
                 for i in range(n_qubits):
@@ -327,6 +332,8 @@ class VQCRegressor:
 
         if self._qnode is None:
             self._build_circuit()
+        assert self._qnode is not None  # set by _build_circuit
+        qnode = self._qnode
 
         y = np.asarray(y, dtype=np.float64)
         self._y_min = float(y.min())
@@ -353,8 +360,8 @@ class VQCRegressor:
 
             for xi, ti in zip(X_epoch, y_epoch):
 
-                def cost(params: NDArray[np.floating[Any]]) -> float:
-                    return (self._qnode(xi, params) - ti) ** 2
+                def cost(params: NDArray[np.floating[Any]]) -> Any:
+                    return (qnode(xi, params) - ti) ** 2
 
                 self.params_, loss = opt.step_and_cost(cost, self.params_)
                 epoch_loss += float(loss)
@@ -375,6 +382,7 @@ class VQCRegressor:
             raise ValueError("Model not fitted. Call fit() first.")
         if self._qnode is None:
             self._build_circuit()
+        assert self._qnode is not None  # set by _build_circuit
 
         raw = np.array([float(self._qnode(xi, self.params_)) for xi in X])
         return (raw + 1.0) / 2.0 * self._y_span + self._y_min

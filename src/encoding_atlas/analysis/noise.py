@@ -178,7 +178,7 @@ def simulate_noisy_density_matrix(
         )
     device = qml.device("default.mixed", wires=n_qubits)
 
-    @qml.qnode(device)
+    @qml.qnode(device)  # type: ignore[untyped-decorator]
     def noisy_circuit() -> Any:
         with qml.queuing.AnnotatedQueue() as queue:
             circuit_fn()
@@ -251,7 +251,7 @@ def compute_noise_resilience(
     n_features = encoding.n_features
     low, high = feature_range
 
-    fidelities = np.empty(n_samples, dtype=np.float64)
+    fidelities: NDArray[np.float64] = np.empty(n_samples, dtype=np.float64)
     for i in range(n_samples):
         x = rng.uniform(low, high, size=n_features)
         psi = simulate_encoding_statevector(encoding, x, backend="pennylane")
