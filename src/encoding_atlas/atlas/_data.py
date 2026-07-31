@@ -1,11 +1,19 @@
-"""Internal loader and name normalisation for the bundled empirical atlas.
+"""Internal loaders and name normalisation for the bundled empirical atlas.
 
-The dataset shipped under ``encoding_atlas/atlas/data/master_summary.json`` is
-the consolidated output of the project's 8-stage empirical pipeline (see
-``experiments/``). It records, for all 16 encodings, the measured circuit
-resources, simulability, expressibility, entanglement capability, trainability,
-noise resilience, and downstream VQC / quantum-kernel accuracy that back every
-table and figure in the accompanying paper.
+Two datasets ship as package data under ``encoding_atlas/atlas/data/``:
+
+``master_summary.json``
+    The consolidated output of the project's 8-stage empirical pipeline (see
+    ``experiments/``). Records, for all 16 encodings, the measured circuit
+    resources, simulability, expressibility, entanglement capability,
+    trainability, noise resilience, and downstream VQC / quantum-kernel
+    accuracy that back every table and figure in the accompanying paper.
+
+``concentration.json``
+    The fidelity-kernel concentration scan (``experiments/concentration_scan.py``),
+    measuring how each encoding's kernel approaches the Haar floor as the
+    circuit widens. This is the axis that says whether the accuracy numbers —
+    measured at 2-4 qubits — transfer to wider circuits.
 
 This module is private: end users go through :mod:`encoding_atlas.atlas`.
 """
@@ -17,16 +25,27 @@ from functools import lru_cache
 from importlib import resources
 from typing import Any
 
-# Package and filename of the bundled dataset (shipped as package data).
+# Package and filenames of the bundled datasets (shipped as package data).
 _DATA_PACKAGE = "encoding_atlas.atlas"
 _DATA_SUBDIR = "data"
 _DATA_FILENAME = "master_summary.json"
+_CONCENTRATION_FILENAME = "concentration.json"
 
 # Human-readable provenance, surfaced through ``atlas_metadata()``.
 ATLAS_SOURCE = (
     "Consolidated from the 8-stage empirical pipeline in experiments/ "
     "(experiments/results/report/master_summary.json); the same data backs "
     "the tables and figures in the Quantum Encoding Atlas paper."
+)
+
+# Provenance for the concentration scan, surfaced through
+# ``concentration_metadata()``.
+CONCENTRATION_SOURCE = (
+    "Measured by experiments/concentration_scan.py: fidelity-kernel "
+    "off-diagonal variance relative to the Haar floor, swept over 2-8 "
+    "qubits with the same circuit parameters the accuracy stages used "
+    "(experiments/configs/stage6b_kernel.json). Regenerate with "
+    "'python -m experiments.concentration_scan'."
 )
 
 # Canonical-name normalisation.
@@ -44,6 +63,18 @@ _ATLAS_TO_CANONICAL: dict[str, str] = {
 }
 
 
+def _read_bundled(filename: str) -> dict[str, Any]:
+    """Parse one bundled JSON dataset from the package's ``data`` directory."""
+    text = (
+        resources.files(_DATA_PACKAGE)
+        .joinpath(_DATA_SUBDIR)
+        .joinpath(filename)
+        .read_text(encoding="utf-8")
+    )
+    data: dict[str, Any] = json.loads(text)
+    return data
+
+
 @lru_cache(maxsize=1)
 def load_raw() -> dict[str, Any]:
     """Load and cache the raw atlas dataset as a plain dictionary.
@@ -54,14 +85,20 @@ def load_raw() -> dict[str, Any]:
         Parsed contents of the bundled ``master_summary.json``. The returned
         object is cached and shared; callers must treat it as read-only.
     """
-    text = (
-        resources.files(_DATA_PACKAGE)
-        .joinpath(_DATA_SUBDIR)
-        .joinpath(_DATA_FILENAME)
-        .read_text(encoding="utf-8")
-    )
-    data: dict[str, Any] = json.loads(text)
-    return data
+    return _read_bundled(_DATA_FILENAME)
+
+
+@lru_cache(maxsize=1)
+def load_concentration_raw() -> dict[str, Any]:
+    """Load and cache the raw concentration dataset as a plain dictionary.
+
+    Returns
+    -------
+    dict
+        Parsed contents of the bundled ``concentration.json``. The returned
+        object is cached and shared; callers must treat it as read-only.
+    """
+    return _read_bundled(_CONCENTRATION_FILENAME)
 
 
 def canonical_name(name: str) -> str:

@@ -21,6 +21,7 @@ from encoding_atlas.analysis.generalization import (
     geometric_difference,
     kernel_effective_dimension,
     kernel_target_alignment,
+    sample_shot_kernel,
 )
 
 
@@ -199,3 +200,146 @@ class TestExplainsAccuracyRanking:
             IQPEncoding(n_features=2, reps=2), X, y
         )
         assert angle_kta > iqp_kta
+
+
+# =====================================================================
+# Finite-shot kernel estimation
+# =====================================================================
+
+
+class TestSampleShotKernel:
+    """The compute-uncompute estimator: all-zeros count ~ Binomial(shots, K)."""
+
+    def test_structure_is_preserved(self) -> None:
+        K = np.array([[1.0, 0.4, 0.7], [0.4, 1.0, 0.2], [0.7, 0.2, 1.0]])
+        estimate = sample_shot_kernel(K, shots=500, seed=0)
+        assert estimate.shape == K.shape
+        assert np.allclose(estimate, estimate.T)  # symmetric
+        assert np.allclose(np.diag(estimate), 1.0)  # exact unit diagonal
+        assert estimate.min() >= 0.0 and estimate.max() <= 1.0
+
+    def test_entries_are_multiples_of_one_over_shots(self) -> None:
+        K = np.full((5, 5), 0.37)
+        np.fill_diagonal(K, 1.0)
+        shots = 64
+        estimate = sample_shot_kernel(K, shots=shots, seed=1)
+        counts = estimate * shots
+        assert np.allclose(counts, np.round(counts))
+
+    def test_estimator_is_unbiased(self) -> None:
+        """Averaging many independent draws converges to the exact kernel."""
+        K = np.array([[1.0, 0.3], [0.3, 1.0]])
+        draws = [sample_shot_kernel(K, shots=200, seed=s)[0, 1] for s in range(400)]
+        assert float(np.mean(draws)) == pytest.approx(0.3, abs=0.01)
+
+    def test_variance_matches_binomial(self) -> None:
+        """Per-entry variance is K(1 - K)/shots — the basis of the shot budget."""
+        p, shots = 0.3, 200
+        K = np.array([[1.0, p], [p, 1.0]])
+        draws = [sample_shot_kernel(K, shots=shots, seed=s)[0, 1] for s in range(800)]
+        assert float(np.var(draws)) == pytest.approx(p * (1 - p) / shots, rel=0.2)
+
+    def test_more_shots_reduce_error(self) -> None:
+        enc = AngleEncoding(n_features=3)
+        rng = np.random.default_rng(0)
+        X = rng.uniform(0, 2 * np.pi, (12, 3))
+        exact = compute_fidelity_kernel(enc, X)
+
+        def error(shots: int) -> float:
+            estimate = sample_shot_kernel(exact, shots=shots, seed=7)
+            return float(np.abs(estimate - exact).mean())
+
+        assert error(10_000) < error(100)
+
+    def test_determinism_same_seed(self) -> None:
+        K = np.array([[1.0, 0.5], [0.5, 1.0]])
+        assert np.array_equal(
+            sample_shot_kernel(K, shots=100, seed=3),
+            sample_shot_kernel(K, shots=100, seed=3),
+        )
+
+    def test_single_sample_kernel_is_identity(self) -> None:
+        assert np.array_equal(
+            sample_shot_kernel(np.array([[1.0]]), shots=10, seed=0), np.eye(1)
+        )
+
+    @pytest.mark.parametrize("bad", [0, -5, 2.5, True, "100"])
+    def test_invalid_shots_raises(self, bad: object) -> None:
+        K = np.array([[1.0, 0.5], [0.5, 1.0]])
+        with pytest.raises(ValueError, match="shots must be a positive integer"):
+            sample_shot_kernel(K, shots=bad)  # type: ignore[arg-type]
+
+    def test_non_square_raises(self) -> None:
+        with pytest.raises(ValueError, match="square 2D matrix"):
+            sample_shot_kernel(np.zeros((2, 3)), shots=10)
+
+    def test_out_of_range_entries_raise(self) -> None:
+        with pytest.raises(ValueError, match=r"\[0, 1\]"):
+            sample_shot_kernel(np.array([[1.0, 1.5], [1.5, 1.0]]), shots=10)
+
+
+class TestShotAwareDiagnostics:
+    """``shots=`` threads through the kernel into every downstream metric."""
+
+    def test_default_is_exact(self, separable: tuple[np.ndarray, np.ndarray]) -> None:
+        X, _ = separable
+        enc = AngleEncoding(n_features=2)
+        assert np.array_equal(
+            compute_fidelity_kernel(enc, X), compute_fidelity_kernel(enc, X, shots=None)
+        )
+
+    def test_kernel_shots_are_applied(
+        self, separable: tuple[np.ndarray, np.ndarray]
+    ) -> None:
+        X, _ = separable
+        enc = AngleEncoding(n_features=2)
+        noisy = compute_fidelity_kernel(enc, X, shots=50, seed=0)
+        assert not np.array_equal(noisy, compute_fidelity_kernel(enc, X))
+        assert np.allclose(np.diag(noisy), 1.0)
+
+    def test_alignment_survives_finite_shots(
+        self, separable: tuple[np.ndarray, np.ndarray]
+    ) -> None:
+        """KTA aggregates over all n(n-1)/2 entries, so shot noise averages out.
+
+        This is why the atlas's KTA-based screening rule is usable on hardware
+        even though the kernel matrix itself is not.
+        """
+        X, y = separable
+        enc = AngleEncoding(n_features=2)
+        exact = compute_kernel_target_alignment(enc, X, y)
+        sampled = compute_kernel_target_alignment(enc, X, y, shots=2000, seed=0)
+        assert sampled == pytest.approx(exact, abs=0.05)
+
+    def test_geometric_difference_accepts_shots(
+        self, separable: tuple[np.ndarray, np.ndarray]
+    ) -> None:
+        X, _ = separable
+        g = compute_geometric_difference(
+            AngleEncoding(n_features=2), X, shots=500, seed=0
+        )
+        assert np.isfinite(g) and g > 0.0
+
+    def test_effective_dimension_accepts_shots(
+        self, separable: tuple[np.ndarray, np.ndarray]
+    ) -> None:
+        X, _ = separable
+        d = compute_effective_dimension(
+            AngleEncoding(n_features=2), X, shots=500, seed=0
+        )
+        assert 0.0 < d <= len(X)
+
+    def test_shot_noise_breaks_positive_semidefiniteness(
+        self, separable: tuple[np.ndarray, np.ndarray]
+    ) -> None:
+        """The documented caveat: sampled kernels need ensure_psd before use."""
+        from encoding_atlas.benchmark.kernel import ensure_psd
+
+        X, _ = separable
+        noisy = compute_fidelity_kernel(
+            AngleEncoding(n_features=2), X, shots=20, seed=0
+        )
+        assert float(np.linalg.eigvalsh(noisy).min()) < -1e-9
+        repaired, was_clipped = ensure_psd(noisy)
+        assert was_clipped
+        assert float(np.linalg.eigvalsh(repaired).min()) > -1e-9

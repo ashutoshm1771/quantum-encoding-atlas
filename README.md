@@ -35,6 +35,7 @@ The **Quantum Encoding Atlas** is the definitive open-source resource for unders
 - 🧪 **Benchmarking Framework** — Systematic comparison infrastructure
 - 🧭 **Decision Guide** — Evidence-based encoding recommendations
 - 🗺️ **Empirical Atlas** — Query the measured benchmark results (rank, accuracy, expressibility, trainability, …) bundled with the package
+- 📉 **Concentration Diagnostics** — Measure whether an encoding's kernel survives to wider circuits, and what it costs in shots
 - 📚 **Extensive Documentation** — Tutorials, API docs, and theoretical background
 
 ## Installation
@@ -180,6 +181,70 @@ gd = compute_geometric_difference(AngleEncoding(n_features=2), X)
 # Effective feature-space dimension the encoding uses (capacity)
 d_eff = compute_effective_dimension(AngleEncoding(n_features=2), X)
 ```
+
+### Check whether an encoding survives to wider circuits
+
+Every other axis describes an encoding at a *fixed* width. Kernel concentration
+describes what happens as the width grows — whether the fidelity kernel keeps
+enough structure to learn from, and what it costs in shots:
+
+```python
+from encoding_atlas.analysis import compute_kernel_concentration
+
+angle = compute_kernel_concentration(AngleEncoding(n_features=6), seed=0)
+iqp = compute_kernel_concentration(IQPEncoding(n_features=6, reps=2), seed=0)
+
+print(angle.concentration_ratio, angle.is_concentrated)   # 9.0  False
+print(iqp.concentration_ratio, iqp.is_concentrated)       # 1.0  True
+print(iqp.shots_per_entry)                                # 259 shots per kernel entry
+```
+
+`concentration_ratio` is the kernel's off-diagonal variance divided by the
+Haar-random variance at the same width. A value near **1** means the kernel has
+collapsed to the identity up to sampling noise — a kernel method cannot
+generalize from it at *any* shot budget. Sweep it across widths to get a decay
+rate and an extrapolated horizon:
+
+```python
+from encoding_atlas.analysis import estimate_concentration_scaling
+
+scaling = estimate_concentration_scaling(
+    lambda d: IQPEncoding(n_features=d, reps=2), feature_counts=(2, 4, 6, 8), seed=0
+)
+print(scaling.decay_rate)               # 3.9 — near the maximal (Haar) rate of 4.0
+print(scaling.concentration_horizon())  # 2  — already at the floor
+print(scaling.shots_per_entry_at(20))   # extrapolated hardware cost at 20 qubits
+```
+
+The scan for all 16 encodings ships with the package. The four encodings whose
+kernels reach the Haar floor are exactly the four with expressibility ≈ 0.999,
+and four of the five worst-ranked in the benchmark — which is *why*
+expressibility fails to predict accuracy:
+
+```python
+from encoding_atlas.atlas import concentrated_encodings
+
+print(sorted(p.name for p in concentrated_encodings()))
+# ['hamiltonian', 'iqp', 'pauli_feature_map', 'zz_feature_map']
+```
+
+### Run diagnostics under a realistic shot budget
+
+Pass `shots=` to get the kernel a real device would return. The
+compute-uncompute estimator's all-zeros count is exactly `Binomial(shots, K)`,
+so this is statistically identical to running the circuits:
+
+```python
+from encoding_atlas.analysis import compute_fidelity_kernel
+
+K = compute_fidelity_kernel(AngleEncoding(n_features=2), X, shots=1000, seed=0)
+kta = compute_kernel_target_alignment(
+    AngleEncoding(n_features=2), X, y, shots=1000, seed=0
+)
+```
+
+Sampled kernels stay symmetric with a unit diagonal but are no longer PSD —
+project with `encoding_atlas.benchmark.kernel.ensure_psd` before fitting.
 
 ### Measure noise resilience
 

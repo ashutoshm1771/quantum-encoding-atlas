@@ -1072,3 +1072,76 @@ class TestEvidenceBasedBehaviour:
             assert get_encoding_profile(alt).rank >= 1  # all valid atlas entries
         # The primary must out-rank IQP, the former default.
         assert primary_rank < get_encoding_profile("iqp").rank
+
+
+# =========================================================================
+# Kernel-concentration scale warning
+# =========================================================================
+
+
+class TestScaleWarning:
+    """The advisory that fires when a recommended encoding's fidelity kernel
+    is measured to sit at the Haar floor — the regime where a kernel method
+    cannot generalize no matter how many shots are spent."""
+
+    def test_field_defaults_to_none(self) -> None:
+        """New field is additive: constructing without it still works."""
+        from encoding_atlas.guide.recommender import Recommendation
+
+        rec = Recommendation("angle", "because", [], 0.9)
+        assert rec.scale_warning is None
+
+    def test_clear_encoding_has_no_warning(self) -> None:
+        rec = recommend_encoding(n_features=4, priority="accuracy")
+        assert rec.encoding_name == "angle"
+        assert rec.scale_warning is None
+
+    def test_concentrated_encoding_warns(self) -> None:
+        """custom_pauli routing reaches pauli_feature_map, which is at the floor."""
+        rec = recommend_encoding(n_features=4, feature_interactions="custom_pauli")
+        assert rec.encoding_name == "pauli_feature_map"
+        assert rec.scale_warning is not None
+        assert "Kernel concentration" in rec.scale_warning
+        assert "Haar floor" in rec.scale_warning
+
+    def test_warning_cites_measured_numbers(self) -> None:
+        from encoding_atlas.atlas import get_concentration_profile
+
+        rec = recommend_encoding(n_features=4, feature_interactions="custom_pauli")
+        assert rec.scale_warning is not None
+        point = get_concentration_profile(rec.encoding_name).at_features(4)
+        assert f"{point.concentration_ratio:.2f}" in rec.scale_warning
+        assert f"{point.n_qubits} qubits" in rec.scale_warning
+
+    def test_warning_names_the_task(self) -> None:
+        rec = recommend_encoding(
+            n_features=4, task="regression", feature_interactions="custom_pauli"
+        )
+        assert rec.scale_warning is not None
+        assert "regression" in rec.scale_warning
+
+    def test_warning_is_not_mixed_into_the_explanation(self) -> None:
+        """Callers that format ``explanation`` are unaffected by this feature."""
+        rec = recommend_encoding(n_features=4, feature_interactions="custom_pauli")
+        assert "Kernel concentration" not in rec.explanation
+
+    def test_every_recommendation_agrees_with_the_scan(self) -> None:
+        """Sweep the parameter space: the warning fires exactly when the
+        bundled scan says the recommended encoding is at the floor."""
+        from encoding_atlas.atlas import get_concentration_profile
+
+        for n_features in (2, 3, 4, 6, 8):
+            for priority in ("accuracy", "trainability", "speed", "noise_resilience"):
+                rec = recommend_encoding(n_features=n_features, priority=priority)
+                expected = get_concentration_profile(
+                    rec.encoding_name
+                ).is_concentrated_at(n_features)
+                assert (
+                    rec.scale_warning is not None
+                ) == expected, f"{rec.encoding_name} at n_features={n_features}"
+
+    def test_unknown_encoding_degrades_gracefully(self) -> None:
+        """A rule-base entry absent from the scan must not raise."""
+        from encoding_atlas.guide.recommender import _scale_warning
+
+        assert _scale_warning("not_a_real_encoding", 4, "classification") is None

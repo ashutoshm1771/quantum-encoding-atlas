@@ -21,6 +21,8 @@ The main analysis functions are:
 - :func:`compute_expressibility`: Measure Hilbert space coverage
 - :func:`compute_entanglement_capability`: Measure entanglement generation
 - :func:`estimate_trainability`: Detect barren plateau risk
+- :func:`compute_kernel_concentration`: Measure fidelity-kernel concentration
+- :func:`estimate_concentration_scaling`: Track concentration across widths
 
 Utility Functions
 -----------------
@@ -88,6 +90,16 @@ from encoding_atlas.analysis._utils import (
     validate_encoding_for_analysis,
     validate_statevector,
 )
+
+# Fidelity-kernel concentration (usable-scale diagnostics)
+from encoding_atlas.analysis.concentration import (
+    CONCENTRATION_THRESHOLD,
+    ConcentrationResult,
+    ScalingResult,
+    compute_kernel_concentration,
+    estimate_concentration_scaling,
+    haar_kernel_moments,
+)
 from encoding_atlas.analysis.entanglement import (
     EntanglementResult,
     compute_entanglement_capability,
@@ -114,6 +126,7 @@ from encoding_atlas.analysis.generalization import (
     geometric_difference,
     kernel_effective_dimension,
     kernel_target_alignment,
+    sample_shot_kernel,
 )
 
 # Noise-resilience analysis (depolarizing noise model)
@@ -185,6 +198,12 @@ __all__ = [
     "centered_kernel_target_alignment",
     "geometric_difference",
     "kernel_effective_dimension",
+    "sample_shot_kernel",
+    # Kernel-concentration diagnostics
+    "compute_kernel_concentration",
+    "estimate_concentration_scaling",
+    "haar_kernel_moments",
+    "CONCENTRATION_THRESHOLD",
     # Noise-resilience analysis
     "compute_noise_resilience",
     "simulate_noisy_density_matrix",
@@ -194,6 +213,8 @@ __all__ = [
     "compare_to_atlas",
     "atlas_comparable_metrics",
     # Type definitions
+    "ConcentrationResult",
+    "ScalingResult",
     "EncodingCharacterization",
     "NoiseResilienceResult",
     "SimulabilityResult",

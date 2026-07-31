@@ -1,0 +1,875 @@
+{
+  "encodings": {
+    "amplitude": {
+      "concentration_horizon": null,
+      "decay_rate": 1.46170393841475,
+      "display_name": "AmplitudeEncoding",
+      "encoding": "amplitude",
+      "haar_normalized_slope": 0.5979642068560114,
+      "mean_decay_rate": 1.1276175868821177,
+      "params": {},
+      "points": [
+        {
+          "concentration_ratio": 0.8201527286905005,
+          "is_concentrated": true,
+          "mean_ratio": 1.4837874876256474,
+          "n_features": 2,
+          "n_qubits": 1,
+          "offdiagonal_mean": 0.7418937438128237,
+          "offdiagonal_variance": 0.06834606072420837,
+          "shots_per_entry": 11.206932172837906
+        },
+        {
+          "concentration_ratio": 1.2358627242199198,
+          "is_concentrated": true,
+          "mean_ratio": 2.5799824560951268,
+          "n_features": 4,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.6449956140237817,
+          "offdiagonal_variance": 0.04634485215824699,
+          "shots_per_entry": 19.76282251431203
+        },
+        {
+          "concentration_ratio": 2.9113907679928297,
+          "is_concentrated": false,
+          "mean_ratio": 4.658358822026516,
+          "n_features": 6,
+          "n_qubits": 3,
+          "offdiagonal_mean": 0.5822948527533145,
+          "offdiagonal_variance": 0.03538148502769064,
+          "shots_per_entry": 27.497721706135614
+        },
+        {
+          "concentration_ratio": 2.37275831519451,
+          "is_concentrated": false,
+          "mean_ratio": 4.646315769737028,
+          "n_features": 8,
+          "n_qubits": 3,
+          "offdiagonal_mean": 0.5807894712171285,
+          "offdiagonal_variance": 0.02883560452493328,
+          "shots_per_entry": 33.77394930353313
+        }
+      ],
+      "r_squared": 0.9497318178668105,
+      "skipped": {}
+    },
+    "angle": {
+      "concentration_horizon": null,
+      "decay_rate": 2.3847439432024236,
+      "display_name": "AngleEncoding",
+      "encoding": "angle",
+      "haar_normalized_slope": 0.4370551113070554,
+      "mean_decay_rate": 1.985401430846402,
+      "params": {
+        "rotation": "Y"
+      },
+      "points": [
+        {
+          "concentration_ratio": 2.0678545170503932,
+          "is_concentrated": false,
+          "mean_ratio": 0.9889249769398992,
+          "n_features": 2,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.2472312442349748,
+          "offdiagonal_variance": 0.07754454438938975,
+          "shots_per_entry": 9.600054140467208
+        },
+        {
+          "concentration_ratio": 4.724617473521977,
+          "is_concentrated": false,
+          "mean_ratio": 1.0102826934935647,
+          "n_features": 4,
+          "n_qubits": 4,
+          "offdiagonal_mean": 0.0631426683433478,
+          "offdiagonal_variance": 0.01628429735818696,
+          "shots_per_entry": 14.530727479767904
+        },
+        {
+          "concentration_ratio": 10.933959235627924,
+          "is_concentrated": false,
+          "mean_ratio": 1.0129421387477442,
+          "n_features": 6,
+          "n_qubits": 6,
+          "offdiagonal_mean": 0.015827220917933503,
+          "offdiagonal_variance": 0.00258728752946424,
+          "shots_per_entry": 24.0819310858333
+        },
+        {
+          "concentration_ratio": 28.804070744330033,
+          "is_concentrated": false,
+          "mean_ratio": 1.0375137756036836,
+          "n_features": 8,
+          "n_qubits": 8,
+          "offdiagonal_mean": 0.004052788185951889,
+          "offdiagonal_variance": 0.00043609488756968923,
+          "shots_per_entry": 37.022796725418395
+        }
+      ],
+      "r_squared": 0.9988232743914733,
+      "skipped": {}
+    },
+    "basis": {
+      "concentration_horizon": null,
+      "decay_rate": 0.968001457657404,
+      "display_name": "BasisEncoding",
+      "encoding": "basis",
+      "haar_normalized_slope": 1.338668554405284,
+      "mean_decay_rate": 1.186062426634137,
+      "params": {},
+      "points": [
+        {
+          "concentration_ratio": 4.309090578520744,
+          "is_concentrated": false,
+          "mean_ratio": 3.1893467336683416,
+          "n_features": 2,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.7973366834170854,
+          "offdiagonal_variance": 0.1615908966945279,
+          "shots_per_entry": 4.000000000000001
+        },
+        {
+          "concentration_ratio": 72.22092843312038,
+          "is_concentrated": false,
+          "mean_ratio": 8.52502512562814,
+          "n_features": 4,
+          "n_qubits": 4,
+          "offdiagonal_mean": 0.5328140703517588,
+          "offdiagonal_variance": 0.2489232367869498,
+          "shots_per_entry": 4.000000000000001
+        },
+        {
+          "concentration_ratio": 990.6088509068433,
+          "is_concentrated": false,
+          "mean_ratio": 24.008040201005024,
+          "n_features": 6,
+          "n_qubits": 6,
+          "offdiagonal_mean": 0.3751256281407035,
+          "offdiagonal_variance": 0.23440639125274612,
+          "shots_per_entry": 4.000000000000001
+        },
+        {
+          "concentration_ratio": 13525.34503123908,
+          "is_concentrated": false,
+          "mean_ratio": 73.55819095477386,
+          "n_features": 8,
+          "n_qubits": 8,
+          "offdiagonal_mean": 0.2873366834170854,
+          "offdiagonal_variance": 0.20477431377995506,
+          "shots_per_entry": 3.9999999999999996
+        }
+      ],
+      "r_squared": 0.19179968702075412,
+      "skipped": {}
+    },
+    "cyclic_equivariant": {
+      "concentration_horizon": null,
+      "decay_rate": 2.579076916566393,
+      "display_name": "CyclicEquivariantFeatureMap",
+      "encoding": "cyclic_equivariant",
+      "haar_normalized_slope": 0.35871531790614625,
+      "mean_decay_rate": 2.0123556001533904,
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "concentration_ratio": 1.407099903891547,
+          "is_concentrated": true,
+          "mean_ratio": 1.5978580005240013,
+          "n_features": 2,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.3994645001310003,
+          "offdiagonal_variance": 0.05276624639593301,
+          "shots_per_entry": 18.185308196156264
+        },
+        {
+          "concentration_ratio": 2.556715184484242,
+          "is_concentrated": false,
+          "mean_ratio": 1.2205081165154463,
+          "n_features": 4,
+          "n_qubits": 4,
+          "offdiagonal_mean": 0.0762817572822154,
+          "offdiagonal_variance": 0.00881220766711021,
+          "shots_per_entry": 31.98419894308255
+        },
+        {
+          "concentration_ratio": 5.346832708254668,
+          "is_concentrated": false,
+          "mean_ratio": 1.3373353046342096,
+          "n_features": 6,
+          "n_qubits": 6,
+          "offdiagonal_mean": 0.020895864134909525,
+          "offdiagonal_variance": 0.0012652135690356223,
+          "shots_per_entry": 64.6822876316746
+        },
+        {
+          "concentration_ratio": 12.025618047737199,
+          "is_concentrated": false,
+          "mean_ratio": 1.4875563595339978,
+          "n_features": 8,
+          "n_qubits": 8,
+          "offdiagonal_mean": 0.005810767029429679,
+          "offdiagonal_variance": 0.00018206838182815882,
+          "shots_per_entry": 126.91939057077722
+        }
+      ],
+      "r_squared": 0.9996258965585569,
+      "skipped": {}
+    },
+    "data_reuploading": {
+      "concentration_horizon": null,
+      "decay_rate": 2.547742425391735,
+      "display_name": "DataReuploading",
+      "encoding": "data_reuploading",
+      "haar_normalized_slope": 0.3709392248786694,
+      "mean_decay_rate": 1.964173379243578,
+      "params": {
+        "n_layers": 2
+      },
+      "points": [
+        {
+          "concentration_ratio": 2.6965381805299344,
+          "is_concentrated": false,
+          "mean_ratio": 1.5496946210952487,
+          "n_features": 2,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.3874236552738122,
+          "offdiagonal_variance": 0.10112018176987253,
+          "shots_per_entry": 9.387901107543259
+        },
+        {
+          "concentration_ratio": 6.633821060225417,
+          "is_concentrated": false,
+          "mean_ratio": 1.705363512677795,
+          "n_features": 4,
+          "n_qubits": 4,
+          "offdiagonal_mean": 0.10658521954236219,
+          "offdiagonal_variance": 0.022864732514563706,
+          "shots_per_entry": 16.658810324033336
+        },
+        {
+          "concentration_ratio": 11.861475114453647,
+          "is_concentrated": false,
+          "mean_ratio": 1.5920496653268852,
+          "n_features": 6,
+          "n_qubits": 6,
+          "offdiagonal_mean": 0.02487577602073258,
+          "offdiagonal_variance": 0.0028067643186995934,
+          "shots_per_entry": 34.56930334547999
+        },
+        {
+          "concentration_ratio": 26.34272191873298,
+          "is_concentrated": false,
+          "mean_ratio": 1.7886858737847973,
+          "n_features": 8,
+          "n_qubits": 8,
+          "offdiagonal_mean": 0.006987054194471864,
+          "offdiagonal_variance": 0.0003988299589803917,
+          "shots_per_entry": 69.58589857083923
+        }
+      ],
+      "r_squared": 0.995299339211315,
+      "skipped": {}
+    },
+    "hamiltonian_encoding": {
+      "concentration_horizon": 2,
+      "decay_rate": 3.481353195957969,
+      "display_name": "HamiltonianEncoding",
+      "encoding": "hamiltonian_encoding",
+      "haar_normalized_slope": 0.05872580092576342,
+      "mean_decay_rate": 1.906562587927628,
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "concentration_ratio": 1.271082362139213,
+          "is_concentrated": true,
+          "mean_ratio": 0.9997264380689169,
+          "n_features": 2,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.24993160951722923,
+          "offdiagonal_variance": 0.04766558858022049,
+          "shots_per_entry": 15.731751619166875
+        },
+        {
+          "concentration_ratio": 1.2566217513523066,
+          "is_concentrated": true,
+          "mean_ratio": 1.064993675595274,
+          "n_features": 4,
+          "n_qubits": 4,
+          "offdiagonal_mean": 0.06656210472470463,
+          "offdiagonal_variance": 0.004331187102547013,
+          "shots_per_entry": 57.3806575133037
+        },
+        {
+          "concentration_ratio": 1.2880372337843684,
+          "is_concentrated": true,
+          "mean_ratio": 1.1188021750741521,
+          "n_features": 6,
+          "n_qubits": 6,
+          "offdiagonal_mean": 0.017481283985533627,
+          "offdiagonal_variance": 0.0003047864548092518,
+          "shots_per_entry": 225.41275604258755
+        },
+        {
+          "concentration_ratio": 1.8647803580550817,
+          "is_concentrated": true,
+          "mean_ratio": 1.3529194674145273,
+          "n_features": 8,
+          "n_qubits": 8,
+          "offdiagonal_mean": 0.005284841669587997,
+          "offdiagonal_variance": 2.823285596700859e-05,
+          "shots_per_entry": 744.7935305246243
+        }
+      ],
+      "r_squared": 0.9995451175658309,
+      "skipped": {}
+    },
+    "hardware_efficient": {
+      "concentration_horizon": null,
+      "decay_rate": 2.547742425391735,
+      "display_name": "HardwareEfficientEncoding",
+      "encoding": "hardware_efficient",
+      "haar_normalized_slope": 0.3709392248786694,
+      "mean_decay_rate": 1.964173379243578,
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "concentration_ratio": 2.6965381805299344,
+          "is_concentrated": false,
+          "mean_ratio": 1.5496946210952487,
+          "n_features": 2,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.3874236552738122,
+          "offdiagonal_variance": 0.10112018176987253,
+          "shots_per_entry": 9.387901107543259
+        },
+        {
+          "concentration_ratio": 6.633821060225417,
+          "is_concentrated": false,
+          "mean_ratio": 1.705363512677795,
+          "n_features": 4,
+          "n_qubits": 4,
+          "offdiagonal_mean": 0.10658521954236219,
+          "offdiagonal_variance": 0.022864732514563706,
+          "shots_per_entry": 16.658810324033336
+        },
+        {
+          "concentration_ratio": 11.861475114453647,
+          "is_concentrated": false,
+          "mean_ratio": 1.5920496653268852,
+          "n_features": 6,
+          "n_qubits": 6,
+          "offdiagonal_mean": 0.02487577602073258,
+          "offdiagonal_variance": 0.0028067643186995934,
+          "shots_per_entry": 34.56930334547999
+        },
+        {
+          "concentration_ratio": 26.34272191873298,
+          "is_concentrated": false,
+          "mean_ratio": 1.7886858737847973,
+          "n_features": 8,
+          "n_qubits": 8,
+          "offdiagonal_mean": 0.006987054194471864,
+          "offdiagonal_variance": 0.0003988299589803917,
+          "shots_per_entry": 69.58589857083923
+        }
+      ],
+      "r_squared": 0.995299339211315,
+      "skipped": {}
+    },
+    "higher_order_angle": {
+      "concentration_horizon": null,
+      "decay_rate": 2.368828741260596,
+      "display_name": "HigherOrderAngleEncoding",
+      "encoding": "higher_order_angle",
+      "haar_normalized_slope": 0.4437512375537811,
+      "mean_decay_rate": 1.9778584859654122,
+      "params": {
+        "order": 2
+      },
+      "points": [
+        {
+          "concentration_ratio": 2.0928681738652943,
+          "is_concentrated": false,
+          "mean_ratio": 0.9980966246715612,
+          "n_features": 2,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.2495241561678903,
+          "offdiagonal_variance": 0.07848255651994854,
+          "shots_per_entry": 9.544125979586038
+        },
+        {
+          "concentration_ratio": 4.513103859843899,
+          "is_concentrated": false,
+          "mean_ratio": 0.9928608432095362,
+          "n_features": 4,
+          "n_qubits": 4,
+          "offdiagonal_mean": 0.06205380270059601,
+          "offdiagonal_variance": 0.01555527525221932,
+          "shots_per_entry": 14.966788392301188
+        },
+        {
+          "concentration_ratio": 11.192202133385655,
+          "is_concentrated": false,
+          "mean_ratio": 0.9861302981725566,
+          "n_features": 6,
+          "n_qubits": 6,
+          "offdiagonal_mean": 0.015408285908946197,
+          "offdiagonal_variance": 0.0026483951863104575,
+          "shots_per_entry": 22.91330344158988
+        },
+        {
+          "concentration_ratio": 29.788814965316664,
+          "is_concentrated": false,
+          "mean_ratio": 1.0774302178351727,
+          "n_features": 8,
+          "n_qubits": 8,
+          "offdiagonal_mean": 0.004208711788418643,
+          "offdiagonal_variance": 0.0004510039580322592,
+          "shots_per_entry": 37.17039248866989
+        }
+      ],
+      "r_squared": 0.999535295025735,
+      "skipped": {}
+    },
+    "iqp": {
+      "concentration_horizon": 2,
+      "decay_rate": 3.8576017203964197,
+      "display_name": "IQPEncoding",
+      "encoding": "iqp",
+      "haar_normalized_slope": -0.04389880587749923,
+      "mean_decay_rate": 2.065164389519279,
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "concentration_ratio": 1.4216410399970698,
+          "is_concentrated": true,
+          "mean_ratio": 1.262234322156775,
+          "n_features": 2,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.3155585805391937,
+          "offdiagonal_variance": 0.053311538999890114,
+          "shots_per_entry": 16.205224372736875
+        },
+        {
+          "concentration_ratio": 1.1268338384271535,
+          "is_concentrated": true,
+          "mean_ratio": 1.0641876070845315,
+          "n_features": 4,
+          "n_qubits": 4,
+          "offdiagonal_mean": 0.06651172544278322,
+          "offdiagonal_variance": 0.0038838482482553543,
+          "shots_per_entry": 63.94473918933087
+        },
+        {
+          "concentration_ratio": 1.0630265667264505,
+          "is_concentrated": true,
+          "mean_ratio": 1.0285482446109173,
+          "n_features": 6,
+          "n_qubits": 6,
+          "offdiagonal_mean": 0.016071066322045583,
+          "offdiagonal_variance": 0.00025154249438013215,
+          "shots_per_entry": 251.4531342035853
+        },
+        {
+          "concentration_ratio": 1.0817539220353856,
+          "is_concentrated": true,
+          "mean_ratio": 1.0309563581266477,
+          "n_features": 8,
+          "n_qubits": 8,
+          "offdiagonal_mean": 0.004027173273932217,
+          "offdiagonal_variance": 1.637780156823679e-05,
+          "shots_per_entry": 979.6077044022354
+        }
+      ],
+      "r_squared": 0.9998927021650607,
+      "skipped": {}
+    },
+    "pauli_feature_map": {
+      "concentration_horizon": 2,
+      "decay_rate": 3.5275011982948477,
+      "display_name": "PauliFeatureMap",
+      "encoding": "pauli_feature_map",
+      "haar_normalized_slope": 0.04555712409736338,
+      "mean_decay_rate": 1.9530293102390694,
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "concentration_ratio": 1.364608750858391,
+          "is_concentrated": true,
+          "mean_ratio": 1.176847814867019,
+          "n_features": 2,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.29421195371675474,
+          "offdiagonal_variance": 0.05117282815718966,
+          "shots_per_entry": 16.231370239618105
+        },
+        {
+          "concentration_ratio": 1.3416373191857982,
+          "is_concentrated": true,
+          "mean_ratio": 1.156300068979996,
+          "n_features": 4,
+          "n_qubits": 4,
+          "offdiagonal_mean": 0.07226875431124975,
+          "offdiagonal_variance": 0.0046242095100613445,
+          "shots_per_entry": 57.99562612002892
+        },
+        {
+          "concentration_ratio": 1.3947429990124234,
+          "is_concentrated": true,
+          "mean_ratio": 1.1821446348213867,
+          "n_features": 6,
+          "n_qubits": 6,
+          "offdiagonal_mean": 0.018471009919084166,
+          "offdiagonal_variance": 0.00033003609126270537,
+          "shots_per_entry": 219.73150442170402
+        },
+        {
+          "concentration_ratio": 1.8251133817292022,
+          "is_concentrated": true,
+          "mean_ratio": 1.3687638124906802,
+          "n_features": 8,
+          "n_qubits": 8,
+          "offdiagonal_mean": 0.00534673364254172,
+          "offdiagonal_variance": 2.7632296215069043e-05,
+          "shots_per_entry": 769.8449727818459
+        }
+      ],
+      "r_squared": 0.9997080683338909,
+      "skipped": {}
+    },
+    "qaoa_encoding": {
+      "concentration_horizon": null,
+      "decay_rate": 2.4814849455102093,
+      "display_name": "QAOAEncoding",
+      "encoding": "qaoa_encoding",
+      "haar_normalized_slope": 0.3972897192054775,
+      "mean_decay_rate": 1.9046426150890812,
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "concentration_ratio": 1.4044326987728946,
+          "is_concentrated": true,
+          "mean_ratio": 1.0929905139252263,
+          "n_features": 2,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.27324762848130657,
+          "offdiagonal_variance": 0.05266622620398354,
+          "shots_per_entry": 15.082406796454924
+        },
+        {
+          "concentration_ratio": 3.150703449142069,
+          "is_concentrated": false,
+          "mean_ratio": 1.230764173347344,
+          "n_features": 4,
+          "n_qubits": 4,
+          "offdiagonal_mean": 0.076922760834209,
+          "offdiagonal_variance": 0.010859501777833418,
+          "shots_per_entry": 26.154293687686447
+        },
+        {
+          "concentration_ratio": 6.611960395559689,
+          "is_concentrated": false,
+          "mean_ratio": 1.2795011388313824,
+          "n_features": 6,
+          "n_qubits": 6,
+          "offdiagonal_mean": 0.01999220529424035,
+          "offdiagonal_variance": 0.0015645789698026608,
+          "shots_per_entry": 50.090196531746784
+        },
+        {
+          "concentration_ratio": 15.504755156192081,
+          "is_concentrated": false,
+          "mean_ratio": 1.4942999175578633,
+          "n_features": 8,
+          "n_qubits": 8,
+          "offdiagonal_mean": 0.0058371090529604035,
+          "offdiagonal_variance": 0.00023474266941821508,
+          "shots_per_entry": 98.88338111254278
+        }
+      ],
+      "r_squared": 0.9979923435923512,
+      "skipped": {}
+    },
+    "so2_equivariant": {
+      "concentration_horizon": null,
+      "decay_rate": null,
+      "display_name": "SO2EquivariantFeatureMap",
+      "encoding": "so2_equivariant",
+      "haar_normalized_slope": null,
+      "mean_decay_rate": null,
+      "params": {
+        "max_angular_momentum": 2
+      },
+      "points": [
+        {
+          "concentration_ratio": 9.87370715980222,
+          "is_concentrated": false,
+          "mean_ratio": 3.6396780432002123,
+          "n_features": 2,
+          "n_qubits": 3,
+          "offdiagonal_mean": 0.45495975540002653,
+          "offdiagonal_variance": 0.11999296895592977,
+          "shots_per_entry": 8.266196878833721
+        }
+      ],
+      "r_squared": null,
+      "skipped": {
+        "4": "ValueError: SO2EquivariantFeatureMap requires n_features=2 (2D Cartesian coordinates [x, y]) for SO(2) rotation equivariance. Got n_features=4. For higher-dimensional data with rotational symmetry, consider projecting to 2D or using a different encoding.",
+        "6": "ValueError: SO2EquivariantFeatureMap requires n_features=2 (2D Cartesian coordinates [x, y]) for SO(2) rotation equivariance. Got n_features=6. For higher-dimensional data with rotational symmetry, consider projecting to 2D or using a different encoding.",
+        "8": "ValueError: SO2EquivariantFeatureMap requires n_features=2 (2D Cartesian coordinates [x, y]) for SO(2) rotation equivariance. Got n_features=8. For higher-dimensional data with rotational symmetry, consider projecting to 2D or using a different encoding."
+      }
+    },
+    "swap_equivariant": {
+      "concentration_horizon": null,
+      "decay_rate": 1.744903170255126,
+      "display_name": "SwapEquivariantFeatureMap",
+      "encoding": "swap_equivariant",
+      "haar_normalized_slope": 0.7494478042533852,
+      "mean_decay_rate": 1.6119154568251843,
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "concentration_ratio": 2.6332810192809544,
+          "is_concentrated": false,
+          "mean_ratio": 1.7052775634215611,
+          "n_features": 2,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.4263193908553903,
+          "offdiagonal_variance": 0.09874803822303578,
+          "shots_per_entry": 9.906877027113481
+        },
+        {
+          "concentration_ratio": 13.672402587288646,
+          "is_concentrated": false,
+          "mean_ratio": 2.4897783218974743,
+          "n_features": 4,
+          "n_qubits": 4,
+          "offdiagonal_mean": 0.15561114511859214,
+          "offdiagonal_variance": 0.04712454935876142,
+          "shots_per_entry": 11.153109656976982
+        },
+        {
+          "concentration_ratio": 66.30261342205827,
+          "is_concentrated": false,
+          "mean_ratio": 4.4000604293605745,
+          "n_features": 6,
+          "n_qubits": 6,
+          "offdiagonal_mean": 0.06875094420875898,
+          "offdiagonal_variance": 0.015689094972917934,
+          "shots_per_entry": 16.323249235135595
+        },
+        {
+          "concentration_ratio": 230.04294108140223,
+          "is_concentrated": false,
+          "mean_ratio": 5.942200896261707,
+          "n_features": 8,
+          "n_qubits": 8,
+          "offdiagonal_mean": 0.023211722251022294,
+          "offdiagonal_variance": 0.0034828601629803475,
+          "shots_per_entry": 26.039447052346816
+        }
+      ],
+      "r_squared": 0.9769045128695897,
+      "skipped": {}
+    },
+    "symmetry_inspired": {
+      "concentration_horizon": null,
+      "decay_rate": 1.8197916936267058,
+      "display_name": "SymmetryInspiredFeatureMap",
+      "encoding": "symmetry_inspired",
+      "haar_normalized_slope": 0.707424828055937,
+      "mean_decay_rate": 1.6025728359859583,
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "concentration_ratio": 1.747887582265633,
+          "is_concentrated": true,
+          "mean_ratio": 1.6257334546287971,
+          "n_features": 2,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.4064333636571993,
+          "offdiagonal_variance": 0.06554578433496124,
+          "shots_per_entry": 14.722245649279209
+        },
+        {
+          "concentration_ratio": 7.363283832153228,
+          "is_concentrated": false,
+          "mean_ratio": 2.322578765471264,
+          "n_features": 4,
+          "n_qubits": 4,
+          "offdiagonal_mean": 0.145161172841954,
+          "offdiagonal_variance": 0.02537896541413107,
+          "shots_per_entry": 19.557835351634797
+        },
+        {
+          "concentration_ratio": 34.171749736747245,
+          "is_concentrated": false,
+          "mean_ratio": 4.119287731846268,
+          "n_features": 6,
+          "n_qubits": 6,
+          "offdiagonal_mean": 0.06436387081009794,
+          "offdiagonal_variance": 0.008086013496901578,
+          "shots_per_entry": 29.79028564199883
+        },
+        {
+          "concentration_ratio": 117.08994437726847,
+          "is_concentrated": false,
+          "mean_ratio": 5.881844982132283,
+          "n_features": 8,
+          "n_qubits": 8,
+          "offdiagonal_mean": 0.02297595696145423,
+          "offdiagonal_variance": 0.0017727468656074412,
+          "shots_per_entry": 50.65147833267822
+        }
+      ],
+      "r_squared": 0.9886268077606571,
+      "skipped": {}
+    },
+    "trainable_encoding": {
+      "concentration_horizon": null,
+      "decay_rate": 2.554517359865299,
+      "display_name": "TrainableEncoding",
+      "encoding": "trainable_encoding",
+      "haar_normalized_slope": 0.3682835629796623,
+      "mean_decay_rate": 1.96019292519657,
+      "params": {
+        "n_layers": 2,
+        "seed": 42
+      },
+      "points": [
+        {
+          "concentration_ratio": 2.7524126317330797,
+          "is_concentrated": false,
+          "mean_ratio": 1.5264220155270851,
+          "n_features": 2,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.3816055038817713,
+          "offdiagonal_variance": 0.10321547368999048,
+          "shots_per_entry": 9.14524672909758
+        },
+        {
+          "concentration_ratio": 6.439020694824337,
+          "is_concentrated": false,
+          "mean_ratio": 1.6264679194867326,
+          "n_features": 4,
+          "n_qubits": 4,
+          "offdiagonal_mean": 0.10165424496792079,
+          "offdiagonal_variance": 0.02219331581396256,
+          "shots_per_entry": 16.459128543643732
+        },
+        {
+          "concentration_ratio": 12.100980753279545,
+          "is_concentrated": false,
+          "mean_ratio": 1.6246235904430197,
+          "n_features": 6,
+          "n_qubits": 6,
+          "offdiagonal_mean": 0.025384743600672183,
+          "offdiagonal_variance": 0.0028634382040888346,
+          "shots_per_entry": 34.56035245694833
+        },
+        {
+          "concentration_ratio": 25.98185095174189,
+          "is_concentrated": false,
+          "mean_ratio": 1.746009993927739,
+          "n_features": 8,
+          "n_qubits": 8,
+          "offdiagonal_mean": 0.00682035153878023,
+          "offdiagonal_variance": 0.00039336635679811604,
+          "shots_per_entry": 68.88066787210441
+        }
+      ],
+      "r_squared": 0.9962271963637543,
+      "skipped": {}
+    },
+    "zz_feature_map": {
+      "concentration_horizon": 2,
+      "decay_rate": 3.5275011982948477,
+      "display_name": "ZZFeatureMap",
+      "encoding": "zz_feature_map",
+      "haar_normalized_slope": 0.045557124097363295,
+      "mean_decay_rate": 1.9530293102390697,
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "concentration_ratio": 1.3646087508583913,
+          "is_concentrated": true,
+          "mean_ratio": 1.1768478148670192,
+          "n_features": 2,
+          "n_qubits": 2,
+          "offdiagonal_mean": 0.2942119537167548,
+          "offdiagonal_variance": 0.05117282815718967,
+          "shots_per_entry": 16.231370239618105
+        },
+        {
+          "concentration_ratio": 1.3416373191857982,
+          "is_concentrated": true,
+          "mean_ratio": 1.156300068979996,
+          "n_features": 4,
+          "n_qubits": 4,
+          "offdiagonal_mean": 0.07226875431124975,
+          "offdiagonal_variance": 0.0046242095100613445,
+          "shots_per_entry": 57.99562612002892
+        },
+        {
+          "concentration_ratio": 1.394742999012423,
+          "is_concentrated": true,
+          "mean_ratio": 1.1821446348213864,
+          "n_features": 6,
+          "n_qubits": 6,
+          "offdiagonal_mean": 0.018471009919084163,
+          "offdiagonal_variance": 0.00033003609126270526,
+          "shots_per_entry": 219.73150442170405
+        },
+        {
+          "concentration_ratio": 1.8251133817292018,
+          "is_concentrated": true,
+          "mean_ratio": 1.3687638124906802,
+          "n_features": 8,
+          "n_qubits": 8,
+          "offdiagonal_mean": 0.00534673364254172,
+          "offdiagonal_variance": 2.7632296215069037e-05,
+          "shots_per_entry": 769.8449727818461
+        }
+      ],
+      "r_squared": 0.9997080683338909,
+      "skipped": {}
+    }
+  },
+  "generated_by": "experiments/concentration_scan.py",
+  "n_encodings": 16,
+  "protocol": {
+    "backend": "pennylane",
+    "feature_counts": [
+      2,
+      4,
+      6,
+      8
+    ],
+    "input_range": [
+      0.0,
+      6.283185307179586
+    ],
+    "n_samples": 200,
+    "sampling": "uniform",
+    "seed": 42,
+    "threshold": 2.0
+  },
+  "schema_version": "1.0"
+}

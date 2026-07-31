@@ -26,6 +26,7 @@ _FAST = dict(
     entanglement_samples=30,
     trainability_samples=15,
     noise_samples=3,
+    concentration_samples=20,
     seed=0,
 )
 
@@ -35,6 +36,10 @@ _DATA_FREE_KEYS = {
     "entanglement_capability",
     "trainability_estimate",
     "noise_retained_fidelity",
+    "kernel_concentration_ratio",
+    "kernel_offdiagonal_mean",
+    "kernel_shots_per_entry",
+    "kernel_is_concentrated",
 }
 
 
@@ -117,6 +122,52 @@ class TestDataDependentAxes:
         p = profile_encoding(AngleEncoding(n_features=2), X=X, y=y, **_FAST)
         assert p.metrics["kernel_target_alignment"] is not None
         assert -1.0 <= p.metrics["kernel_target_alignment"] <= 1.0
+
+
+class TestConcentrationAxis:
+    """The concentration axis is data-free, so it is always present."""
+
+    def test_present_without_data(self, base_profile: EncodingCharacterization) -> None:
+        assert base_profile.metrics["kernel_concentration_ratio"] > 0.0
+        assert 0.0 <= base_profile.metrics["kernel_offdiagonal_mean"] <= 1.0
+        assert base_profile.metrics["kernel_shots_per_entry"] > 0.0
+        assert isinstance(base_profile.metrics["kernel_is_concentrated"], bool)
+
+    def test_flag_agrees_with_ratio(
+        self, base_profile: EncodingCharacterization
+    ) -> None:
+        assert base_profile.metrics["kernel_is_concentrated"] == (
+            base_profile.metrics["kernel_concentration_ratio"] < 2.0
+        )
+
+    def test_uses_supplied_data(self, data: tuple[np.ndarray, np.ndarray]) -> None:
+        """With X given the axis describes the user's data, not random inputs."""
+        X, _ = data
+        with_data = profile_encoding(AngleEncoding(n_features=2), X=X, **_FAST)
+        without = profile_encoding(AngleEncoding(n_features=2), **_FAST)
+        assert (
+            with_data.metrics["kernel_concentration_ratio"]
+            != without.metrics["kernel_concentration_ratio"]
+        )
+
+    def test_entangling_map_is_more_concentrated(self) -> None:
+        angle = profile_encoding(AngleEncoding(n_features=6), **_FAST)
+        iqp = profile_encoding(IQPEncoding(n_features=6, reps=2), **_FAST)
+        assert (
+            iqp.metrics["kernel_concentration_ratio"]
+            < angle.metrics["kernel_concentration_ratio"]
+        )
+
+    def test_failure_nulls_the_whole_axis(self) -> None:
+        p = profile_encoding(AngleEncoding(n_features=2), X=np.zeros((5, 3)), **_FAST)
+        for key in (
+            "kernel_concentration_ratio",
+            "kernel_offdiagonal_mean",
+            "kernel_shots_per_entry",
+            "kernel_is_concentrated",
+        ):
+            assert p.metrics[key] is None
+        assert "kernel_concentration_ratio" in p.notes
 
 
 class TestCustomEncoding:

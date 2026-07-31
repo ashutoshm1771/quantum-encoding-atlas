@@ -7,11 +7,11 @@ the atlas/recommender only know the 16 curated encodings — a researcher's own
 encoding cannot be profiled or placed in context.
 
 :func:`profile_encoding` computes the data-free axes (resources, simulability,
-expressibility, entanglement, trainability, noise resilience) always, and the
-data-dependent kernel-geometry axes (kernel-target alignment, geometric
-difference, effective dimension) when a dataset ``(X, y)`` is supplied. Each
-axis is computed defensively, so a failure on one axis records ``None`` with a
-note rather than aborting the whole profile.
+expressibility, entanglement, trainability, noise resilience, kernel
+concentration) always, and the data-dependent kernel-geometry axes
+(kernel-target alignment, geometric difference, effective dimension) when a
+dataset ``(X, y)`` is supplied. Each axis is computed defensively, so a failure
+on one axis records ``None`` with a note rather than aborting the whole profile.
 
 :func:`compare_to_atlas` ranks a profiled encoding against the 16 built-in
 encodings on the axes whose definitions match the bundled atlas.
@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 from numpy.typing import NDArray
 
+from encoding_atlas.analysis.concentration import compute_kernel_concentration
 from encoding_atlas.analysis.entanglement import compute_entanglement_capability
 from encoding_atlas.analysis.expressibility import compute_expressibility
 from encoding_atlas.analysis.generalization import (
@@ -69,14 +70,18 @@ class EncodingCharacterization:
         Whether the encoding is classically efficiently simulable.
     metrics : Mapping[str, float | None]
         Measured metrics. Always includes ``depth``, ``expressibility``,
-        ``entanglement_capability``, ``trainability_estimate`` and
-        ``noise_retained_fidelity``; includes ``kernel_target_alignment``,
-        ``geometric_difference`` and ``effective_dimension`` when a dataset was
-        supplied. A value is ``None`` if that axis could not be computed (see
-        ``notes``). ``depth``/``expressibility``/``entanglement_capability``/
+        ``entanglement_capability``, ``trainability_estimate``,
+        ``noise_retained_fidelity`` and the concentration axis
+        (``kernel_concentration_ratio``, ``kernel_offdiagonal_mean``,
+        ``kernel_shots_per_entry``, ``kernel_is_concentrated``); includes
+        ``kernel_target_alignment``, ``geometric_difference`` and
+        ``effective_dimension`` when a dataset was supplied. A value is
+        ``None`` if that axis could not be computed (see ``notes``).
+        ``depth``/``expressibility``/``entanglement_capability``/
         ``trainability_estimate`` share the atlas's definitions;
         ``noise_retained_fidelity`` is the fidelity-based noise metric (distinct
         from the atlas's ``noise_resilience`` trade-off column).
+        ``kernel_is_concentrated`` is a ``bool``, not a float.
     notes : Mapping[str, str]
         Per-axis failure reasons for any metric that is ``None``.
     """
@@ -120,6 +125,7 @@ def profile_encoding(
     noise_level: str = "medium",
     noise_samples: int = 20,
     include_noise: bool = True,
+    concentration_samples: int = 30,
     seed: int | None = None,
 ) -> EncodingCharacterization:
     """Characterise an encoding across every analysis axis.
@@ -142,6 +148,9 @@ def profile_encoding(
         Inputs averaged for the noise-resilience axis.
     include_noise : bool, default=True
         Whether to compute the (density-matrix) noise axis.
+    concentration_samples : int, default=30
+        Inputs used to build the kernel for the concentration axis. When ``X``
+        is supplied, ``X`` is used instead and this is ignored.
     seed : int or None, default=None
         Base random seed for all stochastic axes.
 
@@ -210,6 +219,32 @@ def profile_encoding(
                 seed=seed,
             ).retained_fidelity,
         )
+
+    # --- Kernel concentration (data-free unless X is supplied) --------------
+    # Always computed: it is the axis that says whether this encoding's kernel
+    # still carries usable geometry at this circuit width, and it needs no
+    # labels. Uses X when available so it describes the user's actual data.
+    try:
+        concentration = compute_kernel_concentration(
+            encoding,
+            X,
+            n_samples=concentration_samples,
+            seed=seed,
+        )
+        metrics["kernel_concentration_ratio"] = concentration.concentration_ratio
+        metrics["kernel_offdiagonal_mean"] = concentration.offdiagonal_mean
+        metrics["kernel_shots_per_entry"] = concentration.shots_per_entry
+        metrics["kernel_is_concentrated"] = concentration.is_concentrated
+    except Exception as exc:  # noqa: BLE001 - one bad axis must not abort
+        for key in (
+            "kernel_concentration_ratio",
+            "kernel_offdiagonal_mean",
+            "kernel_shots_per_entry",
+            "kernel_is_concentrated",
+        ):
+            metrics[key] = None
+        notes["kernel_concentration_ratio"] = f"{type(exc).__name__}: {exc}"
+        logger.debug("Profile axis 'kernel_concentration_ratio' failed: %s", exc)
 
     # --- Data-dependent kernel-geometry axes --------------------------------
     if X is not None:

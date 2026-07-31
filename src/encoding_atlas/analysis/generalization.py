@@ -19,6 +19,19 @@ All three are cheap classical post-processing of the fidelity (overlap) kernel
 
 computed from simulated statevectors — no training required.
 
+Finite shots
+------------
+By default the kernel is exact (infinite-shot). Passing ``shots=M`` to
+:func:`compute_fidelity_kernel`, or to any of the three diagnostics, instead
+returns the estimate a real device would produce from ``M`` measurements per
+entry. On hardware the standard construction is the *compute-uncompute*
+circuit ``U(x_j)^dagger U(x_i)|0>``, whose probability of returning the
+all-zeros bitstring is exactly ``K(x_i, x_j)``; the count of all-zeros
+outcomes over ``M`` shots is therefore exactly ``Binomial(M, K)``. Sampling
+that binomial from the exact kernel is statistically identical to running the
+circuits, so shot realism costs one random draw rather than a second
+simulation. See :func:`sample_shot_kernel`.
+
 Notes
 -----
 The effective dimension implemented here is the *feature-space* (kernel ridge)
@@ -35,6 +48,7 @@ Cortes, Mohri & Rostamizadeh (2012), *JMLR* 13:795 — centered alignment.
 Huang et al. (2021), *Nat. Commun.* 12:2631 — geometric difference.
 Zhang (2005), *Neural Comput.* 17:2077; Bach (2013) — effective degrees of
 freedom of a kernel.
+Havlicek et al. (2019), *Nature* 567:209 — compute-uncompute kernel estimation.
 """
 
 from __future__ import annotations
@@ -80,17 +94,110 @@ def _symmetric_psd_sqrt(K: NDArray[np.floating[Any]]) -> NDArray[np.floating[Any
 # ---------------------------------------------------------------------------
 
 
+def sample_shot_kernel(
+    K: NDArray[np.floating[Any]],
+    shots: int,
+    *,
+    seed: int | None = None,
+) -> NDArray[np.floating[Any]]:
+    """Return the finite-shot estimate of an exact fidelity kernel.
+
+    Models the *compute-uncompute* estimator used on hardware: for each pair
+    ``(i, j)`` the circuit ``U(x_j)^dagger U(x_i)|0>`` is measured ``shots``
+    times and the fraction of all-zeros outcomes is taken as ``K[i, j]``.
+    Because the all-zeros probability *is* ``K[i, j]``, that count is exactly
+    ``Binomial(shots, K[i, j])`` — so drawing from the binomial is
+    statistically identical to simulating the circuits, at a fraction of the
+    cost.
+
+    The estimate is unbiased entrywise and symmetric, and its diagonal is
+    exactly 1 (the compute-uncompute circuit for ``x_i = x_i`` returns
+    all-zeros with certainty). It is **not** guaranteed to be positive
+    semidefinite: independent noise on each entry routinely pushes the
+    smallest eigenvalues negative. Project with
+    :func:`encoding_atlas.benchmark.kernel.ensure_psd` before handing it to a
+    precomputed-kernel estimator.
+
+    Parameters
+    ----------
+    K : ndarray, shape (n, n)
+        Exact kernel with entries in ``[0, 1]``, e.g. from
+        :func:`compute_fidelity_kernel`.
+    shots : int
+        Measurements per entry. Must be a positive integer.
+    seed : int or None, default=None
+        Seed for the binomial draws.
+
+    Returns
+    -------
+    ndarray, shape (n, n)
+        Symmetric finite-shot estimate with unit diagonal. Entries are
+        multiples of ``1 / shots``.
+
+    Raises
+    ------
+    ValueError
+        If ``shots`` is not a positive integer, or ``K`` is not a square 2D
+        matrix with entries in ``[0, 1]``.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> K = np.array([[1.0, 0.5], [0.5, 1.0]])
+    >>> K_hat = sample_shot_kernel(K, shots=1000, seed=0)
+    >>> bool(K_hat[0, 0] == 1.0 and K_hat[0, 1] == K_hat[1, 0])
+    True
+
+    Notes
+    -----
+    The variance of each off-diagonal estimate is ``K (1 - K) / shots``. When
+    the kernel has concentrated — every off-diagonal entry near ``2**-n`` —
+    that noise swamps the signal unless ``shots`` grows with the Hilbert-space
+    dimension; see
+    :func:`encoding_atlas.analysis.concentration.compute_kernel_concentration`
+    for the resulting budget.
+    """
+    if isinstance(shots, bool) or not isinstance(shots, (int, np.integer)):
+        raise ValueError(f"shots must be a positive integer, got {shots!r}")
+    if shots < 1:
+        raise ValueError(f"shots must be a positive integer, got {shots!r}")
+
+    K_arr = np.asarray(K, dtype=np.float64)
+    if K_arr.ndim != 2 or K_arr.shape[0] != K_arr.shape[1]:
+        raise ValueError(f"K must be a square 2D matrix, got shape {K_arr.shape}")
+    if K_arr.size and (float(K_arr.min()) < -_EPS or float(K_arr.max()) > 1.0 + _EPS):
+        raise ValueError(
+            f"K entries must lie in [0, 1], got "
+            f"[{float(K_arr.min()):.6g}, {float(K_arr.max()):.6g}]"
+        )
+
+    n = K_arr.shape[0]
+    estimate = np.eye(n, dtype=np.float64)
+    if n < 2:
+        return estimate
+
+    rng = np.random.default_rng(seed)
+    upper = np.triu_indices(n, k=1)
+    probabilities = np.clip(K_arr[upper], 0.0, 1.0)
+    sampled = rng.binomial(int(shots), probabilities) / float(shots)
+    estimate[upper] = sampled
+    estimate[(upper[1], upper[0])] = sampled
+    return estimate
+
+
 def compute_fidelity_kernel(
     encoding: BaseEncoding,
     X: NDArray[np.floating[Any]],
     *,
     backend: Literal["pennylane", "qiskit", "cirq"] = "pennylane",
+    shots: int | None = None,
+    seed: int | None = None,
 ) -> NDArray[np.floating[Any]]:
     """Compute the fidelity (overlap) kernel matrix for ``X``.
 
     ``K[i, j] = |<phi(x_i)|phi(x_j)>|^2`` where ``|phi(x)> = U(x)|0>`` is the
-    encoded state. The matrix is symmetric, PSD, has unit diagonal, and entries
-    in ``[0, 1]``.
+    encoded state. With the default ``shots=None`` the matrix is exact:
+    symmetric, PSD, unit diagonal, entries in ``[0, 1]``.
 
     Parameters
     ----------
@@ -101,17 +208,32 @@ def compute_fidelity_kernel(
         Input data.
     backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
         Statevector simulation backend.
+    shots : int or None, default=None
+        When given, return the finite-shot compute-uncompute estimate from
+        ``shots`` measurements per entry instead of the exact kernel (see
+        :func:`sample_shot_kernel`). The result stays symmetric with a unit
+        diagonal but is **no longer guaranteed PSD**.
+    seed : int or None, default=None
+        Seed for the shot sampling. Ignored when ``shots`` is ``None``.
 
     Returns
     -------
     ndarray, shape (n_samples, n_samples)
         The fidelity kernel matrix.
+
+    Raises
+    ------
+    ValueError
+        If ``shots`` is given but is not a positive integer.
     """
     states = simulate_encoding_statevectors_batch(encoding, X, backend=backend)
     overlaps = states.conj() @ states.T
     K = np.abs(overlaps) ** 2
     np.fill_diagonal(K, 1.0)
-    return np.clip(K.real.astype(np.float64), 0.0, 1.0)
+    exact = np.clip(K.real.astype(np.float64), 0.0, 1.0)
+    if shots is None:
+        return exact
+    return sample_shot_kernel(exact, shots, seed=seed)
 
 
 # ---------------------------------------------------------------------------
@@ -173,13 +295,34 @@ def compute_kernel_target_alignment(
     *,
     centered: bool = True,
     backend: Literal["pennylane", "qiskit", "cirq"] = "pennylane",
+    shots: int | None = None,
+    seed: int | None = None,
 ) -> float:
     """Kernel-target alignment of an encoding's fidelity kernel on ``(X, y)``.
 
     Higher alignment predicts stronger quantum-kernel classification accuracy.
     Uses the centred variant by default.
+
+    Parameters
+    ----------
+    encoding : BaseEncoding
+        Encoding under test.
+    X : ndarray, shape (n_samples, n_features)
+        Input data.
+    y : ndarray, shape (n_samples,)
+        Binary labels.
+    centered : bool, default=True
+        Use the centred alignment (Cortes et al., 2012).
+    backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
+        Statevector backend.
+    shots : int or None, default=None
+        Measure the alignment on a finite-shot kernel estimate instead of the
+        exact one. Alignment aggregates over all ``n(n-1)/2`` entries, so it
+        tolerates shot noise far better than the kernel matrix itself does.
+    seed : int or None, default=None
+        Seed for the shot sampling. Ignored when ``shots`` is ``None``.
     """
-    K = compute_fidelity_kernel(encoding, X, backend=backend)
+    K = compute_fidelity_kernel(encoding, X, backend=backend, shots=shots, seed=seed)
     if centered:
         return centered_kernel_target_alignment(K, y)
     return kernel_target_alignment(K, y)
@@ -252,6 +395,8 @@ def compute_geometric_difference(
     gamma: float | None = None,
     regularization: float = 1e-6,
     backend: Literal["pennylane", "qiskit", "cirq"] = "pennylane",
+    shots: int | None = None,
+    seed: int | None = None,
 ) -> float:
     """Geometric difference ``g(K_classical || K_quantum)`` for an encoding.
 
@@ -273,8 +418,15 @@ def compute_geometric_difference(
         Ridge for the classical-kernel inversion.
     backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
         Statevector backend.
+    shots : int or None, default=None
+        Measure against a finite-shot kernel estimate instead of the exact
+        one. Shot noise inflates ``g`` — noise is a direction no classical
+        kernel reproduces — so a large value under finite shots is not by
+        itself evidence of an advantage.
+    seed : int or None, default=None
+        Seed for the shot sampling. Ignored when ``shots`` is ``None``.
     """
-    K_q = compute_fidelity_kernel(encoding, X, backend=backend)
+    K_q = compute_fidelity_kernel(encoding, X, backend=backend, shots=shots, seed=seed)
     K_c = _classical_kernel(np.asarray(X, dtype=np.float64), classical_kernel, gamma)
     return geometric_difference(K_c, K_q, regularization=regularization)
 
@@ -323,12 +475,31 @@ def compute_effective_dimension(
     *,
     regularization: float = 1.0,
     backend: Literal["pennylane", "qiskit", "cirq"] = "pennylane",
+    shots: int | None = None,
+    seed: int | None = None,
 ) -> float:
     """Feature-space effective dimension of an encoding's fidelity kernel.
 
     Larger values indicate the encoding spreads data across more effective
     feature-space directions (higher capacity). See
     :func:`kernel_effective_dimension` for the definition.
+
+    Parameters
+    ----------
+    encoding : BaseEncoding
+        Encoding under test.
+    X : ndarray, shape (n_samples, n_features)
+        Input data.
+    regularization : float, default=1.0
+        Ridge parameter of the effective-dimension sum.
+    backend : {"pennylane", "qiskit", "cirq"}, default="pennylane"
+        Statevector backend.
+    shots : int or None, default=None
+        Measure on a finite-shot kernel estimate instead of the exact one.
+        Shot noise raises the apparent dimension by spreading the eigenvalue
+        spectrum, so finite-shot values overstate capacity.
+    seed : int or None, default=None
+        Seed for the shot sampling. Ignored when ``shots`` is ``None``.
     """
-    K = compute_fidelity_kernel(encoding, X, backend=backend)
+    K = compute_fidelity_kernel(encoding, X, backend=backend, shots=shots, seed=seed)
     return kernel_effective_dimension(K, regularization=regularization)

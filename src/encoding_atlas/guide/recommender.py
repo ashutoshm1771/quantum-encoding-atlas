@@ -71,12 +71,21 @@ class Recommendation:
         Up to three runner-up encoding names, ranked by score.
     confidence : float
         Confidence in the recommendation, in ``[0, 1]``.
+    scale_warning : str or None
+        Set when the recommended encoding's fidelity kernel is measured to sit
+        at the Haar floor at this feature count — meaning a quantum-kernel
+        method built on it has no geometry left to learn from, and the shot
+        cost per kernel entry grows exponentially with circuit width. ``None``
+        when no such warning applies. Kept out of ``explanation`` so callers
+        that format the rationale are unaffected; see
+        :mod:`encoding_atlas.atlas.concentration` for the underlying scan.
     """
 
     encoding_name: str
     explanation: str
     alternatives: list[str]
     confidence: float
+    scale_warning: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -400,6 +409,58 @@ def _evidence_suffix(name: str) -> str:
     return f" [benchmark: rank {profile.rank}/16, mean kernel accuracy {kernel:.2f}]"
 
 
+def _scale_warning(name: str, n_features: int, task: str) -> str | None:
+    """Return a kernel-concentration warning for ``name``, or ``None``.
+
+    Fires when the bundled concentration scan measured this encoding's
+    fidelity kernel at the Haar floor around ``n_features`` — the regime where
+    every pair of distinct inputs looks equally dissimilar, so the kernel
+    matrix is the identity up to sampling noise and a kernel method cannot
+    generalize from it no matter how many shots are spent.
+
+    Returns ``None`` for regression tasks' variational path and for any
+    encoding absent from the scan, so the guide degrades gracefully if the
+    rule base and the scan ever drift apart.
+
+    Parameters
+    ----------
+    name : str
+        Canonical encoding name.
+    n_features : int
+        The user's feature count.
+    task : str
+        ML task; used only to phrase the consequence.
+
+    Returns
+    -------
+    str or None
+        A one-sentence warning, or ``None`` if the encoding is clear.
+    """
+    from encoding_atlas.atlas import get_concentration_profile
+
+    try:
+        profile = get_concentration_profile(name)
+    except KeyError:
+        return None
+    if not profile.points or not profile.is_concentrated_at(n_features):
+        return None
+
+    point = profile.at_features(n_features)
+    horizon = profile.horizon
+    reach = f"from {horizon} qubits upward" if horizon is not None else "at this width"
+    return (
+        f"Kernel concentration: {name}'s fidelity kernel sits at the Haar "
+        f"floor {reach} (measured variance ratio {point.concentration_ratio:.2f} "
+        f"at {point.n_qubits} qubits, where 1.0 means the kernel is "
+        f"indistinguishable from the identity). Quantum-kernel {task} will "
+        f"not improve with more features, and resolving a single kernel entry "
+        f"already needs about {point.shots_per_entry:.0f} shots — a cost that "
+        f"grows exponentially with circuit width. Prefer an encoding with no "
+        f"measured concentration horizon, or use a variational (VQC) model "
+        f"instead of a kernel."
+    )
+
+
 def _generate_explanation(
     name: str,
     rules: EncodingRule,
@@ -672,4 +733,5 @@ def recommend_encoding(
         explanation=explanation,
         alternatives=alternatives,
         confidence=confidence,
+        scale_warning=_scale_warning(best_name, n_features, task),
     )
