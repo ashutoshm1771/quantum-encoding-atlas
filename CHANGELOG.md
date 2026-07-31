@@ -9,6 +9,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Data-driven encoding screening
+- `encoding_atlas.guide.screen_encodings` — ranks candidate encodings by
+  kernel-target alignment measured on the caller's own ``(X, y)``, with no
+  training. This is the workflow the benchmark's validated predictor implies:
+  score, keep the encodings that do well, train only those. All 16 candidates
+  on 100 samples take about a second.
+- `ScreeningResult` (with `top()`, `names()`, `best()`, `get()`) and
+  `ScreenedEncoding`, which carries the built instance so the shortlist can be
+  trained without rebuilding. Encodings that cannot be constructed at the
+  caller's feature count are reported in `skipped` with the reason instead of
+  raising.
+- Supports restricted candidate sets, stratified and seeded sub-sampling for
+  large inputs, finite-shot kernels via `shots=`, and optional kernel
+  concentration annotation. Concentration deliberately does **not** affect the
+  ranking: at a fixed circuit width alignment already ranks the Haar-floor
+  encodings last, so a veto would be redundant.
+- Documented honestly: on the benchmark's eight datasets the top-3 shortlist
+  reaches 0.973 mean accuracy against an oracle's 0.974, but the single top
+  pick (0.960) is not meaningfully better than always choosing `angle`
+  (0.958). The shortlist is the deliverable, not the top-1.
+- New guide page: *Screening on Your Data*.
+
+#### Kernel-target alignment in the atlas
+- `kernel_target_alignment` is now a first-class, rankable atlas metric:
+  `rank_encodings(by="kernel_target_alignment")`. Previously the atlas
+  exposed `expressibility` — the predictor the study *refutes* (rho = -0.68) —
+  while the predictor it *validates* (rho = +0.91) was measured by the pipeline
+  and then dropped during consolidation.
+- `experiments/report.py` now carries the measured alignment through, so the
+  column is derived from existing Stage 6b measurements with no new simulation,
+  averaged over (configuration, dataset) pairs — the identical rule the
+  `kernel_accuracy` column already used.
+
+#### Analysis
+- `encoding_atlas.analysis.summarize_kernel_concentration` — derives the
+  concentration statistics from an already-computed kernel, so a caller that
+  holds one (screening, for instance) does not pay for a second simulation.
+
+### Fixed
+- Kernel-target alignment assumed labels were literally `{0, 1}` and silently
+  returned wrong values for any other two-class convention: an ideal kernel
+  scored 1.00 for `{0, 1}` but 0.20 for `{1, 2}` and 0.80 for `{-1, +1}`.
+  Two-class labels are now mapped to `{-1, +1}` by partition, so the score
+  depends on the split rather than on how the classes are spelled. `{0, 1}`
+  behaviour, and therefore every published number, is unchanged; continuous
+  and multi-class targets keep the previous linear mapping.
+- `encoding_atlas.benchmark.kernel` had a second, independently maintained copy
+  of both alignment functions that had drifted from the analysis package's.
+  It now re-exports the single definition, so the metric the benchmark records
+  and the metric users screen with cannot disagree.
+
+### Changed
+- The benchmark-matched encoding parameters now live in the package
+  (`encoding_atlas.guide._candidates.BENCHMARK_PARAMS`) as the single source of
+  truth for both screening and `experiments/concentration_scan.py`, which
+  re-exports them as `ENCODING_PARAMS` for backwards compatibility.
+
 #### Kernel-concentration analysis
 - `encoding_atlas.analysis.compute_kernel_concentration` — measures how close an
   encoding's fidelity kernel sits to the Haar floor at a given circuit width.

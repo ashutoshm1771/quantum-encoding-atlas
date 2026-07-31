@@ -343,3 +343,98 @@ class TestShotAwareDiagnostics:
         repaired, was_clipped = ensure_psd(noisy)
         assert was_clipped
         assert float(np.linalg.eigvalsh(repaired).min()) > -1e-9
+
+
+# =====================================================================
+# Label-convention handling
+# =====================================================================
+
+
+class TestLabelConventions:
+    """Alignment describes a *partition*, so it must not depend on how the two
+    classes happen to be spelled. The uncentred variant did depend on it: it
+    assumed labels were literally ``{0, 1}`` and silently returned wrong values
+    for ``{1, 2}``, ``{-1, +1}`` or any other pair."""
+
+    @staticmethod
+    def _ideal_kernel(split: np.ndarray) -> np.ndarray:
+        signed = 2 * split - 1
+        return np.outer(signed, signed).astype(float)
+
+    @pytest.mark.parametrize(
+        "labels",
+        [
+            np.array([0, 0, 1, 1]),
+            np.array([1, 1, 2, 2]),
+            np.array([-1, -1, 1, 1]),
+            np.array([0, 0, 5, 5]),
+            np.array([3.5, 3.5, 9.0, 9.0]),
+        ],
+    )
+    def test_perfect_alignment_regardless_of_convention(
+        self, labels: np.ndarray
+    ) -> None:
+        K = self._ideal_kernel(np.array([0, 0, 1, 1]))
+        assert kernel_target_alignment(K, labels) == pytest.approx(1.0)
+        assert centered_kernel_target_alignment(K, labels) == pytest.approx(1.0)
+
+    def test_class_order_is_respected(self) -> None:
+        """Swapping which class is 'positive' flips the uncentred sign only
+        through the kernel, not through the labels: the partition is the same,
+        so the score is unchanged."""
+        K = self._ideal_kernel(np.array([0, 0, 1, 1]))
+        assert kernel_target_alignment(K, np.array([1, 1, 0, 0])) == pytest.approx(
+            kernel_target_alignment(K, np.array([0, 0, 1, 1]))
+        )
+
+    def test_zero_one_behaviour_is_unchanged(self) -> None:
+        """Published numbers were measured on {0, 1} labels and must not move."""
+        rng = np.random.default_rng(0)
+        A = rng.standard_normal((8, 8))
+        K = A @ A.T
+        y = np.array([0, 1, 0, 1, 1, 0, 1, 0])
+        signed = 2.0 * y - 1.0
+        y_outer = np.outer(signed, signed)
+        expected = float(
+            np.sum(K * y_outer)
+            / (np.linalg.norm(K, "fro") * np.linalg.norm(y_outer, "fro"))
+        )
+        assert kernel_target_alignment(K, y) == pytest.approx(expected)
+
+    def test_continuous_targets_still_use_the_linear_map(self) -> None:
+        """Regression targets are not a two-class partition and must keep the
+        original ``2y - 1`` behaviour."""
+        rng = np.random.default_rng(1)
+        A = rng.standard_normal((6, 6))
+        K = A @ A.T
+        y = np.array([0.1, 0.4, 0.7, 0.2, 0.9, 0.5])
+        signed = 2.0 * y - 1.0
+        y_outer = np.outer(signed, signed)
+        expected = float(
+            np.sum(K * y_outer)
+            / (np.linalg.norm(K, "fro") * np.linalg.norm(y_outer, "fro"))
+        )
+        assert kernel_target_alignment(K, y) == pytest.approx(expected)
+
+    def test_multiclass_falls_back_to_the_linear_map(self) -> None:
+        rng = np.random.default_rng(2)
+        A = rng.standard_normal((6, 6))
+        K = A @ A.T
+        y = np.array([0, 1, 2, 1, 0, 2])
+        signed = 2.0 * y - 1.0
+        y_outer = np.outer(signed, signed)
+        expected = float(
+            np.sum(K * y_outer)
+            / (np.linalg.norm(K, "fro") * np.linalg.norm(y_outer, "fro"))
+        )
+        assert kernel_target_alignment(K, y) == pytest.approx(expected)
+
+    def test_benchmark_module_shares_one_definition(self) -> None:
+        """Two independent copies had drifted; there is now a single source."""
+        from encoding_atlas.benchmark import kernel as benchmark_kernel
+
+        assert benchmark_kernel.kernel_target_alignment is kernel_target_alignment
+        assert (
+            benchmark_kernel.centered_kernel_target_alignment
+            is centered_kernel_target_alignment
+        )

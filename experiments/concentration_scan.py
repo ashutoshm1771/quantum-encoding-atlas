@@ -47,6 +47,7 @@ from encoding_atlas.analysis.concentration import (
 )
 from encoding_atlas.core.base import BaseEncoding
 from encoding_atlas.core.registry import get_encoding
+from encoding_atlas.guide._candidates import BENCHMARK_PARAMS
 
 SCHEMA_VERSION = "1.0"
 
@@ -75,29 +76,15 @@ BACKEND = "pennylane"
 
 # Fixed (non-width) parameters per encoding, mirroring stage6b_kernel.json so
 # the concentration scan describes the same circuits the benchmark measured.
+# The table lives in the package (``encoding_atlas.guide._candidates``) because
+# data-driven screening must use the same configurations for its alignments to
+# be comparable with the atlas; re-exported here for backwards compatibility.
 #
-# ``trainable_encoding`` additionally pins ``seed``: its variational parameters
-# are drawn at construction time, so without a seed the scan would not be
+# ``trainable_encoding`` pins ``seed`` there: its variational parameters are
+# drawn at construction time, so without a seed the scan would not be
 # reproducible. Holding them fixed also matches how the benchmark treats it —
 # as a feature map, not a jointly-optimised model.
-ENCODING_PARAMS: dict[str, dict[str, Any]] = {
-    "angle": {"rotation": "Y"},
-    "amplitude": {},
-    "basis": {},
-    "iqp": {"reps": 2},
-    "zz_feature_map": {"reps": 2},
-    "pauli_feature_map": {"reps": 2},
-    "data_reuploading": {"n_layers": 2},
-    "hardware_efficient": {"reps": 2},
-    "higher_order_angle": {"order": 2},
-    "qaoa_encoding": {"reps": 2},
-    "hamiltonian_encoding": {"reps": 2},
-    "symmetry_inspired": {"reps": 2},
-    "trainable_encoding": {"n_layers": 2, "seed": SEED},
-    "so2_equivariant": {"max_angular_momentum": 2},
-    "cyclic_equivariant": {"reps": 2},
-    "swap_equivariant": {"reps": 2},
-}
+ENCODING_PARAMS: dict[str, dict[str, Any]] = BENCHMARK_PARAMS
 
 
 def _factory(name: str, params: dict[str, Any]) -> Callable[[int], BaseEncoding]:

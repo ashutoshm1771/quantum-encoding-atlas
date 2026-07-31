@@ -202,6 +202,7 @@ class TestListMetrics:
             "noise_resilience",
             "vqc_accuracy",
             "kernel_accuracy",
+            "kernel_target_alignment",
         ]
 
     def test_ci_keys_excluded_from_scalar_metrics(self) -> None:
@@ -377,3 +378,96 @@ class TestCrossSystemConsistency:
 
         assert hasattr(encoding_atlas, "atlas")
         assert encoding_atlas.atlas.get_encoding_profile("angle").rank == 1
+
+
+# =========================================================================
+# Kernel-target alignment column
+# =========================================================================
+
+
+class TestKernelTargetAlignmentColumn:
+    """The benchmark's *validated* predictor, carried into the shipped atlas.
+
+    Expressibility (which the study refutes) was already queryable; alignment
+    (which it validates) was measured but dropped during consolidation. These
+    tests pin both the presence of the column and the claim it encodes.
+    """
+
+    def test_present_for_every_encoding(self) -> None:
+        for profile in list_profiles():
+            value = profile.metrics["kernel_target_alignment"]
+            assert value is not None, profile.name
+            assert -1.0 <= value <= 1.0
+
+    def test_is_rankable(self) -> None:
+        ranked = rank_encodings(by="kernel_target_alignment")
+        assert len(ranked) == EXPECTED_N_ENCODINGS
+        values = [p.metric("kernel_target_alignment") for p in ranked]
+        assert values == sorted(values, reverse=True)  # higher is better
+
+    def test_predicts_kernel_accuracy_better_than_expressibility(self) -> None:
+        """The paper's headline pair of results, reproduced from the atlas.
+
+        Alignment tracks accuracy; expressibility is if anything negatively
+        associated with it. This is the reason the column exists.
+        """
+        from scipy.stats import spearmanr
+
+        profiles = list_profiles()
+        alignment = [p.metric("kernel_target_alignment") for p in profiles]
+        accuracy = [p.metric("kernel_accuracy") for p in profiles]
+        rho_alignment, p_alignment = spearmanr(alignment, accuracy)
+
+        with_expr = [p for p in profiles if p.metrics.get("expressibility") is not None]
+        rho_expr, _ = spearmanr(
+            [p.metric("expressibility") for p in with_expr],
+            [p.metric("kernel_accuracy") for p in with_expr],
+        )
+
+        assert rho_alignment > 0.85 and p_alignment < 0.001
+        assert rho_expr < 0.0
+        assert rho_alignment > abs(rho_expr)
+
+    def test_matches_the_raw_stage_measurement(self) -> None:
+        """The column is an aggregate of measured values, not a re-derivation.
+
+        Recomputes the mean over (configuration, dataset) pairs straight from
+        the Stage 6b output and requires an exact match — the same rule the
+        ``kernel_accuracy`` column uses.
+        """
+        import json
+        import pathlib
+
+        raw_path = pathlib.Path("experiments/results/raw/stage6b_kernel/summary.json")
+        if not raw_path.exists():  # pragma: no cover - raw data not packaged
+            pytest.skip("raw stage6b output not available")
+
+        raw = json.loads(raw_path.read_text(encoding="utf-8"))
+        sums: dict[str, float] = {}
+        counts: dict[str, int] = {}
+        for entry in raw["results"]:
+            if entry.get("status") != "success":
+                continue
+            name = entry["encoding_name"]
+            for ds in entry["result"]["datasets"].values():
+                if ds.get("status") != "success":
+                    continue
+                value = ds.get("centered_kernel_target_alignment")
+                if value is None:
+                    continue
+                sums[name] = sums.get(name, 0.0) + float(value)
+                counts[name] = counts.get(name, 0) + 1
+
+        for name, total in sums.items():
+            profile = get_encoding_profile(name)
+            assert profile.metric("kernel_target_alignment") == pytest.approx(
+                total / counts[name]
+            )
+
+    def test_orders_the_haar_floor_encodings_last(self) -> None:
+        """Encodings whose kernels concentrate should score lowest on alignment."""
+        from encoding_atlas.atlas import concentrated_encodings
+
+        ranked = [p.name for p in rank_encodings(by="kernel_target_alignment")]
+        for profile in concentrated_encodings():
+            assert ranked.index(profile.name) >= 10, profile.name

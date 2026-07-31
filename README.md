@@ -33,7 +33,7 @@ The **Quantum Encoding Atlas** is the definitive open-source resource for unders
 - 🔀 **Multi-Framework Support** — Works seamlessly with PennyLane, Qiskit, and Cirq
 - 📈 **Analysis Tools** — Compute expressibility, entanglement capability, and trainability
 - 🧪 **Benchmarking Framework** — Systematic comparison infrastructure
-- 🧭 **Decision Guide** — Evidence-based encoding recommendations
+- 🧭 **Decision Guide** — Evidence-based encoding recommendations, plus training-free screening on your own data
 - 🗺️ **Empirical Atlas** — Query the measured benchmark results (rank, accuracy, expressibility, trainability, …) bundled with the package
 - 📉 **Concentration Diagnostics** — Measure whether an encoding's kernel survives to wider circuits, and what it costs in shots
 - 📚 **Extensive Documentation** — Tutorials, API docs, and theoretical background
@@ -93,6 +93,40 @@ print(f"Recommended: {rec.encoding_name}")
 print(f"Reason: {rec.explanation}")
 ```
 
+### Screen encodings on your own data
+
+`recommend_encoding` answers from metadata. Once you have data, screen the
+encodings against it — no training, about a second for all 16:
+
+```python
+from encoding_atlas.benchmark import get_dataset, evaluate_encoding
+from encoding_atlas.guide import screen_encodings
+
+X, y = get_dataset("moons", n_samples=200, seed=0)
+result = screen_encodings(X, y, seed=0)
+
+for c in result.top(3):
+    print(f"{c.rank}. {c.name:22s} alignment={c.alignment:+.3f}")
+
+# Candidates come back built and ready to train
+for c in result.top(3):
+    print(c.name, evaluate_encoding(c.encoding, X, y, method="kernel")["mean"])
+```
+
+The ranking key is the centered kernel-target alignment, which the benchmark
+found tracks kernel accuracy closely (Spearman ρ = 0.91 across encodings and
+datasets). **Treat the result as a shortlist, not an oracle**: on the
+benchmark's eight datasets the top-3 shortlist lands within 0.001 of the best
+achievable accuracy, while the single top pick (0.960) is no better than simply
+always choosing `angle` (0.958). Screening buys you a 3-encoding shortlist
+instead of 16, and adapts when your data doesn't resemble the benchmark's.
+
+Encodings that can't be built at your feature count are reported, not raised:
+
+```python
+result.skipped     # {'so2_equivariant': 'ValueError: ... requires n_features=2 ...'}
+```
+
 ### Query the empirical atlas
 
 The measured benchmark results for every encoding ship with the package as a
@@ -108,6 +142,10 @@ print(angle.rank, round(angle.metric("kernel_accuracy"), 3))   # 1 0.958
 # Rank encodings by any measured metric
 print([p.name for p in rank_encodings(by="kernel_accuracy", limit=3)])
 # ['angle', 'cyclic_equivariant', 'qaoa']
+
+# Including the benchmark's validated predictor of accuracy
+print([p.name for p in rank_encodings(by="kernel_target_alignment", limit=3)])
+# ['amplitude', 'angle', 'so2_equivariant']
 
 # The Pareto-optimal set across accuracy, depth, trainability, and noise
 print(sorted(p.name for p in pareto_front()))

@@ -208,6 +208,7 @@ nav:
   - Decision Guide:
     - guide/index.md
     - Which Encoding?: guide/which-encoding.md
+    - Screening on Your Data: guide/screening.md
     - Decision Flowchart: guide/decision-flowchart.md
     - Recommendation Architecture: guide/recommendation-architecture.md
     - Interactive Notebook: notebooks/guide_recommendation_system.ipynb

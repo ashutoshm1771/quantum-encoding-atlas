@@ -133,6 +133,7 @@ _HYPOTHESIS_DESCRIPTIONS: dict[str, str] = {
 # JSON helpers
 # ---------------------------------------------------------------------------
 
+
 def _json_default(obj: Any) -> Any:
     """Fallback JSON serializer for numpy types."""
     type_name = type(obj).__name__
@@ -198,6 +199,57 @@ def _tex_escape(s: str) -> str:
 # 8.1: Master summary JSON
 # ---------------------------------------------------------------------------
 
+
+def _mean_kernel_alignment(
+    kernel_summary: dict[str, Any] | None,
+) -> dict[str, float]:
+    """Mean centered kernel-target alignment per encoding, from Stage 6b.
+
+    The kernel stage records ``centered_kernel_target_alignment`` for every
+    (encoding config, dataset) pair. This averages it over those pairs, which
+    is exactly the rule the ranking uses for ``kernel_accuracy`` — so the two
+    columns are aggregated identically and remain directly comparable.
+
+    Alignment is the benchmark's *validated* predictor of kernel accuracy
+    (Spearman rho = 0.91), unlike expressibility, which the study refutes.
+    Carrying it into the master summary is what lets the shipped atlas rank
+    encodings by it.
+
+    Parameters
+    ----------
+    kernel_summary : dict or None
+        Parsed ``summary.json`` from the Stage 6b kernel directory.
+
+    Returns
+    -------
+    dict[str, float]
+        Encoding name -> mean centered alignment. Encodings with no successful
+        measurement are omitted.
+    """
+    sums: dict[str, float] = {}
+    counts: dict[str, int] = {}
+    if not kernel_summary:
+        return {}
+
+    for entry in kernel_summary.get("results", []):
+        if entry.get("status") != "success":
+            continue
+        enc_name = entry.get("encoding_name")
+        if not enc_name:
+            continue
+        datasets = entry.get("result", {}).get("datasets", {})
+        for ds_data in datasets.values():
+            if ds_data.get("status") != "success":
+                continue
+            alignment = ds_data.get("centered_kernel_target_alignment")
+            if alignment is None:
+                continue
+            sums[enc_name] = sums.get(enc_name, 0.0) + float(alignment)
+            counts[enc_name] = counts.get(enc_name, 0) + 1
+
+    return {name: sums[name] / counts[name] for name in sums if counts[name]}
+
+
 def _build_master_summary(
     stage_dirs: dict[str, str],
     tradeoff_dir: str,
@@ -244,6 +296,9 @@ def _build_master_summary(
         sensitivity_path = os.path.join(sensitivity_dir, "sensitivity_report.json")
         sensitivity_data = _load_json(sensitivity_path)
 
+    # Mean centered kernel-target alignment per encoding (Stage 6b).
+    kernel_alignment = _mean_kernel_alignment(stage_summaries.get("kernel"))
+
     # Build per-encoding profiles from rankings + stage data.
     encoding_profiles: list[dict[str, Any]] = []
     for ranking_entry in rankings:
@@ -266,6 +321,7 @@ def _build_master_summary(
                 "vqc_ci": ranking_entry.get("vqc_ci"),
                 "kernel_accuracy": ranking_entry.get("kernel_accuracy"),
                 "kernel_ci": ranking_entry.get("kernel_ci"),
+                "kernel_target_alignment": kernel_alignment.get(enc_name),
             },
         }
         encoding_profiles.append(profile)
@@ -286,21 +342,17 @@ def _build_master_summary(
         "encoding_profiles": encoding_profiles,
         "stage_counts": stage_counts,
         "hypothesis_verdicts": (
-            verdicts_data.get("hypothesis_verdicts", {})
-            if verdicts_data else {}
+            verdicts_data.get("hypothesis_verdicts", {}) if verdicts_data else {}
         ),
         "pareto_front": {
             "n_pareto_optimal": (
-                pareto_data.get("n_pareto_optimal", 0)
-                if pareto_data else 0
+                pareto_data.get("n_pareto_optimal", 0) if pareto_data else 0
             ),
             "pareto_optimal": (
-                pareto_data.get("pareto_optimal", [])
-                if pareto_data else []
+                pareto_data.get("pareto_optimal", []) if pareto_data else []
             ),
             "objective_names": (
-                pareto_data.get("objective_names", [])
-                if pareto_data else []
+                pareto_data.get("objective_names", []) if pareto_data else []
             ),
         },
     }
@@ -317,6 +369,7 @@ def _build_master_summary(
 # ---------------------------------------------------------------------------
 # 8.2: Table generation
 # ---------------------------------------------------------------------------
+
 
 def _extract_vqc_accuracy_matrix(
     vqc_summary: dict[str, Any],
@@ -417,11 +470,13 @@ def _generate_accuracy_matrix_tex(
             cells.append(val.replace("+/-", r"$\pm$"))
         lines.append("  " + " & ".join(cells) + r" \\")
 
-    lines.extend([
-        r"\bottomrule",
-        r"\end{tabular}",
-        r"\end{table}",
-    ])
+    lines.extend(
+        [
+            r"\bottomrule",
+            r"\end{tabular}",
+            r"\end{table}",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -508,11 +563,13 @@ def _generate_sensitivity_table_tex(
         ci_str = f"({_fmt(ci_lo, 3)}--{_fmt(ci_hi, 3)})" if ci_lo is not None else "—"
         lines.append(f"  {enc} & {ds} & {lr} & {layers} & {acc} & {ci_str}" + r" \\")
 
-    lines.extend([
-        r"\bottomrule",
-        r"\end{tabular}",
-        r"\end{table}",
-    ])
+    lines.extend(
+        [
+            r"\bottomrule",
+            r"\end{tabular}",
+            r"\end{table}",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -544,8 +601,12 @@ def _generate_tables(
     generated: list[str] = []
 
     # --- Copy Stage 7 tables (ranking + hypothesis) -------------------------
-    for filename in ("ranking_table.md", "ranking_table.tex",
-                     "hypothesis_table.md", "hypothesis_table.tex"):
+    for filename in (
+        "ranking_table.md",
+        "ranking_table.tex",
+        "hypothesis_table.md",
+        "hypothesis_table.tex",
+    ):
         src = os.path.join(tradeoff_dir, filename)
         dst = os.path.join(table_dir, filename)
         if os.path.isfile(src):
@@ -571,7 +632,9 @@ def _generate_tables(
         enc_names, ds_names, matrix = _extract_vqc_accuracy_matrix(vqc_summary)
         if enc_names:
             md = _generate_accuracy_matrix_md(
-                enc_names, ds_names, matrix,
+                enc_names,
+                ds_names,
+                matrix,
                 "VQC Classification Accuracy (mean +/- std)",
             )
             path = os.path.join(table_dir, "vqc_accuracy_matrix.md")
@@ -579,7 +642,9 @@ def _generate_tables(
             generated.append(path)
 
             tex = _generate_accuracy_matrix_tex(
-                enc_names, ds_names, matrix,
+                enc_names,
+                ds_names,
+                matrix,
                 "VQC Classification Accuracy",
                 "tab:vqc_accuracy",
             )
@@ -594,7 +659,9 @@ def _generate_tables(
         enc_names, ds_names, matrix = _extract_vqc_accuracy_matrix(kernel_summary)
         if enc_names:
             md = _generate_accuracy_matrix_md(
-                enc_names, ds_names, matrix,
+                enc_names,
+                ds_names,
+                matrix,
                 "Kernel Classification Accuracy (mean +/- std)",
             )
             path = os.path.join(table_dir, "kernel_accuracy_matrix.md")
@@ -602,7 +669,9 @@ def _generate_tables(
             generated.append(path)
 
             tex = _generate_accuracy_matrix_tex(
-                enc_names, ds_names, matrix,
+                enc_names,
+                ds_names,
+                matrix,
                 "Kernel Classification Accuracy",
                 "tab:kernel_accuracy",
             )
@@ -633,6 +702,7 @@ def _generate_tables(
 # 8.3: Figure verification
 # ---------------------------------------------------------------------------
 
+
 def _verify_figures(figure_dir: str) -> dict[str, Any]:
     """Verify that all expected figures exist.
 
@@ -649,12 +719,8 @@ def _verify_figures(figure_dir: str) -> dict[str, Any]:
     if not os.path.isdir(figure_dir):
         return {"status": "missing", "found": 0, "missing_dir": True}
 
-    png_files = sorted(
-        f for f in os.listdir(figure_dir) if f.endswith(".png")
-    )
-    pdf_files = sorted(
-        f for f in os.listdir(figure_dir) if f.endswith(".pdf")
-    )
+    png_files = sorted(f for f in os.listdir(figure_dir) if f.endswith(".png"))
+    pdf_files = sorted(f for f in os.listdir(figure_dir) if f.endswith(".pdf"))
 
     return {
         "status": "ok" if png_files else "empty",
@@ -752,17 +818,19 @@ def _generate_hypotheses_md(
         evidence = v.get("evidence", "No evidence available.")
         stats = v.get("test_statistic", {})
 
-        lines.extend([
-            f"### {h_id}: {description}",
-            "",
-            f"**Verdict:** {_VERDICT_EMOJI.get(verdict, verdict)}",
-            f"**Confidence:** {_CONFIDENCE_LABEL.get(confidence, confidence)}",
-            "",
-            "**Evidence:**",
-            "",
-            evidence,
-            "",
-        ])
+        lines.extend(
+            [
+                f"### {h_id}: {description}",
+                "",
+                f"**Verdict:** {_VERDICT_EMOJI.get(verdict, verdict)}",
+                f"**Confidence:** {_CONFIDENCE_LABEL.get(confidence, confidence)}",
+                "",
+                "**Evidence:**",
+                "",
+                evidence,
+                "",
+            ]
+        )
 
         if stats:
             lines.append("**Test Statistics:**")
@@ -798,6 +866,7 @@ def _generate_hypotheses_md(
 # Ranking narrative
 # ---------------------------------------------------------------------------
 
+
 def _generate_ranking_md(
     rankings_data: dict[str, Any],
     pareto_data: dict[str, Any] | None,
@@ -832,12 +901,14 @@ def _generate_ranking_md(
     ]
 
     # --- Ranking table ------------------------------------------------------
-    lines.extend([
-        "## Composite Rankings",
-        "",
-        "| Rank | Encoding | Family | Score | VQC Acc | Kernel Acc | Pareto |",
-        "| --- | --- | --- | --- | --- | --- | --- |",
-    ])
+    lines.extend(
+        [
+            "## Composite Rankings",
+            "",
+            "| Rank | Encoding | Family | Score | VQC Acc | Kernel Acc | Pareto |",
+            "| --- | --- | --- | --- | --- | --- | --- |",
+        ]
+    )
 
     for r in rankings:
         enc = r.get("encoding", "unknown")
@@ -857,19 +928,21 @@ def _generate_ranking_md(
         objectives = pareto_data.get("objective_names", [])
         n_analyzed = pareto_data.get("n_encodings_analyzed", 0)
 
-        lines.extend([
-            "",
-            "## Pareto Front",
-            "",
-            f"The Pareto front was computed over {n_analyzed} encodings "
-            f"using {len(objectives)} objectives: "
-            f"{', '.join(objectives)}.",
-            "",
-            f"**{len(pareto_names)} Pareto-optimal encodings** were "
-            "identified (no other encoding dominates them on all objectives "
-            "simultaneously):",
-            "",
-        ])
+        lines.extend(
+            [
+                "",
+                "## Pareto Front",
+                "",
+                f"The Pareto front was computed over {n_analyzed} encodings "
+                f"using {len(objectives)} objectives: "
+                f"{', '.join(objectives)}.",
+                "",
+                f"**{len(pareto_names)} Pareto-optimal encodings** were "
+                "identified (no other encoding dominates them on all objectives "
+                "simultaneously):",
+                "",
+            ]
+        )
 
         encodings_detail = pareto_data.get("encodings", {})
         for name in pareto_names:
@@ -877,37 +950,42 @@ def _generate_ranking_md(
             detail = encodings_detail.get(name, {})
             obj_vals = detail.get("objectives", [])
             obj_strs = [
-                f"{oname}={_fmt(oval, 3)}"
-                for oname, oval in zip(objectives, obj_vals)
+                f"{oname}={_fmt(oval, 3)}" for oname, oval in zip(objectives, obj_vals)
             ]
             lines.append(f"- **{display}**: {', '.join(obj_strs)}")
 
-        lines.extend([
-            "",
-            "The existence of multiple Pareto-optimal encodings across "
-            "different families (Non-Entangling, Equivariant) confirms that "
-            "no single encoding dominates all evaluation axes.  Encoding "
-            "selection should be guided by the specific requirements of the "
-            "target application.",
-        ])
+        lines.extend(
+            [
+                "",
+                "The existence of multiple Pareto-optimal encodings across "
+                "different families (Non-Entangling, Equivariant) confirms that "
+                "no single encoding dominates all evaluation axes.  Encoding "
+                "selection should be guided by the specific requirements of the "
+                "target application.",
+            ]
+        )
 
     # --- Key findings -------------------------------------------------------
-    lines.extend([
-        "",
-        "## Key Findings",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Key Findings",
+            "",
+        ]
+    )
 
     if rankings:
         top = rankings[0]
         top_name = _ENCODING_DISPLAY.get(top["encoding"], top["encoding"])
-        lines.extend([
-            f"1. **Top-ranked encoding:** {top_name} "
-            f"(score={_fmt(top.get('score'), 4)}, "
-            f"VQC={_fmt(top.get('vqc_accuracy'), 3)}, "
-            f"kernel={_fmt(top.get('kernel_accuracy'), 3)})",
-            "",
-        ])
+        lines.extend(
+            [
+                f"1. **Top-ranked encoding:** {top_name} "
+                f"(score={_fmt(top.get('score'), 4)}, "
+                f"VQC={_fmt(top.get('vqc_accuracy'), 3)}, "
+                f"kernel={_fmt(top.get('kernel_accuracy'), 3)})",
+                "",
+            ]
+        )
 
     # Group by family for family-level insights.
     family_best: dict[str, dict[str, Any]] = {}
@@ -916,9 +994,7 @@ def _generate_ranking_md(
         if fam not in family_best:
             family_best[fam] = r
 
-    lines.append(
-        "2. **Best encoding per family:**"
-    )
+    lines.append("2. **Best encoding per family:**")
     lines.append("")
     for fam, r in sorted(family_best.items()):
         display = _ENCODING_DISPLAY.get(r["encoding"], r["encoding"])
@@ -940,22 +1016,24 @@ def _generate_ranking_md(
         lines.append("")
 
     # Practical guidance.
-    lines.extend([
-        "## Practical Guidance",
-        "",
-        "- **For highest accuracy:** Choose the top-ranked encoding "
-        "for the specific dataset and paradigm (VQC or kernel).",
-        "- **For resource-constrained hardware:** Prefer shallow-depth "
-        "encodings from the Pareto front (e.g., AngleEncoding, "
-        "HigherOrderAngleEncoding).",
-        "- **For noise-resilient applications:** Prioritise encodings "
-        "with high noise resilience scores; non-entangling encodings "
-        "are generally more robust (see H5).",
-        "- **For trainability:** Avoid deep circuits that exhibit "
-        "barren plateaus (see H4); SwapEquivariantFeatureMap achieves "
-        "the highest trainability among entangling encodings.",
-        "",
-    ])
+    lines.extend(
+        [
+            "## Practical Guidance",
+            "",
+            "- **For highest accuracy:** Choose the top-ranked encoding "
+            "for the specific dataset and paradigm (VQC or kernel).",
+            "- **For resource-constrained hardware:** Prefer shallow-depth "
+            "encodings from the Pareto front (e.g., AngleEncoding, "
+            "HigherOrderAngleEncoding).",
+            "- **For noise-resilient applications:** Prioritise encodings "
+            "with high noise resilience scores; non-entangling encodings "
+            "are generally more robust (see H5).",
+            "- **For trainability:** Avoid deep circuits that exhibit "
+            "barren plateaus (see H4); SwapEquivariantFeatureMap achieves "
+            "the highest trainability among entangling encodings.",
+            "",
+        ]
+    )
 
     return "\n".join(lines)
 
@@ -963,6 +1041,7 @@ def _generate_ranking_md(
 # ---------------------------------------------------------------------------
 # Main orchestrator
 # ---------------------------------------------------------------------------
+
 
 def generate_report(
     *,
@@ -1012,7 +1091,9 @@ def generate_report(
     print("[8.1] Building master summary JSON...", flush=True)
     try:
         master_summary = _build_master_summary(
-            stage_dirs, tradeoff_dir, sensitivity_dir,
+            stage_dirs,
+            tradeoff_dir,
+            sensitivity_dir,
         )
         # Use "master_summary.json" to avoid collision with the runner's
         # own checkpoint-format "summary.json".
@@ -1020,8 +1101,7 @@ def generate_report(
         _save_json(master_summary, summary_path)
         generated_files.append(summary_path)
         print(
-            f"  -> {summary_path} "
-            f"({master_summary['n_encodings']} encodings)",
+            f"  -> {summary_path} " f"({master_summary['n_encodings']} encodings)",
             flush=True,
         )
     except Exception as exc:
@@ -1035,7 +1115,10 @@ def generate_report(
         print("[8.2] Generating tables...", flush=True)
         try:
             table_files = _generate_tables(
-                stage_dirs, tradeoff_dir, sensitivity_dir, table_dir,
+                stage_dirs,
+                tradeoff_dir,
+                sensitivity_dir,
+                table_dir,
             )
             generated_files.extend(table_files)
             print(f"  -> {len(table_files)} table files in {table_dir}", flush=True)
@@ -1061,12 +1144,8 @@ def generate_report(
         verdicts_data = _load_json(
             os.path.join(tradeoff_dir, "hypothesis_verdicts.json")
         )
-        pareto_data = _load_json(
-            os.path.join(tradeoff_dir, "pareto_front.json")
-        )
-        rankings_data = _load_json(
-            os.path.join(tradeoff_dir, "rankings.json")
-        )
+        pareto_data = _load_json(os.path.join(tradeoff_dir, "pareto_front.json"))
+        rankings_data = _load_json(os.path.join(tradeoff_dir, "rankings.json"))
 
         if verdicts_data:
             hyp_md = _generate_hypotheses_md(verdicts_data, pareto_data)
@@ -1079,7 +1158,9 @@ def generate_report(
 
         if rankings_data:
             rank_md = _generate_ranking_md(
-                rankings_data, pareto_data, verdicts_data,
+                rankings_data,
+                pareto_data,
+                verdicts_data,
             )
             rank_path = os.path.join(output_dir, "ranking.md")
             _save_text(rank_md, rank_path)

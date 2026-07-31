@@ -617,3 +617,83 @@ class TestShotExtrapolation:
         )
         with pytest.raises(ValueError, match="positive integer"):
             scaling.shots_per_entry_at(bad)  # type: ignore[arg-type]
+
+
+# =====================================================================
+# Reduction from an already-computed kernel
+# =====================================================================
+
+
+class TestSummarizeKernelConcentration:
+    """The seam that lets a caller holding a kernel skip a second simulation.
+
+    Screening computes one kernel per encoding and derives both alignment and
+    concentration from it, so this must agree exactly with the encoding-level
+    entry point rather than approximately.
+    """
+
+    def test_agrees_with_the_encoding_level_entry_point(self) -> None:
+        from encoding_atlas.analysis.concentration import summarize_kernel_concentration
+        from encoding_atlas.analysis.generalization import compute_fidelity_kernel
+
+        enc = AngleEncoding(n_features=4)
+        rng = np.random.default_rng(0)
+        X = rng.uniform(0, 2 * np.pi, (30, 4))
+        assert summarize_kernel_concentration(
+            compute_fidelity_kernel(enc, X), enc.n_qubits
+        ) == compute_kernel_concentration(enc, X)
+
+    def test_identity_kernel_is_maximally_concentrated(self) -> None:
+        from encoding_atlas.analysis.concentration import summarize_kernel_concentration
+
+        result = summarize_kernel_concentration(np.eye(10), n_qubits=4)
+        assert result.offdiagonal_mean == 0.0
+        assert result.offdiagonal_variance == 0.0
+        assert result.concentration_ratio == 0.0
+        assert math.isinf(result.shots_per_entry)
+        assert result.is_concentrated
+
+    def test_threshold_is_honoured(self) -> None:
+        from encoding_atlas.analysis.concentration import summarize_kernel_concentration
+
+        # Needs genuine off-diagonal spread: a constant kernel has variance 0
+        # and so sits below every positive threshold by construction.
+        rng = np.random.default_rng(0)
+        K = rng.uniform(0.0, 1.0, (8, 8))
+        K = (K + K.T) / 2.0
+        np.fill_diagonal(K, 1.0)
+        assert summarize_kernel_concentration(K, 3, threshold=1e9).is_concentrated
+        assert not summarize_kernel_concentration(K, 3, threshold=1e-9).is_concentrated
+
+    def test_constant_kernel_has_no_spread(self) -> None:
+        """Equal off-diagonals carry no geometry, whatever their common value."""
+        from encoding_atlas.analysis.concentration import summarize_kernel_concentration
+
+        K = np.full((8, 8), 0.5)
+        np.fill_diagonal(K, 1.0)
+        result = summarize_kernel_concentration(K, 3)
+        assert result.offdiagonal_mean == pytest.approx(0.5)
+        assert result.offdiagonal_variance == 0.0
+        assert result.concentration_ratio == 0.0
+        assert result.is_concentrated
+        assert math.isinf(result.shots_per_entry)
+
+    @pytest.mark.parametrize(
+        ("K", "match"),
+        [
+            (np.zeros((2, 3)), "square 2D matrix"),
+            (np.zeros(4), "square 2D matrix"),
+            (np.ones((1, 1)), "at least 2x2"),
+        ],
+    )
+    def test_invalid_kernel_raises(self, K: np.ndarray, match: str) -> None:
+        from encoding_atlas.analysis.concentration import summarize_kernel_concentration
+
+        with pytest.raises(ValueError, match=match):
+            summarize_kernel_concentration(K, n_qubits=2)
+
+    def test_invalid_threshold_raises(self) -> None:
+        from encoding_atlas.analysis.concentration import summarize_kernel_concentration
+
+        with pytest.raises(ValueError, match="threshold must be positive"):
+            summarize_kernel_concentration(np.eye(4), n_qubits=2, threshold=0.0)

@@ -106,6 +106,7 @@ __all__ = [
     "ScalingResult",
     "compute_kernel_concentration",
     "estimate_concentration_scaling",
+    "summarize_kernel_concentration",
     "haar_kernel_moments",
     "CONCENTRATION_THRESHOLD",
 ]
@@ -621,24 +622,72 @@ def compute_kernel_concentration(
             )
 
     K = compute_fidelity_kernel(encoding, X_used, backend=backend)
-    n = K.shape[0]
-    offdiag = K[np.triu_indices(n, k=1)]
-
-    mean = float(offdiag.mean())
-    variance = float(offdiag.var())
-    haar_mean, haar_variance = haar_kernel_moments(n_qubits)
-    ratio = variance / haar_variance if haar_variance > 0.0 else math.inf
+    result = summarize_kernel_concentration(K, n_qubits, threshold=threshold)
 
     logger.debug(
         "Concentration for %s at %d qubits: var=%.6g ratio=%.3f",
         type(encoding).__name__,
         n_qubits,
-        variance,
-        ratio,
+        result.offdiagonal_variance,
+        result.concentration_ratio,
     )
+    return result
+
+
+def summarize_kernel_concentration(
+    K: NDArray[np.floating[Any]],
+    n_qubits: int,
+    *,
+    threshold: float = CONCENTRATION_THRESHOLD,
+) -> ConcentrationResult:
+    """Reduce an already-computed fidelity kernel to concentration statistics.
+
+    Split out from :func:`compute_kernel_concentration` so a caller that
+    already holds the kernel — screening several encodings, for instance —
+    gets the concentration axis without paying for a second simulation, while
+    both paths keep a single definition of the statistics.
+
+    Parameters
+    ----------
+    K : ndarray of shape (n, n)
+        Fidelity kernel with entries in ``[0, 1]``. Must have at least two
+        rows so an off-diagonal pair exists.
+    n_qubits : int
+        Circuit width the kernel was produced at; sets the Haar reference.
+    threshold : float, default=2.0
+        ``concentration_ratio`` below which ``is_concentrated`` is set.
+
+    Returns
+    -------
+    ConcentrationResult
+        The same statistics :func:`compute_kernel_concentration` returns.
+
+    Raises
+    ------
+    ValueError
+        If ``K`` is not a square 2D matrix of size >= 2, ``n_qubits`` is not a
+        positive integer, or ``threshold`` is not positive.
+    """
+    if threshold <= 0.0:
+        raise ValueError(f"threshold must be positive, got {threshold}")
+    K_arr = np.asarray(K, dtype=np.float64)
+    if K_arr.ndim != 2 or K_arr.shape[0] != K_arr.shape[1]:
+        raise ValueError(f"K must be a square 2D matrix, got shape {K_arr.shape}")
+    if K_arr.shape[0] < 2:
+        raise ValueError(
+            f"K must be at least 2x2 to have an off-diagonal pair, got "
+            f"{K_arr.shape[0]}x{K_arr.shape[0]}"
+        )
+
+    n = K_arr.shape[0]
+    offdiag = K_arr[np.triu_indices(n, k=1)]
+    mean = float(offdiag.mean())
+    variance = float(offdiag.var())
+    haar_mean, haar_variance = haar_kernel_moments(n_qubits)
+    ratio = variance / haar_variance if haar_variance > 0.0 else math.inf
 
     return ConcentrationResult(
-        n_qubits=n_qubits,
+        n_qubits=int(n_qubits),
         n_samples=n,
         offdiagonal_mean=mean,
         offdiagonal_variance=variance,

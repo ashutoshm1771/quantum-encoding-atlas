@@ -151,6 +151,10 @@ widens — the axis that says whether a fixed-width result transfers. See
     options:
       show_root_heading: true
 
+::: encoding_atlas.analysis.summarize_kernel_concentration
+    options:
+      show_root_heading: true
+
 ---
 
 ## Guide Module
@@ -164,6 +168,29 @@ widens — the axis that says whether a fixed-width result transfers. See
       show_root_heading: true
 
 ::: encoding_atlas.guide.rules.get_matching_encodings
+    options:
+      show_root_heading: true
+
+### Data-Driven Screening
+
+Rank candidate encodings by kernel-target alignment measured on your own
+dataset — the training-free predictor of kernel accuracy. See
+[Screening on Your Data](../guide/screening.md).
+
+::: encoding_atlas.guide.screen_encodings
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.guide.ScreeningResult
+    options:
+      show_root_heading: true
+      members:
+        - top
+        - names
+        - best
+        - get
+
+::: encoding_atlas.guide.ScreenedEncoding
     options:
       show_root_heading: true
 

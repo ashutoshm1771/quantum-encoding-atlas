@@ -23,6 +23,13 @@ from typing import TYPE_CHECKING, Any, cast
 import numpy as np
 from numpy.typing import NDArray
 
+from encoding_atlas.analysis.generalization import (
+    centered_kernel_target_alignment as _centered_kernel_target_alignment,
+)
+from encoding_atlas.analysis.generalization import (
+    kernel_target_alignment as _kernel_target_alignment,
+)
+
 if TYPE_CHECKING:
     from encoding_atlas.core.base import BaseEncoding
 
@@ -114,47 +121,13 @@ def ensure_psd(
     return K_psd, True
 
 
-def kernel_target_alignment(
-    K: NDArray[np.floating[Any]],
-    y: NDArray[np.integer[Any] | np.floating[Any]],
-) -> float:
-    """Uncentred kernel-target alignment in ``[-1, 1]`` (Cristianini, 2002)."""
-    y_signed = 2.0 * np.asarray(y, dtype=np.float64) - 1.0
-    y_outer = np.outer(y_signed, y_signed)
-    norm_K = float(np.linalg.norm(K, "fro"))
-    norm_y = float(np.linalg.norm(y_outer, "fro"))
-    if norm_K < 1e-10 or norm_y < 1e-10:
-        return 0.0
-    return float(np.sum(K * y_outer) / (norm_K * norm_y))
-
-
-def centered_kernel_target_alignment(
-    K: NDArray[np.floating[Any]],
-    y: NDArray[np.integer[Any] | np.floating[Any]],
-) -> float:
-    """Centred kernel-target alignment in ``[-1, 1]`` (Cortes et al., 2012).
-
-    The centring removes the inflation the uncentred score suffers for fidelity
-    kernels (whose diagonal is always 1), giving a more faithful measure of an
-    encoding's task alignment.
-    """
-    n = K.shape[0]
-    if n < 2:
-        return 0.0
-    y_signed = 2.0 * np.asarray(y, dtype=np.float64) - 1.0
-    y_outer = np.outer(y_signed, y_signed)
-    K_c = K - K.mean(axis=0, keepdims=True) - K.mean(axis=1, keepdims=True) + K.mean()
-    y_c = (
-        y_outer
-        - y_outer.mean(axis=0, keepdims=True)
-        - y_outer.mean(axis=1, keepdims=True)
-        + y_outer.mean()
-    )
-    norm_K = float(np.linalg.norm(K_c, "fro"))
-    norm_y = float(np.linalg.norm(y_c, "fro"))
-    if norm_K < 1e-10 or norm_y < 1e-10:
-        return 0.0
-    return float(np.sum(K_c * y_c) / (norm_K * norm_y))
+# Kernel-target alignment is defined once, in the analysis package, and
+# re-exported here so the benchmark keeps its historical public surface. Two
+# independent copies had drifted apart in label handling; a single definition
+# means the metric the benchmark records and the metric a user screens with can
+# never disagree.
+kernel_target_alignment = _kernel_target_alignment
+centered_kernel_target_alignment = _centered_kernel_target_alignment
 
 
 class QuantumKernelClassifier:

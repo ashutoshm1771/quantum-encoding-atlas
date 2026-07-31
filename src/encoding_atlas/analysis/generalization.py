@@ -241,6 +241,30 @@ def compute_fidelity_kernel(
 # ---------------------------------------------------------------------------
 
 
+def _signed_labels(
+    y: NDArray[np.integer[Any] | np.floating[Any]],
+) -> NDArray[np.float64]:
+    """Map labels onto the ``{-1, +1}`` convention the alignment is defined on.
+
+    A two-class label vector is mapped *by partition*: the lower class becomes
+    ``-1`` and the higher ``+1``, whatever the two values happen to be. This
+    makes the alignment invariant to the label convention — ``{0, 1}``,
+    ``{1, 2}`` and ``{-1, +1}`` all describe the same split and must score the
+    same. For ``{0, 1}`` the result is identical to the ``2y - 1`` transform
+    used previously, so published numbers are unaffected.
+
+    Anything that is not exactly two-valued (a single class, a multi-class
+    vector, or a continuous regression target) falls back to ``2y - 1``. That
+    keeps continuous targets meaningful, and the centred alignment is invariant
+    to affine relabelling anyway.
+    """
+    y_array = np.asarray(y, dtype=np.float64)
+    classes = np.unique(y_array[np.isfinite(y_array)])
+    if classes.size == 2:
+        return np.where(y_array > classes[0], 1.0, -1.0).astype(np.float64)
+    return 2.0 * y_array - 1.0
+
+
 def kernel_target_alignment(
     K: NDArray[np.floating[Any]],
     y: NDArray[np.integer[Any] | np.floating[Any]],
@@ -249,8 +273,14 @@ def kernel_target_alignment(
 
     ``A(K, y) = <K, yy^T>_F / (||K||_F ||yy^T||_F)`` with labels mapped to
     ``{-1, +1}``. Returns ``0.0`` for degenerate kernels or single-class labels.
+
+    Two-class labels are mapped by partition, so the score does not depend on
+    whether the classes are spelled ``{0, 1}``, ``{1, 2}`` or ``{-1, +1}``.
+    Unlike :func:`centered_kernel_target_alignment`, the uncentred score is
+    *not* invariant to that choice on its own, which is why the mapping is
+    normalised here.
     """
-    y_signed = 2.0 * np.asarray(y, dtype=np.float64) - 1.0
+    y_signed = _signed_labels(y)
     y_outer = np.outer(y_signed, y_signed)
     norm_K = float(np.linalg.norm(K, "fro"))
     norm_y = float(np.linalg.norm(y_outer, "fro"))
@@ -268,11 +298,16 @@ def centered_kernel_target_alignment(
     Centring removes the bias the uncentred score suffers for fidelity kernels
     (whose diagonal is always 1), giving a more faithful measure of task
     alignment. Returns ``0.0`` for degenerate inputs or ``n < 2``.
+
+    This is the variant the benchmark uses and the one to screen encodings
+    with. It is already invariant to affine relabelling of ``y``; labels are
+    normalised through :func:`_signed_labels` so both variants agree on what a
+    two-class split means.
     """
     n = K.shape[0]
     if n < 2:
         return 0.0
-    y_signed = 2.0 * np.asarray(y, dtype=np.float64) - 1.0
+    y_signed = _signed_labels(y)
     y_outer = np.outer(y_signed, y_signed)
     K_c = K - K.mean(axis=0, keepdims=True) - K.mean(axis=1, keepdims=True) + K.mean()
     y_c = (

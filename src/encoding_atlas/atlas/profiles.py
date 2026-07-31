@@ -35,6 +35,11 @@ from encoding_atlas.atlas._data import ATLAS_SOURCE, canonical_name, load_raw
 # Scalar (rankable) metric keys present in every profile's ``metrics`` mapping.
 # Confidence-interval entries (``vqc_ci`` / ``kernel_ci``) are intentionally
 # excluded here because they are pairs, not single sortable values.
+#
+# ``kernel_target_alignment`` is the benchmark's *validated* predictor of
+# downstream kernel accuracy (Spearman rho = 0.91 across encodings and
+# datasets), in contrast to ``expressibility``, which the study refutes
+# (rho = -0.68). Both are rankable so the two can be compared directly.
 _SCALAR_METRICS: tuple[str, ...] = (
     "depth",
     "expressibility",
@@ -43,6 +48,7 @@ _SCALAR_METRICS: tuple[str, ...] = (
     "noise_resilience",
     "vqc_accuracy",
     "kernel_accuracy",
+    "kernel_target_alignment",
 )
 
 # Synthetic ranking keys that are not stored inside ``metrics``.
@@ -80,6 +86,11 @@ class EncodingProfile:
         intervals as ``[low, high]`` pairs. Some entries may be ``None`` when a
         metric is not defined for that encoding (e.g. expressibility for
         basis/amplitude state-preparation circuits).
+
+        ``kernel_target_alignment`` is the mean *centered* alignment over the
+        benchmark's (configuration, dataset) pairs — the training-free quantity
+        that predicts kernel accuracy. To measure it on your own data instead,
+        see :func:`encoding_atlas.guide.screen_encodings`.
     """
 
     name: str

@@ -23,6 +23,7 @@ The main analysis functions are:
 - :func:`estimate_trainability`: Detect barren plateau risk
 - :func:`compute_kernel_concentration`: Measure fidelity-kernel concentration
 - :func:`estimate_concentration_scaling`: Track concentration across widths
+- :func:`summarize_kernel_concentration`: Concentration from a given kernel
 
 Utility Functions
 -----------------
@@ -99,6 +100,7 @@ from encoding_atlas.analysis.concentration import (
     compute_kernel_concentration,
     estimate_concentration_scaling,
     haar_kernel_moments,
+    summarize_kernel_concentration,
 )
 from encoding_atlas.analysis.entanglement import (
     EntanglementResult,
@@ -202,6 +204,7 @@ __all__ = [
     # Kernel-concentration diagnostics
     "compute_kernel_concentration",
     "estimate_concentration_scaling",
+    "summarize_kernel_concentration",
     "haar_kernel_moments",
     "CONCENTRATION_THRESHOLD",
     # Noise-resilience analysis
