@@ -12,13 +12,13 @@
         <meta name="author" content="Ashutosh Mishra">
       
       
-        <link rel="canonical" href="https://encoding-atlas.github.io/quantum-encoding-atlas/contributing/adding-encodings/">
+        <link rel="canonical" href="https://encoding-atlas.github.io/quantum-encoding-atlas/concepts/kernel-concentration/">
       
       
-        <link rel="prev" href="../development-setup/">
+        <link rel="prev" href="../encoding-properties/">
       
       
-        <link rel="next" href="../code-style/">
+        <link rel="next" href="../quantum-advantage/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Adding Encodings - Quantum Encoding Atlas</title>
+        <title>Kernel Concentration - Quantum Encoding Atlas</title>
       
     
     
@@ -149,7 +149,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#adding-encodings" class="md-skip">
+        <a href="#kernel-concentration" class="md-skip">
           Skip to content
         </a>
       
@@ -209,7 +209,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Adding Encodings
+              Kernel Concentration
             
           </span>
         </div>
@@ -360,11 +360,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../concepts/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -492,13 +494,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../contributing/" class="md-tabs__link">
           
   
   
@@ -715,6 +715,8 @@
       
   
   
+    
+  
   
   
     
@@ -736,20 +738,23 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../concepts/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -767,13 +772,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -793,7 +798,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/what-is-encoding/" class="md-nav__link">
+      <a href="../what-is-encoding/" class="md-nav__link">
         
   
   
@@ -821,7 +826,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/encoding-properties/" class="md-nav__link">
+      <a href="../encoding-properties/" class="md-nav__link">
         
   
   
@@ -846,10 +851,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../concepts/kernel-concentration/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kernel Concentration
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -865,6 +897,136 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-measure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The measure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-the-variance-and-not-the-mean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the variance, and not the mean
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scaling-across-widths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scaling across widths
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-measured-atlas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The measured atlas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finite-shots" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finite shots
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproducing-the-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproducing the scan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -877,7 +1039,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/quantum-advantage/" class="md-nav__link">
+      <a href="../quantum-advantage/" class="md-nav__link">
         
   
   
@@ -2534,8 +2696,6 @@
       
   
   
-    
-  
   
   
     
@@ -2557,23 +2717,20 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../contributing/" class="md-nav__link ">
               
   
   
@@ -2591,13 +2748,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_9" id="__nav_9_label" tabindex="">
+              <label class="md-nav__link " for="__nav_9" id="__nav_9_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_9">
             <span class="md-nav__icon md-icon"></span>
             
@@ -2617,7 +2774,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../development-setup/" class="md-nav__link">
+      <a href="../../contributing/development-setup/" class="md-nav__link">
         
   
   
@@ -2642,37 +2799,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Adding Encodings
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../contributing/adding-encodings/" class="md-nav__link">
         
   
   
@@ -2688,109 +2818,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-1-implement-the-encoding" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 1: Implement the Encoding
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Step 1: Implement the Encoding">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#key-requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Requirements
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-2-write-documentation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 2: Write Documentation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-3-add-tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 3: Add Tests
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-4-register-the-encoding" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 4: Register the Encoding
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checklist" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Checklist
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -2803,7 +2830,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../code-style/" class="md-nav__link">
+      <a href="../../contributing/code-style/" class="md-nav__link">
         
   
   
@@ -2831,7 +2858,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../release-process/" class="md-nav__link">
+      <a href="../../contributing/release-process/" class="md-nav__link">
         
   
   
@@ -2886,10 +2913,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#the-problem" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
+        The problem
       
     </span>
   </a>
@@ -2897,38 +2924,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-1-implement-the-encoding" class="md-nav__link">
+  <a href="#the-measure" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 1: Implement the Encoding
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Step 1: Implement the Encoding">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#key-requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Requirements
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-2-write-documentation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 2: Write Documentation
+        The measure
       
     </span>
   </a>
@@ -2936,10 +2935,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-3-add-tests" class="md-nav__link">
+  <a href="#why-the-variance-and-not-the-mean" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 3: Add Tests
+        Why the variance, and not the mean
       
     </span>
   </a>
@@ -2947,10 +2946,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-4-register-the-encoding" class="md-nav__link">
+  <a href="#scaling-across-widths" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 4: Register the Encoding
+        Scaling across widths
       
     </span>
   </a>
@@ -2958,10 +2957,65 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checklist" class="md-nav__link">
+  <a href="#the-measured-atlas" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checklist
+        The measured atlas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finite-shots" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finite shots
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproducing-the-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproducing the scan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
       
     </span>
   </a>
@@ -3014,7 +3068,7 @@
         <a href="../" class="md-path__link">
           
   <span class="md-ellipsis">
-    Contributing
+    Concepts
   </span>
 
         </a>
@@ -3036,146 +3090,422 @@
   
 
 
-<h1 id="adding-encodings">Adding Encodings<a class="headerlink" href="#adding-encodings" title="Anchor link to this section">&para;</a></h1>
-<p>This guide explains how to add a new quantum encoding to the Quantum Encoding Atlas. Every encoding follows the same structure and integrates with the unified API, analysis tools, and benchmarking framework.</p>
+<h1 id="kernel-concentration">Kernel Concentration<a class="headerlink" href="#kernel-concentration" title="Anchor link to this section">&para;</a></h1>
+<p>Every other property in this library describes an encoding at a <strong>fixed</strong> circuit width. Kernel concentration describes what happens as that width grows — and it is the property that decides whether a result measured at 2–8 qubits says anything about the same encoding at 20.</p>
+<p>It is also the mechanism behind the atlas's headline negative result. Expressibility does not predict accuracy; concentration explains why not.</p>
 <hr />
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Anchor link to this section">&para;</a></h2>
-<p>Adding a new encoding involves four steps:</p>
-<ol>
-<li><strong>Implement</strong> the encoding class</li>
-<li><strong>Write documentation</strong> for the encoding</li>
-<li><strong>Add tests</strong> for the encoding</li>
-<li><strong>Register</strong> the encoding in the package</li>
-</ol>
+<h2 id="the-problem">The problem<a class="headerlink" href="#the-problem" title="Anchor link to this section">&para;</a></h2>
+<p>A quantum-kernel method learns from the fidelity kernel</p>
+<div class="arithmatex">\[
+K(x, x') = |\langle \phi(x) | \phi(x') \rangle|^2, \qquad |\phi(x)\rangle = U(x)|0\rangle .
+\]</div>
+<p>What the model actually uses is the <strong>spread</strong> of the off-diagonal entries. If every distinct pair of inputs looks equally similar, the matrix is the identity up to sampling noise, and there is nothing left to fit — the model can memorise its training set and will generalise at chance.</p>
+<p><em>Exponential concentration</em> is the statement that this spread vanishes exponentially in the qubit count:</p>
+<div class="arithmatex">\[
+\operatorname{Var}_{x, x'}\!\left[K(x, x')\right] \in \mathcal{O}(b^{-n}), \quad b &gt; 1 .
+\]</div>
+<p>Two things go wrong at once. The geometry disappears, and separating two kernel entries starts to require a shot budget growing like <span class="arithmatex">\(1/\operatorname{Var}\)</span> — so the kernel becomes unaffordable on hardware well before it becomes uninformative in exact arithmetic.</p>
 <hr />
-<h2 id="step-1-implement-the-encoding">Step 1: Implement the Encoding<a class="headerlink" href="#step-1-implement-the-encoding" title="Anchor link to this section">&para;</a></h2>
-<p>Create a new file in <code>src/encoding_atlas/encodings/</code>:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># src/encoding_atlas/encodings/my_encoding.py</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.core.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseEncoding</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.core.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">EncodingProperties</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+<h2 id="the-measure">The measure<a class="headerlink" href="#the-measure" title="Anchor link to this section">&para;</a></h2>
+<p>The reference point is the Haar-random ensemble. For two independent Haar states in dimension <span class="arithmatex">\(d = 2^n\)</span>, the overlap follows <span class="arithmatex">\(\mathrm{Beta}(1, d-1)\)</span>, so</p>
+<div class="arithmatex">\[
+\mathbb{E}_{\text{Haar}}[K] = \frac{1}{d}, \qquad
+\operatorname{Var}_{\text{Haar}}[K] = \frac{d - 1}{d^2 (d + 1)} \sim d^{-2} .
+\]</div>
+<p>That gives a dimensionless order parameter, comparable across qubit counts:</p>
+<div class="arithmatex">\[
+\texttt{concentration\_ratio} = \frac{\operatorname{Var}[K]}{\operatorname{Var}_{\text{Haar}}[K]} .
+\]</div>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Value</th>
+<th style="text-align: left;">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><span class="arithmatex">\(\approx 1\)</span></td>
+<td style="text-align: left;">At the Haar floor. The kernel is the identity up to noise; a kernel method cannot generalise from it, at any shot budget.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><span class="arithmatex">\(\gg 1\)</span></td>
+<td style="text-align: left;">Structure remains. The circuit width has not yet destroyed the geometry.</td>
+</tr>
+</tbody>
+</table>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas</span><span class="w"> </span><span class="kn">import</span> <span class="n">AngleEncoding</span><span class="p">,</span> <span class="n">IQPEncoding</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_kernel_concentration</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">angle</span> <span class="o">=</span> <span class="n">compute_kernel_concentration</span><span class="p">(</span><span class="n">AngleEncoding</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="mi">6</span><span class="p">),</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">iqp</span> <span class="o">=</span> <span class="n">compute_kernel_concentration</span><span class="p">(</span><span class="n">IQPEncoding</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyEncoding</span><span class="p">(</span><span class="n">BaseEncoding</span><span class="p">):</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;One-line description of the encoding.</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="sd">    Longer description explaining the encoding strategy,</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="sd">    circuit structure, and relevant references.</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="sd">        n_features: Number of classical features to encode.</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="sd">        reps: Number of circuit repetitions.</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="sd">    References:</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="sd">        Author et al., &quot;Paper Title&quot;, Journal, Year.</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_reps&#39;</span><span class="p">,)</span>  <span class="c1"># Required: declare instance attributes</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">reps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_reps</span> <span class="o">=</span> <span class="n">reps</span>
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="n">n_features</span><span class="p">)</span>
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_build_circuit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s1">&#39;pennylane&#39;</span><span class="p">):</span>
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the encoding circuit for input x.&quot;&quot;&quot;</span>
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        <span class="o">...</span>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EncodingProperties</span><span class="p">:</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute encoding properties.&quot;&quot;&quot;</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        <span class="o">...</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="nb">print</span><span class="p">(</span><span class="n">angle</span><span class="o">.</span><span class="n">concentration_ratio</span><span class="p">,</span> <span class="n">angle</span><span class="o">.</span><span class="n">is_concentrated</span><span class="p">)</span>   <span class="c1"># 9.0   False</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="nb">print</span><span class="p">(</span><span class="n">iqp</span><span class="o">.</span><span class="n">concentration_ratio</span><span class="p">,</span> <span class="n">iqp</span><span class="o">.</span><span class="n">is_concentrated</span><span class="p">)</span>       <span class="c1"># 1.0   True</span>
 </span></code></pre></div>
-<h3 id="key-requirements">Key Requirements<a class="headerlink" href="#key-requirements" title="Anchor link to this section">&para;</a></h3>
+<hr />
+<h2 id="why-the-variance-and-not-the-mean">Why the variance, and not the mean<a class="headerlink" href="#why-the-variance-and-not-the-mean" title="Anchor link to this section">&para;</a></h2>
+<p>This is the subtlety that makes the measure non-obvious, so it is worth stating plainly: <strong>the mean cannot distinguish the two regimes.</strong></p>
+<p>Take an encoding that puts each qubit into an independent, uniformly random single-qubit state — angle encoding with inputs drawn from <span class="arithmatex">\([0, 2\pi)\)</span> is exactly this. Each qubit contributes an overlap <span class="arithmatex">\(\cos^2\!\big((x - x')/2\big)\)</span> with <span class="arithmatex">\(\mathbb{E} = 1/2\)</span> and <span class="arithmatex">\(\mathbb{E}[\cdot^2] = 3/8\)</span>, so across <span class="arithmatex">\(n\)</span> independent qubits</p>
+<div class="arithmatex">\[
+\mathbb{E}[K] = 2^{-n}, \qquad
+\operatorname{Var}[K] = \left(\tfrac{3}{8}\right)^{n} - \left(\tfrac{1}{4}\right)^{n} .
+\]</div>
+<p>The mean is <span class="arithmatex">\(2^{-n} = 1/d\)</span> — <strong>identical to Haar</strong>. A mean-based measure would declare angle encoding maximally concentrated, which is exactly backwards. The variance, meanwhile, is exponentially <em>larger</em> than the Haar <span class="arithmatex">\(\sim 4^{-n}\)</span>, and their ratio grows by a factor of <span class="arithmatex">\(1.5\)</span> per qubit:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Qubits</th>
+<th style="text-align: right;">Angle <code>mean_ratio</code></th>
+<th style="text-align: right;">Angle <code>concentration_ratio</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.1</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">4.7</td>
+</tr>
+<tr>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">10.9</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">28.8</td>
+</tr>
+</tbody>
+</table>
+<p><code>mean_ratio</code> is reported on every result for completeness, but it is degenerate. Do not use it.</p>
+<div class="admonition note">
+<p class="admonition-title">Concentration depends on your data, not just your circuit</p>
+<p>It is a joint property of the encoding <strong>and</strong> the input distribution. The library's data-free default draws inputs from <span class="arithmatex">\([0, 2\pi)\)</span>, matching expressibility and entanglement capability. Narrowing that range — which is what feature scaling does — generally reduces concentration. Pass your own <code>X</code> to measure the axis on your actual data.</p>
+</div>
+<hr />
+<h2 id="scaling-across-widths">Scaling across widths<a class="headerlink" href="#scaling-across-widths" title="Anchor link to this section">&para;</a></h2>
+<p>A single width tells you where you are; the sweep tells you where you are heading.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">estimate_concentration_scaling</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">scaling</span> <span class="o">=</span> <span class="n">estimate_concentration_scaling</span><span class="p">(</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">IQPEncoding</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="n">d</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">feature_counts</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">)</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">scaling</span><span class="o">.</span><span class="n">decay_rate</span>              <span class="c1"># 3.88 — variance falls per qubit (Haar rate is 4.0)</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">scaling</span><span class="o">.</span><span class="n">haar_normalized_slope</span>   <span class="c1"># ~0 — tracking the floor rather than pulling away</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">scaling</span><span class="o">.</span><span class="n">concentration_horizon</span><span class="p">()</span> <span class="c1"># 2 — already at the floor at the narrowest width</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">scaling</span><span class="o">.</span><span class="n">shots_per_entry_at</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>  <span class="c1"># extrapolated hardware cost per kernel entry</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Field</th>
+<th style="text-align: left;">Reading</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>decay_rate</code></td>
+<td style="text-align: left;">Per-qubit factor by which the variance shrinks. The Haar floor itself falls at <strong>4.0</strong>, so a rate near 4 means the encoding scrambles as fast as it possibly can.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>haar_normalized_slope</code></td>
+<td style="text-align: left;">Slope of <span class="arithmatex">\(\log(\texttt{concentration\_ratio})\)</span> vs. qubits. <strong>Negative</strong> = collapsing towards the floor. <strong>Positive</strong> = pulling away. This is the honest discriminator: a large <code>decay_rate</code> alone proves nothing, because the floor is falling too.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>concentration_horizon()</code></td>
+<td style="text-align: left;">Narrowest width from which the encoding <em>stays</em> at the floor. <code>None</code> means it never gets there over the measured range. A transient dip at the narrowest width does not count.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>r_squared</code></td>
+<td style="text-align: left;">Quality of the log-linear fit. Below ~0.9, do not trust any extrapolation from it.</td>
+</tr>
+</tbody>
+</table>
+<p>The sweep fits against <strong>qubit count</strong>, not feature count — concentration is a statement about Hilbert-space dimension. The distinction matters for amplitude encoding, where <span class="arithmatex">\(n_{\text{qubits}} = \lceil \log_2 n_{\text{features}} \rceil\)</span>.</p>
+<hr />
+<h2 id="the-measured-atlas">The measured atlas<a class="headerlink" href="#the-measured-atlas" title="Anchor link to this section">&para;</a></h2>
+<p>Every built-in encoding has been scanned and the results ship with the package. Sorted by the benchmark's overall rank:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Encoding</th>
+<th style="text-align: right;">Rank</th>
+<th style="text-align: right;">Expressibility</th>
+<th style="text-align: right;">Kernel acc.</th>
+<th style="text-align: right;">Ratio @8q</th>
+<th style="text-align: right;">Variance decay/qubit</th>
+<th style="text-align: center;">Horizon</th>
+<th style="text-align: right;">Shots/entry @8q</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>angle</code></td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.930</td>
+<td style="text-align: right;">0.958</td>
+<td style="text-align: right;">28.8</td>
+<td style="text-align: right;">2.38</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: right;">37</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>swap_equivariant</code></td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.860</td>
+<td style="text-align: right;">0.835</td>
+<td style="text-align: right;">230.0</td>
+<td style="text-align: right;">1.74</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: right;">26</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>higher_order_angle</code></td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0.934</td>
+<td style="text-align: right;">0.767</td>
+<td style="text-align: right;">29.8</td>
+<td style="text-align: right;">2.37</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: right;">37</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>cyclic_equivariant</code></td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.989</td>
+<td style="text-align: right;">0.954</td>
+<td style="text-align: right;">12.0</td>
+<td style="text-align: right;">2.58</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: right;">127</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>amplitude</code></td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">0.910</td>
+<td style="text-align: right;">2.4</td>
+<td style="text-align: right;">1.46</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: right;">34</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>qaoa</code></td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0.981</td>
+<td style="text-align: right;">0.917</td>
+<td style="text-align: right;">15.5</td>
+<td style="text-align: right;">2.48</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: right;">99</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>trainable</code></td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0.941</td>
+<td style="text-align: right;">0.862</td>
+<td style="text-align: right;">26.0</td>
+<td style="text-align: right;">2.55</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: right;">69</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>symmetry_inspired</code></td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.914</td>
+<td style="text-align: right;">0.849</td>
+<td style="text-align: right;">117.1</td>
+<td style="text-align: right;">1.82</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: right;">51</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>hardware_efficient</code></td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">0.946</td>
+<td style="text-align: right;">0.863</td>
+<td style="text-align: right;">26.3</td>
+<td style="text-align: right;">2.55</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: right;">70</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>data_reuploading</code></td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.946</td>
+<td style="text-align: right;">0.863</td>
+<td style="text-align: right;">26.3</td>
+<td style="text-align: right;">2.55</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: right;">70</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>so2_equivariant</code></td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">0.650</td>
+<td style="text-align: right;">0.895</td>
+<td style="text-align: right;">9.9</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>pauli_feature_map</code></strong></td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;"><strong>0.999</strong></td>
+<td style="text-align: right;">0.693</td>
+<td style="text-align: right;"><strong>1.8</strong></td>
+<td style="text-align: right;"><strong>3.53</strong></td>
+<td style="text-align: center;"><strong>2</strong></td>
+<td style="text-align: right;">770</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>zz_feature_map</code></strong></td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;"><strong>0.998</strong></td>
+<td style="text-align: right;">0.693</td>
+<td style="text-align: right;"><strong>1.8</strong></td>
+<td style="text-align: right;"><strong>3.53</strong></td>
+<td style="text-align: center;"><strong>2</strong></td>
+<td style="text-align: right;">770</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>basis</code></td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">0.628</td>
+<td style="text-align: right;">13525.3</td>
+<td style="text-align: right;">0.97</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>hamiltonian</code></strong></td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;"><strong>0.999</strong></td>
+<td style="text-align: right;">0.730</td>
+<td style="text-align: right;"><strong>1.9</strong></td>
+<td style="text-align: right;"><strong>3.48</strong></td>
+<td style="text-align: center;"><strong>2</strong></td>
+<td style="text-align: right;">745</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>iqp</code></strong></td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;"><strong>0.999</strong></td>
+<td style="text-align: right;">0.639</td>
+<td style="text-align: right;"><strong>1.1</strong></td>
+<td style="text-align: right;"><strong>3.86</strong></td>
+<td style="text-align: center;"><strong>2</strong></td>
+<td style="text-align: right;">980</td>
+</tr>
+</tbody>
+</table>
+<p>Read the bold rows. The four encodings whose kernels reach the Haar floor are:</p>
 <ul>
-<li>Inherit from <code>BaseEncoding</code></li>
-<li>Use <code>__slots__</code> for all instance attributes</li>
-<li>Implement <code>_build_circuit</code> and <code>_compute_properties</code></li>
-<li>Support all three backends: <code>pennylane</code>, <code>qiskit</code>, <code>cirq</code></li>
-<li>Include Google-style docstrings with references</li>
+<li>the four with <strong>expressibility <span class="arithmatex">\(\approx 0.999\)</span></strong>, and</li>
+<li>four of the five <strong>worst-ranked</strong> encodings in the benchmark.</li>
 </ul>
-<hr />
-<h2 id="step-2-write-documentation">Step 2: Write Documentation<a class="headerlink" href="#step-2-write-documentation" title="Anchor link to this section">&para;</a></h2>
-<p>Create a documentation page in <code>docs/encodings/&lt;name&gt;/</code>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docs/encodings/my_encoding/my_encoding.md
-</span></code></pre></div>
-<p>Follow the structure of existing encoding pages (see <a href="../../encodings/iqp/iqp_encoding/">IQP Encoding</a> for the gold standard):</p>
-<ol>
-<li>Title and one-line description</li>
-<li>Core idea with ASCII diagram</li>
-<li>Circuit structure</li>
-<li>Mathematics</li>
-<li>Key properties table</li>
-<li>Example walkthrough</li>
-<li>Resource scaling table</li>
-<li>Strengths and limitations</li>
-<li>Use cases</li>
-<li>References</li>
-</ol>
-<hr />
-<h2 id="step-3-add-tests">Step 3: Add Tests<a class="headerlink" href="#step-3-add-tests" title="Anchor link to this section">&para;</a></h2>
-<p>Create a test file in <code>tests/unit/encodings/</code>:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># tests/unit/encodings/test_my_encoding.py</span>
+<p>That is the mechanism. High expressibility <em>means</em> Haar-likeness; Haar-likeness <em>implies</em> a kernel variance at the <span class="arithmatex">\(\sim d^{-2}\)</span> floor; a kernel at the floor cannot generalise. The encodings that score best on expressibility are the ones whose kernels are least usable — which is why the atlas's pre-registered hypothesis H1 ("expressibility predicts accuracy") came back <em>refuted</em> with <span class="arithmatex">\(\rho = -0.68\)</span>.</p>
+<p><code>basis</code> is the instructive exception: it ranks 14<sup>th</sup> but is nowhere near the floor. Its kernel is a 0/1 matrix with enormous spread — it fails for a different reason (it discretises away information), not through concentration. Concentration explains four of the five bottom-ranked encodings, not all of them.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.atlas</span><span class="w"> </span><span class="kn">import</span> <span class="n">concentrated_encodings</span><span class="p">,</span> <span class="n">get_concentration_profile</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.encodings.my_encoding</span><span class="w"> </span><span class="kn">import</span> <span class="n">MyEncoding</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">concentrated_encodings</span><span class="p">())</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># [&#39;hamiltonian&#39;, &#39;iqp&#39;, &#39;pauli_feature_map&#39;, &#39;zz_feature_map&#39;]</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="k">class</span><span class="w"> </span><span class="nc">TestMyEncoding</span><span class="p">:</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">test_basic_creation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        <span class="n">enc</span> <span class="o">=</span> <span class="n">MyEncoding</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>        <span class="k">assert</span> <span class="n">enc</span><span class="o">.</span><span class="n">n_qubits</span> <span class="o">==</span> <span class="mi">4</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">test_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>        <span class="n">enc</span> <span class="o">=</span> <span class="n">MyEncoding</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>        <span class="n">props</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">properties</span>
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>        <span class="k">assert</span> <span class="n">props</span><span class="o">.</span><span class="n">gate_count</span> <span class="o">&gt;</span> <span class="mi">0</span>
-</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
-</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">test_circuit_generation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>        <span class="o">...</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">get_concentration_profile</span><span class="p">(</span><span class="s2">&quot;iqp&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">horizon</span>        <span class="c1"># 2</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">get_concentration_profile</span><span class="p">(</span><span class="s2">&quot;angle&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">horizon</span>      <span class="c1"># None</span>
 </span></code></pre></div>
-<p>Ensure tests cover:</p>
+<div class="admonition warning">
+<p class="admonition-title">Scope of the accuracy numbers</p>
+<p>The benchmark's accuracy stages ran at <code>n_features</code> in <code>{2, 4}</code>, so the published ranking is measured entirely in the regime <em>before</em> concentration switches on. That is precisely why this axis exists: it tells you which parts of the ranking are expected to survive as circuits widen.</p>
+</div>
+<hr />
+<h2 id="finite-shots">Finite shots<a class="headerlink" href="#finite-shots" title="Anchor link to this section">&para;</a></h2>
+<p>Concentration is what makes shot budgets matter, so the two are measured together.</p>
+<p>On hardware the standard construction is the <strong>compute–uncompute</strong> circuit <span class="arithmatex">\(U(x_j)^\dagger U(x_i)|0\rangle\)</span>, whose probability of returning the all-zeros bitstring is exactly <span class="arithmatex">\(K(x_i, x_j)\)</span>. The count of all-zeros outcomes over <span class="arithmatex">\(M\)</span> shots is therefore exactly <span class="arithmatex">\(\mathrm{Binomial}(M, K)\)</span> — so sampling that binomial from the exact kernel is statistically identical to running the circuits, at a fraction of the cost.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas</span><span class="w"> </span><span class="kn">import</span> <span class="n">AngleEncoding</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_fidelity_kernel</span><span class="p">,</span> <span class="n">compute_kernel_target_alignment</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">enc</span> <span class="o">=</span> <span class="n">AngleEncoding</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">K_exact</span> <span class="o">=</span> <span class="n">compute_fidelity_kernel</span><span class="p">(</span><span class="n">enc</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>                       <span class="c1"># infinite shots</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="n">K_shots</span> <span class="o">=</span> <span class="n">compute_fidelity_kernel</span><span class="p">(</span><span class="n">enc</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>   <span class="c1"># what a device returns</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="c1"># The same switch threads through every kernel-geometry diagnostic:</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="n">kta</span> <span class="o">=</span> <span class="n">compute_kernel_target_alignment</span><span class="p">(</span><span class="n">enc</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span></code></pre></div>
+<p>The estimate is unbiased entrywise, symmetric, and has an exact unit diagonal. It is <strong>not</strong> positive semidefinite — independent noise on each entry routinely pushes the smallest eigenvalues negative. Project it before handing it to a precomputed-kernel estimator:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.benchmark.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">ensure_psd</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">K_psd</span><span class="p">,</span> <span class="n">was_clipped</span> <span class="o">=</span> <span class="n">ensure_psd</span><span class="p">(</span><span class="n">K_shots</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Two consequences worth knowing:</p>
 <ul>
-<li>Construction with default and custom parameters</li>
-<li>Property computation</li>
-<li>Circuit generation for each backend</li>
-<li>Edge cases (n_features=1, large n_features)</li>
+<li><strong>Kernel-target alignment is shot-robust.</strong> It aggregates over all <span class="arithmatex">\(n(n-1)/2\)</span> entries, so independent noise largely averages out — which is why the atlas's KTA-based screening rule remains usable under a realistic shot budget even though the kernel matrix itself does not.</li>
+<li><strong>Geometric difference is not.</strong> Shot noise is a direction no classical kernel reproduces, so it <em>inflates</em> <span class="arithmatex">\(g\)</span>. A large value under finite shots is not by itself evidence of an advantage.</li>
+</ul>
+<p><code>shots_per_entry</code> reports the budget needed for the estimator's standard error to fall below half the measured spread, <span class="arithmatex">\(4\bar{K}(1 - \bar{K}) / \operatorname{Var}\)</span>. It is a <strong>noiseless lower bound</strong>: gate noise, readout error, and compilation overhead are not modelled.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">compute_kernel_concentration</span><span class="p">(</span><span class="n">IQPEncoding</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">result</span><span class="o">.</span><span class="n">shots_per_entry</span>          <span class="c1"># ~1,050 per entry at 8 qubits</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">result</span><span class="o">.</span><span class="n">shots_for_dataset</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>  <span class="c1"># ~5.2e8 across the 499,500 pairs of a 1000-sample kernel</span>
+</span></code></pre></div>
+<hr />
+<h2 id="using-it">Using it<a class="headerlink" href="#using-it" title="Anchor link to this section">&para;</a></h2>
+<p><strong>Profiling any encoding</strong>, including one you wrote yourself. The axis is data-free, so <code>profile_encoding</code> always computes it — pass <code>X=</code> to measure it on your own data instead:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">profile_encoding</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">profile</span> <span class="o">=</span> <span class="n">profile_encoding</span><span class="p">(</span><span class="n">AngleEncoding</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="mi">6</span><span class="p">))</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">profile</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;kernel_concentration_ratio&quot;</span><span class="p">]</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">profile</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;kernel_is_concentrated&quot;</span><span class="p">]</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">profile</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;kernel_shots_per_entry&quot;</span><span class="p">]</span>
+</span></code></pre></div>
+<p><strong>Getting warned automatically.</strong> The decision guide raises a flag when it recommends an encoding the scan measured at the floor:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.guide</span><span class="w"> </span><span class="kn">import</span> <span class="n">recommend_encoding</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">rec</span> <span class="o">=</span> <span class="n">recommend_encoding</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">feature_interactions</span><span class="o">=</span><span class="s2">&quot;custom_pauli&quot;</span><span class="p">)</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">encoding_name</span><span class="p">)</span>   <span class="c1"># pauli_feature_map</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">scale_warning</span><span class="p">)</span>   <span class="c1"># &quot;Kernel concentration: ... sits at the Haar floor ...&quot;</span>
+</span></code></pre></div>
+<p><strong>Practical rules of thumb.</strong></p>
+<ul>
+<li>A finite <code>concentration_horizon</code> at or below your feature count means a fidelity-kernel method is the wrong tool. Switch encodings, or use a variational (VQC) model, which does not depend on pairwise overlaps in the same way.</li>
+<li>A <code>decay_rate</code> above ~3 means the encoding is scrambling near the maximal rate; expect the shot cost to roughly double or worse per added qubit.</li>
+<li>Do not select an encoding on expressibility. High expressibility is a <em>predictor of concentration</em>, and concentration is a predictor of failure.</li>
 </ul>
 <hr />
-<h2 id="step-4-register-the-encoding">Step 4: Register the Encoding<a class="headerlink" href="#step-4-register-the-encoding" title="Anchor link to this section">&para;</a></h2>
-<ol>
-<li>
-<p>Export from the encodings module:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># src/encoding_atlas/encodings/__init__.py</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">.my_encoding</span><span class="w"> </span><span class="kn">import</span> <span class="n">MyEncoding</span>
+<h2 id="reproducing-the-scan">Reproducing the scan<a class="headerlink" href="#reproducing-the-scan" title="Anchor link to this section">&para;</a></h2>
+<p>The bundled dataset is regenerated by a committed, deterministic script:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python<span class="w"> </span>-m<span class="w"> </span>experiments.concentration_scan<span class="w">            </span><span class="c1"># rewrite package data</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>python<span class="w"> </span>-m<span class="w"> </span>experiments.concentration_scan<span class="w"> </span>--check<span class="w">    </span><span class="c1"># verify, do not write</span>
 </span></code></pre></div>
-</li>
-<li>
-<p>Export from the top-level package:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># src/encoding_atlas/__init__.py</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">.encodings.my_encoding</span><span class="w"> </span><span class="kn">import</span> <span class="n">MyEncoding</span>
-</span></code></pre></div>
-</li>
-<li>
-<p>Add to the nav in <code>mkdocs.yml</code>:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">My Encoding</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">encodings/my_encoding/my_encoding.md</span>
-</span></code></pre></div>
-</li>
-</ol>
+<p>It uses the same circuit parameters as the benchmark's kernel stage (<code>experiments/configs/stage6b_kernel.json</code>), 200 random inputs per point (19,900 off-diagonal pairs), and a fixed seed. <code>concentration_metadata()</code> returns the full protocol.</p>
 <hr />
-<h2 id="checklist">Checklist<a class="headerlink" href="#checklist" title="Anchor link to this section">&para;</a></h2>
-<p>Before submitting a PR for a new encoding:</p>
-<ul class="task-list">
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Encoding class inherits from <code>BaseEncoding</code> with <code>__slots__</code></li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>_build_circuit</code> supports pennylane, qiskit, and cirq backends</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>_compute_properties</code> returns a valid <code>EncodingProperties</code></li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Google-style docstring with description and references</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Documentation page with circuit diagrams, math, and examples</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Test file with &gt;90% coverage of the new code</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Encoding exported from <code>__init__.py</code></li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Added to <code>mkdocs.yml</code> nav</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> All existing tests still pass (<code>pytest</code>)</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Linting passes (<code>ruff check src tests</code>)</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Formatting passes (<code>black --check src tests</code>)</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Type checking passes (<code>mypy src</code>)</li>
+<h2 id="references">References<a class="headerlink" href="#references" title="Anchor link to this section">&para;</a></h2>
+<ul>
+<li>Thanasilp, Wang, Cerezo &amp; Holmes (2024). <em>Exponential concentration in quantum kernel methods.</em> Nature Communications 15:5200.</li>
+<li>Huang et al. (2021). <em>Power of data in quantum machine learning.</em> Nature Communications 12:2631.</li>
+<li>Sim, Johnson &amp; Aspuru-Guzik (2019). <em>Expressibility and entangling capability of parameterized quantum circuits.</em> Advanced Quantum Technologies 2:1900070.</li>
+<li>Havlíček et al. (2019). <em>Supervised learning with quantum-enhanced feature spaces.</em> Nature 567:209.</li>
+</ul>
+<hr />
+<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Anchor link to this section">&para;</a></h2>
+<ul>
+<li><a href="../encoding-properties/">Encoding Properties</a> — the fixed-width axes</li>
+<li><a href="../quantum-advantage/">Quantum Advantage</a> — when a quantum kernel can help at all</li>
+<li><a href="../../api/">API Reference</a> — full signatures</li>
 </ul>
 
 
@@ -3214,7 +3544,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../development-setup/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Development Setup">
+          <a href="../encoding-properties/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Encoding Properties">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -3224,20 +3554,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Development Setup
+                Encoding Properties
               </div>
             </div>
           </a>
         
         
           
-          <a href="../code-style/" class="md-footer__link md-footer__link--next" aria-label="Next: Code Style">
+          <a href="../quantum-advantage/" class="md-footer__link md-footer__link--next" aria-label="Next: Quantum Advantage">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Code Style
+                Quantum Advantage
               </div>
             </div>
             <div class="md-footer__button md-icon">
