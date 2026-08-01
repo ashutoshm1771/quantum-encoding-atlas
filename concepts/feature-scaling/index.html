@@ -12,13 +12,13 @@
         <meta name="author" content="Ashutosh Mishra">
       
       
-        <link rel="canonical" href="https://encoding-atlas.github.io/quantum-encoding-atlas/tutorials/custom-encoding/">
+        <link rel="canonical" href="https://encoding-atlas.github.io/quantum-encoding-atlas/concepts/feature-scaling/">
       
       
-        <link rel="prev" href="../comparing-encodings/">
+        <link rel="prev" href="../kernel-concentration/">
       
       
-        <link rel="next" href="../benchmarking/">
+        <link rel="next" href="../quantum-advantage/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Custom Encodings - Quantum Encoding Atlas</title>
+        <title>Feature Scaling - Quantum Encoding Atlas</title>
       
     
     
@@ -149,7 +149,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#custom-encodings" class="md-skip">
+        <a href="#feature-scaling" class="md-skip">
           Skip to content
         </a>
       
@@ -209,7 +209,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Custom Encodings
+              Feature Scaling
             
           </span>
         </div>
@@ -360,11 +360,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../concepts/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -404,13 +406,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../tutorials/" class="md-tabs__link">
           
   
   
@@ -715,6 +715,8 @@
       
   
   
+    
+  
   
   
     
@@ -738,20 +740,23 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../concepts/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -769,13 +774,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -795,7 +800,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/what-is-encoding/" class="md-nav__link">
+      <a href="../what-is-encoding/" class="md-nav__link">
         
   
   
@@ -823,7 +828,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/encoding-properties/" class="md-nav__link">
+      <a href="../encoding-properties/" class="md-nav__link">
         
   
   
@@ -851,7 +856,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/kernel-concentration/" class="md-nav__link">
+      <a href="../kernel-concentration/" class="md-nav__link">
         
   
   
@@ -876,10 +881,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../concepts/feature-scaling/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Scaling
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -895,6 +927,114 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-mechanism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The mechanism
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-costs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it costs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-consequence-for-hypothesis-h1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The consequence for hypothesis H1
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-a-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing a range
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scaling-inside-cross-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scaling inside cross-validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practical-rules-of-thumb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Practical rules of thumb
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproducing-the-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproducing the scan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -907,7 +1047,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/quantum-advantage/" class="md-nav__link">
+      <a href="../quantum-advantage/" class="md-nav__link">
         
   
   
@@ -1493,8 +1633,6 @@
       
   
   
-    
-  
   
   
     
@@ -1518,23 +1656,20 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../tutorials/" class="md-nav__link ">
               
   
   
@@ -1552,13 +1687,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1578,7 +1713,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../getting-started/" class="md-nav__link">
+      <a href="../../tutorials/getting-started/" class="md-nav__link">
         
   
   
@@ -1606,7 +1741,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../comparing-encodings/" class="md-nav__link">
+      <a href="../../tutorials/comparing-encodings/" class="md-nav__link">
         
   
   
@@ -1631,37 +1766,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Custom Encodings
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../tutorials/custom-encoding/" class="md-nav__link">
         
   
   
@@ -1677,59 +1785,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#the-baseencoding-interface" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The BaseEncoding Interface
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-custom-rotation-encoding" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example: Custom Rotation Encoding
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next Steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1742,7 +1797,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../benchmarking/" class="md-nav__link">
+      <a href="../../tutorials/benchmarking/" class="md-nav__link">
         
   
   
@@ -1770,7 +1825,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hardware-considerations/" class="md-nav__link">
+      <a href="../../tutorials/hardware-considerations/" class="md-nav__link">
         
   
   
@@ -2896,10 +2951,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-baseencoding-interface" class="md-nav__link">
+  <a href="#the-mechanism" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The BaseEncoding Interface
+        The mechanism
       
     </span>
   </a>
@@ -2907,10 +2962,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-custom-rotation-encoding" class="md-nav__link">
+  <a href="#what-it-costs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example: Custom Rotation Encoding
+        What it costs
       
     </span>
   </a>
@@ -2918,10 +2973,65 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
+  <a href="#the-consequence-for-hypothesis-h1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next Steps
+        The consequence for hypothesis H1
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-a-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing a range
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scaling-inside-cross-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scaling inside cross-validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practical-rules-of-thumb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Practical rules of thumb
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproducing-the-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproducing the scan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
       
     </span>
   </a>
@@ -2974,7 +3084,7 @@
         <a href="../" class="md-path__link">
           
   <span class="md-ellipsis">
-    Tutorials
+    Concepts
   </span>
 
         </a>
@@ -2996,81 +3106,307 @@
   
 
 
-<h1 id="custom-encodings">Custom Encodings<a class="headerlink" href="#custom-encodings" title="Anchor link to this section">&para;</a></h1>
-<p>This tutorial shows how to create your own quantum data encoding by subclassing <code>BaseEncoding</code>. This lets you define arbitrary circuit structures while inheriting the full analysis, benchmarking, and multi-backend infrastructure of the Quantum Encoding Atlas.</p>
-<div class="admonition abstract">
-<p class="admonition-title">What you'll learn</p>
-<ul>
-<li>The <code>BaseEncoding</code> interface and required methods</li>
-<li>Implementing a custom encoding step by step</li>
-<li>Registering your encoding for use with the analysis tools</li>
-</ul>
+<h1 id="feature-scaling">Feature Scaling<a class="headerlink" href="#feature-scaling" title="Anchor link to this section">&para;</a></h1>
+<p>Encodings turn numbers into rotation angles. The numeric range you scale your features into therefore decides how much of each qubit's Bloch circle your data sweeps — and that changes the geometry of the kernel your model actually sees.</p>
+<p>This is not a tuning detail. For several encodings the scaling range moves accuracy <strong>further than the choice of encoding does</strong>, and it is the one axis of the benchmark that was held fixed rather than measured.</p>
+<hr />
+<h2 id="the-mechanism">The mechanism<a class="headerlink" href="#the-mechanism" title="Anchor link to this section">&para;</a></h2>
+<p>Rotation gates have period <span class="arithmatex">\(2\pi\)</span>. Scaling into <span class="arithmatex">\([0, 2\pi]\)</span> drives every feature over a <em>full</em> period, which is exactly the regime <a href="../kernel-concentration/">kernel concentration</a> identifies as maximally Haar-like: pairwise fidelities collapse towards the <span class="arithmatex">\(1/2^n\)</span> floor and the kernel approaches the identity.</p>
+<p>Angle encoding makes this exact. Under inputs uniform on <span class="arithmatex">\([0, 2\pi]\)</span>, each qubit contributes an overlap <span class="arithmatex">\(\cos^2((x - x')/2)\)</span> with mean <span class="arithmatex">\(1/2\)</span>, so across <span class="arithmatex">\(n\)</span> qubits</p>
+<div class="arithmatex">\[
+\mathbb{E}[K] = 2^{-n} = \frac{1}{d},
+\]</div>
+<p>precisely the Haar mean. Narrower ranges keep the encoded states in a cone, preserving the spread a kernel method needs.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas</span><span class="w"> </span><span class="kn">import</span> <span class="n">IQPEncoding</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">scan_feature_ranges</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.benchmark</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_dataset</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">get_dataset</span><span class="p">(</span><span class="s2">&quot;moons&quot;</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">scan</span> <span class="o">=</span> <span class="n">scan_feature_ranges</span><span class="p">(</span><span class="n">IQPEncoding</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">scan</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[0, </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">high</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">]  align=</span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">alignment</span><span class="si">:</span><span class="s2">+.3f</span><span class="si">}</span><span class="s2">  mean=</span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">offdiagonal_mean</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>[0, 0.785]  align=+0.517  mean=0.746
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>[0, 1.571]  align=+0.352  mean=0.423
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>[0, 3.142]  align=+0.167  mean=0.290
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>[0, 6.283]  align=+0.036  mean=0.315     &lt;- the pipeline&#39;s default
+</span></code></pre></div>
+<p>Alignment falls monotonically as the range widens, and the mean overlap descends towards the Haar value (0.25 at two qubits).</p>
+<div class="admonition warning">
+<p class="admonition-title">Read the mean alongside <code>concentration_ratio</code></p>
+<p><code>concentration_ratio</code> is a <em>variance</em> relative to Haar, and it is <strong>not</strong> monotone in range width. A very narrow range leaves every kernel entry close to 1 — degenerate in its own way, but with tiny variance and so a <em>low</em> ratio. Only a ratio near 1 <strong>together with</strong> a mean near <span class="arithmatex">\(1/2^n\)</span> means the Haar floor.</p>
 </div>
 <hr />
-<h2 id="the-baseencoding-interface">The BaseEncoding Interface<a class="headerlink" href="#the-baseencoding-interface" title="Anchor link to this section">&para;</a></h2>
-<p>Every encoding in the atlas inherits from <code>BaseEncoding</code> and implements a small set of methods:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.core.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseEncoding</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyEncoding</span><span class="p">(</span><span class="n">BaseEncoding</span><span class="p">):</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;A custom quantum data encoding.&quot;&quot;&quot;</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="n">n_features</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_build_circuit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s1">&#39;pennylane&#39;</span><span class="p">):</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the encoding circuit for input x.&quot;&quot;&quot;</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        <span class="o">...</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute and return an EncodingProperties dataclass.&quot;&quot;&quot;</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        <span class="o">...</span>
-</span></code></pre></div>
+<h2 id="what-it-costs">What it costs<a class="headerlink" href="#what-it-costs" title="Anchor link to this section">&para;</a></h2>
+<p>The bundled scan measures mean quantum-kernel accuracy for every encoding across four ranges, on the library's benchmark datasets:</p>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Method</th>
-<th style="text-align: left;">Purpose</th>
-<th style="text-align: center;">Required</th>
+<th style="text-align: left;">Encoding</th>
+<th style="text-align: right;">[0, π/4]</th>
+<th style="text-align: right;">[0, π/2]</th>
+<th style="text-align: right;">[0, π]</th>
+<th style="text-align: right;">[0, 2π]</th>
+<th style="text-align: right;">Spread</th>
+<th style="text-align: left;">Best</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>__init__</code></td>
-<td style="text-align: left;">Set encoding parameters</td>
-<td style="text-align: center;">Yes</td>
+<td style="text-align: left;"><code>iqp</code></td>
+<td style="text-align: right;">0.875</td>
+<td style="text-align: right;">0.903</td>
+<td style="text-align: right;">0.792</td>
+<td style="text-align: right;"><strong>0.560</strong></td>
+<td style="text-align: right;"><strong>0.343</strong></td>
+<td style="text-align: left;">[0, π/4]</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>_build_circuit</code></td>
-<td style="text-align: left;">Define the quantum circuit</td>
-<td style="text-align: center;">Yes</td>
+<td style="text-align: left;"><code>hamiltonian</code></td>
+<td style="text-align: right;">0.881</td>
+<td style="text-align: right;">0.935</td>
+<td style="text-align: right;">0.867</td>
+<td style="text-align: right;"><strong>0.667</strong></td>
+<td style="text-align: right;"><strong>0.268</strong></td>
+<td style="text-align: left;">[0, π/2]</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>_compute_properties</code></td>
-<td style="text-align: left;">Compute encoding properties</td>
-<td style="text-align: center;">Yes</td>
+<td style="text-align: left;"><code>pauli_feature_map</code></td>
+<td style="text-align: right;">0.839</td>
+<td style="text-align: right;">0.886</td>
+<td style="text-align: right;">0.823</td>
+<td style="text-align: right;">0.672</td>
+<td style="text-align: right;">0.214</td>
+<td style="text-align: left;">[0, π/2]</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>zz_feature_map</code></td>
+<td style="text-align: right;">0.839</td>
+<td style="text-align: right;">0.886</td>
+<td style="text-align: right;">0.823</td>
+<td style="text-align: right;">0.672</td>
+<td style="text-align: right;">0.214</td>
+<td style="text-align: left;">[0, π/2]</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>basis</code></td>
+<td style="text-align: right;">0.678</td>
+<td style="text-align: right;">0.755</td>
+<td style="text-align: right;">0.658</td>
+<td style="text-align: right;">0.578</td>
+<td style="text-align: right;">0.177</td>
+<td style="text-align: left;">[0, π/2]</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>symmetry_inspired</code></td>
+<td style="text-align: right;">0.734</td>
+<td style="text-align: right;">0.877</td>
+<td style="text-align: right;">0.860</td>
+<td style="text-align: right;">0.809</td>
+<td style="text-align: right;">0.144</td>
+<td style="text-align: left;">[0, π/2]</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>cyclic_equivariant</code></td>
+<td style="text-align: right;">0.813</td>
+<td style="text-align: right;">0.885</td>
+<td style="text-align: right;">0.946</td>
+<td style="text-align: right;">0.889</td>
+<td style="text-align: right;">0.133</td>
+<td style="text-align: left;">[0, π]</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>angle</code></td>
+<td style="text-align: right;">0.803</td>
+<td style="text-align: right;">0.828</td>
+<td style="text-align: right;">0.900</td>
+<td style="text-align: right;"><strong>0.931</strong></td>
+<td style="text-align: right;">0.128</td>
+<td style="text-align: left;">[0, π]</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>data_reuploading</code></td>
+<td style="text-align: right;">0.826</td>
+<td style="text-align: right;">0.895</td>
+<td style="text-align: right;">0.920</td>
+<td style="text-align: right;">0.796</td>
+<td style="text-align: right;">0.124</td>
+<td style="text-align: left;">[0, π/2]</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>hardware_efficient</code></td>
+<td style="text-align: right;">0.826</td>
+<td style="text-align: right;">0.895</td>
+<td style="text-align: right;">0.920</td>
+<td style="text-align: right;">0.796</td>
+<td style="text-align: right;">0.124</td>
+<td style="text-align: left;">[0, π/2]</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>higher_order_angle</code></td>
+<td style="text-align: right;">0.789</td>
+<td style="text-align: right;">0.846</td>
+<td style="text-align: right;">0.867</td>
+<td style="text-align: right;">0.751</td>
+<td style="text-align: right;">0.116</td>
+<td style="text-align: left;">[0, π/4]</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>trainable</code></td>
+<td style="text-align: right;">0.800</td>
+<td style="text-align: right;">0.876</td>
+<td style="text-align: right;">0.915</td>
+<td style="text-align: right;">0.804</td>
+<td style="text-align: right;">0.115</td>
+<td style="text-align: left;">[0, π/2]</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>swap_equivariant</code></td>
+<td style="text-align: right;">0.791</td>
+<td style="text-align: right;">0.745</td>
+<td style="text-align: right;">0.683</td>
+<td style="text-align: right;">0.781</td>
+<td style="text-align: right;">0.108</td>
+<td style="text-align: left;">[0, π/4]</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>qaoa</code></td>
+<td style="text-align: right;">0.826</td>
+<td style="text-align: right;">0.900</td>
+<td style="text-align: right;">0.909</td>
+<td style="text-align: right;">0.852</td>
+<td style="text-align: right;">0.083</td>
+<td style="text-align: left;">[0, π/2]</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>so2_equivariant</code></td>
+<td style="text-align: right;">0.842</td>
+<td style="text-align: right;">0.883</td>
+<td style="text-align: right;">0.895</td>
+<td style="text-align: right;">0.853</td>
+<td style="text-align: right;">0.053</td>
+<td style="text-align: left;">[0, π]</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>amplitude</code></td>
+<td style="text-align: right;">0.750</td>
+<td style="text-align: right;">0.750</td>
+<td style="text-align: right;">0.750</td>
+<td style="text-align: right;">0.750</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: left;">[0, π/4]</td>
 </tr>
 </tbody>
 </table>
+<p>IQP swings by <strong>34 accuracy points</strong> across the four ranges. Note the asymmetry: the entangling maps lose the most at <span class="arithmatex">\([0, 2\pi]\)</span>, while <code>angle</code> is the one encoding that <em>prefers</em> the wide range. <code>amplitude</code> is flat, because it normalises its input to a state vector and discards the scale entirely.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.atlas</span><span class="w"> </span><span class="kn">import</span> <span class="n">scaling_sensitive_encodings</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">[(</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">accuracy_spread</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">scaling_sensitive_encodings</span><span class="p">()][:</span><span class="mi">4</span><span class="p">]</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># [(&#39;iqp&#39;, 0.343), (&#39;hamiltonian&#39;, 0.268), (&#39;pauli_feature_map&#39;, 0.214), (&#39;zz_feature_map&#39;, 0.214)]</span>
+</span></code></pre></div>
 <hr />
-<h2 id="example-custom-rotation-encoding">Example: Custom Rotation Encoding<a class="headerlink" href="#example-custom-rotation-encoding" title="Anchor link to this section">&para;</a></h2>
-<div class="admonition info">
-<p class="admonition-title">Under Development</p>
-<p>A complete worked example with a custom rotation encoding, property computation, backend support, and integration with the analysis tools is being prepared.</p>
-<p><strong>Planned content:</strong></p>
-<ul>
-<li>Step-by-step implementation of a custom <code>RXRZEncoding</code></li>
-<li>Computing circuit depth, gate count, and simulability</li>
-<li>Registering the encoding in the atlas registry</li>
-<li>Running expressibility and entanglement analysis on the custom encoding</li>
-<li>Testing with the benchmarking framework</li>
-</ul>
+<h2 id="the-consequence-for-hypothesis-h1">The consequence for hypothesis H1<a class="headerlink" href="#the-consequence-for-hypothesis-h1" title="Anchor link to this section">&para;</a></h2>
+<p>The empirical pipeline scales every dataset into <span class="arithmatex">\([0, 2\pi]\)</span> at load time, and the study's headline negative result — that expressibility is <em>anti</em>-correlated with accuracy — is measured under that choice. Since <span class="arithmatex">\([0, 2\pi]\)</span> is the range that pushes circuits hardest onto the concentration floor, and the most expressible circuits are pushed furthest, the natural question is whether the correlation is a property of expressibility or of the preprocessing.</p>
+<p>The scan answers it by recomputing the correlation at each range, with expressibility re-measured in the same regime so both axes describe one setting:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Range</th>
+<th style="text-align: right;">ρ (atlas subset, n=14)</th>
+<th style="text-align: right;">p</th>
+<th style="text-align: right;">ρ (all 16)</th>
+<th style="text-align: right;">p</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">[0, π/4]</td>
+<td style="text-align: right;"><strong>+0.580</strong></td>
+<td style="text-align: right;">0.030</td>
+<td style="text-align: right;">+0.339</td>
+<td style="text-align: right;">0.200</td>
+</tr>
+<tr>
+<td style="text-align: left;">[0, π/2]</td>
+<td style="text-align: right;"><strong>+0.784</strong></td>
+<td style="text-align: right;"><strong>0.0009</strong></td>
+<td style="text-align: right;">+0.637</td>
+<td style="text-align: right;">0.008</td>
+</tr>
+<tr>
+<td style="text-align: left;">[0, π]</td>
+<td style="text-align: right;">−0.289</td>
+<td style="text-align: right;">0.316</td>
+<td style="text-align: right;">−0.094</td>
+<td style="text-align: right;">0.728</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>[0, 2π]</strong> ← pipeline default</td>
+<td style="text-align: right;"><strong>−0.541</strong></td>
+<td style="text-align: right;"><strong>0.046</strong></td>
+<td style="text-align: right;">−0.286</td>
+<td style="text-align: right;">0.283</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The sign reverses.</strong> At the pipeline's own range the association is negative and significant, reproducing the direction the study reports. At <span class="arithmatex">\([0, \pi/2]\)</span> it is positive and more significant.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.atlas</span><span class="w"> </span><span class="kn">import</span> <span class="n">expressibility_accuracy_correlation</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">expressibility_accuracy_correlation</span><span class="p">():</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;high&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;spearman_rho_atlas_subset&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;is_published_range&quot;</span><span class="p">])</span>
+</span></code></pre></div>
+<p>The "atlas subset" column restricts to the 14 encodings the atlas records an expressibility for — <code>basis</code> and <code>amplitude</code> are state-preparation circuits whose expressibility the pipeline stores as null. That is the set the published analysis used, so it is the only column comparable with the published number.</p>
+<div class="admonition note">
+<p class="admonition-title">What this does and does not say</p>
+<p>It does <strong>not</strong> say the published result is wrong. <span class="arithmatex">\([0, 2\pi]\)</span> is a defensible convention — it is the full rotation period — and the study's claim is scoped to its own protocol.</p>
+<p>It says the sign of the expressibility–accuracy association is <strong>set by a preprocessing choice</strong>, so it is not a scaling-invariant property of an encoding. The range belongs in any report of that correlation.</p>
+<p>Caveats on the scan itself: it uses the library's five binary datasets at two features with single-run 5-fold CV, whereas the study used eight datasets across {2, 4} features with 10 runs × 5 folds and multiple-comparison correction. It is a sensitivity measurement, not a re-run of the study.</p>
 </div>
 <hr />
-<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Anchor link to this section">&para;</a></h2>
+<h2 id="choosing-a-range">Choosing a range<a class="headerlink" href="#choosing-a-range" title="Anchor link to this section">&para;</a></h2>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">recommend_feature_range</span><span class="p">,</span> <span class="n">scale_to_range</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">recommend_feature_range</span><span class="p">(</span><span class="n">IQPEncoding</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">X_scaled</span> <span class="o">=</span> <span class="n">scale_to_range</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+</span></code></pre></div>
+<p><code>recommend_feature_range</code> picks the range with the highest kernel-target alignment — training-free, and alignment is the quantity that <a href="../../guide/screening/">predicts accuracy</a>. Ties break towards the narrower range, the more conservative side.</p>
+<p>To search encodings and ranges together, pass <code>feature_ranges=</code> to the screener:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_FEATURE_RANGES</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.guide</span><span class="w"> </span><span class="kn">import</span> <span class="n">screen_encodings</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">result</span> <span class="o">=</span> <span class="n">screen_encodings</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">feature_ranges</span><span class="o">=</span><span class="n">DEFAULT_FEATURE_RANGES</span><span class="p">)</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">top</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">feature_range</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">alignment</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+</span></code></pre></div>
+<p>Candidates are then ranked over (encoding, range) pairs, so the same encoding can appear more than once.</p>
+<hr />
+<h2 id="scaling-inside-cross-validation">Scaling inside cross-validation<a class="headerlink" href="#scaling-inside-cross-validation" title="Anchor link to this section">&para;</a></h2>
+<p><code>scale_to_range</code> accepts a <code>reference</code> array, so the scaler can be fitted on a training split and applied to a test split without the test fold's extremes setting its own scale:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">X_train_scaled</span> <span class="o">=</span> <span class="n">scale_to_range</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">X_test_scaled</span> <span class="o">=</span> <span class="n">scale_to_range</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="n">X_train</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Transformed test values may then fall outside the target range, which is correct and matches <code>sklearn.preprocessing.MinMaxScaler</code>. The library's own benchmark does this per fold; fitting on the full dataset before splitting is a mild but real leak.</p>
+<hr />
+<h2 id="practical-rules-of-thumb">Practical rules of thumb<a class="headerlink" href="#practical-rules-of-thumb" title="Anchor link to this section">&para;</a></h2>
 <ul>
-<li><a href="../benchmarking/">Benchmarking</a> — test your custom encoding against the built-in ones</li>
-<li><a href="../../contributing/adding-encodings/">Adding Encodings</a> — contribute your encoding to the project</li>
-<li><a href="../../api/">API Reference</a> — full <code>BaseEncoding</code> interface documentation</li>
+<li><strong>Report the range you used.</strong> It is a result-affecting choice, not a formatting detail.</li>
+<li><strong>Do not default to <span class="arithmatex">\([0, 2\pi]\)</span> for entangling feature maps.</strong> It is the worst of the four measured ranges for every one of them.</li>
+<li><strong><code>angle</code> is the exception</strong> — it is the only encoding that prefers the full period, which is worth knowing given it tops the benchmark ranking.</li>
+<li><strong>Screen the range with your data</strong>, the same way you screen the encoding. It costs no training.</li>
+</ul>
+<hr />
+<h2 id="reproducing-the-scan">Reproducing the scan<a class="headerlink" href="#reproducing-the-scan" title="Anchor link to this section">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>-m<span class="w"> </span>experiments.scaling_scan<span class="w">            </span><span class="c1"># rewrite package data</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>python<span class="w"> </span>-m<span class="w"> </span>experiments.scaling_scan<span class="w"> </span>--check<span class="w">    </span><span class="c1"># verify, do not write</span>
+</span></code></pre></div>
+<p>Deterministic and seeded; <code>scaling_metadata()</code> returns the full protocol.</p>
+<hr />
+<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Anchor link to this section">&para;</a></h2>
+<ul>
+<li><a href="../kernel-concentration/">Kernel Concentration</a> — the mechanism behind the loss</li>
+<li><a href="../../guide/screening/">Screening on Your Data</a> — search encodings and ranges together</li>
+<li><a href="../../api/">API Reference</a> — full signatures</li>
 </ul>
 
 
@@ -3109,7 +3445,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../comparing-encodings/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Comparing Encodings">
+          <a href="../kernel-concentration/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Kernel Concentration">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -3119,20 +3455,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Comparing Encodings
+                Kernel Concentration
               </div>
             </div>
           </a>
         
         
           
-          <a href="../benchmarking/" class="md-footer__link md-footer__link--next" aria-label="Next: Benchmarking">
+          <a href="../quantum-advantage/" class="md-footer__link md-footer__link--next" aria-label="Next: Quantum Advantage">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Benchmarking
+                Quantum Advantage
               </div>
             </div>
             <div class="md-footer__button md-icon">
