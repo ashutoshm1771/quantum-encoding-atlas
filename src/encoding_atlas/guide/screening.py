@@ -30,6 +30,14 @@ Alignment needs one statevector per sample per encoding and no training, so a
 full 16-encoding screen on 100 samples takes on the order of a second. Larger
 datasets are sub-sampled (stratified, seeded) to keep it that way.
 
+Scaling is part of the search
+-----------------------------
+The range features are scaled into is not a fixed detail — for several
+encodings it moves accuracy further than the choice of encoding does, because
+a full ``2*pi`` sweep drives the kernel onto its concentration floor. Pass
+``feature_ranges=`` to rank over (encoding, range) pairs rather than encodings
+alone; see :mod:`encoding_atlas.analysis.scaling`.
+
 Notes
 -----
 Alignment is a two-class quantity: labels are mapped to ``{-1, +1}`` by
@@ -51,9 +59,10 @@ kernels by alignment.
 from __future__ import annotations
 
 import logging
+import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -108,6 +117,11 @@ class ScreenedEncoding:
         Mean alignment the benchmark measured, for reference. A large gap
         against :attr:`alignment` means your data behaves differently from the
         benchmark's, which is exactly when screening pays off.
+    feature_range : tuple[float, float] or None
+        The range the features were scaled into for this measurement, when
+        ``feature_ranges`` was supplied. ``None`` means the data was used as
+        given. Candidates are ranked across (encoding, range) pairs, so the
+        same encoding can appear more than once at different ranges.
     concentration_ratio : float or None
         Kernel variance relative to the Haar floor on your data, when
         ``include_concentration=True``. Near 1 means the kernel carries no
@@ -124,6 +138,7 @@ class ScreenedEncoding:
     n_qubits: int
     alignment: float
     rank: int
+    feature_range: tuple[float, float] | None
     atlas_rank: int | None
     atlas_alignment: float | None
     concentration_ratio: float | None
@@ -152,6 +167,8 @@ class ScreeningResult:
         Whether the centred alignment variant was used.
     shots : int or None
         Shot budget per kernel entry, or ``None`` for exact kernels.
+    feature_ranges : tuple[tuple[float, float], ...] or None
+        Ranges swept, or ``None`` if the data was used as supplied.
     """
 
     candidates: tuple[ScreenedEncoding, ...]
@@ -161,6 +178,7 @@ class ScreeningResult:
     n_features: int
     centered: bool
     shots: int | None
+    feature_ranges: tuple[tuple[float, float], ...] | None = None
 
     def top(self, k: int = _DEFAULT_TOP_K) -> list[ScreenedEncoding]:
         """Return the ``k`` highest-aligned candidates.
@@ -219,24 +237,37 @@ class ScreeningResult:
         return None
 
 
-def _validate_binary_labels(y: NDArray[Any]) -> NDArray[np.float64]:
-    """Validate that ``y`` is a 1D two-class label vector."""
-    y_array = np.asarray(y)
-    if y_array.ndim != 1:
-        raise ValueError(f"y must be a 1D label vector, got shape {y_array.shape}")
-    y_float = y_array.astype(np.float64)
-    if not np.all(np.isfinite(y_float)):
-        raise ValueError("y contains NaN or infinite values")
-    classes = np.unique(y_float)
-    if classes.size != 2:
-        raise ValueError(
-            f"Screening scores encodings by kernel-target alignment, which is "
-            f"defined for two-class labels; got {classes.size} distinct "
-            f"value(s). For multi-class or regression targets, benchmark "
-            f"candidates directly with "
-            f"encoding_atlas.benchmark.evaluate_encoding instead."
-        )
-    return y_float
+class _Scored(NamedTuple):
+    """One scored (encoding, range) pair, before ranking."""
+
+    name: str
+    encoding: BaseEncoding
+    alignment: float
+    feature_range: tuple[float, float] | None
+    concentration_ratio: float | None
+    is_concentrated: bool | None
+
+
+def _validate_feature_ranges(
+    feature_ranges: Sequence[tuple[float, float]] | None,
+) -> tuple[tuple[float, float] | None, ...]:
+    """Normalise the requested ranges to a non-empty tuple to iterate over.
+
+    ``None`` becomes a single ``None`` entry, meaning "use the data as given".
+    """
+    if feature_ranges is None:
+        return (None,)
+    resolved = tuple((float(low), float(high)) for low, high in feature_ranges)
+    if not resolved:
+        raise ValueError("feature_ranges must not be empty")
+    for low, high in resolved:
+        if not (math.isfinite(low) and math.isfinite(high)):
+            raise ValueError(f"feature range must be finite, got ({low}, {high})")
+        if low >= high:
+            raise ValueError(
+                f"feature range must satisfy low < high, got ({low}, {high})"
+            )
+    return resolved
 
 
 def _stratified_subsample(
@@ -278,6 +309,7 @@ def screen_encodings(
     max_samples: int = _DEFAULT_MAX_SAMPLES,
     centered: bool = True,
     include_concentration: bool = False,
+    feature_ranges: Sequence[tuple[float, float]] | None = None,
     shots: int | None = None,
     seed: int | None = None,
     backend: Literal["pennylane", "qiskit", "cirq"] = "pennylane",
@@ -317,6 +349,14 @@ def screen_encodings(
         Also annotate each candidate with its kernel concentration on your
         data. Computed from the same kernel, so it costs no extra simulation.
         It does not affect the ranking.
+    feature_ranges : sequence of (float, float), optional
+        Also sweep the range the features are min-max scaled into, ranking
+        over (encoding, range) pairs. The range is not a minor knob: for
+        several encodings it moves accuracy further than the choice of
+        encoding does, because a full ``2*pi`` sweep drives the kernel onto
+        its concentration floor. Pass
+        :data:`encoding_atlas.analysis.DEFAULT_FEATURE_RANGES` for the usual
+        sweep. When ``None`` (default) the data is used exactly as supplied.
     shots : int or None, default=None
         Screen on finite-shot kernel estimates instead of exact ones, to see
         what a device would report. Alignment aggregates over all pairs and so
@@ -359,7 +399,9 @@ def screen_encodings(
         centered_kernel_target_alignment,
         compute_fidelity_kernel,
         kernel_target_alignment,
+        validate_binary_labels,
     )
+    from encoding_atlas.analysis.scaling import scale_to_range
 
     if isinstance(max_samples, bool) or not isinstance(max_samples, int):
         raise ValueError(f"max_samples must be an integer >= 2, got {max_samples!r}")
@@ -374,7 +416,7 @@ def screen_encodings(
     if not np.all(np.isfinite(X_array)):
         raise ValueError("X contains NaN or infinite values")
 
-    y_float = _validate_binary_labels(y)
+    y_float = validate_binary_labels(y)
     if y_float.shape[0] != X_array.shape[0]:
         raise ValueError(
             f"X and y must have the same length, got {X_array.shape[0]} and "
@@ -393,47 +435,67 @@ def screen_encodings(
         len(X_used),
     )
 
-    score = centered_kernel_target_alignment if centered else kernel_target_alignment
-    scored: list[tuple[str, BaseEncoding, float, float | None, bool | None]] = []
-    for name, encoding in built:
-        try:
-            K = compute_fidelity_kernel(
-                encoding, X_used, backend=backend, shots=shots, seed=seed
-            )
-            alignment = float(score(K, y_used))
-            ratio: float | None = None
-            concentrated: bool | None = None
-            if include_concentration:
-                summary = summarize_kernel_concentration(K, int(encoding.n_qubits))
-                ratio = summary.concentration_ratio
-                concentrated = summary.is_concentrated
-        except Exception as exc:  # noqa: BLE001 - one bad candidate must not abort
-            skipped[name] = f"{type(exc).__name__}: {exc}"
-            logger.debug("Screening skipped %s: %s", name, exc)
-            continue
-        scored.append((name, encoding, alignment, ratio, concentrated))
+    resolved_ranges = _validate_feature_ranges(feature_ranges)
 
-    # Highest alignment first; name breaks ties so the order is deterministic.
-    scored.sort(key=lambda item: (-item[2], item[0]))
+    score = centered_kernel_target_alignment if centered else kernel_target_alignment
+    scored: list[_Scored] = []
+    for name, encoding in built:
+        for feature_range in resolved_ranges:
+            X_scaled = (
+                X_used
+                if feature_range is None
+                else scale_to_range(X_used, feature_range[0], feature_range[1])
+            )
+            try:
+                K = compute_fidelity_kernel(
+                    encoding, X_scaled, backend=backend, shots=shots, seed=seed
+                )
+                alignment = float(score(K, y_used))
+                ratio: float | None = None
+                concentrated: bool | None = None
+                if include_concentration:
+                    summary = summarize_kernel_concentration(K, int(encoding.n_qubits))
+                    ratio = summary.concentration_ratio
+                    concentrated = summary.is_concentrated
+            except Exception as exc:  # noqa: BLE001 - one bad candidate must not abort
+                skipped[name] = f"{type(exc).__name__}: {exc}"
+                logger.debug("Screening skipped %s: %s", name, exc)
+                continue
+            scored.append(
+                _Scored(name, encoding, alignment, feature_range, ratio, concentrated)
+            )
+
+    # Highest alignment first. Ties break on the narrower range (further from
+    # the concentration floor) then on name, so the order is deterministic.
+    scored.sort(
+        key=lambda item: (
+            -item.alignment,
+            (
+                item.feature_range[1] - item.feature_range[0]
+                if item.feature_range
+                else 0.0
+            ),
+            item.name,
+        )
+    )
 
     atlas_ranks, atlas_alignments = _atlas_reference()
     ranked = tuple(
         ScreenedEncoding(
-            name=name,
-            display_name=type(encoding).__name__,
-            encoding=encoding,
-            params=dict(BENCHMARK_PARAMS[name]),
-            n_qubits=int(encoding.n_qubits),
-            alignment=alignment,
+            name=item.name,
+            display_name=type(item.encoding).__name__,
+            encoding=item.encoding,
+            params=dict(BENCHMARK_PARAMS[item.name]),
+            n_qubits=int(item.encoding.n_qubits),
+            alignment=item.alignment,
             rank=position,
-            atlas_rank=atlas_ranks.get(name),
-            atlas_alignment=atlas_alignments.get(name),
-            concentration_ratio=ratio,
-            is_concentrated=concentrated,
+            feature_range=item.feature_range,
+            atlas_rank=atlas_ranks.get(item.name),
+            atlas_alignment=atlas_alignments.get(item.name),
+            concentration_ratio=item.concentration_ratio,
+            is_concentrated=item.is_concentrated,
         )
-        for position, (name, encoding, alignment, ratio, concentrated) in enumerate(
-            scored, start=1
-        )
+        for position, item in enumerate(scored, start=1)
     )
 
     return ScreeningResult(
@@ -444,6 +506,9 @@ def screen_encodings(
         n_features=int(n_features),
         centered=bool(centered),
         shots=shots,
+        feature_ranges=(
+            None if feature_ranges is None else tuple(resolved_ranges)  # type: ignore[arg-type]
+        ),
     )
 
 

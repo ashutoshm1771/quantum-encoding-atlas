@@ -22,8 +22,18 @@ says whether they transfer:
 >>> get_concentration_profile("angle").horizon is None
 True
 
-See :mod:`encoding_atlas.atlas.profiles` and
-:mod:`encoding_atlas.atlas.concentration` for the full APIs, and
+A third records **feature-scaling sensitivity**: what the range features are
+scaled into costs, and how far the study's own expressibility-accuracy
+correlation moves with it:
+
+>>> from encoding_atlas.atlas import expressibility_accuracy_correlation
+>>> rows = expressibility_accuracy_correlation()
+>>> [round(r["spearman_rho_atlas_subset"], 2) for r in rows]   # narrow -> wide
+[0.58, 0.78, -0.29, -0.54]
+
+See :mod:`encoding_atlas.atlas.profiles`,
+:mod:`encoding_atlas.atlas.concentration` and
+:mod:`encoding_atlas.atlas.scaling` for the full APIs, and
 :func:`encoding_atlas.atlas.atlas_metadata` /
 :func:`encoding_atlas.atlas.concentration_metadata` for data provenance.
 """
@@ -47,6 +57,15 @@ from encoding_atlas.atlas.profiles import (
     pareto_front,
     rank_encodings,
 )
+from encoding_atlas.atlas.scaling import (
+    ScalingPoint,
+    ScalingProfile,
+    expressibility_accuracy_correlation,
+    get_scaling_profile,
+    list_scaling_profiles,
+    scaling_metadata,
+    scaling_sensitive_encodings,
+)
 
 __all__ = [
     "EncodingProfile",
@@ -65,4 +84,12 @@ __all__ = [
     "concentration_metadata",
     "get_concentration_profile",
     "list_concentration_profiles",
+    # Feature-scaling sensitivity scan
+    "ScalingPoint",
+    "ScalingProfile",
+    "expressibility_accuracy_correlation",
+    "get_scaling_profile",
+    "list_scaling_profiles",
+    "scaling_metadata",
+    "scaling_sensitive_encodings",
 ]

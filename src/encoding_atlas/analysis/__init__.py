@@ -24,6 +24,8 @@ The main analysis functions are:
 - :func:`compute_kernel_concentration`: Measure fidelity-kernel concentration
 - :func:`estimate_concentration_scaling`: Track concentration across widths
 - :func:`summarize_kernel_concentration`: Concentration from a given kernel
+- :func:`scan_feature_ranges`: Measure sensitivity to feature scaling
+- :func:`recommend_feature_range`: Pick the range that maximises alignment
 
 Utility Functions
 -----------------
@@ -129,6 +131,7 @@ from encoding_atlas.analysis.generalization import (
     kernel_effective_dimension,
     kernel_target_alignment,
     sample_shot_kernel,
+    validate_binary_labels,
 )
 
 # Noise-resilience analysis (depolarizing noise model)
@@ -152,6 +155,16 @@ from encoding_atlas.analysis.resources import (
     estimate_execution_time,
     get_gate_breakdown,
     get_resource_summary,
+)
+
+# Feature-scaling sensitivity
+from encoding_atlas.analysis.scaling import (
+    DEFAULT_FEATURE_RANGES,
+    FeatureRangeResult,
+    FeatureRangeScan,
+    recommend_feature_range,
+    scale_to_range,
+    scan_feature_ranges,
 )
 from encoding_atlas.analysis.simulability import (
     SimulabilityResult,
@@ -201,6 +214,12 @@ __all__ = [
     "geometric_difference",
     "kernel_effective_dimension",
     "sample_shot_kernel",
+    "validate_binary_labels",
+    # Feature-scaling sensitivity
+    "scan_feature_ranges",
+    "recommend_feature_range",
+    "scale_to_range",
+    "DEFAULT_FEATURE_RANGES",
     # Kernel-concentration diagnostics
     "compute_kernel_concentration",
     "estimate_concentration_scaling",
@@ -218,6 +237,8 @@ __all__ = [
     # Type definitions
     "ConcentrationResult",
     "ScalingResult",
+    "FeatureRangeResult",
+    "FeatureRangeScan",
     "EncodingCharacterization",
     "NoiseResilienceResult",
     "SimulabilityResult",

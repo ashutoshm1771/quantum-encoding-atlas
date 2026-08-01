@@ -456,3 +456,112 @@ class TestValidation:
         X = np.array([[0.1, 0.2], [0.3, 0.4]])
         with pytest.raises(ValueError, match="max_samples"):
             screen_encodings(X, np.array([0, 1]), max_samples=bad)  # type: ignore[arg-type]
+
+
+# =====================================================================
+# Screening over feature-scaling ranges
+# =====================================================================
+
+
+class TestFeatureRangeSweep:
+    """The range features are scaled into is part of the search space.
+
+    For several encodings it moves accuracy further than the choice of
+    encoding does, so screening can rank over (encoding, range) pairs.
+    """
+
+    def test_absent_by_default(self, screened: ScreeningResult) -> None:
+        assert screened.feature_ranges is None
+        assert all(c.feature_range is None for c in screened.candidates)
+
+    def test_sweep_produces_the_full_product(
+        self, moons: tuple[np.ndarray, np.ndarray]
+    ) -> None:
+        from encoding_atlas.analysis import DEFAULT_FEATURE_RANGES
+
+        X, y = moons
+        result = screen_encodings(X, y, seed=0, feature_ranges=DEFAULT_FEATURE_RANGES)
+        assert len(result.candidates) == 16 * len(DEFAULT_FEATURE_RANGES)
+        assert result.feature_ranges == tuple(DEFAULT_FEATURE_RANGES)
+        assert all(c.feature_range is not None for c in result.candidates)
+
+    def test_still_ranked_by_alignment(
+        self, moons: tuple[np.ndarray, np.ndarray]
+    ) -> None:
+        from encoding_atlas.analysis import DEFAULT_FEATURE_RANGES
+
+        X, y = moons
+        result = screen_encodings(X, y, seed=0, feature_ranges=DEFAULT_FEATURE_RANGES)
+        alignments = [c.alignment for c in result.candidates]
+        assert alignments == sorted(alignments, reverse=True)
+        assert [c.rank for c in result.candidates] == list(
+            range(1, len(result.candidates) + 1)
+        )
+
+    def test_entangling_map_prefers_a_narrow_range(
+        self, moons: tuple[np.ndarray, np.ndarray]
+    ) -> None:
+        """IQP's alignment collapses as the range approaches a full period."""
+        from encoding_atlas.analysis import DEFAULT_FEATURE_RANGES
+
+        X, y = moons
+        result = screen_encodings(
+            X, y, seed=0, candidates=["iqp"], feature_ranges=DEFAULT_FEATURE_RANGES
+        )
+        by_width = sorted(result.candidates, key=lambda c: c.feature_range[1])
+        alignments = [c.alignment for c in by_width]
+        assert alignments == sorted(alignments, reverse=True)
+        assert result.best().feature_range[1] < 2 * np.pi
+
+    def test_single_range_matches_manual_scaling(
+        self, moons: tuple[np.ndarray, np.ndarray]
+    ) -> None:
+        """A swept range must equal screening the pre-scaled data directly."""
+        from encoding_atlas.analysis import scale_to_range
+
+        X, y = moons
+        swept = screen_encodings(
+            X, y, seed=0, candidates=["angle"], feature_ranges=[(0.0, np.pi)]
+        )
+        manual = screen_encodings(
+            scale_to_range(X, 0.0, np.pi), y, seed=0, candidates=["angle"]
+        )
+        assert swept.candidates[0].alignment == pytest.approx(
+            manual.candidates[0].alignment
+        )
+
+    def test_ties_break_towards_the_narrower_range(
+        self, moons: tuple[np.ndarray, np.ndarray]
+    ) -> None:
+        """Deterministic ordering, and the safer side of the tie."""
+        X, y = moons
+        result = screen_encodings(
+            X, y, seed=0, candidates=["angle"], feature_ranges=[(0.0, 1.0), (0.0, 1.0)]
+        )
+        assert [c.feature_range for c in result.candidates] == [(0.0, 1.0)] * 2
+
+    def test_determinism(self, moons: tuple[np.ndarray, np.ndarray]) -> None:
+        from encoding_atlas.analysis import DEFAULT_FEATURE_RANGES
+
+        X, y = moons
+        kw = dict(seed=1, feature_ranges=DEFAULT_FEATURE_RANGES)
+        a = screen_encodings(X, y, **kw)  # type: ignore[arg-type]
+        b = screen_encodings(X, y, **kw)  # type: ignore[arg-type]
+        assert [(c.name, c.feature_range, c.alignment) for c in a.candidates] == [
+            (c.name, c.feature_range, c.alignment) for c in b.candidates
+        ]
+
+    @pytest.mark.parametrize(
+        ("ranges", "match"),
+        [
+            ([], "must not be empty"),
+            ([(1.0, 0.0)], "low < high"),
+            ([(0.0, float("inf"))], "finite"),
+        ],
+    )
+    def test_invalid_ranges_rejected(
+        self, moons: tuple[np.ndarray, np.ndarray], ranges: list, match: str
+    ) -> None:
+        X, y = moons
+        with pytest.raises(ValueError, match=match):
+            screen_encodings(X, y, feature_ranges=ranges)

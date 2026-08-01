@@ -56,13 +56,39 @@ _DEFAULT_SCALE = (0.0, 2.0 * math.pi)
 def _scale_features(
     X: NDArray[np.floating[Any]], low: float, high: float
 ) -> NDArray[np.floating[Any]]:
-    """Min-max scale each feature into ``[low, high]`` (constant features -> low)."""
-    X = np.asarray(X, dtype=np.float64)
-    mins = X.min(axis=0)
-    span = X.max(axis=0) - mins
-    span = np.where(span == 0.0, 1.0, span)
-    scaled: NDArray[np.floating[Any]] = low + (X - mins) / span * (high - low)
-    return scaled
+    """Min-max scale each feature into ``[low, high]`` (constant features -> low).
+
+    Delegates to :func:`encoding_atlas.analysis.scaling.scale_to_range` so the
+    benchmark and the scaling-sensitivity analysis share one definition.
+    """
+    from encoding_atlas.analysis.scaling import scale_to_range
+
+    return scale_to_range(X, low, high)
+
+
+def _scale_fold(
+    fold: tuple[Any, Any, Any, Any],
+    scale_range: tuple[float, float],
+) -> tuple[Any, Any, Any, Any]:
+    """Scale one CV fold, fitting the scaler on the training split only.
+
+    Fitting on the full dataset before splitting would let each test fold's
+    own minimum and maximum set the scale it is later evaluated under — a
+    mild but real leak. Test values may land outside ``scale_range`` as a
+    result, which is correct and matches
+    :class:`sklearn.preprocessing.MinMaxScaler`.
+    """
+    from encoding_atlas.analysis.scaling import scale_to_range
+
+    X_train, X_test, y_train, y_test = fold
+    low, high = scale_range
+    X_train = np.asarray(X_train, dtype=np.float64)
+    return (
+        scale_to_range(X_train, low, high),
+        scale_to_range(X_test, low, high, reference=X_train),
+        y_train,
+        y_test,
+    )
 
 
 def _stratified_folds(
@@ -272,9 +298,6 @@ def evaluate_encoding(
             f"{X.shape[1]}; construct the encoding with matching n_features."
         )
 
-    if scale:
-        X = _scale_features(X, scale_range[0], scale_range[1])
-
     params = {
         "vqc_layers": vqc_layers,
         "vqc_epochs": vqc_epochs,
@@ -288,6 +311,8 @@ def evaluate_encoding(
     n_failed = 0
     for run in range(n_runs):
         folds = _make_folds(X, y, n_folds, seed=seed + run, task=task)
+        if scale:
+            folds = [_scale_fold(f, scale_range) for f in folds]
         for fold_idx, fold in enumerate(folds):
             result = _run_method_fold(
                 method,
@@ -423,12 +448,12 @@ class EncodingBenchmark:
         for name in self.datasets:
             X, y = loader(name, n_samples=self.n_samples, seed=self.seed)
             resolved[name] = (
-                _scale_features(np.asarray(X, float), *self.scale_range),
+                np.asarray(X, float),
                 np.asarray(y, target_dtype),
             )
         for name, (X, y) in self.custom_datasets.items():
             resolved[name] = (
-                _scale_features(np.asarray(X, float), *self.scale_range),
+                np.asarray(X, float),
                 np.asarray(y, target_dtype),
             )
         return resolved
@@ -455,7 +480,12 @@ class EncodingBenchmark:
         for dname, (X, y) in data.items():
             # Pre-compute the shared fold splits per run for paired comparison.
             run_folds = [
-                _make_folds(X, y, self.n_folds, seed=self.seed + r, task=self.task)
+                [
+                    _scale_fold(fold, self.scale_range)
+                    for fold in _make_folds(
+                        X, y, self.n_folds, seed=self.seed + r, task=self.task
+                    )
+                ]
                 for r in range(self.n_runs)
             ]
 

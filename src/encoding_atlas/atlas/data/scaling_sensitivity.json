@@ -1,0 +1,887 @@
+{
+  "encodings": {
+    "amplitude": {
+      "accuracy_spread": 0.0,
+      "best_range": [
+        0.0,
+        0.7853981633974483
+      ],
+      "display_name": "AmplitudeEncoding",
+      "encoding": "amplitude",
+      "params": {},
+      "points": [
+        {
+          "expressibility": 0.9482247419027207,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.75,
+          "mean_alignment": 0.3204981394740116,
+          "mean_concentration_ratio": 0.6753360722710919,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9482247419027207,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.75,
+          "mean_alignment": 0.3204981394740116,
+          "mean_concentration_ratio": 0.6753360722710919,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9482247419027207,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.75,
+          "mean_alignment": 0.3204981394740116,
+          "mean_concentration_ratio": 0.6753360722710919,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9482247419027207,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.75,
+          "mean_alignment": 0.3204981394740116,
+          "mean_concentration_ratio": 0.6753360722710919,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "angle": {
+      "accuracy_spread": 0.12766666666666648,
+      "best_range": [
+        0.0,
+        3.141592653589793
+      ],
+      "display_name": "AngleEncoding",
+      "encoding": "angle",
+      "params": {
+        "rotation": "Y"
+      },
+      "points": [
+        {
+          "expressibility": 0.22585739595204524,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.8030000000000002,
+          "mean_alignment": 0.37949443123155036,
+          "mean_concentration_ratio": 0.02211406217299703,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.6005450153129659,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.8280000000000001,
+          "mean_alignment": 0.390759920937525,
+          "mean_concentration_ratio": 0.2753593937335418,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9005777749828068,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.8996666666666668,
+          "mean_alignment": 0.4221022147624038,
+          "mean_concentration_ratio": 1.7543445236758184,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9550232316825641,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.9306666666666666,
+          "mean_alignment": 0.3754020385621423,
+          "mean_concentration_ratio": 2.4857257348670574,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "basis": {
+      "accuracy_spread": 0.17666666666666664,
+      "best_range": [
+        0.0,
+        1.5707963267948966
+      ],
+      "display_name": "BasisEncoding",
+      "encoding": "basis",
+      "params": {},
+      "points": [
+        {
+          "expressibility": 0.43854623654215463,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.6783333333333333,
+          "mean_alignment": 0.16183304391821637,
+          "mean_concentration_ratio": 6.206112130873824,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.4256818057083972,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.755,
+          "mean_alignment": 0.2653140719972295,
+          "mean_concentration_ratio": 5.915885756201688,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.22560628892975654,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.6583333333333334,
+          "mean_alignment": 0.13843475613704348,
+          "mean_concentration_ratio": 6.152340340572511,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.006732392785941732,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.5783333333333334,
+          "mean_alignment": 0.0624458738712221,
+          "mean_concentration_ratio": 3.7867717146951088,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "cyclic_equivariant": {
+      "accuracy_spread": 0.1333333333333332,
+      "best_range": [
+        0.0,
+        3.141592653589793
+      ],
+      "display_name": "CyclicEquivariantFeatureMap",
+      "encoding": "cyclic_equivariant",
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "expressibility": 0.40707870602402385,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.8130000000000001,
+          "mean_alignment": 0.3861154382740612,
+          "mean_concentration_ratio": 0.07679164455479903,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.7434112525107074,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.8846666666666667,
+          "mean_alignment": 0.4062580450543397,
+          "mean_concentration_ratio": 0.739428987878407,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9085826975984405,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.9463333333333332,
+          "mean_alignment": 0.417030893005465,
+          "mean_concentration_ratio": 2.067999608581852,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9664914263802771,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.8886666666666667,
+          "mean_alignment": 0.2876453124411978,
+          "mean_concentration_ratio": 1.6861965899217748,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "data_reuploading": {
+      "accuracy_spread": 0.124,
+      "best_range": [
+        0.0,
+        1.5707963267948966
+      ],
+      "display_name": "DataReuploading",
+      "encoding": "data_reuploading",
+      "params": {
+        "n_layers": 2
+      },
+      "points": [
+        {
+          "expressibility": 0.549752920336374,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.8263333333333334,
+          "mean_alignment": 0.3922346049109656,
+          "mean_concentration_ratio": 0.2075398240426086,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.8695485681467217,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.8946666666666667,
+          "mean_alignment": 0.41231132896489286,
+          "mean_concentration_ratio": 1.5870444604882572,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9355309915829721,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.9196666666666667,
+          "mean_alignment": 0.368848790368039,
+          "mean_concentration_ratio": 2.662825162353241,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9291461676434085,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.7956666666666667,
+          "mean_alignment": 0.18451065081415138,
+          "mean_concentration_ratio": 2.9244075362966044,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "hamiltonian_encoding": {
+      "accuracy_spread": 0.268,
+      "best_range": [
+        0.0,
+        1.5707963267948966
+      ],
+      "display_name": "HamiltonianEncoding",
+      "encoding": "hamiltonian_encoding",
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "expressibility": 0.9137552860326313,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.881,
+          "mean_alignment": 0.2840089732907585,
+          "mean_concentration_ratio": 2.8795682879427327,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9764666593888893,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.9346666666666668,
+          "mean_alignment": 0.31541247044698795,
+          "mean_concentration_ratio": 2.155636123139071,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9880474000393474,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.8673333333333334,
+          "mean_alignment": 0.2426884604864698,
+          "mean_concentration_ratio": 1.5469148369063992,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.992120471022669,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.6666666666666667,
+          "mean_alignment": 0.11721487506534993,
+          "mean_concentration_ratio": 1.3923280426191882,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "hardware_efficient": {
+      "accuracy_spread": 0.124,
+      "best_range": [
+        0.0,
+        1.5707963267948966
+      ],
+      "display_name": "HardwareEfficientEncoding",
+      "encoding": "hardware_efficient",
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "expressibility": 0.549752920336374,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.8263333333333334,
+          "mean_alignment": 0.3922346049109656,
+          "mean_concentration_ratio": 0.2075398240426086,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.8695485681467217,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.8946666666666667,
+          "mean_alignment": 0.41231132896489286,
+          "mean_concentration_ratio": 1.5870444604882572,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9355309915829721,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.9196666666666667,
+          "mean_alignment": 0.368848790368039,
+          "mean_concentration_ratio": 2.662825162353241,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9291461676434085,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.7956666666666667,
+          "mean_alignment": 0.18451065081415138,
+          "mean_concentration_ratio": 2.9244075362966044,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "higher_order_angle": {
+      "accuracy_spread": 0.11566666666666658,
+      "best_range": [
+        0.0,
+        0.7853981633974483
+      ],
+      "display_name": "HigherOrderAngleEncoding",
+      "encoding": "higher_order_angle",
+      "params": {
+        "order": 2
+      },
+      "points": [
+        {
+          "expressibility": 0.3380827229308536,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.789,
+          "mean_alignment": 0.32550092694470306,
+          "mean_concentration_ratio": 0.05505348384355298,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.779498540297476,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.8460000000000001,
+          "mean_alignment": 0.3083848592137109,
+          "mean_concentration_ratio": 1.0912392023508195,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9445838927428953,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.8666666666666666,
+          "mean_alignment": 0.31069102412632077,
+          "mean_concentration_ratio": 2.8167352748765984,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9561678398322194,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.751,
+          "mean_alignment": 0.16595930653678134,
+          "mean_concentration_ratio": 2.27577708066562,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "iqp": {
+      "accuracy_spread": 0.34299999999999997,
+      "best_range": [
+        0.0,
+        0.7853981633974483
+      ],
+      "display_name": "IQPEncoding",
+      "encoding": "iqp",
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "expressibility": 0.7140866133879927,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.8746666666666666,
+          "mean_alignment": 0.3923079631611178,
+          "mean_concentration_ratio": 0.5037303991784503,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9418365596059592,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.9033333333333333,
+          "mean_alignment": 0.37365237234832704,
+          "mean_concentration_ratio": 2.053427080634565,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9900436288971685,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.792,
+          "mean_alignment": 0.21160945825279348,
+          "mean_concentration_ratio": 1.510480180399405,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9925248505215422,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.5603333333333333,
+          "mean_alignment": 0.05608147559473967,
+          "mean_concentration_ratio": 1.3924161243976472,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "pauli_feature_map": {
+      "accuracy_spread": 0.21366666666666678,
+      "best_range": [
+        0.0,
+        1.5707963267948966
+      ],
+      "display_name": "PauliFeatureMap",
+      "encoding": "pauli_feature_map",
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "expressibility": 0.9158377160585879,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.8390000000000001,
+          "mean_alignment": 0.2676591116415619,
+          "mean_concentration_ratio": 2.717397719770273,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9500219093128031,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.8856666666666667,
+          "mean_alignment": 0.321089054099052,
+          "mean_concentration_ratio": 2.023146681988254,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9838611754272866,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.8230000000000001,
+          "mean_alignment": 0.17759029023763637,
+          "mean_concentration_ratio": 1.5491035358103853,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9914488779151772,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.6719999999999999,
+          "mean_alignment": 0.09129942538881211,
+          "mean_concentration_ratio": 1.437489766768595,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "qaoa_encoding": {
+      "accuracy_spread": 0.08299999999999985,
+      "best_range": [
+        0.0,
+        1.5707963267948966
+      ],
+      "display_name": "QAOAEncoding",
+      "encoding": "qaoa_encoding",
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "expressibility": 0.5210092512574882,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.8263333333333334,
+          "mean_alignment": 0.3879889601327712,
+          "mean_concentration_ratio": 0.1628305848584382,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.8192559280131296,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.8996666666666668,
+          "mean_alignment": 0.41517479498594884,
+          "mean_concentration_ratio": 1.031782970913456,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9264613786889687,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.9093333333333332,
+          "mean_alignment": 0.3530261809654476,
+          "mean_concentration_ratio": 1.531278302989983,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9876224368710116,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.8523333333333334,
+          "mean_alignment": 0.26169020196404935,
+          "mean_concentration_ratio": 1.6194173377640453,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "so2_equivariant": {
+      "accuracy_spread": 0.053333333333333344,
+      "best_range": [
+        0.0,
+        3.141592653589793
+      ],
+      "display_name": "SO2EquivariantFeatureMap",
+      "encoding": "so2_equivariant",
+      "params": {
+        "max_angular_momentum": 2
+      },
+      "points": [
+        {
+          "expressibility": 0.13330756794167153,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.8416666666666668,
+          "mean_alignment": 0.34407278829394256,
+          "mean_concentration_ratio": 3.771498138138297,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.4936237562730814,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.8833333333333334,
+          "mean_alignment": 0.37889181765022517,
+          "mean_concentration_ratio": 6.376984931826724,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.6702592352688792,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.8950000000000001,
+          "mean_alignment": 0.38996472633214585,
+          "mean_concentration_ratio": 8.387827658849,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.5878268649065372,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.8533333333333333,
+          "mean_alignment": 0.32735996173410237,
+          "mean_concentration_ratio": 9.691489546854308,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "swap_equivariant": {
+      "accuracy_spread": 0.10766666666666669,
+      "best_range": [
+        0.0,
+        0.7853981633974483
+      ],
+      "display_name": "SwapEquivariantFeatureMap",
+      "encoding": "swap_equivariant",
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "expressibility": 0.25783454641082726,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.791,
+          "mean_alignment": 0.25523174005050514,
+          "mean_concentration_ratio": 0.0436832268283767,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.3716805877313132,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.7453333333333333,
+          "mean_alignment": 0.20070209922954746,
+          "mean_concentration_ratio": 0.19870026459157134,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.5950052899311357,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.6833333333333333,
+          "mean_alignment": 0.18111046364977207,
+          "mean_concentration_ratio": 0.3653483092764208,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.910613724644232,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.7806666666666666,
+          "mean_alignment": 0.2196170734708942,
+          "mean_concentration_ratio": 2.917948697511407,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "symmetry_inspired": {
+      "accuracy_spread": 0.14366666666666672,
+      "best_range": [
+        0.0,
+        1.5707963267948966
+      ],
+      "display_name": "SymmetryInspiredFeatureMap",
+      "encoding": "symmetry_inspired",
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "expressibility": 0.3675565556111209,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.7336666666666666,
+          "mean_alignment": 0.2160738600637473,
+          "mean_concentration_ratio": 0.10240502093188555,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.7435238546576246,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.8773333333333333,
+          "mean_alignment": 0.38420270417469105,
+          "mean_concentration_ratio": 0.6907142595975191,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9353226949521213,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.8596666666666668,
+          "mean_alignment": 0.35998075355080206,
+          "mean_concentration_ratio": 2.163820090216432,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.96698333420456,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.8086666666666668,
+          "mean_alignment": 0.19003724507994804,
+          "mean_concentration_ratio": 1.926937103519029,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "trainable_encoding": {
+      "accuracy_spread": 0.11499999999999988,
+      "best_range": [
+        0.0,
+        1.5707963267948966
+      ],
+      "display_name": "TrainableEncoding",
+      "encoding": "trainable_encoding",
+      "params": {
+        "n_layers": 2,
+        "seed": 42
+      },
+      "points": [
+        {
+          "expressibility": 0.4601141654262808,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.7996666666666667,
+          "mean_alignment": 0.3751027543513235,
+          "mean_concentration_ratio": 0.14876536321941408,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.8070110576141449,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.8763333333333334,
+          "mean_alignment": 0.3963870885743169,
+          "mean_concentration_ratio": 1.2293167110086969,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9193542547212682,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.9146666666666666,
+          "mean_alignment": 0.3673640836073469,
+          "mean_concentration_ratio": 2.6588885903917707,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9324561146236084,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.8036666666666665,
+          "mean_alignment": 0.1542965975749162,
+          "mean_concentration_ratio": 2.783105861453948,
+          "n_datasets": 5
+        }
+      ]
+    },
+    "zz_feature_map": {
+      "accuracy_spread": 0.21366666666666678,
+      "best_range": [
+        0.0,
+        1.5707963267948966
+      ],
+      "display_name": "ZZFeatureMap",
+      "encoding": "zz_feature_map",
+      "params": {
+        "reps": 2
+      },
+      "points": [
+        {
+          "expressibility": 0.9158377160585879,
+          "high": 0.7853981633974483,
+          "low": 0.0,
+          "mean_accuracy": 0.8390000000000001,
+          "mean_alignment": 0.2676591116415619,
+          "mean_concentration_ratio": 2.7173977197702737,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9500219093128031,
+          "high": 1.5707963267948966,
+          "low": 0.0,
+          "mean_accuracy": 0.8856666666666667,
+          "mean_alignment": 0.321089054099052,
+          "mean_concentration_ratio": 2.023146681988254,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9838611754272866,
+          "high": 3.141592653589793,
+          "low": 0.0,
+          "mean_accuracy": 0.8230000000000001,
+          "mean_alignment": 0.17759029023763642,
+          "mean_concentration_ratio": 1.5491035358103853,
+          "n_datasets": 5
+        },
+        {
+          "expressibility": 0.9914488779151772,
+          "high": 6.283185307179586,
+          "low": 0.0,
+          "mean_accuracy": 0.6719999999999999,
+          "mean_alignment": 0.09129942538881212,
+          "mean_concentration_ratio": 1.4374897667685953,
+          "n_datasets": 5
+        }
+      ]
+    }
+  },
+  "expressibility_accuracy_correlation": [
+    {
+      "high": 0.7853981633974483,
+      "is_published_range": false,
+      "low": 0.0,
+      "n_encodings": 16,
+      "n_encodings_atlas_subset": 14,
+      "p_value": 0.19968020310019655,
+      "p_value_atlas_subset": 0.029586689440614024,
+      "spearman_rho": 0.3385078535543162,
+      "spearman_rho_atlas_subset": 0.5802911315883166
+    },
+    {
+      "high": 1.5707963267948966,
+      "is_published_range": false,
+      "low": 0.0,
+      "n_encodings": 16,
+      "n_encodings_atlas_subset": 14,
+      "p_value": 0.007937688342796916,
+      "p_value_atlas_subset": 0.0009118837380309738,
+      "spearman_rho": 0.6371681415929202,
+      "spearman_rho_atlas_subset": 0.7836644591611479
+    },
+    {
+      "high": 3.141592653589793,
+      "is_published_range": false,
+      "low": 0.0,
+      "n_encodings": 16,
+      "n_encodings_atlas_subset": 14,
+      "p_value": 0.7280426836528964,
+      "p_value_atlas_subset": 0.3159648649306671,
+      "spearman_rho": -0.09439528023598819,
+      "spearman_rho_atlas_subset": -0.2891832229580574
+    },
+    {
+      "high": 6.283185307179586,
+      "is_published_range": true,
+      "low": 0.0,
+      "n_encodings": 16,
+      "n_encodings_atlas_subset": 14,
+      "p_value": 0.2826581117653003,
+      "p_value_atlas_subset": 0.04582499253004186,
+      "spearman_rho": -0.28613569321533916,
+      "spearman_rho_atlas_subset": -0.5408388520971302
+    }
+  ],
+  "generated_by": "experiments/scaling_scan.py",
+  "n_encodings": 16,
+  "protocol": {
+    "backend": "pennylane",
+    "datasets": [
+      "moons",
+      "circles",
+      "linear",
+      "xor",
+      "iris"
+    ],
+    "expressibility_samples": 1000,
+    "kernel_C": 1.0,
+    "n_folds": 5,
+    "n_samples": 120,
+    "published_range": [
+      0.0,
+      6.283185307179586
+    ],
+    "ranges": [
+      [
+        0.0,
+        0.7853981633974483
+      ],
+      [
+        0.0,
+        1.5707963267948966
+      ],
+      [
+        0.0,
+        3.141592653589793
+      ],
+      [
+        0.0,
+        6.283185307179586
+      ]
+    ],
+    "seed": 42
+  },
+  "schema_version": "1.0"
+}

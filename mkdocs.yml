@@ -159,6 +159,7 @@ nav:
     - What is Encoding?: concepts/what-is-encoding.md
     - Encoding Properties: concepts/encoding-properties.md
     - Kernel Concentration: concepts/kernel-concentration.md
+    - Feature Scaling: concepts/feature-scaling.md
     - Quantum Advantage: concepts/quantum-advantage.md
   - Encodings:
     - encodings/index.md

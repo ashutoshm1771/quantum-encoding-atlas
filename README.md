@@ -36,6 +36,7 @@ The **Quantum Encoding Atlas** is the definitive open-source resource for unders
 - 🧭 **Decision Guide** — Evidence-based encoding recommendations, plus training-free screening on your own data
 - 🗺️ **Empirical Atlas** — Query the measured benchmark results (rank, accuracy, expressibility, trainability, …) bundled with the package
 - 📉 **Concentration Diagnostics** — Measure whether an encoding's kernel survives to wider circuits, and what it costs in shots
+- 📐 **Scaling Sensitivity** — Measure what the feature range costs; for entangling maps it moves accuracy more than the encoding does
 - 📚 **Extensive Documentation** — Tutorials, API docs, and theoretical background
 
 ## Installation
@@ -125,6 +126,42 @@ Encodings that can't be built at your feature count are reported, not raised:
 
 ```python
 result.skipped     # {'so2_equivariant': 'ValueError: ... requires n_features=2 ...'}
+```
+
+### Choose how to scale your features
+
+Encodings turn numbers into rotation angles, so the range you scale into
+changes the kernel's geometry. It is not a minor knob — IQP swings **34
+accuracy points** across four ranges, and `[0, 2π]` (a full rotation period,
+and the pipeline's own default) is the worst of them for every entangling map:
+
+```python
+from encoding_atlas.analysis import recommend_feature_range, scale_to_range
+
+low, high = recommend_feature_range(IQPEncoding(n_features=2, reps=2), X, y, seed=0)
+X_scaled = scale_to_range(X, low, high)
+```
+
+Search encodings and ranges together by passing `feature_ranges=` to the screener:
+
+```python
+from encoding_atlas.analysis import DEFAULT_FEATURE_RANGES
+
+result = screen_encodings(X, y, seed=0, feature_ranges=DEFAULT_FEATURE_RANGES)
+print(result.best().name, result.best().feature_range)
+```
+
+The measured sensitivity for all 16 encodings ships with the package, including
+how far the benchmark's own expressibility-versus-accuracy correlation moves
+with the range — it reverses sign between `[0, π/2]` (ρ = +0.78) and the
+pipeline's `[0, 2π]` (ρ = −0.54), both significant. See
+[Feature Scaling](https://encoding-atlas.github.io/quantum-encoding-atlas/concepts/feature-scaling/).
+
+```python
+from encoding_atlas.atlas import scaling_sensitive_encodings
+
+print([(p.name, round(p.accuracy_spread, 2)) for p in scaling_sensitive_encodings()][:3])
+# [('iqp', 0.34), ('hamiltonian', 0.27), ('pauli_feature_map', 0.21)]
 ```
 
 ### Query the empirical atlas

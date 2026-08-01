@@ -15,6 +15,12 @@ Two datasets ship as package data under ``encoding_atlas/atlas/data/``:
     circuit widens. This is the axis that says whether the accuracy numbers —
     measured at 2-4 qubits — transfer to wider circuits.
 
+``scaling_sensitivity.json``
+    The feature-scaling scan (``experiments/scaling_scan.py``), measuring what
+    the range features are scaled into costs in alignment, accuracy and
+    concentration — and how far the study's expressibility-versus-accuracy
+    correlation moves with that choice.
+
 This module is private: end users go through :mod:`encoding_atlas.atlas`.
 """
 
@@ -30,6 +36,7 @@ _DATA_PACKAGE = "encoding_atlas.atlas"
 _DATA_SUBDIR = "data"
 _DATA_FILENAME = "master_summary.json"
 _CONCENTRATION_FILENAME = "concentration.json"
+_SCALING_FILENAME = "scaling_sensitivity.json"
 
 # Human-readable provenance, surfaced through ``atlas_metadata()``.
 ATLAS_SOURCE = (
@@ -46,6 +53,17 @@ CONCENTRATION_SOURCE = (
     "qubits with the same circuit parameters the accuracy stages used "
     "(experiments/configs/stage6b_kernel.json). Regenerate with "
     "'python -m experiments.concentration_scan'."
+)
+
+# Provenance for the feature-scaling scan, surfaced through
+# ``scaling_metadata()``.
+SCALING_SOURCE = (
+    "Measured by experiments/scaling_scan.py: kernel-target alignment, "
+    "quantum-kernel accuracy and kernel concentration per encoding across "
+    "feature-scaling ranges, with the expressibility-accuracy correlation "
+    "recomputed at each range. The empirical pipeline scales into "
+    "[0, 2*pi] (experiments/datasets.py), which this scan records as "
+    "'published_range'. Regenerate with 'python -m experiments.scaling_scan'."
 )
 
 # Canonical-name normalisation.
@@ -86,6 +104,20 @@ def load_raw() -> dict[str, Any]:
         object is cached and shared; callers must treat it as read-only.
     """
     return _read_bundled(_DATA_FILENAME)
+
+
+@lru_cache(maxsize=1)
+def load_scaling_raw() -> dict[str, Any]:
+    """Load and cache the raw feature-scaling dataset as a plain dictionary.
+
+    Returns
+    -------
+    dict
+        Parsed contents of the bundled ``scaling_sensitivity.json``. The
+        returned object is cached and shared; callers must treat it as
+        read-only.
+    """
+    return _read_bundled(_SCALING_FILENAME)
 
 
 @lru_cache(maxsize=1)

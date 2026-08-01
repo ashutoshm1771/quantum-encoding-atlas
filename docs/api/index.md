@@ -145,6 +145,37 @@ widens — the axis that says whether a fixed-width result transfers. See
         - offdiagonal_variances
         - offdiagonal_means
 
+### Feature-Scaling Sensitivity
+
+How much the range features are scaled into changes an encoding's kernel
+geometry — for several encodings, more than the choice of encoding does. See
+[Feature Scaling](../concepts/feature-scaling.md).
+
+::: encoding_atlas.analysis.scan_feature_ranges
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.analysis.recommend_feature_range
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.analysis.scale_to_range
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.analysis.FeatureRangeScan
+    options:
+      show_root_heading: true
+      members:
+        - best
+        - best_range
+        - alignment_spread
+        - at
+
+::: encoding_atlas.analysis.FeatureRangeResult
+    options:
+      show_root_heading: true
+
 ### Finite-Shot Kernel Estimation
 
 ::: encoding_atlas.analysis.sample_shot_kernel
@@ -307,6 +338,42 @@ the Haar floor across 2–8 qubits. The accuracy numbers above were measured at
         - is_concentrated_at
 
 ::: encoding_atlas.atlas.ConcentrationPoint
+    options:
+      show_root_heading: true
+
+### Feature-Scaling Sensitivity Scan
+
+What the feature range costs each encoding, and how far the study's own
+expressibility-accuracy correlation moves with that choice.
+
+::: encoding_atlas.atlas.get_scaling_profile
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.atlas.list_scaling_profiles
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.atlas.scaling_sensitive_encodings
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.atlas.expressibility_accuracy_correlation
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.atlas.scaling_metadata
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.atlas.ScalingProfile
+    options:
+      show_root_heading: true
+      members:
+        - at_range
+        - published
+
+::: encoding_atlas.atlas.ScalingPoint
     options:
       show_root_heading: true
 

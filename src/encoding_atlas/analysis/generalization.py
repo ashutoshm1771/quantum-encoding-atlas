@@ -241,6 +241,56 @@ def compute_fidelity_kernel(
 # ---------------------------------------------------------------------------
 
 
+def validate_binary_labels(
+    y: NDArray[np.integer[Any] | np.floating[Any]],
+) -> NDArray[np.float64]:
+    """Validate that ``y`` is a 1D, finite, exactly-two-class label vector.
+
+    Kernel-target alignment is a two-class quantity, so anything else — a
+    single class, a multi-class vector, or a continuous regression target —
+    would be scored meaninglessly rather than rejected. Callers that rank or
+    select encodings by alignment should gate on this first.
+
+    Parameters
+    ----------
+    y : ndarray of shape (n_samples,)
+        Candidate label vector. The two classes may be any two distinct
+        values; see :func:`_signed_labels` for how they are mapped.
+
+    Returns
+    -------
+    ndarray of shape (n_samples,), dtype float64
+        The labels as float64, unchanged apart from the cast.
+
+    Raises
+    ------
+    ValueError
+        If ``y`` is not 1D, contains non-finite values, or does not have
+        exactly two distinct values.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> validate_binary_labels(np.array([0, 1, 1, 0])).dtype
+    dtype('float64')
+    """
+    y_array = np.asarray(y)
+    if y_array.ndim != 1:
+        raise ValueError(f"y must be a 1D label vector, got shape {y_array.shape}")
+    y_float = y_array.astype(np.float64)
+    if not np.all(np.isfinite(y_float)):
+        raise ValueError("y contains NaN or infinite values")
+    classes = np.unique(y_float)
+    if classes.size != 2:
+        raise ValueError(
+            f"kernel-target alignment is defined for two-class labels; got "
+            f"{classes.size} distinct value(s). For multi-class or regression "
+            f"targets, evaluate candidates directly with "
+            f"encoding_atlas.benchmark.evaluate_encoding instead."
+        )
+    return y_float
+
+
 def _signed_labels(
     y: NDArray[np.integer[Any] | np.floating[Any]],
 ) -> NDArray[np.float64]:
