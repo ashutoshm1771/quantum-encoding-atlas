@@ -110,9 +110,14 @@ class TestQuantumKernelClassifier:
         with pytest.raises(ValueError, match="not fitted"):
             QuantumKernelClassifier(encoding).predict(np.array([[0.1, 0.2]]))
 
-    def test_invalid_C(self, encoding: AngleEncoding) -> None:
+    def test_invalid_C(
+        self, encoding: AngleEncoding, xor_like: tuple[np.ndarray, np.ndarray]
+    ) -> None:
+        """Validated at fit time, per scikit-learn's estimator contract."""
+        X, y = xor_like
+        model = QuantumKernelClassifier(encoding, C=0)  # construction succeeds
         with pytest.raises(ValueError, match="C must be positive"):
-            QuantumKernelClassifier(encoding, C=0)
+            model.fit(X, y)
 
 
 class TestRunKernelSingleFold:

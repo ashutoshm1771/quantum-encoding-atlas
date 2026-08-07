@@ -22,12 +22,19 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from numpy.typing import NDArray
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
+from sklearn.utils.validation import check_is_fitted
 
 from encoding_atlas.analysis.generalization import (
     centered_kernel_target_alignment as _centered_kernel_target_alignment,
 )
 from encoding_atlas.analysis.generalization import (
     kernel_target_alignment as _kernel_target_alignment,
+)
+from encoding_atlas.benchmark._estimator import (
+    check_feature_matrix,
+    check_targets,
+    require_positive,
 )
 
 if TYPE_CHECKING:
@@ -130,119 +137,177 @@ kernel_target_alignment = _kernel_target_alignment
 centered_kernel_target_alignment = _centered_kernel_target_alignment
 
 
-class QuantumKernelClassifier:
+class QuantumKernelClassifier(ClassifierMixin, BaseEstimator):
     """Fidelity-kernel SVM classifier for a fixed encoding.
 
     Computes the quantum kernel for the training data, enforces PSD, and fits a
     precomputed-kernel :class:`sklearn.svm.SVC`. Prediction uses the test/train
     cross kernel.
 
+    Follows scikit-learn's estimator contract, so it composes with
+    ``cross_val_score``, ``GridSearchCV``, ``Pipeline`` and other
+    meta-estimators. As there, hyper-parameters are validated at ``fit`` time
+    rather than in the constructor; see
+    :mod:`encoding_atlas.benchmark._estimator`.
+
     Parameters
     ----------
     encoding : BaseEncoding
-        Encoding used for state preparation.
+        Encoding used for state preparation. Fixes the accepted feature count.
     C : float, default=1.0
-        SVM regularisation strength.
+        SVM regularisation strength. Must be positive.
     seed : int or None, default=None
         Seed forwarded to the SVM for reproducibility.
+
+    Attributes
+    ----------
+    classes_ : ndarray
+        Class labels seen during ``fit``.
+    n_features_in_ : int
+        Feature count seen during ``fit``.
+    kernel_regularized_ : bool
+        Whether the training kernel needed PSD projection.
+
+    Examples
+    --------
+    >>> from sklearn.model_selection import cross_val_score
+    >>> from encoding_atlas import AngleEncoding
+    >>> from encoding_atlas.benchmark import get_dataset
+    >>> X, y = get_dataset("moons", n_samples=30, seed=0)
+    >>> clf = QuantumKernelClassifier(AngleEncoding(n_features=2))
+    >>> scores = cross_val_score(clf, X, y, cv=3)
+    >>> len(scores)
+    3
     """
 
     def __init__(
-        self, encoding: Any, *, C: float = 1.0, seed: int | None = None
+        self, encoding: Any = None, *, C: float = 1.0, seed: int | None = None
     ) -> None:
-        if C <= 0:
-            raise ValueError(f"C must be positive, got {C}")
+        # Store verbatim only: no validation, no derived state. See
+        # encoding_atlas.benchmark._estimator for why.
         self.encoding = encoding
         self.C = C
         self.seed = seed
-        self._svm: Any | None = None
-        self._X_train: NDArray[np.floating[Any]] | None = None
-        self._train_states: list[NDArray[np.complexfloating[Any, Any]]] | None = None
-        self.kernel_regularized_: bool = False
 
     def fit(
         self, X: NDArray[np.floating[Any]], y: NDArray[np.intp]
     ) -> QuantumKernelClassifier:
-        """Fit the precomputed-kernel SVM on ``(X, y)``."""
+        """Fit the precomputed-kernel SVM on ``(X, y)``.
+
+        Raises
+        ------
+        ValueError
+            If ``C`` is not positive, ``encoding`` is unset, or ``X``/``y`` are
+            malformed or mismatched.
+        """
         from sklearn.svm import SVC
+
+        require_positive("C", self.C)
+        if self.encoding is None:
+            raise ValueError("encoding must be set before fitting")
+        X = check_feature_matrix(self, X, reset=True)
+        y = check_targets(y, X.shape[0], dtype=np.intp)
+        self.classes_ = np.unique(y)
 
         K_train, states = compute_kernel_matrix(self.encoding, X, return_states=True)
         K_train_psd, self.kernel_regularized_ = ensure_psd(K_train)
-        self._svm = SVC(kernel="precomputed", C=self.C, random_state=self.seed)
-        self._svm.fit(K_train_psd, y)
-        self._X_train = X
-        self._train_states = states
+        self.svm_ = SVC(kernel="precomputed", C=self.C, random_state=self.seed)
+        self.svm_.fit(K_train_psd, y)
+        self.X_train_ = X
+        self.train_states_ = states
         return self
+
+    def _cross_kernel(self, X: NDArray[np.floating[Any]]) -> NDArray[np.floating[Any]]:
+        """Validate ``X`` and return the test/train cross kernel."""
+        check_is_fitted(self)
+        X = check_feature_matrix(self, X, reset=False)
+        return compute_kernel_matrix_cross(
+            self.encoding, self.X_train_, X, train_states=self.train_states_
+        )
 
     def predict(self, X: NDArray[np.floating[Any]]) -> NDArray[np.intp]:
         """Predict labels for ``X`` using the test/train cross kernel."""
-        if self._svm is None or self._X_train is None:
-            raise ValueError("Model not fitted. Call fit() first.")
-        K_test = compute_kernel_matrix_cross(
-            self.encoding, self._X_train, X, train_states=self._train_states
-        )
-        return cast("NDArray[np.intp]", self._svm.predict(K_test).astype(np.intp))
+        # Build the kernel first: attribute access on ``svm_`` would otherwise
+        # be evaluated before the fitted check inside ``_cross_kernel``.
+        K_test = self._cross_kernel(X)
+        return cast("NDArray[np.intp]", self.svm_.predict(K_test).astype(np.intp))
 
-    def score(self, X: NDArray[np.floating[Any]], y: NDArray[np.intp]) -> float:
-        """Return classification accuracy on ``(X, y)``."""
-        return float(np.mean(self.predict(X) == y))
+    def decision_function(
+        self, X: NDArray[np.floating[Any]]
+    ) -> NDArray[np.floating[Any]]:
+        """Signed distance to the separating hyperplane in feature space.
+
+        Exposed so the classifier works with threshold-based metrics such as
+        ROC-AUC, and with probability calibration.
+        """
+        K_test = self._cross_kernel(X)
+        return np.asarray(self.svm_.decision_function(K_test), dtype=np.float64)
 
 
-class QuantumKernelRegressor:
+class QuantumKernelRegressor(RegressorMixin, BaseEstimator):
     """Fidelity-kernel ridge regressor for a fixed encoding.
 
     Computes the quantum kernel for the training data, enforces PSD, and fits a
     precomputed-kernel :class:`sklearn.kernel_ridge.KernelRidge`. Prediction
     uses the test/train cross kernel.
 
+    Follows scikit-learn's estimator contract; ``score`` returns R^2 through
+    :class:`sklearn.base.RegressorMixin`.
+
     Parameters
     ----------
     encoding : BaseEncoding
         Encoding used for state preparation.
     alpha : float, default=1.0
-        Ridge regularisation strength (must be positive).
+        Ridge regularisation strength. Must be positive.
+
+    Attributes
+    ----------
+    n_features_in_ : int
+        Feature count seen during ``fit``.
+    kernel_regularized_ : bool
+        Whether the training kernel needed PSD projection.
     """
 
-    def __init__(self, encoding: Any, *, alpha: float = 1.0) -> None:
-        if alpha <= 0:
-            raise ValueError(f"alpha must be positive, got {alpha}")
+    def __init__(self, encoding: Any = None, *, alpha: float = 1.0) -> None:
         self.encoding = encoding
         self.alpha = alpha
-        self._model: Any | None = None
-        self._X_train: NDArray[np.floating[Any]] | None = None
-        self._train_states: list[NDArray[np.complexfloating[Any, Any]]] | None = None
-        self.kernel_regularized_: bool = False
 
     def fit(
         self, X: NDArray[np.floating[Any]], y: NDArray[np.floating[Any]]
     ) -> QuantumKernelRegressor:
-        """Fit the precomputed-kernel ridge regressor on ``(X, y)``."""
+        """Fit the precomputed-kernel ridge regressor on ``(X, y)``.
+
+        Raises
+        ------
+        ValueError
+            If ``alpha`` is not positive, ``encoding`` is unset, or ``X``/``y``
+            are malformed or mismatched.
+        """
         from sklearn.kernel_ridge import KernelRidge
+
+        require_positive("alpha", self.alpha)
+        if self.encoding is None:
+            raise ValueError("encoding must be set before fitting")
+        X = check_feature_matrix(self, X, reset=True)
+        y = check_targets(y, X.shape[0], dtype=np.float64)
 
         K_train, states = compute_kernel_matrix(self.encoding, X, return_states=True)
         K_train_psd, self.kernel_regularized_ = ensure_psd(K_train)
-        self._model = KernelRidge(kernel="precomputed", alpha=self.alpha)
-        self._model.fit(K_train_psd, np.asarray(y, dtype=np.float64))
-        self._X_train = X
-        self._train_states = states
+        self.model_ = KernelRidge(kernel="precomputed", alpha=self.alpha)
+        self.model_.fit(K_train_psd, y)
+        self.X_train_ = X
+        self.train_states_ = states
         return self
 
     def predict(self, X: NDArray[np.floating[Any]]) -> NDArray[np.floating[Any]]:
         """Predict continuous targets using the test/train cross kernel."""
-        if self._model is None or self._X_train is None:
-            raise ValueError("Model not fitted. Call fit() first.")
+        check_is_fitted(self)
+        X = check_feature_matrix(self, X, reset=False)
         K_test = compute_kernel_matrix_cross(
-            self.encoding, self._X_train, X, train_states=self._train_states
+            self.encoding, self.X_train_, X, train_states=self.train_states_
         )
-        return np.asarray(self._model.predict(K_test), dtype=np.float64)
-
-    def score(
-        self, X: NDArray[np.floating[Any]], y: NDArray[np.floating[Any]]
-    ) -> float:
-        """Return the coefficient of determination (R^2) on ``(X, y)``."""
-        from encoding_atlas.benchmark.metrics import compute_regression_metrics
-
-        return compute_regression_metrics(y, self.predict(X))["r2"]
+        return np.asarray(self.model_.predict(K_test), dtype=np.float64)
 
 
 def run_kernel_single_fold(

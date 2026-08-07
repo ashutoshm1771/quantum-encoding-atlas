@@ -32,10 +32,23 @@ class TestVQCConstruction:
         ],
     )
     def test_invalid_args(
-        self, encoding: AngleEncoding, kwargs: dict, msg: str
+        self,
+        encoding: AngleEncoding,
+        data: tuple[np.ndarray, np.ndarray],
+        kwargs: dict,
+        msg: str,
     ) -> None:
+        """Hyper-parameters are validated at fit time, not construction.
+
+        scikit-learn requires ``__init__`` to store its arguments verbatim so
+        that ``clone`` and ``set_params`` can rebuild an estimator from
+        ``get_params()``; validation therefore belongs in ``fit``. This mirrors
+        ``SVC(C=-1)``, which also constructs and then fails when fitted.
+        """
+        X, y = data
+        model = VQCClassifier(encoding, **kwargs)  # construction succeeds
         with pytest.raises(ValueError, match=msg):
-            VQCClassifier(encoding, **kwargs)
+            model.fit(X, y)
 
 
 class TestVQCTraining:

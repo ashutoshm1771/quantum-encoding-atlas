@@ -234,6 +234,12 @@ and quantum-kernel SVMs, paired stratified cross-validation, classical
 baselines, and statistical comparison (Wilcoxon + Holm–Bonferroni + Cliff's
 delta).
 
+All four estimators follow scikit-learn's estimator contract, so they compose
+with `cross_val_score`, `GridSearchCV`, `Pipeline`, `VotingClassifier` and
+other meta-estimators. Hyper-parameters are validated at `fit` time rather than
+in the constructor, as scikit-learn requires so that `clone` and `set_params`
+can rebuild an estimator from `get_params()`.
+
 ::: encoding_atlas.benchmark.EncodingBenchmark
     options:
       show_root_heading: true
@@ -256,6 +262,23 @@ delta).
         - score
 
 ::: encoding_atlas.benchmark.QuantumKernelClassifier
+    options:
+      show_root_heading: true
+      members:
+        - fit
+        - predict
+        - decision_function
+        - score
+
+::: encoding_atlas.benchmark.VQCRegressor
+    options:
+      show_root_heading: true
+      members:
+        - fit
+        - predict
+        - score
+
+::: encoding_atlas.benchmark.QuantumKernelRegressor
     options:
       show_root_heading: true
       members:

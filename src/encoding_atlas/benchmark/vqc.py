@@ -20,6 +20,15 @@ from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
+from sklearn.utils.validation import check_is_fitted
+
+from encoding_atlas.benchmark._estimator import (
+    check_feature_matrix,
+    check_targets,
+    require_at_least,
+    require_positive,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +36,7 @@ logger = logging.getLogger(__name__)
 _MAX_LOSS = 10.0
 
 
-class VQCClassifier:
+class VQCClassifier(ClassifierMixin, BaseEstimator):
     """Variational quantum classifier with a configurable encoding.
 
     Architecture::
@@ -48,53 +57,75 @@ class VQCClassifier:
     seed : int or None, default=None
         Random seed for parameter initialisation and shuffling.
 
+    Follows scikit-learn's estimator contract, so it composes with
+    ``cross_val_score``, ``GridSearchCV``, ``Pipeline`` and other
+    meta-estimators. Hyper-parameters are validated at ``fit`` time rather than
+    in the constructor; see :mod:`encoding_atlas.benchmark._estimator`.
+
     Attributes
     ----------
-    params_ : ndarray or None
+    params_ : ndarray
         Trained variational parameters of shape ``(n_var_layers, n_qubits)``.
+        Set by ``fit``; absent before it.
     loss_history_ : list[float]
         Mean training loss per epoch.
     status_ : str
-        One of ``"not_fitted"``, ``"success"``, ``"diverged"``.
+        ``"success"`` or ``"diverged"``. Set by ``fit``.
+    classes_ : ndarray
+        Class labels seen during ``fit``.
+    n_features_in_ : int
+        Feature count seen during ``fit``.
+
+    Examples
+    --------
+    >>> from sklearn.model_selection import GridSearchCV
+    >>> from encoding_atlas import AngleEncoding
+    >>> from encoding_atlas.benchmark import get_dataset
+    >>> X, y = get_dataset("moons", n_samples=24, seed=0)
+    >>> search = GridSearchCV(
+    ...     VQCClassifier(AngleEncoding(n_features=2), epochs=2),
+    ...     {"n_var_layers": [1, 2]},
+    ...     cv=2,
+    ... ).fit(X, y)
+    >>> search.best_params_["n_var_layers"] in (1, 2)
+    True
     """
+
+    # Declared for typing only: assigned by ``fit``, absent until then, so
+    # ``check_is_fitted`` and ``getattr(..., None)`` both behave correctly.
+    _ovr_models: list[VQCClassifier] | None
+    _qnode: Any
+    _device: Any
 
     def __init__(
         self,
-        encoding: Any,
+        encoding: Any = None,
         n_var_layers: int = 2,
         lr: float = 0.05,
         epochs: int = 30,
         seed: int | None = None,
     ) -> None:
-        if n_var_layers < 1:
-            raise ValueError(f"n_var_layers must be at least 1, got {n_var_layers}")
-        if lr <= 0:
-            raise ValueError(f"lr must be positive, got {lr}")
-        if epochs < 1:
-            raise ValueError(f"epochs must be at least 1, got {epochs}")
-
+        # Store verbatim only. Reading ``encoding.n_qubits`` here would go
+        # stale under ``set_params(encoding=...)``; it is read in ``fit``.
         self.encoding = encoding
         self.n_var_layers = n_var_layers
         self.lr = lr
         self.epochs = epochs
         self.seed = seed
 
-        self.params_: NDArray[np.floating[Any]] | None = None
-        self.loss_history_: list[float] = []
-        self.status_: str = "not_fitted"
-        self.classes_: NDArray[np.intp] | None = None
-
-        self._qnode: Any | None = None
-        self._device: Any | None = None
-        self._n_qubits: int = encoding.n_qubits
-        # For >2 classes, a one-vs-rest ensemble of binary VQCs is used.
-        self._ovr_models: list[VQCClassifier] | None = None
+    def _validate_hyperparameters(self) -> None:
+        """Validate constructor arguments at ``fit`` time (sklearn contract)."""
+        require_at_least("n_var_layers", self.n_var_layers, 1)
+        require_positive("lr", self.lr)
+        require_at_least("epochs", self.epochs, 1)
+        if self.encoding is None:
+            raise ValueError("encoding must be set before fitting")
 
     def _build_circuit(self) -> None:
         """Construct the PennyLane QNode (encoding + variational + ``<Z_0>``)."""
         import pennylane as qml
 
-        n_qubits = self._n_qubits
+        n_qubits = self.n_qubits_
         n_var_layers = self.n_var_layers
         self._device = qml.device("lightning.qubit", wires=n_qubits)
         encoding = self.encoding
@@ -120,13 +151,17 @@ class VQCClassifier:
         out ``<Z_0>``. Problems with more than two classes train a one-vs-rest
         ensemble of binary VQCs.
         """
-        y = np.asarray(y)
+        self._validate_hyperparameters()
+        X = check_feature_matrix(self, X, reset=True)
+        y = check_targets(y, X.shape[0], dtype=np.intp)
+        self.n_qubits_ = int(self.encoding.n_qubits)
         self.classes_ = np.unique(y)
         if len(self.classes_) > 2:
             return self._fit_multiclass(X, y)
 
         # --- Binary path (labels in {0, 1}) -------------------------------
         self._ovr_models = None
+        self._qnode = None
         import pennylane as qml
         from pennylane import numpy as pnp
 
@@ -137,7 +172,7 @@ class VQCClassifier:
 
         rng = np.random.default_rng(self.seed)
         self.params_ = pnp.array(
-            rng.uniform(-np.pi, np.pi, size=(self.n_var_layers, self._n_qubits)),
+            rng.uniform(-np.pi, np.pi, size=(self.n_var_layers, self.n_qubits_)),
             requires_grad=True,
         )
 
@@ -196,6 +231,8 @@ class VQCClassifier:
 
     def predict_proba(self, X: NDArray[np.floating[Any]]) -> NDArray[np.floating[Any]]:
         """Return class probabilities of shape ``(n_samples, n_classes)``."""
+        check_is_fitted(self)
+        X = check_feature_matrix(self, X, reset=False)
         if self._ovr_models is not None:
             columns = [model.predict_proba(X)[:, 1] for model in self._ovr_models]
             probs = np.column_stack(columns)
@@ -204,8 +241,6 @@ class VQCClassifier:
             probs_normalized: NDArray[np.floating[Any]] = probs / row_sums
             return probs_normalized
 
-        if self.params_ is None:
-            raise ValueError("Model not fitted. Call fit() first.")
         if self._qnode is None:
             self._build_circuit()
         assert self._qnode is not None  # set by _build_circuit
@@ -219,17 +254,13 @@ class VQCClassifier:
 
     def predict(self, X: NDArray[np.floating[Any]]) -> NDArray[np.intp]:
         """Return predicted labels (in ``{0, 1}`` for binary tasks)."""
+        check_is_fitted(self)
         if self._ovr_models is not None:
-            assert self.classes_ is not None
             indices = np.argmax(self.predict_proba(X), axis=1)
             labels: NDArray[np.intp] = self.classes_[indices].astype(np.intp)
             return labels
         proba = self.predict_proba(X)
         return (proba[:, 1] >= 0.5).astype(np.intp)
-
-    def score(self, X: NDArray[np.floating[Any]], y: NDArray[np.intp]) -> float:
-        """Return classification accuracy on ``(X, y)``."""
-        return float(np.mean(self.predict(X) == y))
 
     def get_final_loss(self) -> float | None:
         """Return the final training loss, or ``None`` if not fitted.
@@ -237,17 +268,19 @@ class VQCClassifier:
         For a one-vs-rest ensemble this is the mean of the sub-models' final
         losses.
         """
-        if self._ovr_models is not None:
+        ovr_models = getattr(self, "_ovr_models", None)
+        if ovr_models is not None:
             losses = [
                 loss
-                for model in self._ovr_models
+                for model in ovr_models
                 if (loss := model.get_final_loss()) is not None
             ]
             return float(np.mean(losses)) if losses else None
-        return self.loss_history_[-1] if self.loss_history_ else None
+        history = getattr(self, "loss_history_", None)
+        return history[-1] if history else None
 
 
-class VQCRegressor:
+class VQCRegressor(RegressorMixin, BaseEstimator):
     """Variational quantum regressor with a configurable encoding.
 
     Uses the same circuit as :class:`VQCClassifier` but reads ``<Z_0>`` as a
@@ -267,44 +300,46 @@ class VQCRegressor:
         Number of training epochs.
     seed : int or None, default=None
         Random seed for parameter initialisation and shuffling.
+
+    Attributes
+    ----------
+    params_ : ndarray
+        Trained variational parameters. Set by ``fit``; absent before it.
+    loss_history_ : list[float]
+        Mean training loss per epoch.
+    status_ : str
+        ``"success"`` or ``"diverged"``. Set by ``fit``.
+    n_features_in_ : int
+        Feature count seen during ``fit``.
     """
 
     def __init__(
         self,
-        encoding: Any,
+        encoding: Any = None,
         n_var_layers: int = 2,
         lr: float = 0.05,
         epochs: int = 30,
         seed: int | None = None,
     ) -> None:
-        if n_var_layers < 1:
-            raise ValueError(f"n_var_layers must be at least 1, got {n_var_layers}")
-        if lr <= 0:
-            raise ValueError(f"lr must be positive, got {lr}")
-        if epochs < 1:
-            raise ValueError(f"epochs must be at least 1, got {epochs}")
-
         self.encoding = encoding
         self.n_var_layers = n_var_layers
         self.lr = lr
         self.epochs = epochs
         self.seed = seed
 
-        self.params_: NDArray[np.floating[Any]] | None = None
-        self.loss_history_: list[float] = []
-        self.status_: str = "not_fitted"
-
-        self._qnode: Any | None = None
-        self._device: Any | None = None
-        self._n_qubits: int = encoding.n_qubits
-        self._y_min: float = 0.0
-        self._y_span: float = 1.0
+    def _validate_hyperparameters(self) -> None:
+        """Validate constructor arguments at ``fit`` time (sklearn contract)."""
+        require_at_least("n_var_layers", self.n_var_layers, 1)
+        require_positive("lr", self.lr)
+        require_at_least("epochs", self.epochs, 1)
+        if self.encoding is None:
+            raise ValueError("encoding must be set before fitting")
 
     def _build_circuit(self) -> None:
         """Construct the PennyLane QNode (encoding + variational + ``<Z_0>``)."""
         import pennylane as qml
 
-        n_qubits = self._n_qubits
+        n_qubits = self.n_qubits_
         n_var_layers = self.n_var_layers
         self._device = qml.device("lightning.qubit", wires=n_qubits)
         encoding = self.encoding
@@ -330,12 +365,16 @@ class VQCRegressor:
         import pennylane as qml
         from pennylane import numpy as pnp
 
-        if self._qnode is None:
-            self._build_circuit()
+        self._validate_hyperparameters()
+        X = check_feature_matrix(self, X, reset=True)
+        y = check_targets(y, X.shape[0], dtype=np.float64)
+        self.n_qubits_ = int(self.encoding.n_qubits)
+
+        self._qnode = None
+        self._build_circuit()
         assert self._qnode is not None  # set by _build_circuit
         qnode = self._qnode
 
-        y = np.asarray(y, dtype=np.float64)
         self._y_min = float(y.min())
         span = float(y.max()) - self._y_min
         self._y_span = span if span > 0.0 else 1.0
@@ -344,7 +383,7 @@ class VQCRegressor:
 
         rng = np.random.default_rng(self.seed)
         self.params_ = pnp.array(
-            rng.uniform(-np.pi, np.pi, size=(self.n_var_layers, self._n_qubits)),
+            rng.uniform(-np.pi, np.pi, size=(self.n_var_layers, self.n_qubits_)),
             requires_grad=True,
         )
 
@@ -378,8 +417,8 @@ class VQCRegressor:
 
     def predict(self, X: NDArray[np.floating[Any]]) -> NDArray[np.floating[Any]]:
         """Predict continuous targets on the original target scale."""
-        if self.params_ is None:
-            raise ValueError("Model not fitted. Call fit() first.")
+        check_is_fitted(self)
+        X = check_feature_matrix(self, X, reset=False)
         if self._qnode is None:
             self._build_circuit()
         assert self._qnode is not None  # set by _build_circuit
@@ -387,17 +426,10 @@ class VQCRegressor:
         raw = np.array([float(self._qnode(xi, self.params_)) for xi in X])
         return (raw + 1.0) / 2.0 * self._y_span + self._y_min
 
-    def score(
-        self, X: NDArray[np.floating[Any]], y: NDArray[np.floating[Any]]
-    ) -> float:
-        """Return the coefficient of determination (R^2) on ``(X, y)``."""
-        from encoding_atlas.benchmark.metrics import compute_regression_metrics
-
-        return compute_regression_metrics(y, self.predict(X))["r2"]
-
     def get_final_loss(self) -> float | None:
         """Return the final training loss, or ``None`` if not fitted."""
-        return self.loss_history_[-1] if self.loss_history_ else None
+        history = getattr(self, "loss_history_", None)
+        return history[-1] if history else None
 
 
 def run_vqc_single_fold(

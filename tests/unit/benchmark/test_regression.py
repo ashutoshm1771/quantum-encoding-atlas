@@ -122,9 +122,12 @@ class TestQuantumKernelRegressor:
         with pytest.raises(ValueError, match="not fitted"):
             QuantumKernelRegressor(_angle()).predict(np.array([[0.1, 0.2]]))
 
-    def test_invalid_alpha(self) -> None:
+    def test_invalid_alpha(self, reg_data: tuple[np.ndarray, np.ndarray]) -> None:
+        """Validated at fit time — see TestVQCConstruction.test_invalid_args."""
+        X, y = reg_data
+        model = QuantumKernelRegressor(_angle(), alpha=0.0)
         with pytest.raises(ValueError, match="alpha must be positive"):
-            QuantumKernelRegressor(_angle(), alpha=0.0)
+            model.fit(X[:20], y[:20])
 
 
 class TestVQCRegressor:
@@ -177,9 +180,14 @@ class TestVQCRegressor:
             ({"epochs": 0}, "epochs"),
         ],
     )
-    def test_invalid_args(self, kwargs: dict, msg: str) -> None:
+    def test_invalid_args(
+        self, reg_data: tuple[np.ndarray, np.ndarray], kwargs: dict, msg: str
+    ) -> None:
+        """Validated at fit time — see TestVQCConstruction.test_invalid_args."""
+        X, y = reg_data
+        model = VQCRegressor(_angle(), **kwargs)
         with pytest.raises(ValueError, match=msg):
-            VQCRegressor(_angle(), **kwargs)
+            model.fit(X[:12], y[:12])
 
 
 # =====================================================================

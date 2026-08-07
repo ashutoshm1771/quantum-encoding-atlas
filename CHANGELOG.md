@@ -9,6 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### scikit-learn estimator compatibility
+- `VQCClassifier`, `VQCRegressor`, `QuantumKernelClassifier` and
+  `QuantumKernelRegressor` now follow scikit-learn's estimator contract,
+  inheriting `BaseEstimator` plus `ClassifierMixin` / `RegressorMixin`. They
+  compose with `cross_val_score`, `cross_validate`, `GridSearchCV`,
+  `learning_curve`, `Pipeline`, `VotingClassifier`, `CalibratedClassifierCV`
+  and anything else that clones or introspects an estimator. Previously only a
+  bare `Pipeline` worked: everything that calls `clone` or `get_params`
+  failed.
+- The encoding is itself a tunable hyper-parameter, so
+  `GridSearchCV(clf, {"encoding": [...], "C": [...]})` searches over encodings
+  and model settings together.
+- `QuantumKernelClassifier.decision_function`, enabling ROC-AUC and
+  probability calibration for the kernel path.
+- Standard fitted attributes: `classes_` (classifiers) and `n_features_in_`
+  (all four), with `predict` checking the feature count against `fit`.
+
+### Changed
+- **Hyper-parameters are validated at `fit` time rather than in `__init__`.**
+  `QuantumKernelClassifier(enc, C=-1)` now constructs and raises when fitted,
+  exactly as `SVC(C=-1)` does. scikit-learn requires this: `clone` and
+  `set_params` rebuild an estimator from `get_params()`, so the constructor
+  must store its arguments verbatim. The error types and messages are
+  unchanged — only where they are raised.
+- Fitted state no longer exists before `fit`. `params_`, `loss_history_` and
+  `status_` are set by `fit`; `get_final_loss()` still returns `None` on an
+  unfitted model. Calling `predict` before `fit` now raises
+  `NotFittedError`, which subclasses `ValueError`, so existing handlers keep
+  working.
+- The VQC estimators read `encoding.n_qubits` at `fit` time instead of
+  caching it in `__init__`, where it would have gone stale after
+  `set_params(encoding=...)`.
+- `QuantumKernelRegressor.score` and `VQCRegressor.score` are inherited from
+  `RegressorMixin` instead of being reimplemented. The value is unchanged
+  (both were already `sklearn.metrics.r2_score`) and `sample_weight` is now
+  supported. `score` on the classifiers is likewise `accuracy_score` via
+  `ClassifierMixin`.
+- Private fitted state on the kernel estimators is exposed under scikit-learn's
+  trailing-underscore convention (`svm_`, `model_`, `X_train_`,
+  `train_states_`).
+
 #### Feature-scaling sensitivity
 - `encoding_atlas.analysis.scan_feature_ranges` — measures an encoding's
   kernel-target alignment and kernel concentration across candidate

@@ -32,7 +32,7 @@ The **Quantum Encoding Atlas** is the definitive open-source resource for unders
 - 📊 **16 Encoding Methods** — Comprehensive implementations of all major quantum data encodings
 - 🔀 **Multi-Framework Support** — Works seamlessly with PennyLane, Qiskit, and Cirq
 - 📈 **Analysis Tools** — Compute expressibility, entanglement capability, and trainability
-- 🧪 **Benchmarking Framework** — Systematic comparison infrastructure
+- 🧪 **Benchmarking Framework** — Systematic comparison infrastructure, with scikit-learn-compatible estimators
 - 🧭 **Decision Guide** — Evidence-based encoding recommendations, plus training-free screening on your own data
 - 🗺️ **Empirical Atlas** — Query the measured benchmark results (rank, accuracy, expressibility, trainability, …) bundled with the package
 - 📉 **Concentration Diagnostics** — Measure whether an encoding's kernel survives to wider circuits, and what it costs in shots
@@ -233,6 +233,47 @@ report = evaluate_encoding(
 )
 print(report["score_metric"], report["mean"])   # r2 0.97
 ```
+
+### Use the estimators with scikit-learn
+
+`VQCClassifier`, `VQCRegressor`, `QuantumKernelClassifier` and
+`QuantumKernelRegressor` follow scikit-learn's estimator contract, so they drop
+straight into the tooling you already use:
+
+```python
+from sklearn.model_selection import GridSearchCV, cross_val_score
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import MinMaxScaler
+
+from encoding_atlas import AngleEncoding, IQPEncoding
+from encoding_atlas.benchmark import QuantumKernelClassifier, get_dataset
+
+X, y = get_dataset("moons", n_samples=120, seed=0)
+clf = QuantumKernelClassifier(AngleEncoding(n_features=2))
+
+cross_val_score(clf, X, y, cv=5)
+
+# Scaling matters (see below), so tune it in a pipeline
+pipe = make_pipeline(MinMaxScaler((0, 3.14 / 2)), clf).fit(X, y)
+
+# The encoding itself is a tunable hyper-parameter
+search = GridSearchCV(
+    clf,
+    {"encoding": [AngleEncoding(n_features=2), IQPEncoding(n_features=2, reps=2)],
+     "C": [0.5, 1.0, 2.0]},
+    cv=5,
+).fit(X, y)
+print(search.best_params_)
+```
+
+`Pipeline`, `cross_validate`, `learning_curve`, `VotingClassifier`,
+`CalibratedClassifierCV` and anything else that clones an estimator all work.
+`QuantumKernelClassifier` also exposes `decision_function`, so ROC-AUC and
+probability calibration are available.
+
+As in scikit-learn, hyper-parameters are validated at `fit` time rather than in
+the constructor — `QuantumKernelClassifier(enc, C=-1)` constructs and then
+raises when fitted, exactly like `SVC(C=-1)`.
 
 ### Diagnose *why* an encoding generalizes
 
