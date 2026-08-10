@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+#### SO2EquivariantFeatureMap produced the wrong state on Qiskit
+- `SO2EquivariantFeatureMap._to_qiskit` passed its amplitude vector straight to
+  `QuantumCircuit.initialize`, which reads amplitudes **LSB-first**, while
+  `_to_pennylane` hands the same vector to `qml.StatePrep`, which reads it
+  **MSB-first**. The two backends therefore prepared different physical states,
+  and the library's global MSB conversion compounded the error rather than
+  correcting it. Measured PennyLane-vs-Qiskit fidelity was **0.0006** — very
+  nearly orthogonal — and wrong on every input tested. PennyLane and Cirq
+  always agreed with each other, so only the Qiskit path was affected.
+- Anyone running this encoding on Qiskit got silently incorrect states, and so
+  incorrect kernels, accuracies and diagnostics. It is the encoding the guide
+  recommends for `symmetry="rotation"`. The bundled atlas is unaffected: the
+  empirical pipeline runs on PennyLane.
+- The MSB-to-LSB permutation now lives in one tested place,
+  `encoding_atlas.encodings._qubit_order.msb_to_lsb_amplitudes`, used by both
+  encodings that prepare a state from an amplitude vector
+  (`SO2EquivariantFeatureMap` and `AmplitudeEncoding`, which already had the
+  conversion inline and is unchanged in behaviour).
+
+### Added
+
+#### Cross-backend consistency is now verified systematically
+- `tests/integration/test_all_backends_consistency.py` checks that **every**
+  registry encoding prepares the same state on PennyLane, Qiskit and Cirq,
+  across several feature counts and fixed inputs. The parametrisation is
+  generated from the registry, so a newly added encoding is covered
+  automatically. Previously only five encodings were spot-checked, which is
+  how the SO(2) bug shipped. On failure the test reports whether the states are
+  bit-reversed (a qubit-ordering bug) or genuinely different.
+- Unit tests for the amplitude permutation, checked against an explicit
+  bit-reversal reference rather than against itself, plus its involution,
+  permutation and norm-preservation properties.
+
+### Changed
+
+#### CI verifies what the package advertises
+- The test job installs `.[dev,all]`, so Cirq is present. It previously
+  installed `.[dev,qiskit]`, which meant **157 tests silently skipped** —
+  covering 14 of the 16 encodings' Cirq implementations — while CI reported
+  green. Measured: 1 test skips locally with all three backends, 158 without
+  Cirq.
+- A new **Backend Consistency** job runs the cross-backend suite and fails if
+  any test *skips*, so a missing backend is a loud failure instead of an
+  unverified guarantee. Both this guard and the new import check were confirmed
+  to fail when Cirq is removed.
+- The coverage gate is enabled at 80% (`--cov-fail-under=80`, previously `=0`,
+  which overrode the `fail_under = 80` already set in `pyproject.toml`).
+  Current coverage is 87.7%.
+- Removed the stale comment claiming no tests used the backend markers; the
+  tests existed and guarded themselves with availability checks, they were
+  simply never given the dependency.
+
 ### Added
 
 #### scikit-learn estimator compatibility

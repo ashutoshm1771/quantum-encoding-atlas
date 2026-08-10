@@ -853,6 +853,8 @@ class AmplitudeEncoding(BaseEncoding):
                 "Install it with: pip install qiskit"
             ) from e
 
+        from encoding_atlas.encodings._qubit_order import msb_to_lsb_amplitudes
+
         qc = QuantumCircuit(self.n_qubits, name="AmplitudeEncoding")
 
         # Input 'x' arrives pre-processed from get_circuit():
@@ -861,20 +863,10 @@ class AmplitudeEncoding(BaseEncoding):
         # - Normalized to unit L2 norm (if self.normalize=True)
         # - Or user-provided normalized data (if self.normalize=False)
         #
-        # Convert amplitude ordering from this library's MSB convention
-        # to Qiskit's LSB convention.  The conversion reshapes the 1-D
-        # amplitude vector into an n-qubit tensor (shape [2]*n_qubits),
-        # reverses the axis order (which bit-reverses the multi-index),
-        # and flattens back to 1-D.  This is equivalent to permuting
-        # amplitudes[i] → amplitudes[bit_reverse(i)] but avoids an
-        # explicit per-index loop.
+        # Convert amplitude ordering from this library's MSB convention to
+        # Qiskit's LSB convention; see encoding_atlas.encodings._qubit_order.
         n_qubits = self.n_qubits
-        amplitudes_lsb = (
-            x.reshape([2] * n_qubits)
-            .transpose(list(reversed(range(n_qubits))))
-            .flatten()
-            .copy()  # Ensure contiguous memory for Qiskit
-        )
+        amplitudes_lsb = msb_to_lsb_amplitudes(x, n_qubits)
 
         qc.initialize(amplitudes_lsb, range(n_qubits))
 

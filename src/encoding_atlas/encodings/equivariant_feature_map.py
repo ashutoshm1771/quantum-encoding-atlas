@@ -1950,12 +1950,19 @@ class SO2EquivariantFeatureMap(EquivariantFeatureMap[float]):
         """
         from qiskit import QuantumCircuit
 
-        # Precompute state vector
+        from encoding_atlas.encodings._qubit_order import msb_to_lsb_amplitudes
+
+        # Precompute state vector (MSB-first, as everywhere in this library).
         target_state = self._encode_state(x)
 
-        # Create circuit and initialize state
+        # ``initialize`` reads the amplitude vector in Qiskit's LSB-first
+        # convention, so the same array would prepare a *different* physical
+        # state than PennyLane's ``StatePrep`` in ``_to_pennylane``. Permute
+        # first; see encoding_atlas.encodings._qubit_order.
+        amplitudes_lsb = msb_to_lsb_amplitudes(target_state, self._n_qubits)
+
         circuit = QuantumCircuit(self._n_qubits)
-        circuit.initialize(target_state, range(self._n_qubits))
+        circuit.initialize(amplitudes_lsb, range(self._n_qubits))
 
         return circuit
 
