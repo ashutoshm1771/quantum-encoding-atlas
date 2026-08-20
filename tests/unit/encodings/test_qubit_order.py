@@ -12,6 +12,7 @@ import numpy as np
 import pytest
 
 from encoding_atlas.encodings._qubit_order import msb_to_lsb_amplitudes
+from tests._backends import require_backend
 
 
 def _reference(amplitudes: np.ndarray, n_qubits: int) -> np.ndarray:
@@ -108,7 +109,9 @@ class TestUsedWhereItMatters:
     """Both amplitude-vector state preparations must apply the permutation."""
 
     def test_amplitude_encoding_round_trips_through_qiskit(self) -> None:
-        pytest.importorskip("qiskit")
+        require_backend(
+            "qiskit", reason="AmplitudeEncoding's MSB->LSB round trip did not run"
+        )
         from encoding_atlas import AmplitudeEncoding
         from encoding_atlas.analysis._utils import simulate_encoding_statevector
 
@@ -119,7 +122,7 @@ class TestUsedWhereItMatters:
         assert abs(np.vdot(reference, qiskit_state)) ** 2 == pytest.approx(1.0)
 
     def test_so2_round_trips_through_qiskit(self) -> None:
-        pytest.importorskip("qiskit")
+        require_backend("qiskit", reason="the SO(2) MSB->LSB round trip did not run")
         from encoding_atlas import SO2EquivariantFeatureMap
         from encoding_atlas.analysis._utils import simulate_encoding_statevector
 

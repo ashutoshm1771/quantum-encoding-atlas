@@ -163,6 +163,25 @@ Run tests across Python versions:
 nox -s tests
 ```
 
+### Optional backends
+
+Qiskit and Cirq live behind the `all` extra. Without them, the tests that
+exercise those backends **skip**, which keeps a partial install usable but also
+means a green run may have verified much less than it appears to — that is how
+a bit-reversed Qiskit state once shipped in `SO2EquivariantFeatureMap`.
+
+To reproduce what CI enforces, so a missing backend is a failure rather than a
+skip:
+
+```bash
+pip install '.[dev,all]'
+ENCODING_ATLAS_REQUIRE_ALL_BACKENDS=1 pytest
+```
+
+With the variable set, pytest refuses to start at all if PennyLane, Qiskit or
+Cirq is missing, and names the ones it could not import. Leave it unset for
+day-to-day work on a partial install. The policy lives in `tests/_backends.py`.
+
 ## Documentation
 
 Build documentation locally:

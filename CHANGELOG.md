@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+#### CI failed on Windows: backend checks were written as bash heredocs
+- The backend-availability guards added alongside the SO(2) fix were embedded
+  in `.github/workflows/ci.yml` as `python - <<'EOF'` heredocs. GitHub's
+  `windows-latest` runners default to **PowerShell**, which cannot parse that
+  syntax, so both Windows jobs died with a `ParserError` at the guard step.
+  That step ran *before* the test step, so **the test suite did not execute on
+  Windows at all** for that commit. Every other job passed, including the new
+  Backend Consistency job; the `.[dev,all]` install itself was fine (Cirq
+  installed cleanly on Windows Server 2025 for Python 3.11 and 3.12).
+- The policy now lives in the test suite instead of in shell, so it is
+  platform-independent by construction and can be reproduced locally:
+
+  ```bash
+  ENCODING_ATLAS_REQUIRE_ALL_BACKENDS=1 pytest
+  ```
+
+  Unset, a missing optional backend still skips, which is what a contributor
+  with a partial install needs. Set, it is a failure. `tests/conftest.py`
+  refuses to start a strict session when any advertised backend is missing, and
+  `tests/_backends.py::require_backend` turns individual skips into failures.
+  Both branches are covered by `tests/test_backend_policy.py`, and both were
+  verified end-to-end by shadowing a backend with an unimportable stub:
+  strict + missing exits 4 before collection, permissive + missing exits 0 with
+  named skips.
+- No shell heredoc remains in any workflow, and the only job that runs on
+  Windows now contains just two `run:` steps, both unchanged from versions
+  already proven green on `windows-latest`.
+
 #### SO2EquivariantFeatureMap produced the wrong state on Qiskit
 - `SO2EquivariantFeatureMap._to_qiskit` passed its amplitude vector straight to
   `QuantumCircuit.initialize`, which reads amplitudes **LSB-first**, while
@@ -50,10 +78,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   covering 14 of the 16 encodings' Cirq implementations — while CI reported
   green. Measured: 1 test skips locally with all three backends, 158 without
   Cirq.
-- A new **Backend Consistency** job runs the cross-backend suite and fails if
-  any test *skips*, so a missing backend is a loud failure instead of an
-  unverified guarantee. Both this guard and the new import check were confirmed
-  to fail when Cirq is removed.
+- Both CI jobs that exercise backends set
+  `ENCODING_ATLAS_REQUIRE_ALL_BACKENDS=1`, so a backend that failed to install
+  is a loud failure rather than a green run with an unverified guarantee. A new
+  **Backend Consistency** job runs the cross-backend suite under that flag,
+  giving the multi-framework claim its own named result.
 - The coverage gate is enabled at 80% (`--cov-fail-under=80`, previously `=0`,
   which overrode the `fail_under = 80` already set in `pyproject.toml`).
   Current coverage is 87.7%.

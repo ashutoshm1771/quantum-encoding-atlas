@@ -14,8 +14,10 @@ remembers to add a case. The parametrisation is generated from
 ``BENCHMARK_PARAMS``; nothing here needs editing to cover encoding number 17.
 
 Backends that are not installed are skipped individually, and
-``test_backends_available`` records which ones actually ran, so a silently
-degraded environment is visible in the report instead of passing quietly.
+``TestBackendsAvailable`` records which ones actually ran, so a silently
+degraded environment is visible in the report instead of passing quietly. Under
+``ENCODING_ATLAS_REQUIRE_ALL_BACKENDS=1`` — which CI sets — a missing backend
+fails instead of skipping; see :mod:`tests._backends`.
 """
 
 from __future__ import annotations
@@ -32,6 +34,13 @@ from encoding_atlas.analysis._utils import (
 )
 from encoding_atlas.core.registry import get_encoding
 from encoding_atlas.guide._candidates import BENCHMARK_PARAMS
+from tests._backends import (
+    ALL_BACKENDS,
+    OPTIONAL_BACKENDS,
+    backend_is_installed,
+    missing_backends,
+    require_backend,
+)
 
 # Widths spanning the odd/even and power-of-two cases the encodings branch on.
 FEATURE_COUNTS = (2, 3, 4, 6)
@@ -45,16 +54,6 @@ INPUTS = (
 # Statevector agreement is exact up to floating point; this is not a tolerance
 # for "close enough" physics, it is round-off headroom.
 FIDELITY_TOL = 1e-9
-
-OPTIONAL_BACKENDS = ("qiskit", "cirq")
-
-
-def _available(backend: str) -> bool:
-    try:
-        __import__(backend)
-    except ImportError:
-        return False
-    return True
 
 
 def _cases() -> list[tuple[str, int]]:
@@ -87,16 +86,29 @@ class TestBackendsAvailable:
 
     def test_pennylane_is_available(self) -> None:
         """PennyLane is a hard dependency; its absence is a broken install."""
-        assert _available("pennylane")
+        assert backend_is_installed("pennylane")
 
     @pytest.mark.parametrize("backend", OPTIONAL_BACKENDS)
     def test_optional_backend_reported(self, backend: str) -> None:
-        if not _available(backend):
+        require_backend(
+            backend, reason="its cross-backend consistency tests did not run"
+        )
+        assert backend_is_installed(backend)
+
+    def test_no_advertised_backend_is_missing(self) -> None:
+        """One aggregate report, so a degraded environment reads at a glance.
+
+        Under ``ENCODING_ATLAS_REQUIRE_ALL_BACKENDS=1`` the session never gets
+        this far — ``pytest_configure`` refuses to start. This is the same
+        check without the flag, downgraded to a skip so local runs stay usable.
+        """
+        missing = missing_backends(ALL_BACKENDS)
+        if missing:
             pytest.skip(
-                f"{backend} not installed — its consistency tests did NOT run. "
-                f"Install with: pip install 'encoding-atlas[all]'"
+                f"not every advertised backend is installed: {missing}. "
+                f"The consistency guarantee is verified only for the rest."
             )
-        assert _available(backend)
+        assert not missing
 
 
 @pytest.mark.parametrize(("name", "n_features"), CASES, ids=CASE_IDS)
@@ -107,8 +119,11 @@ class TestCrossBackendConsistency:
     def test_prepares_the_same_state(
         self, backend: str, name: str, n_features: int
     ) -> None:
-        if not _available(backend):
-            pytest.skip(f"{backend} not installed")
+        require_backend(
+            backend,
+            reason=f"{name} was not checked for agreement with the "
+            f"PennyLane reference state",
+        )
 
         for x in INPUTS:
             reference = _statevector(name, n_features, "pennylane", x)
@@ -146,8 +161,11 @@ class TestCrossBackendConsistency:
     def test_normalised_and_same_width(
         self, backend: str, name: str, n_features: int
     ) -> None:
-        if not _available(backend):
-            pytest.skip(f"{backend} not installed")
+        require_backend(
+            backend,
+            reason=f"{name} was not checked for normalisation and register "
+            f"width on this backend",
+        )
         state = _statevector(name, n_features, backend, INPUTS[0])
         assert np.isclose(np.linalg.norm(state), 1.0, atol=1e-9)
         encoding = get_encoding(name, n_features=n_features, **BENCHMARK_PARAMS[name])
@@ -158,8 +176,10 @@ class TestRegressionSO2Qiskit:
     """The specific bug this module was written to prevent recurring."""
 
     def test_so2_agrees_across_backends(self) -> None:
-        if not _available("qiskit"):
-            pytest.skip("qiskit not installed")
+        require_backend(
+            "qiskit",
+            reason="the SO(2) bit-reversal regression test did not run",
+        )
         for x in INPUTS:
             reference = _statevector("so2_equivariant", 2, "pennylane", x)
             qiskit_state = _statevector("so2_equivariant", 2, "qiskit", x)

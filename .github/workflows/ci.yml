@@ -60,6 +60,14 @@ jobs:
     needs: lint
     timeout-minutes: 30
 
+    # Refuse to start if any advertised backend failed to install. Without this
+    # a backend that did not install merely turns its tests into skips, and the
+    # run stays green having verified far less than it appears to. Enforced by
+    # tests/conftest.py::pytest_configure, so the rule is identical on every
+    # platform and reproducible locally. See tests/_backends.py.
+    env:
+      ENCODING_ATLAS_REQUIRE_ALL_BACKENDS: "1"
+
     strategy:
       fail-fast: false
       matrix:
@@ -89,27 +97,8 @@ jobs:
           # tests, covering 14 of 16 encodings' Cirq implementations.
           pip install ".[dev,all]"
 
-      - name: Verify all advertised backends are importable
-        run: |
-          python - <<'EOF'
-          import sys
-
-          missing = []
-          for backend in ("pennylane", "qiskit", "cirq"):
-              try:
-                  __import__(backend)
-              except ImportError:
-                  missing.append(backend)
-          if missing:
-              print(f"::error::Advertised backends not installed: {missing}. "
-                    "Their tests would silently skip and CI would still pass.")
-              sys.exit(1)
-          print("All advertised backends importable: pennylane, qiskit, cirq")
-          EOF
-
       - name: Run tests with coverage
-        run: |
-          pytest --cov=encoding_atlas --cov-report=xml --cov-report=term-missing --cov-fail-under=80 -v -m "not slow"
+        run: pytest --cov=encoding_atlas --cov-report=xml --cov-report=term-missing --cov-fail-under=80 -v -m "not slow"
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
@@ -122,14 +111,18 @@ jobs:
 
   # ── Job 3: Backend Consistency ─────────────────────────────
   # Guards the multi-framework claim: every encoding must prepare the same
-  # state on PennyLane, Qiskit and Cirq. Run as its own job with --no-skips so
-  # a missing backend fails loudly instead of skipping quietly — the failure
+  # state on PennyLane, Qiskit and Cirq. Isolated into its own job so the
+  # guarantee has a named, individually-readable result, and run in strict mode
+  # so a missing backend fails loudly instead of skipping quietly — the failure
   # mode that let a bit-reversed Qiskit state ship in SO2EquivariantFeatureMap.
   backends:
     name: Backend Consistency
     runs-on: ubuntu-latest
     needs: lint
     timeout-minutes: 20
+
+    env:
+      ENCODING_ATLAS_REQUIRE_ALL_BACKENDS: "1"
 
     steps:
       - name: Checkout code
@@ -146,43 +139,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install ".[dev,all]"
 
-      - name: Cross-backend consistency (no skips permitted)
-        run: |
-          python - <<'EOF'
-          import re
-          import subprocess
-          import sys
-
-          targets = [
-              "tests/integration/test_all_backends_consistency.py",
-              "tests/unit/encodings/test_qubit_order.py",
-          ]
-          result = subprocess.run(
-              [sys.executable, "-m", "pytest", *targets, "-v", "-ra", "--no-header"],
-              capture_output=True,
-              text=True,
-          )
-          print(result.stdout)
-          if result.stderr:
-              print(result.stderr, file=sys.stderr)
-
-          if result.returncode != 0:
-              print("::error::Backend consistency tests failed.")
-              sys.exit(result.returncode)
-
-          # A skipped backend test means a guarantee went unverified while CI
-          # stayed green -- the failure mode that let a bit-reversed Qiskit
-          # state ship in SO2EquivariantFeatureMap. Treat any skip as failure.
-          lines = [line for line in result.stdout.splitlines() if line.strip()]
-          summary = lines[-1] if lines else ""
-          skipped = re.search(r"(\d+) skipped", summary)
-          if skipped and int(skipped.group(1)) > 0:
-              print(f"::error::{skipped.group(1)} backend consistency test(s) "
-                    "were skipped, so a backend is missing and its guarantee "
-                    "is unverified.")
-              sys.exit(1)
-          print(f"No skips. All advertised backends verified. ({summary.strip()})")
-          EOF
+      # Strict mode (set above) turns "backend missing" from a skip into a
+      # failure, so passing here means every advertised backend was genuinely
+      # exercised — not that its tests quietly declined to run.
+      - name: Cross-backend consistency (a missing backend fails, never skips)
+        run: pytest tests/integration/test_all_backends_consistency.py tests/unit/encodings/test_qubit_order.py tests/test_backend_policy.py -v -ra
 
   # ── Job 4: Build Package ───────────────────────────────────
   build:
