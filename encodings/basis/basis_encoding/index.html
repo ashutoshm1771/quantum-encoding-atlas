@@ -734,6 +734,8 @@
       
         
       
+        
+      
     
     
     
@@ -887,6 +889,34 @@
     
   
     Feature Scaling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../concepts/statistical-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Comparison
   
 
     
@@ -3457,7 +3487,7 @@
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a> ║                                                                      ║
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a> ║   |ψ(x)⟩  =  |x₀ x₁ ... xₙ₋₁⟩       where  xᵢ ∈ {0, 1}          ║
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a> ║                                                                      ║
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> ║   &quot;n binary features  →  n qubits  →  one basis state&quot;              ║
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> ║   "n binary features  →  n qubits  →  one basis state"              ║
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a> ║                                                                      ║
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a> ╚══════════════════════════════════════════════════════════════════════╝
 </span></code></pre></div>
@@ -3582,7 +3612,7 @@ the input. For sparse binary data, the circuit is almost empty.</p>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>  ├────────────┼───────────────────────┼────────────────────────┤
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>  │    0.5     │ Data in [0, 1]        │ Standard split         │
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>  │    0.0     │ Signed data           │ Negative→0, Positive→1 │
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>  │    0.7     │ Conservative &quot;on&quot;     │ Only strong signals→1  │
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>  │    0.7     │ Conservative "on"     │ Only strong signals→1  │
 </span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>  │   custom   │ Domain-specific       │ Match decision boundary│
 </span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>  └─────────────────────────────────────────────────────────────┘
 </span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
@@ -3752,8 +3782,8 @@ encoding's gate count depends on the input data:</p>
 </span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>  │                 │  (QAOA / VQE)                │  problem solutions
 </span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>  │                 ├──────────────────────────────┤  as bit strings
 </span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>  │                 │                              │
-</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>  ├─────────────────┤  Database Search             │  Grover&#39;s algorithm
-</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>  │                 │  (Grover&#39;s Algorithm)        │  marks basis states
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>  ├─────────────────┤  Database Search             │  Grover's algorithm
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>  │                 │  (Grover's Algorithm)        │  marks basis states
 </span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>  │                 ├──────────────────────────────┤
 </span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a>  │                 │                              │
 </span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a>  ├─────────────────┤  Discrete / Categorical      │  One-hot vectors,
@@ -3816,7 +3846,7 @@ encoding's gate count depends on the input data:</p>
 </span><span id="__span-22-28"><a id="__codelineno-22-28" name="__codelineno-22-28" href="#__codelineno-22-28"></a>  Qubit ordering:  All backends use direct mapping (feature x[i] →
 </span><span id="__span-22-29"><a id="__codelineno-22-29" name="__codelineno-22-29" href="#__codelineno-22-29"></a>  qubit i).  PennyLane and Cirq are both big-endian (qubit 0 = MSB),
 </span><span id="__span-22-30"><a id="__codelineno-22-30" name="__codelineno-22-30" href="#__codelineno-22-30"></a>  so no conversion is needed.  Qiskit is little-endian (qubit 0 =
-</span><span id="__span-22-31"><a id="__codelineno-22-31" name="__codelineno-22-31" href="#__codelineno-22-31"></a>  LSB), but the analysis module&#39;s _simulate_qiskit automatically
+</span><span id="__span-22-31"><a id="__codelineno-22-31" name="__codelineno-22-31" href="#__codelineno-22-31"></a>  LSB), but the analysis module's _simulate_qiskit automatically
 </span><span id="__span-22-32"><a id="__codelineno-22-32" name="__codelineno-22-32" href="#__codelineno-22-32"></a>  converts statevectors to big-endian for cross-backend consistency.
 </span></code></pre></div>
 <hr />

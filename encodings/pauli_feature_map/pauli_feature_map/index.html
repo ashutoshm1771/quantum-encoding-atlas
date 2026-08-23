@@ -734,6 +734,8 @@
       
         
       
+        
+      
     
     
     
@@ -887,6 +889,34 @@
     
   
     Feature Scaling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../concepts/statistical-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Comparison
   
 
     
@@ -3714,7 +3744,7 @@ and enabling custom problem-specific encoding structures.</p>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a> ║                                                                       ║
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a> ║   |ψ(x)⟩ = [ U_Pauli(x) · H^⊗n ]^reps |0⟩^⊗n                       ║
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a> ║                                                                       ║
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> ║   &quot;Choose your Paulis → shape your quantum kernel → solve your task&quot; ║
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> ║   "Choose your Paulis → shape your quantum kernel → solve your task" ║
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a> ║                                                                       ║
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a> ╚═══════════════════════════════════════════════════════════════════════╝
 </span></code></pre></div>
@@ -3728,18 +3758,18 @@ two-qubit (XX, YY, ZZ, XY, XZ, YZ) terms to include, how they connect
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  ┌─────────────────────────────────────────────────────────────────────┐
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  │                                                                     │
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  │  paulis = [&quot;Z&quot;, &quot;ZZ&quot;]         Which Pauli rotations to apply       │
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  │  entanglement = &quot;full&quot;        How qubits connect (topology)        │
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  │  paulis = ["Z", "ZZ"]         Which Pauli rotations to apply       │
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  │  entanglement = "full"        How qubits connect (topology)        │
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  │  reps = 2                     How many layers to repeat            │
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>  │                                                                     │
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>  │  These 3 choices fully determine the circuit structure.            │
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>  │                                                                     │
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>  └─────────────────────────────────────────────────────────────────────┘
 </span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>  When paulis=[&quot;Z&quot;,&quot;ZZ&quot;] and entanglement=&quot;full&quot;:
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>  When paulis=["Z","ZZ"] and entanglement="full":
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    → Equivalent to the standard ZZFeatureMap from Havlicek et al. (2019)
 </span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>  When paulis=[&quot;Y&quot;,&quot;XX&quot;]:
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>  When paulis=["Y","XX"]:
 </span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    → A completely different encoding, tailored to your problem
 </span></code></pre></div>
 <blockquote>
@@ -4007,7 +4037,7 @@ two-qubit Pauli gates. This is one of the most impactful design choices.</p>
 <h2 id="7-quantum-kernel-connection">7. Quantum Kernel Connection<a class="headerlink" href="#7-quantum-kernel-connection" title="Anchor link to this section">&para;</a></h2>
 <p>PauliFeatureMap was introduced specifically for <strong>quantum kernel methods</strong>.
 The quantum kernel between two data points is:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>  κ(x, x&#39;) = |⟨ψ(x)|ψ(x&#39;)⟩|²
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>  κ(x, x') = |⟨ψ(x)|ψ(x')⟩|²
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
 </span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>  ┌────────────────────────────────────────────────────────────────┐
 </span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>  │                                                                │
@@ -4015,8 +4045,8 @@ The quantum kernel between two data points is:</p>
 </span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>  │  Data            Map                   Evaluation              │
 </span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>  │                                                                │
 </span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>  │  x ───────► |ψ(x)⟩ ─────────────┐                            │
-</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>  │                                   ├──► κ(x,x&#39;) = |⟨ψ|ψ&#39;⟩|²  │
-</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>  │  x&#39; ──────► |ψ(x&#39;)⟩ ────────────┘                            │
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>  │                                   ├──► κ(x,x') = |⟨ψ|ψ'⟩|²  │
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>  │  x' ──────► |ψ(x')⟩ ────────────┘                            │
 </span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>  │                                                                │
 </span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>  │  The choice of Pauli terms and entanglement determines         │
 </span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>  │  the geometry of the feature space and hence the kernel.       │
@@ -4028,11 +4058,11 @@ The quantum kernel between two data points is:</p>
 </span><span id="__span-15-19"><a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>  ┌──────────────────┬────────────────────────────────────────────┐
 </span><span id="__span-15-20"><a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>  │  Configuration   │  Feature Space Geometry                    │
 </span><span id="__span-15-21"><a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a>  ├──────────────────┼────────────────────────────────────────────┤
-</span><span id="__span-15-22"><a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a>  │  [&quot;Z&quot;] only      │  Diagonal phases, no correlations         │
-</span><span id="__span-15-23"><a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a>  │  [&quot;Z&quot;,&quot;ZZ&quot;]      │  Standard: phases + pairwise products     │
-</span><span id="__span-15-24"><a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a>  │  [&quot;X&quot;,&quot;XX&quot;]      │  Amplitude-based, population changes      │
-</span><span id="__span-15-25"><a id="__codelineno-15-25" name="__codelineno-15-25" href="#__codelineno-15-25"></a>  │  [&quot;Y&quot;,&quot;YY&quot;]      │  Complex rotations, richest structure     │
-</span><span id="__span-15-26"><a id="__codelineno-15-26" name="__codelineno-15-26" href="#__codelineno-15-26"></a>  │  [&quot;Z&quot;,&quot;XX&quot;,&quot;YY&quot;] │  Multiple interaction types combined      │
+</span><span id="__span-15-22"><a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a>  │  ["Z"] only      │  Diagonal phases, no correlations         │
+</span><span id="__span-15-23"><a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a>  │  ["Z","ZZ"]      │  Standard: phases + pairwise products     │
+</span><span id="__span-15-24"><a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a>  │  ["X","XX"]      │  Amplitude-based, population changes      │
+</span><span id="__span-15-25"><a id="__codelineno-15-25" name="__codelineno-15-25" href="#__codelineno-15-25"></a>  │  ["Y","YY"]      │  Complex rotations, richest structure     │
+</span><span id="__span-15-26"><a id="__codelineno-15-26" name="__codelineno-15-26" href="#__codelineno-15-26"></a>  │  ["Z","XX","YY"] │  Multiple interaction types combined      │
 </span><span id="__span-15-27"><a id="__codelineno-15-27" name="__codelineno-15-27" href="#__codelineno-15-27"></a>  └──────────────────┴────────────────────────────────────────────┘
 </span></code></pre></div>
 <hr />
@@ -4071,7 +4101,7 @@ The quantum kernel between two data points is:</p>
 </span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>  │  DataReuploading │  RY      │  linear      │    O(L·n)     │  Medium        │
 </span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a>  └──────────────────┴──────────┴──────────────┴───────────────┴────────────────┘
 </span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>
-</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a>  PauliFeatureMap with paulis=[&quot;Z&quot;,&quot;ZZ&quot;] is EXACTLY equivalent to ZZFeatureMap.
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a>  PauliFeatureMap with paulis=["Z","ZZ"] is EXACTLY equivalent to ZZFeatureMap.
 </span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>  It is a strict generalization — every ZZFeatureMap is a PauliFeatureMap.
 </span></code></pre></div>
 <hr />
@@ -4080,33 +4110,33 @@ The quantum kernel between two data points is:</p>
 </span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>    │
 </span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>    ├── Do you need pairwise feature interactions?
 </span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>    │     │
-</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>    │     ├── No  → paulis=[&quot;Z&quot;]  (simplest, no entanglement)
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>    │     ├── No  → paulis=["Z"]  (simplest, no entanglement)
 </span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>    │     │
 </span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>    │     └── Yes → Which basis captures your problem structure?
 </span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>    │               │
-</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>    │               ├── Standard / Unknown → paulis=[&quot;Z&quot;, &quot;ZZ&quot;] ★
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>    │               ├── Standard / Unknown → paulis=["Z", "ZZ"] ★
 </span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>    │               │   (proven in quantum kernel literature)
 </span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>    │               │
-</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>    │               ├── Need amplitude changes → paulis=[&quot;X&quot;, &quot;XX&quot;]
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>    │               ├── Need amplitude changes → paulis=["X", "XX"]
 </span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>    │               │   (populations change, not just phases)
 </span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a>    │               │
-</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a>    │               ├── Need rich rotations → paulis=[&quot;Y&quot;, &quot;YY&quot;]
+</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a>    │               ├── Need rich rotations → paulis=["Y", "YY"]
 </span><span id="__span-19-16"><a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a>    │               │   (most expressive but highest gate overhead)
 </span><span id="__span-19-17"><a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a>    │               │
-</span><span id="__span-19-18"><a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a>    │               └── Exploring → paulis=[&quot;Z&quot;, &quot;ZZ&quot;, &quot;XX&quot;]
+</span><span id="__span-19-18"><a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a>    │               └── Exploring → paulis=["Z", "ZZ", "XX"]
 </span><span id="__span-19-19"><a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a>    │                   (combine multiple interaction types)
 </span><span id="__span-19-20"><a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a>    │
 </span><span id="__span-19-21"><a id="__codelineno-19-21" name="__codelineno-19-21" href="#__codelineno-19-21"></a>    └── How many qubits / features?
 </span><span id="__span-19-22"><a id="__codelineno-19-22" name="__codelineno-19-22" href="#__codelineno-19-22"></a>          │
-</span><span id="__span-19-23"><a id="__codelineno-19-23" name="__codelineno-19-23" href="#__codelineno-19-23"></a>          ├── n ≤ 8   → entanglement=&quot;full&quot;  (affordable)
-</span><span id="__span-19-24"><a id="__codelineno-19-24" name="__codelineno-19-24" href="#__codelineno-19-24"></a>          ├── n ≤ 12  → entanglement=&quot;full&quot; or &quot;circular&quot;
-</span><span id="__span-19-25"><a id="__codelineno-19-25" name="__codelineno-19-25" href="#__codelineno-19-25"></a>          └── n &gt; 12  → entanglement=&quot;linear&quot; or &quot;circular&quot;
+</span><span id="__span-19-23"><a id="__codelineno-19-23" name="__codelineno-19-23" href="#__codelineno-19-23"></a>          ├── n ≤ 8   → entanglement="full"  (affordable)
+</span><span id="__span-19-24"><a id="__codelineno-19-24" name="__codelineno-19-24" href="#__codelineno-19-24"></a>          ├── n ≤ 12  → entanglement="full" or "circular"
+</span><span id="__span-19-25"><a id="__codelineno-19-25" name="__codelineno-19-25" href="#__codelineno-19-25"></a>          └── n &gt; 12  → entanglement="linear" or "circular"
 </span><span id="__span-19-26"><a id="__codelineno-19-26" name="__codelineno-19-26" href="#__codelineno-19-26"></a>                        (full creates too many CNOTs)
 </span></code></pre></div>
 <hr />
 <h2 id="11-example-walkthrough">11. Example Walkthrough<a class="headerlink" href="#11-example-walkthrough" title="Anchor link to this section">&para;</a></h2>
 <p>Encode <code>x = [0.5, 1.0, 1.5]</code> with <code>paulis=["Z", "ZZ"]</code>, <code>entanglement="full"</code>, <code>reps=1</code>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>  Configuration: n_features=3, paulis=[&quot;Z&quot;,&quot;ZZ&quot;], full, reps=1
+<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>  Configuration: n_features=3, paulis=["Z","ZZ"], full, reps=1
 </span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>  Entanglement pairs: (0,1), (0,2), (1,2)
 </span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>
 </span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>  ══════════════════════════════════════════════════════════════
@@ -4155,7 +4185,7 @@ The quantum kernel between two data points is:</p>
 </span><span id="__span-20-47"><a id="__codelineno-20-47" name="__codelineno-20-47" href="#__codelineno-20-47"></a>  |ψ(x)⟩: An entangled 3-qubit state where:
 </span><span id="__span-20-48"><a id="__codelineno-20-48" name="__codelineno-20-48" href="#__codelineno-20-48"></a>    • Individual features are encoded as Z-phases
 </span><span id="__span-20-49"><a id="__codelineno-20-49" name="__codelineno-20-49" href="#__codelineno-20-49"></a>    • Pairwise products are encoded as ZZ-entangling phases
-</span><span id="__span-20-50"><a id="__codelineno-20-50" name="__codelineno-20-50" href="#__codelineno-20-50"></a>    • The quantum kernel κ(x,x&#39;) = |⟨ψ(x)|ψ(x&#39;)⟩|²
+</span><span id="__span-20-50"><a id="__codelineno-20-50" name="__codelineno-20-50" href="#__codelineno-20-50"></a>    • The quantum kernel κ(x,x') = |⟨ψ(x)|ψ(x')⟩|²
 </span><span id="__span-20-51"><a id="__codelineno-20-51" name="__codelineno-20-51" href="#__codelineno-20-51"></a>      captures both individual and interaction features
 </span></code></pre></div>
 <hr />
@@ -4197,15 +4227,15 @@ The quantum kernel between two data points is:</p>
 </span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a>  ┌──────────────────────────┬────────────────┬─────────────────────┐
 </span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a>  │  Configuration           │  Depth/rep     │  Trainability (r=2) │
 </span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a>  ├──────────────────────────┼────────────────┼─────────────────────┤
-</span><span id="__span-22-11"><a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a>  │  [&quot;Z&quot;]                   │     2          │  ~0.70              │
-</span><span id="__span-22-12"><a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a>  │  [&quot;Z&quot;, &quot;ZZ&quot;]  ★         │     4          │  ~0.50              │
-</span><span id="__span-22-13"><a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a>  │  [&quot;Z&quot;, &quot;ZZ&quot;, &quot;XX&quot;]      │     7          │  ~0.20              │
-</span><span id="__span-22-14"><a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a>  │  [&quot;X&quot;, &quot;Y&quot;, &quot;Z&quot;, &quot;ZZ&quot;]  │     7          │  ~0.20              │
-</span><span id="__span-22-15"><a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a>  │  [&quot;Z&quot;, &quot;XX&quot;, &quot;YY&quot;, &quot;ZZ&quot;]│    10          │  ~0.10 (floor)      │
+</span><span id="__span-22-11"><a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a>  │  ["Z"]                   │     2          │  ~0.70              │
+</span><span id="__span-22-12"><a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a>  │  ["Z", "ZZ"]  ★         │     4          │  ~0.50              │
+</span><span id="__span-22-13"><a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a>  │  ["Z", "ZZ", "XX"]      │     7          │  ~0.20              │
+</span><span id="__span-22-14"><a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a>  │  ["X", "Y", "Z", "ZZ"]  │     7          │  ~0.20              │
+</span><span id="__span-22-15"><a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a>  │  ["Z", "XX", "YY", "ZZ"]│    10          │  ~0.10 (floor)      │
 </span><span id="__span-22-16"><a id="__codelineno-22-16" name="__codelineno-22-16" href="#__codelineno-22-16"></a>  └──────────────────────────┴────────────────┴─────────────────────┘
 </span><span id="__span-22-17"><a id="__codelineno-22-17" name="__codelineno-22-17" href="#__codelineno-22-17"></a>
 </span><span id="__span-22-18"><a id="__codelineno-22-18" name="__codelineno-22-18" href="#__codelineno-22-18"></a>  Mitigation strategies for deep circuits:
-</span><span id="__span-22-19"><a id="__codelineno-22-19" name="__codelineno-22-19" href="#__codelineno-22-19"></a>    1. Use fewer Pauli terms ([&quot;Z&quot;,&quot;ZZ&quot;] is usually sufficient)
+</span><span id="__span-22-19"><a id="__codelineno-22-19" name="__codelineno-22-19" href="#__codelineno-22-19"></a>    1. Use fewer Pauli terms (["Z","ZZ"] is usually sufficient)
 </span><span id="__span-22-20"><a id="__codelineno-22-20" name="__codelineno-22-20" href="#__codelineno-22-20"></a>    2. Use fewer reps (reps=1 or 2)
 </span><span id="__span-22-21"><a id="__codelineno-22-21" name="__codelineno-22-21" href="#__codelineno-22-21"></a>    3. Switch to linear/circular entanglement
 </span><span id="__span-22-22"><a id="__codelineno-22-22" name="__codelineno-22-22" href="#__codelineno-22-22"></a>    4. Use gradient-free optimizers
@@ -4222,9 +4252,9 @@ The quantum kernel between two data points is:</p>
 </span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a>
 </span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a>  Method              Formula                          Output Range
 </span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>  ──────────────────────────────────────────────────────────────────
-</span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a>  Min-max [0, 2π]     x&#39; = 2π·(x - min)/(max - min)    [0, 2π]
-</span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a>  Min-max [0, π]      x&#39; = π·(x - min)/(max - min)     [0, π]
-</span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a>  Arctan              x&#39; = π/2 + arctan(x)              (0, π)
+</span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a>  Min-max [0, 2π]     x' = 2π·(x - min)/(max - min)    [0, 2π]
+</span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a>  Min-max [0, π]      x' = π·(x - min)/(max - min)     [0, π]
+</span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a>  Arctan              x' = π/2 + arctan(x)              (0, π)
 </span><span id="__span-23-13"><a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a>
 </span><span id="__span-23-14"><a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a>  Important: The (π - xᵢ) term in the two-qubit mapping means
 </span><span id="__span-23-15"><a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a>  features near π produce weak interactions. Consider centering
@@ -4287,19 +4317,19 @@ The quantum kernel between two data points is:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>  ┌──────────────────────────────────────────────────────────────────────┐
 </span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>  │  NAME                 │  PAULIS          │  ENTANGLE.  │  NOTES      │
 </span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>  ├───────────────────────┼──────────────────┼─────────────┼─────────────┤
-</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>  │  ZZFeatureMap         │  [&quot;Z&quot;, &quot;ZZ&quot;]     │  full       │  Standard   │
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>  │  ZZFeatureMap         │  ["Z", "ZZ"]     │  full       │  Standard   │
 </span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>  │  (default)            │                  │             │  baseline   │
 </span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>  ├───────────────────────┼──────────────────┼─────────────┼─────────────┤
-</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>  │  Z-only (no entangl.) │  [&quot;Z&quot;]           │  any        │  Simplest,  │
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>  │  Z-only (no entangl.) │  ["Z"]           │  any        │  Simplest,  │
 </span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>  │                       │                  │             │  simulable  │
 </span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>  ├───────────────────────┼──────────────────┼─────────────┼─────────────┤
-</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a>  │  NISQ-friendly ZZ     │  [&quot;Z&quot;, &quot;ZZ&quot;]     │  linear     │  Low gate   │
+</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a>  │  NISQ-friendly ZZ     │  ["Z", "ZZ"]     │  linear     │  Low gate   │
 </span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a>  │                       │                  │             │  overhead   │
 </span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a>  ├───────────────────────┼──────────────────┼─────────────┼─────────────┤
-</span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a>  │  Rich interactions    │  [&quot;Z&quot;,&quot;ZZ&quot;,&quot;XX&quot;] │  full       │  Multiple   │
+</span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a>  │  Rich interactions    │  ["Z","ZZ","XX"] │  full       │  Multiple   │
 </span><span id="__span-26-14"><a id="__codelineno-26-14" name="__codelineno-26-14" href="#__codelineno-26-14"></a>  │                       │                  │             │  bases      │
 </span><span id="__span-26-15"><a id="__codelineno-26-15" name="__codelineno-26-15" href="#__codelineno-26-15"></a>  ├───────────────────────┼──────────────────┼─────────────┼─────────────┤
-</span><span id="__span-26-16"><a id="__codelineno-26-16" name="__codelineno-26-16" href="#__codelineno-26-16"></a>  │  Periodic topology    │  [&quot;Z&quot;, &quot;ZZ&quot;]     │  circular   │  Ring data  │
+</span><span id="__span-26-16"><a id="__codelineno-26-16" name="__codelineno-26-16" href="#__codelineno-26-16"></a>  │  Periodic topology    │  ["Z", "ZZ"]     │  circular   │  Ring data  │
 </span><span id="__span-26-17"><a id="__codelineno-26-17" name="__codelineno-26-17" href="#__codelineno-26-17"></a>  │                       │                  │             │  structure  │
 </span><span id="__span-26-18"><a id="__codelineno-26-18" name="__codelineno-26-18" href="#__codelineno-26-18"></a>  └───────────────────────┴──────────────────┴─────────────┴─────────────┘
 </span></code></pre></div>

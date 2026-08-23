@@ -734,6 +734,8 @@
       
         
       
+        
+      
     
     
     
@@ -887,6 +889,34 @@
     
   
     Feature Scaling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../concepts/statistical-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Comparison
   
 
     
@@ -3892,7 +3922,7 @@ Creates rich <strong>entanglement structures</strong> via configurable two-qubit
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a> ||                                                                     ||
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a> ||   |psi(x)&gt;  =  exp(-i H(x) t)  |+&gt;^{(x)n}                        ||
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a> ||                                                                     ||
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> ||   &quot;Data shapes the Hamiltonian  --&gt;  physics does the encoding&quot;    ||
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> ||   "Data shapes the Hamiltonian  --&gt;  physics does the encoding"    ||
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a> ||                                                                     ||
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a> +=====================================================================+
 </span></code></pre></div>
@@ -4265,11 +4295,11 @@ the <strong>edge coloring</strong> problem from graph theory.</p>
 </span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>  |                             |          |                                          |
 </span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>  |  n_features                 | required |  Number of features = number of qubits.  |
 </span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a>  |                             |          |                                          |
-</span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a>  |  hamiltonian_type           |  &#39;iqp&#39;   |  Interaction structure:                  |
-</span><span id="__span-30-8"><a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a>  |                             |          |  &#39;iqp&#39;        - ZZ (diagonal)            |
-</span><span id="__span-30-9"><a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a>  |                             |          |  &#39;pauli_z&#39;    - ZZ (same as iqp)         |
-</span><span id="__span-30-10"><a id="__codelineno-30-10" name="__codelineno-30-10" href="#__codelineno-30-10"></a>  |                             |          |  &#39;xy&#39;         - XX + YY                  |
-</span><span id="__span-30-11"><a id="__codelineno-30-11" name="__codelineno-30-11" href="#__codelineno-30-11"></a>  |                             |          |  &#39;heisenberg&#39; - XX + YY + ZZ             |
+</span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a>  |  hamiltonian_type           |  'iqp'   |  Interaction structure:                  |
+</span><span id="__span-30-8"><a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a>  |                             |          |  'iqp'        - ZZ (diagonal)            |
+</span><span id="__span-30-9"><a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a>  |                             |          |  'pauli_z'    - ZZ (same as iqp)         |
+</span><span id="__span-30-10"><a id="__codelineno-30-10" name="__codelineno-30-10" href="#__codelineno-30-10"></a>  |                             |          |  'xy'         - XX + YY                  |
+</span><span id="__span-30-11"><a id="__codelineno-30-11" name="__codelineno-30-11" href="#__codelineno-30-11"></a>  |                             |          |  'heisenberg' - XX + YY + ZZ             |
 </span><span id="__span-30-12"><a id="__codelineno-30-12" name="__codelineno-30-12" href="#__codelineno-30-12"></a>  |                             |          |                                          |
 </span><span id="__span-30-13"><a id="__codelineno-30-13" name="__codelineno-30-13" href="#__codelineno-30-13"></a>  |  evolution_time             |   1.0    |  Total time t in exp(-iHt).              |
 </span><span id="__span-30-14"><a id="__codelineno-30-14" name="__codelineno-30-14" href="#__codelineno-30-14"></a>  |                             |          |  Larger = stronger encoding.             |
@@ -4279,10 +4309,10 @@ the <strong>edge coloring</strong> problem from graph theory.</p>
 </span><span id="__span-30-18"><a id="__codelineno-30-18" name="__codelineno-30-18" href="#__codelineno-30-18"></a>  |                             |          |  More = better approximation,            |
 </span><span id="__span-30-19"><a id="__codelineno-30-19" name="__codelineno-30-19" href="#__codelineno-30-19"></a>  |                             |          |  deeper circuit.                         |
 </span><span id="__span-30-20"><a id="__codelineno-30-20" name="__codelineno-30-20" href="#__codelineno-30-20"></a>  |                             |          |                                          |
-</span><span id="__span-30-21"><a id="__codelineno-30-21" name="__codelineno-30-21" href="#__codelineno-30-21"></a>  |  entanglement               |  &#39;full&#39;  |  Qubit pair topology:                    |
-</span><span id="__span-30-22"><a id="__codelineno-30-22" name="__codelineno-30-22" href="#__codelineno-30-22"></a>  |                             |          |  &#39;full&#39;     - all pairs, O(n^2)          |
-</span><span id="__span-30-23"><a id="__codelineno-30-23" name="__codelineno-30-23" href="#__codelineno-30-23"></a>  |                             |          |  &#39;linear&#39;   - nearest-neighbor, O(n)     |
-</span><span id="__span-30-24"><a id="__codelineno-30-24" name="__codelineno-30-24" href="#__codelineno-30-24"></a>  |                             |          |  &#39;circular&#39; - ring, O(n)                 |
+</span><span id="__span-30-21"><a id="__codelineno-30-21" name="__codelineno-30-21" href="#__codelineno-30-21"></a>  |  entanglement               |  'full'  |  Qubit pair topology:                    |
+</span><span id="__span-30-22"><a id="__codelineno-30-22" name="__codelineno-30-22" href="#__codelineno-30-22"></a>  |                             |          |  'full'     - all pairs, O(n^2)          |
+</span><span id="__span-30-23"><a id="__codelineno-30-23" name="__codelineno-30-23" href="#__codelineno-30-23"></a>  |                             |          |  'linear'   - nearest-neighbor, O(n)     |
+</span><span id="__span-30-24"><a id="__codelineno-30-24" name="__codelineno-30-24" href="#__codelineno-30-24"></a>  |                             |          |  'circular' - ring, O(n)                 |
 </span><span id="__span-30-25"><a id="__codelineno-30-25" name="__codelineno-30-25" href="#__codelineno-30-25"></a>  |                             |          |                                          |
 </span><span id="__span-30-26"><a id="__codelineno-30-26" name="__codelineno-30-26" href="#__codelineno-30-26"></a>  |  include_single_qubit_terms |  True    |  Add Z_i single-qubit rotations.         |
 </span><span id="__span-30-27"><a id="__codelineno-30-27" name="__codelineno-30-27" href="#__codelineno-30-27"></a>  |                             |          |  Always True for iqp/pauli_z.            |
@@ -4380,7 +4410,7 @@ This is the fundamental tradeoff of Hamiltonian encoding.</p>
 </span><span id="__span-34-12"><a id="__codelineno-34-12" name="__codelineno-34-12" href="#__codelineno-34-12"></a>  +===================+==========+=========+============+===============+
 </span><span id="__span-34-13"><a id="__codelineno-34-13" name="__codelineno-34-13" href="#__codelineno-34-13"></a>
 </span><span id="__span-34-14"><a id="__codelineno-34-14" name="__codelineno-34-14" href="#__codelineno-34-14"></a>  * Hamiltonian encoding is distinguished by its PHYSICS-MOTIVATED design.
-</span><span id="__span-34-15"><a id="__codelineno-34-15" name="__codelineno-34-15" href="#__codelineno-34-15"></a>    It doesn&#39;t just apply gates --- it simulates a physical system.
+</span><span id="__span-34-15"><a id="__codelineno-34-15" name="__codelineno-34-15" href="#__codelineno-34-15"></a>    It doesn't just apply gates --- it simulates a physical system.
 </span></code></pre></div>
 <h3 id="what-makes-hamiltonian-encoding-special">What Makes Hamiltonian Encoding Special?<a class="headerlink" href="#what-makes-hamiltonian-encoding-special" title="Anchor link to this section">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>  +-------------------------------------------------------------------+
@@ -4479,20 +4509,20 @@ especially important for Hamiltonian encoding.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>  +============================================+===================================+
 </span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>  |  USE CASE                                  |  RECOMMENDED CONFIG               |
 </span><span id="__span-39-3"><a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a>  +============================================+===================================+
-</span><span id="__span-39-4"><a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a>  |  Standard quantum kernel (Havlicek 2019)   |  hamiltonian_type=&#39;iqp&#39;,          |
-</span><span id="__span-39-5"><a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a>  |                                            |  entanglement=&#39;full&#39;              |
+</span><span id="__span-39-4"><a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a>  |  Standard quantum kernel (Havlicek 2019)   |  hamiltonian_type='iqp',          |
+</span><span id="__span-39-5"><a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a>  |                                            |  entanglement='full'              |
 </span><span id="__span-39-6"><a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a>  |                                            |                                   |
-</span><span id="__span-39-7"><a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a>  |  NISQ-friendly (limited connectivity)      |  entanglement=&#39;linear&#39;, reps=2    |
+</span><span id="__span-39-7"><a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a>  |  NISQ-friendly (limited connectivity)      |  entanglement='linear', reps=2    |
 </span><span id="__span-39-8"><a id="__codelineno-39-8" name="__codelineno-39-8" href="#__codelineno-39-8"></a>  |                                            |                                   |
-</span><span id="__span-39-9"><a id="__codelineno-39-9" name="__codelineno-39-9" href="#__codelineno-39-9"></a>  |  Maximum expressivity                      |  hamiltonian_type=&#39;heisenberg&#39;,   |
-</span><span id="__span-39-10"><a id="__codelineno-39-10" name="__codelineno-39-10" href="#__codelineno-39-10"></a>  |                                            |  entanglement=&#39;full&#39;              |
+</span><span id="__span-39-9"><a id="__codelineno-39-9" name="__codelineno-39-9" href="#__codelineno-39-9"></a>  |  Maximum expressivity                      |  hamiltonian_type='heisenberg',   |
+</span><span id="__span-39-10"><a id="__codelineno-39-10" name="__codelineno-39-10" href="#__codelineno-39-10"></a>  |                                            |  entanglement='full'              |
 </span><span id="__span-39-11"><a id="__codelineno-39-11" name="__codelineno-39-11" href="#__codelineno-39-11"></a>  |                                            |                                   |
-</span><span id="__span-39-12"><a id="__codelineno-39-12" name="__codelineno-39-12" href="#__codelineno-39-12"></a>  |  Coherent excitation transfer              |  hamiltonian_type=&#39;xy&#39;            |
+</span><span id="__span-39-12"><a id="__codelineno-39-12" name="__codelineno-39-12" href="#__codelineno-39-12"></a>  |  Coherent excitation transfer              |  hamiltonian_type='xy'            |
 </span><span id="__span-39-13"><a id="__codelineno-39-13" name="__codelineno-39-13" href="#__codelineno-39-13"></a>  |                                            |                                   |
-</span><span id="__span-39-14"><a id="__codelineno-39-14" name="__codelineno-39-14" href="#__codelineno-39-14"></a>  |  Large feature count (n &gt; 20)              |  entanglement=&#39;linear&#39; or         |
+</span><span id="__span-39-14"><a id="__codelineno-39-14" name="__codelineno-39-14" href="#__codelineno-39-14"></a>  |  Large feature count (n &gt; 20)              |  entanglement='linear' or         |
 </span><span id="__span-39-15"><a id="__codelineno-39-15" name="__codelineno-39-15" href="#__codelineno-39-15"></a>  |                                            |  max_pairs=100                    |
 </span><span id="__span-39-16"><a id="__codelineno-39-16" name="__codelineno-39-16" href="#__codelineno-39-16"></a>  |                                            |                                   |
-</span><span id="__span-39-17"><a id="__codelineno-39-17" name="__codelineno-39-17" href="#__codelineno-39-17"></a>  |  Periodic boundary conditions              |  entanglement=&#39;circular&#39;          |
+</span><span id="__span-39-17"><a id="__codelineno-39-17" name="__codelineno-39-17" href="#__codelineno-39-17"></a>  |  Periodic boundary conditions              |  entanglement='circular'          |
 </span><span id="__span-39-18"><a id="__codelineno-39-18" name="__codelineno-39-18" href="#__codelineno-39-18"></a>  |                                            |                                   |
 </span><span id="__span-39-19"><a id="__codelineno-39-19" name="__codelineno-39-19" href="#__codelineno-39-19"></a>  |  High Trotter fidelity                     |  reps=4+, evolution_time=1.0      |
 </span><span id="__span-39-20"><a id="__codelineno-39-20" name="__codelineno-39-20" href="#__codelineno-39-20"></a>  |                                            |                                   |

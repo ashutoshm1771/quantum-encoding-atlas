@@ -734,6 +734,8 @@
       
         
       
+        
+      
     
     
     
@@ -887,6 +889,34 @@
     
   
     Feature Scaling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../concepts/statistical-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Comparison
   
 
     
@@ -3437,8 +3467,8 @@ the discrete S_2 x S_2 x ... symmetry of paired data.</p>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a> |                                                                     |
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a> |   SWAP_{01} (x) SWAP_{23} (x) ...  |psi(x)&gt;  =  |psi(swap . x)&gt;  |
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a> |                                                                     |
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> |   &quot;Swap the qubits  &lt;===&gt;  swap the features.                      |
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a> |    The circuit doesn&#39;t care which came first.&quot;                      |
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> |   "Swap the qubits  &lt;===&gt;  swap the features.                      |
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a> |    The circuit doesn't care which came first."                      |
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a> |                                                                     |
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a> +=====================================================================+
 </span></code></pre></div>
@@ -3548,7 +3578,7 @@ patterns. The data is not rescaled between layers.</p>
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>  |                   |                                          |             |
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>  | 2. Hadamard       | Mix computational basis states.          | H           |
 </span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>  |    on each qubit  | H (x) H commutes with SWAP because      |             |
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>  |                   | it&#39;s a tensor product of identical       |             |
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>  |                   | it's a tensor product of identical       |             |
 </span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>  |                   | single-qubit gates.                      |             |
 </span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>  |                   |                                          |             |
 </span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>  | 3. CZ             | Entangle qubits within each pair.       | CZ          |
@@ -3622,7 +3652,7 @@ is <strong>finite</strong> and <strong>discrete</strong>:</p>
 </span></code></pre></div>
 <h3 id="key-group-properties">Key group properties<a class="headerlink" href="#key-group-properties" title="Anchor link to this section">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>  Involution:    swap . swap = identity     (swap^2 = id for each pair)
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>  Abelian:       order of swaps doesn&#39;t matter (pairs are independent)
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>  Abelian:       order of swaps doesn't matter (pairs are independent)
 </span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>  Generators:    k generators, one per pair   [True, False, ..., False]
 </span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>                                              [False, True, ..., False]
 </span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>                                              ...
@@ -3847,7 +3877,7 @@ clean -- it reduces to "move the data, move the qubit."</p>
 </span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a>
 </span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="c1"># Encode data</span>
 </span><span id="__span-25-10"><a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
-</span><span id="__span-25-11"><a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a><span class="n">circuit</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">get_circuit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s1">&#39;pennylane&#39;</span><span class="p">)</span>
+</span><span id="__span-25-11"><a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a><span class="n">circuit</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">get_circuit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s1">'pennylane'</span><span class="p">)</span>
 </span><span id="__span-25-12"><a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a>
 </span><span id="__span-25-13"><a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a><span class="c1"># Verify swap equivariance -- swap first pair only</span>
 </span><span id="__span-25-14"><a id="__codelineno-25-14" name="__codelineno-25-14" href="#__codelineno-25-14"></a><span class="n">swaps</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">]</span>
@@ -3860,11 +3890,11 @@ clean -- it reduces to "move the data, move the qubit."</p>
 </span><span id="__span-25-21"><a id="__codelineno-25-21" name="__codelineno-25-21" href="#__codelineno-25-21"></a>
 </span><span id="__span-25-22"><a id="__codelineno-25-22" name="__codelineno-25-22" href="#__codelineno-25-22"></a><span class="c1"># Inspect resources</span>
 </span><span id="__span-25-23"><a id="__codelineno-25-23" name="__codelineno-25-23" href="#__codelineno-25-23"></a><span class="n">summary</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">resource_summary</span><span class="p">()</span>
-</span><span id="__span-25-24"><a id="__codelineno-25-24" name="__codelineno-25-24" href="#__codelineno-25-24"></a><span class="c1"># summary[&#39;symmetry_group&#39;]          -&gt; &#39;S_2^2&#39;</span>
-</span><span id="__span-25-25"><a id="__codelineno-25-25" name="__codelineno-25-25" href="#__codelineno-25-25"></a><span class="c1"># summary[&#39;gate_counts&#39;][&#39;cz&#39;]       -&gt; 4</span>
-</span><span id="__span-25-26"><a id="__codelineno-25-26" name="__codelineno-25-26" href="#__codelineno-25-26"></a><span class="c1"># summary[&#39;entanglement_pairs&#39;]      -&gt; [(0, 1), (2, 3)]</span>
-</span><span id="__span-25-27"><a id="__codelineno-25-27" name="__codelineno-25-27" href="#__codelineno-25-27"></a><span class="c1"># summary[&#39;hardware_requirements&#39;]   -&gt; {&#39;connectivity&#39;: &#39;pairs&#39;,</span>
-</span><span id="__span-25-28"><a id="__codelineno-25-28" name="__codelineno-25-28" href="#__codelineno-25-28"></a><span class="c1">#                                        &#39;native_gates&#39;: [&#39;RY&#39;, &#39;H&#39;, &#39;CZ&#39;]}</span>
+</span><span id="__span-25-24"><a id="__codelineno-25-24" name="__codelineno-25-24" href="#__codelineno-25-24"></a><span class="c1"># summary['symmetry_group']          -&gt; 'S_2^2'</span>
+</span><span id="__span-25-25"><a id="__codelineno-25-25" name="__codelineno-25-25" href="#__codelineno-25-25"></a><span class="c1"># summary['gate_counts']['cz']       -&gt; 4</span>
+</span><span id="__span-25-26"><a id="__codelineno-25-26" name="__codelineno-25-26" href="#__codelineno-25-26"></a><span class="c1"># summary['entanglement_pairs']      -&gt; [(0, 1), (2, 3)]</span>
+</span><span id="__span-25-27"><a id="__codelineno-25-27" name="__codelineno-25-27" href="#__codelineno-25-27"></a><span class="c1"># summary['hardware_requirements']   -&gt; {'connectivity': 'pairs',</span>
+</span><span id="__span-25-28"><a id="__codelineno-25-28" name="__codelineno-25-28" href="#__codelineno-25-28"></a><span class="c1">#                                        'native_gates': ['RY', 'H', 'CZ']}</span>
 </span></code></pre></div>
 <hr />
 <h2 id="14-references">14. References<a class="headerlink" href="#14-references" title="Anchor link to this section">&para;</a></h2>

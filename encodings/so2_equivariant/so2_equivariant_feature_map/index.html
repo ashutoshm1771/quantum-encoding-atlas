@@ -734,6 +734,8 @@
       
         
       
+        
+      
     
     
     
@@ -887,6 +889,34 @@
     
   
     Feature Scaling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../concepts/statistical-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Comparison
   
 
     
@@ -3492,9 +3522,9 @@ that the encoding respects the continuous symmetry of the SO(2) group.</p>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a> |                                                                     |
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a> |   |psi(r, theta)&gt; = SUM_m  c_m(r) * e^{im*theta} |m&gt;              |
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a> |                                                                     |
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> |   &quot;Radial amplitudes set the weights,                               |
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> |   "Radial amplitudes set the weights,                               |
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a> |    angular phases encode direction,                                 |
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a> |    rotation in input = rotation in Hilbert space&quot;                   |
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a> |    rotation in input = rotation in Hilbert space"                   |
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a> |                                                                     |
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a> +=====================================================================+
 </span></code></pre></div>
@@ -3712,7 +3742,7 @@ across angular momentum states. Two options are available:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>  Circuit 1:  |0&gt; --[ encode(x) ]--[ U(phi) ]-- measure --&gt; samples_A
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>  Circuit 2:  |0&gt; --[ encode(rotate(x,phi)) ]-- measure --&gt; samples_B
 </span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>  Chi-squared test: H0 = &quot;distributions are identical&quot;
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>  Chi-squared test: H0 = "distributions are identical"
 </span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>  p_value &gt; significance  --&gt;  equivariance holds (statistically)
 </span></code></pre></div>
 <hr />
@@ -3779,8 +3809,8 @@ across angular momentum states. Two options are available:</p>
 </span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>    - No normalization required (encoding handles arbitrary magnitudes)
 </span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>    - Centering is recommended so rotational symmetry is around a
 </span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a>      meaningful point
-</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a>    - Choose radial_function=&quot;gaussian&quot; if distance matters
-</span><span id="__span-19-16"><a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a>    - Choose radial_function=&quot;uniform&quot; if only direction matters
+</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a>    - Choose radial_function="gaussian" if distance matters
+</span><span id="__span-19-16"><a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a>    - Choose radial_function="uniform" if only direction matters
 </span></code></pre></div>
 <hr />
 <h2 id="10-comparison-with-related-encodings">10. Comparison with Related Encodings<a class="headerlink" href="#10-comparison-with-related-encodings" title="Anchor link to this section">&para;</a></h2>
@@ -3819,7 +3849,7 @@ across angular momentum states. Two options are available:</p>
 </span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>
 </span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="c1"># Encode a 2D point</span>
 </span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
-</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="n">circuit</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">get_circuit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s1">&#39;pennylane&#39;</span><span class="p">)</span>
+</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="n">circuit</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">get_circuit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s1">'pennylane'</span><span class="p">)</span>
 </span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a>
 </span><span id="__span-21-11"><a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a><span class="c1"># Verify rotation equivariance</span>
 </span><span id="__span-21-12"><a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a><span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span>  <span class="c1"># 45-degree rotation</span>
@@ -3831,9 +3861,9 @@ across angular momentum states. Two options are available:</p>
 </span><span id="__span-21-18"><a id="__codelineno-21-18" name="__codelineno-21-18" href="#__codelineno-21-18"></a>
 </span><span id="__span-21-19"><a id="__codelineno-21-19" name="__codelineno-21-19" href="#__codelineno-21-19"></a><span class="c1"># Inspect resources</span>
 </span><span id="__span-21-20"><a id="__codelineno-21-20" name="__codelineno-21-20" href="#__codelineno-21-20"></a><span class="n">summary</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">resource_summary</span><span class="p">()</span>
-</span><span id="__span-21-21"><a id="__codelineno-21-21" name="__codelineno-21-21" href="#__codelineno-21-21"></a><span class="c1"># summary[&#39;symmetry_group&#39;]   -&gt; &#39;SO(2)&#39;</span>
-</span><span id="__span-21-22"><a id="__codelineno-21-22" name="__codelineno-21-22" href="#__codelineno-21-22"></a><span class="c1"># summary[&#39;n_qubits&#39;]         -&gt; 2</span>
-</span><span id="__span-21-23"><a id="__codelineno-21-23" name="__codelineno-21-23" href="#__codelineno-21-23"></a><span class="c1"># summary[&#39;angular_momenta&#39;]  -&gt; [-1, 0, 1]</span>
+</span><span id="__span-21-21"><a id="__codelineno-21-21" name="__codelineno-21-21" href="#__codelineno-21-21"></a><span class="c1"># summary['symmetry_group']   -&gt; 'SO(2)'</span>
+</span><span id="__span-21-22"><a id="__codelineno-21-22" name="__codelineno-21-22" href="#__codelineno-21-22"></a><span class="c1"># summary['n_qubits']         -&gt; 2</span>
+</span><span id="__span-21-23"><a id="__codelineno-21-23" name="__codelineno-21-23" href="#__codelineno-21-23"></a><span class="c1"># summary['angular_momenta']  -&gt; [-1, 0, 1]</span>
 </span></code></pre></div>
 <hr />
 <h2 id="12-references">12. References<a class="headerlink" href="#12-references" title="Anchor link to this section">&para;</a></h2>

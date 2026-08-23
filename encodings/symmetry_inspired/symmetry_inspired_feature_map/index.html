@@ -734,6 +734,8 @@
       
         
       
+        
+      
     
     
     
@@ -887,6 +889,34 @@
     
   
     Feature Scaling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../concepts/statistical-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Comparison
   
 
     
@@ -3793,9 +3823,9 @@ complexity of mathematically rigorous equivariant constructions.</p>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a> ║                                                                        ║
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a> ║   |psi(x)&gt; = [ H^n . RY(f(x)) . RZ(phi(x)) . U_ent(x) ]^reps |0&gt;^n  ║
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a> ║                                                                        ║
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> ║   &quot;Hadamards superpose, RY encodes features,                           ║
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> ║   "Hadamards superpose, RY encodes features,                           ║
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a> ║    RZ applies symmetry-invariant rotations,                            ║
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a> ║    entangling gates preserve symmetry structure&quot;                       ║
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a> ║    entangling gates preserve symmetry structure"                       ║
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a> ║                                                                        ║
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a> ╚════════════════════════════════════════════════════════════════════════╝
 </span></code></pre></div>
@@ -3889,8 +3919,8 @@ equivariant angle uses the <strong>radius</strong> — an SO(2)-invariant quanti
 </span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>       y                  Rotating (x,y) by any angle alpha
 </span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>       ^                  does NOT change the radius r.
 </span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>       |   . (x,y)
-</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>       |  /               (x&#39;, y&#39;) = R(alpha) . (x, y)
-</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>       | / r              r&#39; = sqrt(x&#39;^2 + y&#39;^2) = r
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>       |  /               (x', y') = R(alpha) . (x, y)
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>       | / r              r' = sqrt(x'^2 + y'^2) = r
 </span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>       |/
 </span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>       +---------&gt; x      The gate angle phi = r is the same
 </span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>                          regardless of rotation.
@@ -3971,7 +4001,7 @@ depends on both its own feature AND the global mean.</p>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>  The mean(x) term is a symmetric polynomial (invariant under
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>  ANY permutation of features), providing a shared &quot;context&quot;
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>  ANY permutation of features), providing a shared "context"
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>  that every qubit receives.
 </span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>
 </span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>  Interaction angle:  theta_{ij} = f(xi) * f(xj)
@@ -4111,7 +4141,7 @@ gates, independent of the symmetry type (except rotation, which overrides).</p>
 </span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>  n pairs                           3 ──── 2
 </span></code></pre></div>
 <h3 id="no-entanglement">No Entanglement<a class="headerlink" href="#no-entanglement" title="Anchor link to this section">&para;</a></h3>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>  entanglement=&#39;none&#39;               0      1      2      3
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>  entanglement='none'               0      1      2      3
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
 </span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>  0 pairs                           (product state, classically simulable)
 </span></code></pre></div>
@@ -4198,7 +4228,7 @@ angle feature map:</p>
 </span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>  full       │  8  │   8    │   8   │ 18 CNOT      │ 12 RY      │  54
 </span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>
 </span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a>  Note: CRZ decomposes to 2 CNOTs + 2 RZ on real hardware, so
-</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>  rotation&#39;s 4 CRZ gates become 8 CNOTs + 8 RZ at the hardware level.
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>  rotation's 4 CRZ gates become 8 CNOTs + 8 RZ at the hardware level.
 </span></code></pre></div>
 <hr />
 <h2 id="8-key-properties">8. Key Properties<a class="headerlink" href="#8-key-properties" title="Anchor link to this section">&para;</a></h2>
@@ -4211,7 +4241,7 @@ angle feature map:</p>
 </span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>  │  Feature maps        │  angle | fourier | polynomial                   │
 </span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>  │  Symmetry types      │  rotation | cyclic | reflection | full          │
 </span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>  │  Entanglement        │  full | linear | circular | none                │
-</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>  │  Entangling?         │  Yes (except entanglement=&#39;none&#39;)               │
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>  │  Entangling?         │  Yes (except entanglement='none')               │
 </span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>  │  Simulability        │  Not simulable (with entanglement)              │
 </span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>  │                      │  Classically simulable (without entanglement)   │
 </span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>  │  Parameter count     │  0 (pure data encoding, no variational params)  │
@@ -4271,11 +4301,11 @@ angle feature map:</p>
 <code>measure_trainability()</code> method that <strong>empirically measures gradient
 variance</strong> by sampling random parameters appended to the encoding circuit.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>  &gt;&gt;&gt; result = enc.measure_trainability(x, n_samples=100, seed=42)
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>  &gt;&gt;&gt; result[&#39;gradient_variance&#39;]     # Higher = more trainable
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>  &gt;&gt;&gt; result[&#39;empirical_trainability&#39;] # Scaled to [0, 1]
-</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>  &gt;&gt;&gt; result[&#39;heuristic_trainability&#39;] # Compare with heuristic
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>  &gt;&gt;&gt; result['gradient_variance']     # Higher = more trainable
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>  &gt;&gt;&gt; result['empirical_trainability'] # Scaled to [0, 1]
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>  &gt;&gt;&gt; result['heuristic_trainability'] # Compare with heuristic
 </span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>
-</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>  Supports both &#39;local&#39; (single-qubit Z) and &#39;global&#39; (all-qubit Z)
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>  Supports both 'local' (single-qubit Z) and 'global' (all-qubit Z)
 </span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a>  cost observables. Local cost functions typically show better
 </span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a>  trainability (Cerezo et al., 2021).
 </span></code></pre></div>
@@ -4308,19 +4338,19 @@ variance</strong> by sampling random parameters appended to the encoding circuit
 </span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>                  ┌───────────────────────────┐
 </span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>                  │                           │
 </span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>  ┌───────────────┤  Rotational patterns      │  Image features, molecular
-</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>  │               │  (symmetry=&#39;rotation&#39;)    │  coordinates, 2D point data
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>  │               │  (symmetry='rotation')    │  coordinates, 2D point data
 </span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>  │               ├───────────────────────────┤
 </span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a>  │               │                           │
 </span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a>  ├───────────────┤  Time-series / Periodic   │  Seasonal data, signals,
-</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a>  │               │  (symmetry=&#39;cyclic&#39;)      │  circular features
+</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a>  │               │  (symmetry='cyclic')      │  circular features
 </span><span id="__span-24-10"><a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a>  │               ├───────────────────────────┤
 </span><span id="__span-24-11"><a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a>  │               │                           │
 </span><span id="__span-24-12"><a id="__codelineno-24-12" name="__codelineno-24-12" href="#__codelineno-24-12"></a>  ├───────────────┤  Mirror-symmetric data    │  Palindromic sequences,
-</span><span id="__span-24-13"><a id="__codelineno-24-13" name="__codelineno-24-13" href="#__codelineno-24-13"></a>  │               │  (symmetry=&#39;reflection&#39;)  │  spectral data, physics
+</span><span id="__span-24-13"><a id="__codelineno-24-13" name="__codelineno-24-13" href="#__codelineno-24-13"></a>  │               │  (symmetry='reflection')  │  spectral data, physics
 </span><span id="__span-24-14"><a id="__codelineno-24-14" name="__codelineno-24-14" href="#__codelineno-24-14"></a>  │               ├───────────────────────────┤
 </span><span id="__span-24-15"><a id="__codelineno-24-15" name="__codelineno-24-15" href="#__codelineno-24-15"></a>  │               │                           │
 </span><span id="__span-24-16"><a id="__codelineno-24-16" name="__codelineno-24-16" href="#__codelineno-24-16"></a>  ├───────────────┤  Permutation-invariant    │  Set-like data, unordered
-</span><span id="__span-24-17"><a id="__codelineno-24-17" name="__codelineno-24-17" href="#__codelineno-24-17"></a>  │               │  (symmetry=&#39;full&#39;)        │  feature collections
+</span><span id="__span-24-17"><a id="__codelineno-24-17" name="__codelineno-24-17" href="#__codelineno-24-17"></a>  │               │  (symmetry='full')        │  feature collections
 </span><span id="__span-24-18"><a id="__codelineno-24-18" name="__codelineno-24-18" href="#__codelineno-24-18"></a>  │               ├───────────────────────────┤
 </span><span id="__span-24-19"><a id="__codelineno-24-19" name="__codelineno-24-19" href="#__codelineno-24-19"></a>  │               │                           │
 </span><span id="__span-24-20"><a id="__codelineno-24-20" name="__codelineno-24-20" href="#__codelineno-24-20"></a>  └───────────────┤  Quantum kernels / QML    │  When you want symmetry-aware

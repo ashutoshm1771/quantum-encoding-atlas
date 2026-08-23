@@ -18,7 +18,7 @@
         <link rel="prev" href="../kernel-concentration/">
       
       
-        <link rel="next" href="../quantum-advantage/">
+        <link rel="next" href="../statistical-comparison/">
       
       
         
@@ -736,6 +736,8 @@
       
         
       
+        
+      
     
     
     
@@ -1035,6 +1037,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../statistical-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -3121,16 +3151,16 @@
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">scan_feature_ranges</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.benchmark</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_dataset</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">get_dataset</span><span class="p">(</span><span class="s2">&quot;moons&quot;</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">get_dataset</span><span class="p">(</span><span class="s2">"moons"</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">scan</span> <span class="o">=</span> <span class="n">scan_feature_ranges</span><span class="p">(</span><span class="n">IQPEncoding</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">scan</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[0, </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">high</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">]  align=</span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">alignment</span><span class="si">:</span><span class="s2">+.3f</span><span class="si">}</span><span class="s2">  mean=</span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">offdiagonal_mean</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[0, </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">high</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">]  align=</span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">alignment</span><span class="si">:</span><span class="s2">+.3f</span><span class="si">}</span><span class="s2">  mean=</span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">offdiagonal_mean</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>[0, 0.785]  align=+0.517  mean=0.746
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>[0, 1.571]  align=+0.352  mean=0.423
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>[0, 3.142]  align=+0.167  mean=0.290
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>[0, 6.283]  align=+0.036  mean=0.315     &lt;- the pipeline&#39;s default
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>[0, 6.283]  align=+0.036  mean=0.315     &lt;- the pipeline's default
 </span></code></pre></div>
 <p>Alignment falls monotonically as the range widens, and the mean overlap descends towards the Haar value (0.25 at two qubits).</p>
 <div class="admonition warning">
@@ -3303,7 +3333,7 @@
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.atlas</span><span class="w"> </span><span class="kn">import</span> <span class="n">scaling_sensitive_encodings</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">[(</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">accuracy_spread</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">scaling_sensitive_encodings</span><span class="p">()][:</span><span class="mi">4</span><span class="p">]</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># [(&#39;iqp&#39;, 0.343), (&#39;hamiltonian&#39;, 0.268), (&#39;pauli_feature_map&#39;, 0.214), (&#39;zz_feature_map&#39;, 0.214)]</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># [('iqp', 0.343), ('hamiltonian', 0.268), ('pauli_feature_map', 0.214), ('zz_feature_map', 0.214)]</span>
 </span></code></pre></div>
 <hr />
 <h2 id="the-consequence-for-hypothesis-h1">The consequence for hypothesis H1<a class="headerlink" href="#the-consequence-for-hypothesis-h1" title="Anchor link to this section">&para;</a></h2>
@@ -3354,7 +3384,7 @@
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">encoding_atlas.atlas</span><span class="w"> </span><span class="kn">import</span> <span class="n">expressibility_accuracy_correlation</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">expressibility_accuracy_correlation</span><span class="p">():</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;high&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;spearman_rho_atlas_subset&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;is_published_range&quot;</span><span class="p">])</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"high"</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">"spearman_rho_atlas_subset"</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">"is_published_range"</span><span class="p">])</span>
 </span></code></pre></div>
 <p>The "atlas subset" column restricts to the 14 encodings the atlas records an expressibility for — <code>basis</code> and <code>amplitude</code> are state-preparation circuits whose expressibility the pipeline stores as null. That is the set the published analysis used, so it is the only column comparable with the published number.</p>
 <div class="admonition note">
@@ -3462,13 +3492,13 @@
         
         
           
-          <a href="../quantum-advantage/" class="md-footer__link md-footer__link--next" aria-label="Next: Quantum Advantage">
+          <a href="../statistical-comparison/" class="md-footer__link md-footer__link--next" aria-label="Next: Statistical Comparison">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Quantum Advantage
+                Statistical Comparison
               </div>
             </div>
             <div class="md-footer__button md-icon">

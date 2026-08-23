@@ -734,6 +734,8 @@
       
         
       
+        
+      
     
     
     
@@ -887,6 +889,34 @@
     
   
     Feature Scaling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../concepts/statistical-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Comparison
   
 
     
@@ -3628,7 +3658,7 @@ while still producing <strong>product states</strong> (no entanglement).</p>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a> ||                                                                   ||
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> ||   where  theta_q  =  s * SUM_S  PROD_{i in S}  x_i               ||
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a> ||                                                                   ||
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a> ||   &quot;Polynomial features  -&gt;  rotation angles  -&gt;  product state&quot;   ||
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a> ||   "Polynomial features  -&gt;  rotation angles  -&gt;  product state"   ||
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a> ||                                                                   ||
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a> +===================================================================+
 </span></code></pre></div>
@@ -3819,7 +3849,7 @@ entanglement-based encodings (IQP, ZZ Feature Map):</p>
 </span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>  |    Interactions are in the ANGLES (classical preprocessing).        |
 </span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>  |    The quantum state is a PRODUCT state.                            |
 </span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>  |                                                                     |
-</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>  |    x_0*x_1 --&gt; theta  --&gt; R(theta)|0&gt;  (x)  R(theta&#39;)|0&gt;            |
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>  |    x_0*x_1 --&gt; theta  --&gt; R(theta)|0&gt;  (x)  R(theta')|0&gt;            |
 </span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>  |                                        ^^                           |
 </span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>  |                              tensor product (no entanglement)       |
 </span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>  |                                                                     |
@@ -3884,12 +3914,12 @@ requirements and noise sensitivity.</p>
 </span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>  |                      |          |  3 = + triple products                  |
 </span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a>  |                      |          |  n = all 2^n - 1 terms (exponential!)   |
 </span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a>  |                      |          |                                         |
-</span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a>  |  rotation            |   &#39;Y&#39;    |  Rotation axis: &#39;X&#39;, &#39;Y&#39;, or &#39;Z&#39;.      |
+</span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a>  |  rotation            |   'Y'    |  Rotation axis: 'X', 'Y', or 'Z'.      |
 </span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a>  |                      |          |  Y = real amplitudes (recommended).     |
 </span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a>  |                      |          |                                         |
-</span><span id="__span-17-17"><a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>  |  combination         |&#39;product&#39; |  How features combine in a term:        |
-</span><span id="__span-17-18"><a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a>  |                      |          |  &#39;product&#39;: x_i * x_j (multiplicative) |
-</span><span id="__span-17-19"><a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a>  |                      |          |  &#39;sum&#39;:     x_i + x_j (additive)       |
+</span><span id="__span-17-17"><a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>  |  combination         |'product' |  How features combine in a term:        |
+</span><span id="__span-17-18"><a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a>  |                      |          |  'product': x_i * x_j (multiplicative) |
+</span><span id="__span-17-19"><a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a>  |                      |          |  'sum':     x_i + x_j (additive)       |
 </span><span id="__span-17-20"><a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a>  |                      |          |                                         |
 </span><span id="__span-17-21"><a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a>  |  include_first_order |  True    |  Include single-feature terms (x_i).    |
 </span><span id="__span-17-22"><a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a>  |                      |          |  False = only interaction terms.         |
@@ -4041,7 +4071,7 @@ generated, and each qubit gets exactly one term:</p>
 </span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>                  |                            |
 </span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>  +---------------+  Feature Interactions      |  When you need pairwise
 </span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>  |               |  Without Entanglement      |  (or higher) correlations
-</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>  |               +----------------------------+  but can&#39;t afford 2-qubit gates
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>  |               +----------------------------+  but can't afford 2-qubit gates
 </span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a>  |               |                            |
 </span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a>  +---------------+  NISQ Hardware             |  Minimal depth, no CNOT
 </span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a>  |               |  with Limited Connectivity |  errors, any qubit topology
@@ -4073,7 +4103,7 @@ generated, and each qubit gets exactly one term:</p>
 </span><span id="__span-25-10"><a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a>      16     |   2   |  136   |   16   |     16      |     48      |  reps
 </span><span id="__span-25-11"><a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a>
 </span><span id="__span-25-12"><a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a>  Key insight: gates and depth scale with n_features and reps ONLY.
-</span><span id="__span-25-13"><a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a>  More terms don&#39;t add more gates --- they&#39;re SUMMED into existing angles.
+</span><span id="__span-25-13"><a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a>  More terms don't add more gates --- they're SUMMED into existing angles.
 </span><span id="__span-25-14"><a id="__codelineno-25-14" name="__codelineno-25-14" href="#__codelineno-25-14"></a>  The cost is in CLASSICAL preprocessing (computing angle sums), not
 </span><span id="__span-25-15"><a id="__codelineno-25-15" name="__codelineno-25-15" href="#__codelineno-25-15"></a>  in quantum circuit complexity.
 </span></code></pre></div>
@@ -4086,10 +4116,10 @@ generated, and each qubit gets exactly one term:</p>
 </span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>  |  Pairwise feature interactions      |  order=2 (default)                  |
 </span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>  |  Rich feature interactions          |  order=3                            |
 </span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>  |  Only interaction terms (no linear) |  include_first_order=False, order&gt;=2|
-</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>  |  Real-valued amplitudes             |  rotation=&#39;Y&#39; (default)             |
-</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>  |  Phase encoding                     |  rotation=&#39;Z&#39;                       |
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>  |  Real-valued amplitudes             |  rotation='Y' (default)             |
+</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>  |  Phase encoding                     |  rotation='Z'                       |
 </span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a>  |  Widen rotation range               |  scaling=2.0  or  reps=2            |
-</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a>  |  Additive features (not products)   |  combination=&#39;sum&#39;                  |
+</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a>  |  Additive features (not products)   |  combination='sum'                  |
 </span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a>  +---------------------------------------------------------------------------+
 </span></code></pre></div>
 <hr />

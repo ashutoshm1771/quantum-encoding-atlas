@@ -734,6 +734,8 @@
       
         
       
+        
+      
     
     
     
@@ -887,6 +889,34 @@
     
   
     Feature Scaling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../concepts/statistical-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Comparison
   
 
     
@@ -3509,13 +3539,13 @@ keeps circuits shallow, and preserves coherence on noisy hardware.</p>
 <p>The rotation axis determines which Bloch-sphere direction the data encodes into:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>            Z                         Rotation  |  Gate   |  Bloch Axis
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>            |                         ----------+---------+-------------
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>            |    . theta              &quot;X&quot;       |  RX(x)  |  Around X
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>            |  .                      &quot;Y&quot;       |  RY(x)  |  Around Y  (default)
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>            | .                       &quot;Z&quot;       |  RZ(x)  |  Around Z
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>            |    . theta              "X"       |  RX(x)  |  Around X
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>            |  .                      "Y"       |  RY(x)  |  Around Y  (default)
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>            | .                       "Z"       |  RZ(x)  |  Around Z
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>     -------+---------- Y
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>           /|
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>          / |                         RY creates real-valued amplitudes.
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>         /                            RZ is often a &quot;virtual&quot; gate on
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>         /                            RZ is often a "virtual" gate on
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>        X                             superconducting hardware (zero error).
 </span></code></pre></div>
 <p><strong>Matrix definitions:</strong></p>
@@ -3640,10 +3670,10 @@ keeps circuits shallow, and preserves coherence on noisy hardware.</p>
 <h3 id="hardware-choice-guide">Hardware Choice Guide<a class="headerlink" href="#hardware-choice-guide" title="Anchor link to this section">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>  Hardware Type          |  Recommended Config
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>  -----------------------+--------------------------------------------
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>  IBM / Google / Rigetti |  rotation=&quot;Z&quot; or &quot;Y&quot;, entanglement=&quot;linear&quot;
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>  IBM / Google / Rigetti |  rotation="Z" or "Y", entanglement="linear"
 </span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>  (superconducting)      |  RZ is virtual (zero error) on many chips
 </span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>                         |
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>  IonQ / Quantinuum      |  entanglement=&quot;full&quot; (native all-to-all)
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>  IonQ / Quantinuum      |  entanglement="full" (native all-to-all)
 </span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>  (ion trap)             |  Any rotation axis
 </span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>                         |
 </span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>  Simulators             |  Any config (no hardware constraints)

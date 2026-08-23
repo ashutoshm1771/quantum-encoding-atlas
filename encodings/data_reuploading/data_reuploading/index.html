@@ -734,6 +734,8 @@
       
         
       
+        
+      
     
     
     
@@ -887,6 +889,34 @@
     
   
     Feature Scaling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../concepts/statistical-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Comparison
   
 
     
@@ -3816,7 +3846,7 @@ entangling layers — the quantum analogue of depth in classical neural networks
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a> ║                                                                      ║
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a> ║   |ψ(x)⟩  =  [ U_ent · U_data(x) ]^L  |0⟩^⊗n                      ║
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a> ║                                                                      ║
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> ║   &quot;Re-upload the data  →  build a Fourier series  →  universality&quot;  ║
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> ║   "Re-upload the data  →  build a Fourier series  →  universality"  ║
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a> ║                                                                      ║
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a> ╚══════════════════════════════════════════════════════════════════════╝
 </span></code></pre></div>
@@ -4028,7 +4058,7 @@ gates from each qubit to its neighbor, cascading down the register.</p>
 </span><span id="__span-10-25"><a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a>
 </span><span id="__span-10-26"><a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a>  3. Linear gate count: O(n) per layer vs. O(n²) for full
 </span><span id="__span-10-27"><a id="__codelineno-10-27" name="__codelineno-10-27" href="#__codelineno-10-27"></a>
-</span><span id="__span-10-28"><a id="__codelineno-10-28" name="__codelineno-10-28" href="#__codelineno-10-28"></a>  4. The universal approximation theorem doesn&#39;t require full
+</span><span id="__span-10-28"><a id="__codelineno-10-28" name="__codelineno-10-28" href="#__codelineno-10-28"></a>  4. The universal approximation theorem doesn't require full
 </span><span id="__span-10-29"><a id="__codelineno-10-29" name="__codelineno-10-29" href="#__codelineno-10-29"></a>     connectivity — depth (re-uploading) provides the expressivity
 </span></code></pre></div>
 <hr />
@@ -4052,7 +4082,7 @@ expectation values are degree-1 trigonometric polynomials:</p>
 </span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>         CNOT ladder     CNOT ladder                  CNOT ladder
 </span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>        (entangling)    (entangling)                 (entangling)
 </span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>  The Wₖ matrices ARE the CNOT ladders — they are the &quot;processing&quot;
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>  The Wₖ matrices ARE the CNOT ladders — they are the "processing"
 </span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>  between data uploads that enables the Fourier expansion.
 </span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>
 </span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>  ⟨O⟩ = a₀ + Σₖ₌₁ᴸ [aₖ cos(kx) + bₖ sin(kx)]
@@ -4120,7 +4150,7 @@ RY does both jobs at once.</p>
 </span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>  │  Because RZ(θ)|0⟩ = e^{-iθ/2}|0⟩ — just a global phase!     │
 </span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a>  │  You MUST superpose first with H to make RZ meaningful.       │
 </span><span id="__span-15-17"><a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a>  │                                                                │
-</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a>  │  Why doesn&#39;t DataReuploading need H?                          │
+</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a>  │  Why doesn't DataReuploading need H?                          │
 </span><span id="__span-15-19"><a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>  │  Because RY(θ)|0⟩ = cos(θ/2)|0⟩ + sin(θ/2)|1⟩                │
 </span><span id="__span-15-20"><a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>  │  RY creates its own superposition. No prep step needed.       │
 </span><span id="__span-15-21"><a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a>  │                                                                │
@@ -4199,7 +4229,7 @@ achieves universal approximation for single-variable functions.</p>
 </span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>  No entanglement needed — depth alone provides expressivity.
 </span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>  This is analogous to a deep 1-neuron network.
 </span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a>
-</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>  Wait — without entangling gates, isn&#39;t this just RY(L·x)?
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>  Wait — without entangling gates, isn't this just RY(L·x)?
 </span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a>
 </span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>  In this PURE DATA-ONLY version, yes: consecutive RY gates
 </span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a>  on a single qubit compose additively (same axis).
@@ -4213,8 +4243,8 @@ achieves universal approximation for single-variable functions.</p>
 </span><span id="__span-18-22"><a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a>  parameters {θₖ} control the Fourier coefficients {aₖ, bₖ}.
 </span><span id="__span-18-23"><a id="__codelineno-18-23" name="__codelineno-18-23" href="#__codelineno-18-23"></a>
 </span><span id="__span-18-24"><a id="__codelineno-18-24" name="__codelineno-18-24" href="#__codelineno-18-24"></a>  ┌────────────────────────────────────────────────────────┐
-</span><span id="__span-18-25"><a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a>  │  &quot;A single qubit can learn any function of a single   │
-</span><span id="__span-18-26"><a id="__codelineno-18-26" name="__codelineno-18-26" href="#__codelineno-18-26"></a>  │   variable, given enough re-uploading layers.&quot;         │
+</span><span id="__span-18-25"><a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a>  │  "A single qubit can learn any function of a single   │
+</span><span id="__span-18-26"><a id="__codelineno-18-26" name="__codelineno-18-26" href="#__codelineno-18-26"></a>  │   variable, given enough re-uploading layers."         │
 </span><span id="__span-18-27"><a id="__codelineno-18-27" name="__codelineno-18-27" href="#__codelineno-18-27"></a>  │                                                        │
 </span><span id="__span-18-28"><a id="__codelineno-18-28" name="__codelineno-18-28" href="#__codelineno-18-28"></a>  │   — Pérez-Salinas et al., Quantum 4, 226 (2020)      │
 </span><span id="__span-18-29"><a id="__codelineno-18-29" name="__codelineno-18-29" href="#__codelineno-18-29"></a>  └────────────────────────────────────────────────────────┘
@@ -4404,12 +4434,12 @@ challenges.</p>
 </span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>  │                                                                      │
 </span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>  │    Parameters are everywhere, data appears once.                    │
 </span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>  │    Gradients vanish exponentially with depth and width.             │
-</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>  │    The circuit quickly becomes &quot;noise-like.&quot;                        │
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>  │    The circuit quickly becomes "noise-like."                        │
 </span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>  │                                                                      │
 </span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>  │  Data re-uploading:                                                 │
 </span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a>  │                                                                      │
-</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a>  │    Data re-appears at every layer, providing &quot;anchor points&quot;        │
-</span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a>  │    that constrain the circuit&#39;s behavior.                           │
+</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a>  │    Data re-appears at every layer, providing "anchor points"        │
+</span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a>  │    that constrain the circuit's behavior.                           │
 </span><span id="__span-27-13"><a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a>  │    The interleaved RY(x)─CNOT─RY(x)─CNOT structure prevents the   │
 </span><span id="__span-27-14"><a id="__codelineno-27-14" name="__codelineno-27-14" href="#__codelineno-27-14"></a>  │    loss landscape from becoming completely flat because the         │
 </span><span id="__span-27-15"><a id="__codelineno-27-15" name="__codelineno-27-15" href="#__codelineno-27-15"></a>  │    data injection breaks the symmetry that causes barren plateaus.  │
@@ -4458,9 +4488,9 @@ full rotation range meaningfully.</p>
 <h3 id="recommended-scaling">Recommended Scaling<a class="headerlink" href="#recommended-scaling" title="Anchor link to this section">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>  Method                  Formula                        Output Range
 </span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>  ──────────────────────────────────────────────────────────────────────
-</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>  Min-max to [0, 2pi]    x&#39; = 2pi·(x - min)/(max - min)  [0, 2pi]
-</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>  Standard + scale       x&#39; = pi·(x - mu) / sigma         ~ [-pi, pi]
-</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>  Arctan                 x&#39; = 2·arctan(x)                  (-pi, pi)
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>  Min-max to [0, 2pi]    x' = 2pi·(x - min)/(max - min)  [0, 2pi]
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>  Standard + scale       x' = pi·(x - mu) / sigma         ~ [-pi, pi]
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>  Arctan                 x' = 2·arctan(x)                  (-pi, pi)
 </span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a>
 </span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a>  Implementation note: values beyond |4pi| trigger a debug-level
 </span><span id="__span-30-8"><a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a>  warning to flag potentially unscaled data. The circuit still works
@@ -4504,10 +4534,10 @@ full rotation range meaningfully.</p>
 </span><span id="__span-31-32"><a id="__codelineno-31-32" name="__codelineno-31-32" href="#__codelineno-31-32"></a>  Step 2a — Data encoding (same x applied again):
 </span><span id="__span-31-33"><a id="__codelineno-31-33" name="__codelineno-31-33" href="#__codelineno-31-33"></a>  ─────────────────────────────────────────────────
 </span><span id="__span-31-34"><a id="__codelineno-31-34" name="__codelineno-31-34" href="#__codelineno-31-34"></a>  RY(0.5) applied to q₀,  RY(1.2) applied to q₁
-</span><span id="__span-31-35"><a id="__codelineno-31-35" name="__codelineno-31-35" href="#__codelineno-31-35"></a>  Each qubit&#39;s local state is further rotated, but
+</span><span id="__span-31-35"><a id="__codelineno-31-35" name="__codelineno-31-35" href="#__codelineno-31-35"></a>  Each qubit's local state is further rotated, but
 </span><span id="__span-31-36"><a id="__codelineno-31-36" name="__codelineno-31-36" href="#__codelineno-31-36"></a>  the entanglement from Layer 1 is preserved.
 </span><span id="__span-31-37"><a id="__codelineno-31-37" name="__codelineno-31-37" href="#__codelineno-31-37"></a>
-</span><span id="__span-31-38"><a id="__codelineno-31-38" name="__codelineno-31-38" href="#__codelineno-31-38"></a>  This is where re-uploading&#39;s power lies: the RY gates
+</span><span id="__span-31-38"><a id="__codelineno-31-38" name="__codelineno-31-38" href="#__codelineno-31-38"></a>  This is where re-uploading's power lies: the RY gates
 </span><span id="__span-31-39"><a id="__codelineno-31-39" name="__codelineno-31-39" href="#__codelineno-31-39"></a>  now act on an ENTANGLED state, creating a richer
 </span><span id="__span-31-40"><a id="__codelineno-31-40" name="__codelineno-31-40" href="#__codelineno-31-40"></a>  function of x than Layer 1 alone could produce.
 </span><span id="__span-31-41"><a id="__codelineno-31-41" name="__codelineno-31-41" href="#__codelineno-31-41"></a>
@@ -4640,7 +4670,7 @@ full rotation range meaningfully.</p>
 </span><span id="__span-35-24"><a id="__codelineno-35-24" name="__codelineno-35-24" href="#__codelineno-35-24"></a>
 </span><span id="__span-35-25"><a id="__codelineno-35-25" name="__codelineno-35-25" href="#__codelineno-35-25"></a>  Key difference: the quantum version operates in an exponentially
 </span><span id="__span-35-26"><a id="__codelineno-35-26" name="__codelineno-35-26" href="#__codelineno-35-26"></a>  large Hilbert space (2^n dimensions), potentially encoding richer
-</span><span id="__span-35-27"><a id="__codelineno-35-27" name="__codelineno-35-27" href="#__codelineno-35-27"></a>  representations with fewer &quot;neurons&quot; (qubits).
+</span><span id="__span-35-27"><a id="__codelineno-35-27" name="__codelineno-35-27" href="#__codelineno-35-27"></a>  representations with fewer "neurons" (qubits).
 </span></code></pre></div>
 <hr />
 <h2 id="references">References<a class="headerlink" href="#references" title="Anchor link to this section">&para;</a></h2>

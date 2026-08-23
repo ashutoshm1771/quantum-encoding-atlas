@@ -734,6 +734,8 @@
       
         
       
+        
+      
     
     
     
@@ -887,6 +889,34 @@
     
   
     Feature Scaling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/statistical-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Comparison
   
 
     
@@ -3044,9 +3074,9 @@
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="k">for</span> <span class="n">Enc</span> <span class="ow">in</span> <span class="p">[</span><span class="n">AngleEncoding</span><span class="p">,</span> <span class="n">IQPEncoding</span><span class="p">]:</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">enc</span> <span class="o">=</span> <span class="n">Enc</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">res</span> <span class="o">=</span> <span class="n">count_resources</span><span class="p">(</span><span class="n">enc</span><span class="p">)</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">enc</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">:</span><span class="s2">&lt;20s</span><span class="si">}</span><span class="s2">  &quot;</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>          <span class="sa">f</span><span class="s2">&quot;qubits=</span><span class="si">{</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;n_qubits&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">  depth=</span><span class="si">{</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;depth&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">  &quot;</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>          <span class="sa">f</span><span class="s2">&quot;gates=</span><span class="si">{</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;gate_count&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">enc</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">:</span><span class="s2">&lt;20s</span><span class="si">}</span><span class="s2">  "</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>          <span class="sa">f</span><span class="s2">"qubits=</span><span class="si">{</span><span class="n">res</span><span class="p">[</span><span class="s1">'n_qubits'</span><span class="p">]</span><span class="si">}</span><span class="s2">  depth=</span><span class="si">{</span><span class="n">res</span><span class="p">[</span><span class="s1">'depth'</span><span class="p">]</span><span class="si">}</span><span class="s2">  "</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>          <span class="sa">f</span><span class="s2">"gates=</span><span class="si">{</span><span class="n">res</span><span class="p">[</span><span class="s1">'gate_count'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span></code></pre></div>
 <hr />
 <h2 id="full-experiment-framework">Full Experiment Framework<a class="headerlink" href="#full-experiment-framework" title="Anchor link to this section">&para;</a></h2>

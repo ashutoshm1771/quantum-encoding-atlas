@@ -734,6 +734,8 @@
       
         
       
+        
+      
     
     
     
@@ -887,6 +889,34 @@
     
   
     Feature Scaling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../concepts/statistical-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Comparison
   
 
     
@@ -3789,7 +3819,7 @@ qubit), while the <strong>mixer layer uses a fixed angle</strong> <code>beta</co
 <hr />
 <h2 id="feature-maps">Feature Maps<a class="headerlink" href="#feature-maps" title="Anchor link to this section">&para;</a></h2>
 <p>Two mappings from classical features to rotation angles:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>  &quot;linear&quot; (default)                 &quot;quadratic&quot;
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>  "linear" (default)                 "quadratic"
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  ──────────────────                 ───────────────
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  phi(x_i) = gamma * x_i            phi(x_i) = gamma * x_i^2
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
@@ -3808,16 +3838,16 @@ qubit), while the <strong>mixer layer uses a fixed angle</strong> <code>beta</co
 <h3 id="data-rotation-default-z">Data Rotation (default: Z)<a class="headerlink" href="#data-rotation-default-z" title="Anchor link to this section">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>  Axis  |  Gate   |  Effect on |+&gt; state              |  Typical Use
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>  ──────+─────────+──────────────────────────────────+──────────────────
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  &quot;Z&quot;   |  RZ(x)  |  Phase rotation (diagonal H_C)    |  Standard QAOA
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  &quot;Y&quot;   |  RY(x)  |  Amplitude + phase rotation       |  Amplitude-sensitive
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  &quot;X&quot;   |  RX(x)  |  Bit-flip rotation                |  Alternative basis
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  "Z"   |  RZ(x)  |  Phase rotation (diagonal H_C)    |  Standard QAOA
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  "Y"   |  RY(x)  |  Amplitude + phase rotation       |  Amplitude-sensitive
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  "X"   |  RX(x)  |  Bit-flip rotation                |  Alternative basis
 </span></code></pre></div>
 <h3 id="mixer-rotation-default-x">Mixer Rotation (default: X)<a class="headerlink" href="#mixer-rotation-default-x" title="Anchor link to this section">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>  Axis  |  Gate   |  Effect                            |  Typical Use
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>  ──────+─────────+────────────────────────────────────+──────────────────
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>  &quot;X&quot;   |  RX(b)  |  Standard QAOA mixer (bit-flip)    |  Default choice
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>  &quot;Y&quot;   |  RY(b)  |  Amplitude mixing                  |  Alternative mixer
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>  &quot;Z&quot;   |  RZ(b)  |  Phase-only mixing                 |  Phase manipulation
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>  "X"   |  RX(b)  |  Standard QAOA mixer (bit-flip)    |  Default choice
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>  "Y"   |  RY(b)  |  Amplitude mixing                  |  Alternative mixer
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>  "Z"   |  RZ(b)  |  Phase-only mixing                 |  Phase manipulation
 </span></code></pre></div>
 <p>The <strong>standard QAOA pairing</strong> is <code>data_rotation="Z"</code> + <code>mixer_rotation="X"</code>,
 mirroring the diagonal cost Hamiltonian and transverse-field mixer of the
@@ -3825,7 +3855,7 @@ original algorithm.</p>
 <hr />
 <h2 id="entangling-gate-options">Entangling Gate Options<a class="headerlink" href="#entangling-gate-options" title="Anchor link to this section">&para;</a></h2>
 <p>Three two-qubit gates are available for the mixer entanglement layer:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>  &quot;cz&quot; (default)          &quot;cx&quot; (CNOT)              &quot;rzz&quot; (parameterized)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>  "cz" (default)          "cx" (CNOT)              "rzz" (parameterized)
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  ──────────────          ───────────              ────────────────────
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>  Controlled-Z            Controlled-NOT           RZZ(beta) = exp(-i*b/2 Z*Z)
 </span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
@@ -3893,7 +3923,7 @@ resulting in deeper circuits.</p>
 </span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>
 </span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>  Pairs: all (i,j) where i &lt; j
 </span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>  Count: n(n-1)/2
-</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>  Depth: n-1 (n even), n (n odd)  -- by Vizing&#39;s theorem on K_n
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>  Depth: n-1 (n even), n (n odd)  -- by Vizing's theorem on K_n
 </span></code></pre></div>
 <h3 id="topology-comparison">Topology Comparison<a class="headerlink" href="#topology-comparison" title="Anchor link to this section">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>  Topology  | Gates/layer | Parallel Depth      | Hardware Match
@@ -3992,7 +4022,7 @@ parameters optimized during training</strong>. In QAOA-style encoding, <code>gam
 <h2 id="key-properties">Key Properties<a class="headerlink" href="#key-properties" title="Anchor link to this section">&para;</a></h2>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>  Property                |  Value / Behavior
 </span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>  ────────────────────────+───────────────────────────────────────────
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>  Entangling?             |  Yes (unless entanglement=&#39;none&#39;)
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>  Entangling?             |  Yes (unless entanglement='none')
 </span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>  Simulability            |  Not classically simulable (with entanglement)
 </span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>  Trainable parameters    |  0 (gamma, beta are hyperparameters)
 </span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>  Data re-uploading       |  Yes (same features re-encoded each rep)
@@ -4033,16 +4063,16 @@ parameters optimized during training</strong>. In QAOA-style encoding, <code>gam
 <h3 id="hardware-recommendations">Hardware Recommendations<a class="headerlink" href="#hardware-recommendations" title="Anchor link to this section">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>  Hardware Type          |  Recommended Config
 </span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>  ───────────────────────+───────────────────────────────────────────
-</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>  IBM / Google / Rigetti |  entanglement=&quot;linear&quot;, entangling_gate=&quot;cz&quot;
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>  IBM / Google / Rigetti |  entanglement="linear", entangling_gate="cz"
 </span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>  (superconducting)      |  CZ is native; linear matches chip topology
 </span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>                         |
-</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>  IonQ / Quantinuum      |  entanglement=&quot;full&quot;, entangling_gate=&quot;rzz&quot;
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>  IonQ / Quantinuum      |  entanglement="full", entangling_gate="rzz"
 </span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a>  (ion trap)             |  All-to-all native; RZZ adds expressivity
 </span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a>                         |
-</span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>  Simulators             |  entanglement=&quot;full&quot;, any gate
+</span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>  Simulators             |  entanglement="full", any gate
 </span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a>                         |  Maximize expressibility (no HW constraints)
 </span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a>                         |
-</span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a>  Noisy environments     |  entanglement=&quot;none&quot; or &quot;linear&quot;, low reps
+</span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a>  Noisy environments     |  entanglement="none" or "linear", low reps
 </span><span id="__span-23-13"><a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a>                         |  Minimize gate count and depth
 </span></code></pre></div>
 <hr />
@@ -4101,7 +4131,7 @@ parameters optimized during training</strong>. In QAOA-style encoding, <code>gam
 </span><span id="__span-25-10"><a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a>    - Separate cost &amp; mixer layers (inspired by QAOA algorithm structure)
 </span><span id="__span-25-11"><a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a>    - Fixed-angle mixer (beta) independent of data
 </span><span id="__span-25-12"><a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a>    - Optional initial Hadamard for |+&gt; start state
-</span><span id="__span-25-13"><a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a>    - &quot;none&quot; entanglement option for product-state baseline
+</span><span id="__span-25-13"><a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a>    - "none" entanglement option for product-state baseline
 </span><span id="__span-25-14"><a id="__codelineno-25-14" name="__codelineno-25-14" href="#__codelineno-25-14"></a>    - Quadratic feature map option
 </span></code></pre></div>
 <hr />
