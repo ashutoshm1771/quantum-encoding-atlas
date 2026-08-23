@@ -232,7 +232,12 @@ dataset — the training-free predictor of kernel accuracy. See
 Evaluate encodings on classification tasks with variational quantum classifiers
 and quantum-kernel SVMs, paired stratified cross-validation, classical
 baselines, and statistical comparison (Wilcoxon + Holm–Bonferroni + Cliff's
-delta).
+delta for a single dataset; Friedman + Nemenyi across a suite of them).
+
+For comparing many encodings over many datasets, see
+[Statistical Comparison](../concepts/statistical-comparison.md): all-pairs
+Wilcoxon has *zero* power at that scale, and `compare_over_datasets` implements
+the Demšar (2006) procedure that replaces it.
 
 All four estimators follow scikit-learn's estimator contract, so they compose
 with `cross_val_score`, `GridSearchCV`, `Pipeline`, `VotingClassifier` and
@@ -250,6 +255,44 @@ can rebuild an estimator from `get_params()`.
         - save_results
 
 ::: encoding_atlas.benchmark.evaluate_encoding
+    options:
+      show_root_heading: true
+
+### Multi-dataset comparison
+
+::: encoding_atlas.benchmark.compare_over_datasets
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.friedman_test
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.iman_davenport
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.average_ranks
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.critical_difference
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.complete_cases
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.ComparisonResult
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.FriedmanResult
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.PostHocResult
     options:
       show_root_heading: true
 

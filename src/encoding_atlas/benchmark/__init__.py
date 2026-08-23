@@ -21,6 +21,17 @@ from encoding_atlas.benchmark.baselines import (
     run_baseline_single_fold,
     run_regression_baseline_single_fold,
 )
+from encoding_atlas.benchmark.comparison import (
+    ComparisonResult,
+    FriedmanResult,
+    PostHocResult,
+    average_ranks,
+    compare_over_datasets,
+    complete_cases,
+    critical_difference,
+    friedman_test,
+    iman_davenport,
+)
 from encoding_atlas.benchmark.datasets import (
     get_dataset,
     get_regression_dataset,
@@ -94,4 +105,14 @@ __all__ = [
     "compare_encodings_corrected",
     "cliffs_delta",
     "holm_bonferroni",
+    # Multi-dataset comparison (Demsar 2006)
+    "compare_over_datasets",
+    "friedman_test",
+    "iman_davenport",
+    "average_ranks",
+    "critical_difference",
+    "complete_cases",
+    "ComparisonResult",
+    "FriedmanResult",
+    "PostHocResult",
 ]

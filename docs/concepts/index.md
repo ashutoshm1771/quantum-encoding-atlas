@@ -20,6 +20,12 @@ Understanding quantum data encoding requires bridging classical machine learning
 
     The metrics that characterise an encoding: expressibility, entanglement capability, trainability, circuit depth, and simulability.
 
+-   **[Statistical Comparison](statistical-comparison.md)**
+
+    ---
+
+    Why all-pairs testing has zero power across a handful of datasets, and the Friedman/Nemenyi procedure that replaces it — including what a missing result must *not* be imputed as.
+
 -   **[Quantum Advantage](quantum-advantage.md)**
 
     ---

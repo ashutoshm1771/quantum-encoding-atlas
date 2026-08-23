@@ -7,7 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+#### Multi-dataset statistical comparison (Demsar 2006)
+- `encoding_atlas.benchmark.comparison` implements the procedure for comparing
+  many encodings across many datasets: per-dataset ranking, the Friedman
+  omnibus with the Iman-Davenport correction, and Nemenyi or Bonferroni-Dunn
+  post-hoc tests. Exposed as `compare_over_datasets`, `friedman_test`,
+  `iman_davenport`, `average_ranks`, `critical_difference` and
+  `complete_cases`.
+- This replaces a method that could not work. The previously available route —
+  all-pairs `wilcoxon_test` with `holm_bonferroni` — is *arithmetically*
+  incapable of a positive result at atlas scale, not merely underpowered: a
+  paired Wilcoxon over N=8 datasets has an exact two-sided minimum attainable
+  p of `2/2**8 = 0.0078`, while Holm's strictest threshold over the
+  `15*14/2 = 105` comparisons is `0.05/105 = 0.00048`. Measured on the atlas's
+  kernel results: 0 of 105 significant, smallest raw p exactly at the 0.0078
+  floor. Friedman on the same matrix gives `chi2(14) = 79.09, p = 4.2e-11` and
+  separates 5 encodings from the best.
+- **The omnibus test was previously absent entirely.** The journal figure set
+  drew Nemenyi critical-difference diagrams — a *post-hoc* test — with no
+  omnibus behind them and no statistic reported. Running the missing test
+  confirms the published conclusions stand (VQC `chi2(14) = 63.46,
+  p = 2.9e-08`, Iman-Davenport `F(14,98) = 9.15`; kernel `chi2(14) = 79.09,
+  p = 4.2e-11`, `F(14,98) = 16.83`), so this closes a reporting and procedure
+  gap rather than changing a result. `compare_over_datasets` now returns
+  `posthoc=None` when the omnibus fails to reject, instead of a table that
+  should not be quoted.
+- Critical values come from the studentised range distribution rather than a
+  lookup table, so any number of methods and any alpha work. Agreement with
+  Demsar Table 5 is within that table's own rounding (max deviation 0.0007
+  across k = 2..20), and the published table is used as a test oracle. The
+  Bonferroni-Dunn values match Demsar Table 6 except at k = 9, where the
+  published 2.724 does not follow from `alpha/(k-1) = 0.00625`; the value is
+  2.7344 and the neighbouring entries confirm the table has a typo.
+- New concepts page, `docs/concepts/statistical-comparison.md`, and API
+  reference entries.
+
 ### Fixed
+
+#### Rank figures imputed a missing result as accuracy zero
+- Two journal figures built their rank matrix with `acc.get(dataset, 0.0)`, so
+  an encoding with no result on a dataset was ranked *worst* there. Missing
+  cells are structural, not accidental: `SO2EquivariantFeatureMap` accepts only
+  two features and therefore has no result on the four 4-feature datasets
+  (`iris`, `wine`, `breast_cancer`, `digits_01`).
+- Measured cost: SO(2)'s average rank moved from 5.00 to 10.50 under VQC and
+  from 4.38 to 10.19 under kernel-SVM — top third to bottom half. Every other
+  encoding was unaffected, so the distortion fell entirely on the encoding with
+  the missing cells. It is also the encoding the guide recommends for
+  `symmetry="rotation"`.
+- Nothing is imputed now. Incomplete methods are excluded from the omnibus and
+  post-hoc and reported in `ComparisonResult.excluded` alongside the datasets
+  they lacked, and the critical-difference figures carry that exclusion plus
+  the omnibus statistics as an on-figure caption. Descriptive ranks for such
+  methods remain available via `average_ranks(..., missing="available")`, which
+  the documentation marks as not comparable across differing competitor counts.
+- The bundled atlas (`master_summary.json`) is unaffected: it stores scalar
+  per-encoding accuracies, not the per-dataset rank matrix these figures build.
 
 #### CI failed on Windows: backend checks were written as bash heredocs
 - The backend-availability guards added alongside the SO(2) fix were embedded
