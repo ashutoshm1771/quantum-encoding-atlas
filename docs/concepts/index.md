@@ -26,6 +26,12 @@ Understanding quantum data encoding requires bridging classical machine learning
 
     Why all-pairs testing has zero power across a handful of datasets, and the Friedman/Nemenyi procedure that replaces it — including what a missing result must *not* be imputed as.
 
+-   **[Missing Metrics](missing-metrics.md)**
+
+    ---
+
+    Why a metric that is structurally zero and one that was never measured both arrive as `None`, demand opposite treatment, and why imputing a column median for the first manufactured a robustness claim.
+
 -   **[Quantum Advantage](quantum-advantage.md)**
 
     ---

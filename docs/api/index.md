@@ -258,6 +258,39 @@ can rebuild an estimator from `get_params()`.
     options:
       show_root_heading: true
 
+### Weighted scoring and missing metrics
+
+See [Missing Metrics](../concepts/missing-metrics.md) for why a structural zero
+and an unmeasured value must not share a substitute.
+
+::: encoding_atlas.benchmark.score_encodings
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.weight_sensitivity
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.readings_from_values
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.MetricReading
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.MetricSpec
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.ScoringResult
+    options:
+      show_root_heading: true
+
+::: encoding_atlas.benchmark.SensitivityResult
+    options:
+      show_root_heading: true
+
 ### Multi-dataset comparison
 
 ::: encoding_atlas.benchmark.compare_over_datasets

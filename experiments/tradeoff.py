@@ -19,6 +19,13 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
+from encoding_atlas.benchmark.scoring import (
+    MetricSpec,
+    readings_from_values,
+    score_encodings,
+    weight_sensitivity,
+)
+
 from experiments.statistical import (
     spearman_correlation,
     kendall_tau,
@@ -1308,87 +1315,100 @@ def analyze_pareto_front(
     }
 
 
+
+SCORING_SPECS: list[MetricSpec] = [
+    MetricSpec("accuracy", 0.30),
+    MetricSpec("expressibility", 0.15),
+    MetricSpec("trainability", 0.20),
+    MetricSpec("inv_depth", 0.15),
+    MetricSpec("entanglement", 0.05),
+    MetricSpec("noise_resilience", 0.15),
+]
+
+
+def build_metric_readings(
+    profiles: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    """Collect the scoring metrics, recording *why* each absent one is absent.
+
+    A non-entangling encoding has an entanglement capability of exactly 0, and
+    the pipeline skips it rather than measuring a foregone conclusion. Treating
+    that ``None`` as unknown and filling it with the column median credits
+    angle, higher-order-angle and basis with the median capability of the
+    encodings that *do* entangle (0.605), which is what previously produced the
+    suite's only robustness claim. See encoding_atlas.benchmark.scoring.
+    """
+    values: dict[str, dict[str, float | None]] = {}
+    structural: dict[str, list[str]] = {}
+    for name, p in profiles.items():
+        vqc_acc = p.get("vqc_accuracy")
+        if not vqc_acc:
+            continue
+        depth = p.get("depth")
+        values[name] = {
+            "accuracy": float(np.mean(list(vqc_acc.values()))),
+            "expressibility": p.get("expressibility"),
+            "trainability": p.get("trainability_estimate"),
+            "inv_depth": (1.0 / float(depth)) if depth and depth > 0 else None,
+            "entanglement": p.get("entanglement_capability"),
+            "noise_resilience": p.get("noise_resilience"),
+        }
+        if p.get("is_entangling") is False:
+            structural.setdefault(name, []).append("entanglement")
+    return readings_from_values(
+        values,
+        structural_zeros=structural,
+        reason="no entangling gates, so the capability is exactly 0",
+    )
+
+
 def analyze_ranking_sensitivity(
     profiles: dict[str, dict[str, Any]],
     n_samples: int = 1000,
     seed: int = 42,
 ) -> dict[str, Any]:
-    """7.8: Monte Carlo weight sensitivity analysis."""
-    metric_keys = ["accuracy", "expressibility", "trainability", "inv_depth", "entanglement", "noise_resilience"]
-    names: list[str] = []
-    metric_matrix: list[list[float]] = []
+    """7.8: Monte Carlo weight sensitivity analysis.
 
-    for name, p in profiles.items():
-        vqc_acc = p.get("vqc_accuracy")
-        if not vqc_acc:
-            continue
-        mean_acc = float(np.mean(list(vqc_acc.values())))
-        expr = p.get("expressibility")
-        train = p.get("trainability_estimate")
-        depth = p.get("depth")
-        ent = p.get("entanglement_capability")
-        noise = p.get("noise_resilience")
+    Absent metrics are resolved by encoding_atlas.benchmark.scoring: a
+    structural zero counts as 0 and normalises with everything else, while a
+    genuinely unmeasured metric is dropped from that encoding's weighting and
+    reported in ``effective_weight``. Nothing is imputed.
 
-        inv_depth = 1.0 / float(depth) if depth and depth > 0 else None
-        row = [mean_acc, expr, train, inv_depth, ent, noise]
-        names.append(name)
-        metric_matrix.append(row)
+    Weight vectors come from numpy's legacy RandomState, whose stream NumPy
+    holds stable across releases, so these numbers reproduce on any supported
+    NumPy version.
+    """
+    readings = build_metric_readings(profiles)
+    if len(readings) < 3:
+        return {"status": "insufficient_data", "n_available": len(readings)}
 
-    if len(names) < 3:
-        return {"status": "insufficient_data", "n_available": len(names)}
+    result = weight_sensitivity(
+        readings, SCORING_SPECS, n_samples=n_samples, seed=seed, k=3, threshold=0.90
+    )
 
-    arr = np.array(metric_matrix, dtype=float)
-
-    # Impute missing values with column median
-    for col in range(arr.shape[1]):
-        col_vals = arr[:, col]
-        valid = col_vals[~np.isnan(col_vals)]
-        if len(valid) == 0:
-            arr[:, col] = 0.5
-        else:
-            median_val = np.median(valid)
-            arr[np.isnan(col_vals), col] = median_val
-
-    # Normalize each metric to [0, 1]
-    for col in range(arr.shape[1]):
-        arr[:, col] = _normalize_min_max(arr[:, col])
-
-    # Monte Carlo sampling
-    rng = np.random.default_rng(seed)
-    n_enc = len(names)
-    rank_matrix = np.zeros((n_samples, n_enc), dtype=int)
-
-    for s in range(n_samples):
-        weights = rng.dirichlet(np.ones(len(metric_keys)))
-        scores = arr @ weights
-        # Rank descending (1 = best)
-        rank_matrix[s] = np.argsort(np.argsort(-scores)) + 1
-
-    # Compute statistics
-    per_encoding: dict[str, Any] = {}
-    for i, name in enumerate(names):
-        ranks = rank_matrix[:, i]
-        per_encoding[name] = {
-            "mean_rank": float(np.mean(ranks)),
-            "std_rank": float(np.std(ranks)),
-            "min_rank": int(np.min(ranks)),
-            "max_rank": int(np.max(ranks)),
-            "pct_top3": float(np.mean(ranks <= 3) * 100),
+    per_encoding: dict[str, Any] = {
+        name: {
+            "mean_rank": result.mean_rank[name],
+            "std_rank": result.std_rank[name],
+            "min_rank": result.best_rank[name],
+            "max_rank": result.worst_rank[name],
+            "pct_top3": result.top_k_fraction[name] * 100.0,
         }
-
-    robustly_top3 = [name for name, stats in per_encoding.items() if stats["pct_top3"] >= 90.0]
-
-    # Default ranking with equal weights
-    default_weights = np.ones(len(metric_keys)) / len(metric_keys)
-    default_scores = arr @ default_weights
-    default_order = [names[i] for i in np.argsort(-default_scores)]
+        for name in result.mean_rank
+    }
 
     return {
         "per_encoding": per_encoding,
-        "robustly_top3": robustly_top3,
-        "default_ranking": default_order,
-        "n_samples": n_samples,
-        "metric_keys": metric_keys,
+        "robustly_top3": list(result.robust),
+        "default_ranking": list(result.equal_weight_ranking),
+        "n_samples": result.n_samples,
+        "metric_keys": [spec.name for spec in SCORING_SPECS],
+        # Added so a reduced objective is visible rather than absorbed.
+        "seed": result.seed,
+        "rng": "numpy.random.RandomState (stream-stable across NumPy releases)",
+        "effective_weight": dict(result.effective_weight),
+        "unusable_metrics": {k: list(v) for k, v in result.unusable.items()},
+        "structural_zeros": {k: list(v) for k, v in result.structural_zeros.items()},
     }
 
 
@@ -1404,58 +1424,28 @@ def compute_final_ranking(
             "inv_depth": 0.15, "entanglement": 0.05, "noise_resilience": 0.15,
         }
 
-    names: list[str] = []
-    raw_metrics: list[dict[str, float | None]] = []
-
-    for name, p in profiles.items():
-        vqc_acc = p.get("vqc_accuracy")
-        if not vqc_acc:
-            continue
-        mean_acc = float(np.mean(list(vqc_acc.values())))
-        depth = p.get("depth")
-        inv_depth = 1.0 / float(depth) if depth and depth > 0 else None
-
-        names.append(name)
-        raw_metrics.append({
-            "accuracy": mean_acc,
-            "expressibility": p.get("expressibility"),
-            "trainability": p.get("trainability_estimate"),
-            "inv_depth": inv_depth,
-            "entanglement": p.get("entanglement_capability"),
-            "noise_resilience": p.get("noise_resilience"),
-        })
+    names: list[str] = [n for n, p in profiles.items() if p.get("vqc_accuracy")]
 
     if not names:
         return {"rankings": [], "weights_used": weights, "normalization_ranges": {}}
 
-    # Collect all values per metric for normalization
-    metric_keys = list(weights.keys())
-    norm_ranges: dict[str, list[float]] = {}
-    for mk in metric_keys:
-        vals = [m[mk] for m in raw_metrics if m[mk] is not None]
-        if vals:
-            norm_ranges[mk] = [float(min(vals)), float(max(vals))]
-        else:
-            norm_ranges[mk] = [0.0, 1.0]
+    # Score through the shared policy so 7.8 and 7.9 resolve absent metrics the
+    # same way. Previously this omitted a missing metric and renormalised while
+    # 7.8 imputed the column median, so the two analyses ranked the same data
+    # against two different objectives.
+    scoring = score_encodings(
+        build_metric_readings(profiles),
+        [MetricSpec(k, w) for k, w in weights.items()],
+    )
+    norm_ranges = {k: list(v) for k, v in scoring.normalization.items()}
+    names = [n for n in scoring.scores if n in set(names)]
 
-    # Compute weighted scores
     rankings: list[dict[str, Any]] = []
     pareto_encodings = pareto_result.get("encodings", {})
 
-    for i, name in enumerate(names):
+    for name in names:
         p = profiles[name]
-        score = 0.0
-        total_weight = 0.0
-        for mk in metric_keys:
-            val = raw_metrics[i][mk]
-            if val is None:
-                continue
-            lo, hi = norm_ranges[mk]
-            norm_val = (val - lo) / (hi - lo) if hi - lo > 1e-12 else 0.5
-            score += weights[mk] * norm_val
-            total_weight += weights[mk]
-        if total_weight > 0:
-            score /= total_weight
+        score = scoring.scores.get(name, 0.0)
 
         vqc_acc = p.get("vqc_accuracy", {})
         vqc_ci_data = p.get("vqc_ci", {})
@@ -1512,6 +1502,12 @@ def compute_final_ranking(
         "rankings": rankings,
         "weights_used": weights,
         "normalization_ranges": norm_ranges,
+        # Fraction of the intended weight each encoding was actually judged on.
+        # Below 1 means it was ranked against a different objective than its
+        # rivals, which must be visible rather than absorbed into the score.
+        "effective_weight": dict(scoring.effective_weight),
+        "unusable_metrics": {k: list(v) for k, v in scoring.unusable.items()},
+        "structural_zeros": {k: list(v) for k, v in scoring.structural_zeros.items()},
     }
 
 

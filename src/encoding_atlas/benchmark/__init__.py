@@ -51,6 +51,18 @@ from encoding_atlas.benchmark.kernel import (
 )
 from encoding_atlas.benchmark.metrics import compute_metrics, compute_regression_metrics
 from encoding_atlas.benchmark.runner import EncodingBenchmark, evaluate_encoding
+from encoding_atlas.benchmark.scoring import (
+    MetricReading,
+    MetricSpec,
+    ScoringResult,
+    SensitivityResult,
+    measured,
+    not_measured,
+    readings_from_values,
+    score_encodings,
+    structurally_zero,
+    weight_sensitivity,
+)
 from encoding_atlas.benchmark.statistical import (
     cliffs_delta,
     compare_encodings,
@@ -115,4 +127,15 @@ __all__ = [
     "ComparisonResult",
     "FriedmanResult",
     "PostHocResult",
+    # Weighted scoring with an explicit missing-metric policy
+    "score_encodings",
+    "weight_sensitivity",
+    "readings_from_values",
+    "measured",
+    "structurally_zero",
+    "not_measured",
+    "MetricReading",
+    "MetricSpec",
+    "ScoringResult",
+    "SensitivityResult",
 ]

@@ -7,7 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+#### A median imputation manufactured the atlas's only robustness claim
+- Stage 7's Monte Carlo weight sweep filled every absent metric with the
+  **column median** before ranking. For `entanglement_capability` the absent
+  entries belong to `angle`, `higher_order_angle` and `basis` — the atlas's own
+  `Non-Entangling` family, which Stage 4 never attempted because a circuit with
+  no entangling gates has a capability of exactly 0. The median substituted
+  **0.605**, the median of the encodings that do entangle.
+- That one substitution was the whole claim. Published: `robustly_top3 ==
+  ['angle']`, with angle in the top 3 in **97.8%** of 1000 random weightings.
+  With the structural zero: angle drops to **80.8%**, below the 90% threshold,
+  and `robustly_top3` becomes **`[]`** — no encoding survives reweighting. Mean
+  rank moves 1.71 to 3.26; `higher_order_angle` 3.56 to 6.04; `basis` 7.68 to
+  12.10. Computed by calling the pipeline's own functions with nothing changed
+  but that classification.
+- **This corrects a published conclusion**, unlike the preceding fixes, which
+  left their results standing. The headline ranking is not affected: angle
+  remains first at 0.733. `higher_order_angle` moves from rank 3 to 5,
+  `cyclic_equivariant` 4 to 3 and `amplitude` 5 to 4.
+
+#### Three analyses of the same data used three different missing-metric rules
+- Stage 7.8 imputed the column median; Stage 7.9 omitted the metric and
+  renormalised the weights; the rank figures imputed 0.0 (fixed previously).
+  The same profile data was therefore ranked against three different
+  objectives depending on which analysis read it.
+- Under 7.9's rule, 4 of 16 encodings were scored on a reduced objective —
+  `basis` on 70% of the intended weight, `amplitude` 85%, `angle` and
+  `higher_order_angle` 95% — with nothing in the output saying so. Both stages
+  now share one policy, and `effective_weight` reports the shortfall.
+
+#### The weight sweep was not reproducible across NumPy versions
+- The sweep drew weights from `numpy.random.default_rng`, whose stream NumPy
+  explicitly does not guarantee between releases. Re-running the published
+  analysis from unchanged code (`tradeoff.py` last modified 2026-02-11, before
+  the 2026-02-23 run) and byte-identical inputs reproduced the deterministic
+  equal-weight ranking exactly while returning 97.2% where 97.8% was published.
+  It now uses `numpy.random.RandomState`, whose stream NumPy does guarantee.
+
 ### Added
+
+#### An explicit missing-metric policy for weighted scoring
+- `encoding_atlas.benchmark.scoring` distinguishes the two absences that both
+  arrive as `None`: `structurally_zero` (defined, known, and equal to zero, so
+  never measured) and `not_measured` (undefined or never computed). A
+  structural zero resolves to `0.0` and takes part in normalisation; an
+  unmeasured metric contributes nothing and is *reported* rather than filled or
+  silently dropped. Exposed as `score_encodings`, `weight_sensitivity`,
+  `readings_from_values`, `measured`, `structurally_zero`, `not_measured`,
+  `MetricReading`, `MetricSpec`, `ScoringResult` and `SensitivityResult`.
+- `ScoringResult.effective_weight` records the fraction of the intended weight
+  each encoding was judged on, so ranking against a shorter yardstick is
+  visible instead of absorbed into the score. `on_unusable="exclude"` drops
+  such encodings instead. The failure mode is sharp: an encoding measured only
+  on the axis it wins scores 1.0 and ranks first on half the objective.
+- Ranking order is decided on scores rounded to 12 decimal places. Weighted
+  sums accumulate in different orders for different encodings, so
+  mathematically tied scores can differ by one ULP; without this, rounding
+  noise decided rank 1 from rank 3 among genuinely tied encodings.
+- New concepts page, `docs/concepts/missing-metrics.md`, and API reference
+  entries. Reintroducing any of the three defects was confirmed to fail the
+  test suite, including with the unpackaged raw pipeline output absent.
 
 #### Multi-dataset statistical comparison (Demsar 2006)
 - `encoding_atlas.benchmark.comparison` implements the procedure for comparing
